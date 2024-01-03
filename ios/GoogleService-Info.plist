@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyBMFHOuaBOHBt73rM8IvfVpWrnQ1fM7y1o</string>
+	<key>GCM_SENDER_ID</key>
+	<string>298120067435</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.vassar.gka</string>
+	<key>PROJECT_ID</key>
+	<string>gpt-drive-thru</string>
+	<key>STORAGE_BUCKET</key>
+	<string>gpt-drive-thru.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:298120067435:ios:54153991ecce35f2bf342e</string>
+	<key>DATABASE_URL</key>
+	<string>https://gpt-drive-thru-default-rtdb.firebaseio.com</string>
+</dict>
+</plist>
