@@ -1,8 +1,12 @@
+import 'dart:convert';
+
 import 'package:avatar_glow/avatar_glow.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:gka/cart_item.dart';
 import 'package:gka/chat_bubble.dart';
+import 'package:gka/shoppingCartOverlay.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:text_to_speech/text_to_speech.dart';
@@ -24,6 +28,8 @@ class _ChatWindowState extends State<ChatWindow> {
   var scrollControllerListView = ScrollController();
   int counter = 1;
   TextToSpeech tts = TextToSpeech();
+  // Create a transparent overlay to cover the whole screen
+  OverlayEntry? overlayEntry;
 
   @override
   void initState() {
@@ -84,7 +90,14 @@ class _ChatWindowState extends State<ChatWindow> {
     return Scaffold(
       appBar: AppBar(
         leading: GestureDetector(
-          onTap: () {
+          onTap: () async {
+            DatabaseReference ref = FirebaseDatabase.instance.ref("KFC/${widget.sessionId}");
+
+            await ref.set(null);
+            if (overlayEntry != null) {
+              overlayEntry!.remove();
+            }
+            tts.stop();
             widget.finishSession(true);
           },
             child: const Icon(Icons.cancel)),
@@ -103,15 +116,26 @@ class _ChatWindowState extends State<ChatWindow> {
                       var data = (snapshot.data! as DatabaseEvent)
                           .snapshot
                           .value ?? {};
+                      print("DATAFJLDLFHGLD $data");
                       data = data as Map<dynamic, dynamic>;
                     var sortedByKeyMap = Map.fromEntries(
                         data.entries.toList()..sort((e1, e2) => e1.key.compareTo(e2.key)));
                       sortedByKeyMap.forEach((key, value) {
-                      final datalast = Map<String, dynamic>.from(value);
-                      print("SORTED MESSAGES ${datalast['message']}");
-                      messageList.add(ChatBubble(
-                          text: datalast['message'],
-                          isUser: datalast['isUser']));
+                        if (key != "cart" ) {
+                          final datalast = Map<String, dynamic>.from(value);
+                          print("SORTED MESSAGES ${datalast['message']}");
+                          messageList.add(ChatBubble(
+                              text: datalast['message'],
+                              isUser: datalast['isUser']));
+                        } else {
+                          if (overlayEntry != null) {
+                            overlayEntry!.remove();
+                          }
+                          Cart cart = Cart.fromJson(jsonDecode(jsonEncode(value)));
+                          print("CARTITEMS  ${cart.items}");
+                          showShoppingCartOverlay(context, cart);
+                        }
+
                       });
                       //messageList.reversed;
                       if (messageList.isNotEmpty && !messageList[messageList.length - 1].isUser) {
@@ -178,7 +202,7 @@ class _ChatWindowState extends State<ChatWindow> {
                   builder: (context, value, _) {
                     return AvatarGlow(
                       animate: value,
-                      glowColor: Colors.green,
+                      glowColor: Colors.purple,
                       child: FloatingActionButton(
                         onPressed:
                         // If not yet listening for speech start, otherwise stop
@@ -198,5 +222,31 @@ class _ChatWindowState extends State<ChatWindow> {
         ),
       ),
     );
+  }
+
+  void showShoppingCartOverlay(BuildContext context, Cart cart) {
+
+    overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: 130,
+        left: 500,
+        width: 600,
+        child: Container(
+          color: Colors.black.withOpacity(0.5), // Semi-transparent black background
+          child: ShoppingCartOverlay(
+            cart: cart,
+            onClose: () {
+              // Remove the overlay when the user closes the shopping cart
+              overlayEntry!.remove();
+            },
+          ),
+        ),
+      ),
+    );
+
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) {
+      Overlay.of(context).insert(overlayEntry!);
+    });
   }
 }
