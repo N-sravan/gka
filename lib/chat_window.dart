@@ -89,18 +89,23 @@ class _ChatWindowState extends State<ChatWindow> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: GestureDetector(
-          onTap: () async {
-            DatabaseReference ref = FirebaseDatabase.instance.ref("KFC/${widget.sessionId}");
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: GestureDetector(
+                onTap: () async {
+                  DatabaseReference ref = FirebaseDatabase.instance.ref("KFC/${widget.sessionId}");
 
-            await ref.set(null);
-            if (overlayEntry != null) {
-              overlayEntry!.remove();
-            }
-            tts.stop();
-            widget.finishSession(true);
-          },
-            child: const Icon(Icons.cancel)),
+                  await ref.set(null);
+                  if (overlayEntry != null) {
+                    overlayEntry!.remove();
+                  }
+                  tts.stop();
+                  widget.finishSession(true);
+                },
+                child: const Icon(Icons.cancel)),
+          )
+        ],
       ),
       body: Container(
         color: Colors.grey[100],
@@ -231,15 +236,12 @@ class _ChatWindowState extends State<ChatWindow> {
         top: 130,
         left: 500,
         width: 600,
-        child: Container(
-          color: Colors.black.withOpacity(0.5), // Semi-transparent black background
-          child: ShoppingCartOverlay(
-            cart: cart,
-            onClose: () {
-              // Remove the overlay when the user closes the shopping cart
-              overlayEntry!.remove();
-            },
-          ),
+        child: ShoppingCartOverlay(
+          cart: cart,
+          onClose: () {
+            // Remove the overlay when the user closes the shopping cart
+            overlayEntry!.remove();
+          },
         ),
       ),
     );

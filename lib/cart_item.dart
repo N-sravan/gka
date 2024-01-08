@@ -32,7 +32,6 @@ class Cart {
   factory Cart.fromJson(Map<String, dynamic> json) {
     List<CartItem> items = [];
     json.forEach((key, value) {
-      print("VALUEJFKDJFKD $value");
       items.add(CartItem.fromJson(value));
     });
 
