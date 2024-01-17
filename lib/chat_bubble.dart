@@ -34,7 +34,13 @@ class _ChatBubbleState extends State<ChatBubble> {
           children: [
             widget.isUser ? SizedBox() : Padding(
               padding: const EdgeInsets.only(right: 16.0),
-              child: Image.asset('assets/images/gka_profile_logo.png'),
+              child: SizedBox(
+                width: 48,
+                height: 48,
+                child: CircleAvatar(
+                  radius: 50,
+                    backgroundImage: AssetImage('assets/images/vani.png')),
+              ),
             ),
             Flexible(
               child: DecoratedBox(
@@ -55,7 +61,13 @@ class _ChatBubbleState extends State<ChatBubble> {
             ),
             widget.isUser ? Padding(
               padding: const EdgeInsets.only(left: 16.0),
-              child: Image.asset('assets/images/user_profile_pic.png'),
+              child: SizedBox(
+                height: 48,
+                width: 48,
+                child: CircleAvatar(
+                    radius: 50,
+                    backgroundImage: AssetImage('assets/images/user_profile_pic.png')),
+              ),
             ) : SizedBox()]
         ),
       ),

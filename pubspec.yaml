@@ -29,6 +29,8 @@ dependencies:
   text_to_speech: ^0.2.3
   http: ^1.1.2
   avatar_glow: ^3.0.1
+  livespeechtotext: ^1.0.9
+  flutter_speech: ^2.0.0
 
 dev_dependencies:
   flutter_test:

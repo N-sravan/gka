@@ -130,10 +130,10 @@ class ShoppingCartOverlay extends StatelessWidget {
             /// To remove extra padding
             visualDensity: const VisualDensity(
                 horizontal: 0, vertical: -4),
-            shape: RoundedRectangleBorder(
+            /*shape: RoundedRectangleBorder(
               side: BorderSide(color: Colors.white, width: 1),
               borderRadius: BorderRadius.zero,
-            ),
+            ),*/
             title: Text(
               "Total to Pay (Including All Taxes)",
               style: TextStyle(
@@ -143,9 +143,9 @@ class ShoppingCartOverlay extends StatelessWidget {
               ),
             ),
             trailing: Padding(
-              padding: const EdgeInsets.only(right: 28.0),
+              padding: const EdgeInsets.only(right: 33.0),
               child: Text(
-                "\$${totalAmount.toString()}",
+                "\$${totalAmount.toStringAsFixed(2)}",
                 style: TextStyle(
                     fontSize: 16.0,
                     fontWeight: FontWeight.bold,

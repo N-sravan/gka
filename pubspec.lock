@@ -142,6 +142,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.9.0"
+  flutter_speech:
+    dependency: "direct main"
+    description:
+      name: flutter_speech
+      sha256: d818e653b72516fd93bdb19731c98f3daf46d7990c77c4a84920a44830460a20
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.0"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -192,6 +200,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.1"
+  livespeechtotext:
+    dependency: "direct main"
+    description:
+      name: livespeechtotext
+      sha256: "5d8da7dd96ac754edc1c6f120560ce25db032363b212464576eb66a26e3d7d5b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.9"
   matcher:
     dependency: transitive
     description:
