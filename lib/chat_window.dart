@@ -26,7 +26,7 @@ class ChatWindow extends StatefulWidget {
 
 class _ChatWindowState extends State<ChatWindow> {
   var scrollControllerListView = ScrollController();
-  int counter = 1;
+  int prevChatLength = 0;
   TextToSpeech tts = TextToSpeech();
   // Create a transparent overlay to cover the whole screen
   OverlayEntry? overlayEntry;
@@ -45,19 +45,55 @@ class _ChatWindowState extends State<ChatWindow> {
 
   /// This has to happen only once per app
   void _initSpeech() async {
-    _speechEnabled = await _speechToText.initialize();
-    print("Available voices ${await tts.getVoice()}");
+
+
+    // Some UI or other code to select a locale from the list
+    // resulting in an index, selectedLocale
+
+    _speechEnabled = await _speechToText.initialize(
+      onError: (error) {
+        print("FLKJFJLJF ERROR");
+        _stopListening();
+      },
+
+      onStatus: (status) {
+        print("FLKJFJLJF STATUS ${status}");
+      },
+    );
+    //print("Available voices ${await tts.getVoice()}");
     print("Available languages ${await tts.getLanguages()}");
-    await tts.setLanguage("en-US");
+    await tts.setLanguage("hi-IN");
   }
 
   /// Each time to start a speech recognition session
   void _startListening() async {
+    var locales = await _speechToText.locales();
+    for (int i = 0; i < locales.length; i++) {
+      print("LOCALESDSD $i   ${locales[i].name}");
+    }
+    // 34 for hindi
+    // 55 for Spanish
+
+    // 23 for Ipad English
+    var selectedLocale = locales[9];
+
+    //for android tab english locale at 5
     print("_onSpeechResult_startListening");
-    await _speechToText.listen(partialResults: false, onResult: _onSpeechResult, pauseFor: Duration(seconds: 2));
+    try {
+      await _speechToText.listen(onSoundLevelChange: onSoundLevelChange,/* localeId: selectedLocale.localeId, */partialResults: false, onResult: _onSpeechResult, pauseFor: Duration(seconds: 3), listenFor : Duration(seconds: 15), cancelOnError: true);
+    } catch (e) {
+      print('EXCEPTIONKJSKFJK An exception occurred: $e');
+    }
+
+    print("_onSpeechResult_startListening aferfdf ${_speechToText.lastStatus}");
     bool active = _speechToText.isListening;
     tts.stop();
     listeningActive.value = active;
+  }
+
+  dynamic Function(double)? onSoundLevelChange(double value) {
+    print("onSoundLevelChange  $value");
+    return null;
   }
 
   /// Manually stop the active speech recognition session
@@ -77,9 +113,9 @@ class _ChatWindowState extends State<ChatWindow> {
     print("_onSpeechResult ${result.recognizedWords}");
     DatabaseReference ref = FirebaseDatabase.instance.ref("KFC/${widget.sessionId}");
 
-    await ref.child(DateTime.now().millisecondsSinceEpoch.toString()).set({
-        "isUser": true,
-        "message": result.recognizedWords
+    await ref.push().set({
+      "isUser": true,
+      "message": result.recognizedWords
     });
     bool active = _speechToText.isListening;
     listeningActive.value = active;
@@ -88,15 +124,15 @@ class _ChatWindowState extends State<ChatWindow> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        actions: [
+      /*appBar: AppBar(
+        *//*actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: GestureDetector(
                 onTap: () async {
                   DatabaseReference ref = FirebaseDatabase.instance.ref("KFC/${widget.sessionId}");
 
-                  await ref.set(null);
+                  await ref.set(null);`
                   if (overlayEntry != null) {
                     overlayEntry!.remove();
                   }
@@ -105,8 +141,8 @@ class _ChatWindowState extends State<ChatWindow> {
                 },
                 child: const Icon(Icons.cancel)),
           )
-        ],
-      ),
+        ],*//*
+      ),*/
       body: Container(
         color: Colors.grey[100],
         child: Column(
@@ -118,46 +154,45 @@ class _ChatWindowState extends State<ChatWindow> {
                   if (snapshot.hasData &&
                       snapshot.data != null) {
                     List<ChatBubble> messageList = [];
-                      var data = (snapshot.data! as DatabaseEvent)
-                          .snapshot
-                          .value ?? {};
-                      print("DATAFJLDLFHGLD $data");
-                      data = data as Map<dynamic, dynamic>;
+                    var data = (snapshot.data! as DatabaseEvent)
+                        .snapshot
+                        .value ?? {};
+                    print("DATAFJLDLFHGLD $data");
+                    data = data as Map<dynamic, dynamic>;
                     var sortedByKeyMap = Map.fromEntries(
                         data.entries.toList()..sort((e1, e2) => e1.key.compareTo(e2.key)));
-                      sortedByKeyMap.forEach((key, value) {
-                        if (key != "cart" ) {
-                          final datalast = Map<String, dynamic>.from(value);
-                          print("SORTED MESSAGES ${datalast['message']}");
-                          messageList.add(ChatBubble(
-                              text: datalast['message'],
-                              isUser: datalast['isUser']));
-                        } else {
-                          if (overlayEntry != null) {
-                            overlayEntry!.remove();
-                          }
-                          Cart cart = Cart.fromJson(jsonDecode(jsonEncode(value)));
-                          print("CARTITEMS  ${cart.items}");
-                          showShoppingCartOverlay(context, cart);
+                    sortedByKeyMap.forEach((key, value) {
+                      if (key != "cart" ) {
+                        final datalast = Map<String, dynamic>.from(value);
+                        print("SORTED MESSAGES ${datalast['message']}");
+                        messageList.add(ChatBubble(
+                            text: datalast['message'],
+                            isUser: datalast['isUser']));
+                      } else {
+                        if (overlayEntry != null) {
+                          overlayEntry!.remove();
                         }
-
+                        Cart cart = Cart.fromJson(jsonDecode(jsonEncode(value)));
+                        print("CARTITEMS  ${cart.items}");
+                        showShoppingCartOverlay(context, cart);
+                      }
+                    });
+                    //messageList.reversed;
+                    if (messageList.isNotEmpty && !messageList[messageList.length - 1].isUser && messageList.length > prevChatLength) {
+                      WidgetsBinding.instance
+                          .addPostFrameCallback((_) {
+                        showLoader.value = false;
                       });
-                      //messageList.reversed;
-                      if (messageList.isNotEmpty && !messageList[messageList.length - 1].isUser) {
-                        WidgetsBinding.instance
-                            .addPostFrameCallback((_) {
-                          showLoader.value = false;
-                            });
+                      tts.speak(messageList[messageList.length - 1].text);
+                    }
+                    prevChatLength = messageList.length;
 
-                        tts.speak(messageList[messageList.length - 1].text);
-                      }
-
-                      if (messageList.isNotEmpty && messageList[messageList.length - 1].isUser) {
-                        WidgetsBinding.instance
-                            .addPostFrameCallback((_) {
-                          showLoader.value = true;
-                        });
-                      }
+                    if (messageList.isNotEmpty && messageList[messageList.length - 1].isUser) {
+                      WidgetsBinding.instance
+                          .addPostFrameCallback((_) {
+                        showLoader.value = true;
+                      });
+                    }
                     return ListView.builder(
                       reverse: true,
                       physics: const AlwaysScrollableScrollPhysics(),
@@ -188,9 +223,9 @@ class _ChatWindowState extends State<ChatWindow> {
                   builder: (context, value, _) {
                     if (value) {
                       return SizedBox(
-                        height: 100,
+                          height: 100,
                           width: 100,
-                          child: Image.asset('assets/images/chat_loading.gif'));
+                          child: Image.asset('assets/images/chat_loading_burger.gif'));
                     }
                     return SizedBox() ;
                   },
@@ -233,9 +268,9 @@ class _ChatWindowState extends State<ChatWindow> {
 
     overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
-        top: 130,
-        left: 500,
-        width: 600,
+        top: 20,
+        left: 520,
+        width: 800,
         child: ShoppingCartOverlay(
           cart: cart,
           onClose: () {

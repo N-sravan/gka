@@ -29,12 +29,35 @@ dependencies:
   text_to_speech: ^0.2.3
   http: ^1.1.2
   avatar_glow: ^3.0.1
+  livespeechtotext: ^1.0.9
+  flutter_speech: ^2.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
   flutter_lints: ^2.0.0
+  flutter_flavorizr: ^2.2.1
+
+flavorizr:
+  flavors:
+    spanish:
+      app:
+        name: "Gka spanish"
+
+      android:
+        applicationId: "com.example.gka_spanish"
+      ios:
+        bundleId: "com.example.gka_spanish"
+
+    english:
+      app:
+        name: "Gka english"
+
+      android:
+        applicationId: "com.example.gka_english"
+      ios:
+        bundleId: "com.example.gka_english"
 
 flutter:
   uses-material-design: true

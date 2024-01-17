@@ -25,12 +25,16 @@ PODS:
     - leveldb-library (~> 1.22)
   - FirebaseSharedSwift (10.19.0)
   - Flutter (1.0.0)
+  - flutter_speech (0.0.1):
+    - Flutter
   - GoogleUtilities/Environment (7.12.0):
     - PromisesObjC (< 3.0, >= 1.2)
   - GoogleUtilities/Logger (7.12.0):
     - GoogleUtilities/Environment
   - "GoogleUtilities/NSData+zlib (7.12.0)"
   - leveldb-library (1.22.2)
+  - livespeechtotext (0.0.1):
+    - Flutter
   - PromisesObjC (2.3.1)
   - speech_to_text (0.0.1):
     - Flutter
@@ -43,6 +47,8 @@ DEPENDENCIES:
   - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
   - firebase_database (from `.symlinks/plugins/firebase_database/ios`)
   - Flutter (from `Flutter`)
+  - flutter_speech (from `.symlinks/plugins/flutter_speech/ios`)
+  - livespeechtotext (from `.symlinks/plugins/livespeechtotext/ios`)
   - speech_to_text (from `.symlinks/plugins/speech_to_text/ios`)
   - text_to_speech (from `.symlinks/plugins/text_to_speech/ios`)
 
@@ -66,6 +72,10 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/firebase_database/ios"
   Flutter:
     :path: Flutter
+  flutter_speech:
+    :path: ".symlinks/plugins/flutter_speech/ios"
+  livespeechtotext:
+    :path: ".symlinks/plugins/livespeechtotext/ios"
   speech_to_text:
     :path: ".symlinks/plugins/speech_to_text/ios"
   text_to_speech:
@@ -81,8 +91,10 @@ SPEC CHECKSUMS:
   FirebaseDatabase: ac770bf7525ff0340b105166037036c0e46c2c7e
   FirebaseSharedSwift: f34eeb7d3ea87a34497629b6ca41657beadef76a
   Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
+  flutter_speech: d3db868ad1b390b5f6ac7308ec09b6b608545c03
   GoogleUtilities: 0759d1a57ebb953965c2dfe0ba4c82e95ccc2e34
   leveldb-library: f03246171cce0484482ec291f88b6d563699ee06
+  livespeechtotext: 554d747665baa83e841438e88cf8ad7d2fafd8bc
   PromisesObjC: c50d2056b5253dadbd6c2bea79b0674bd5a52fa4
   speech_to_text: b43a7d99aef037bd758ed8e45d79bbac035d2dfe
   text_to_speech: 8669facdbd5b72d2939b810493defd991634f6f9

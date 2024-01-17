@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:ffi';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,12 +13,21 @@ import 'package:http/http.dart';
 import 'firebase_options.dart';
 import 'package:http/http.dart' as http;
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
+      options: FirebaseOptions(
+        apiKey: 'AIzaSyBMFHOuaBOHBt73rM8IvfVpWrnQ1fM7y1o',
+        appId: '1:298120067435:ios:54153991ecce35f2bf342e',
+        messagingSenderId: '298120067435',
+        projectId: 'gpt-drive-thru',
+        storageBucket: 'gpt-drive-thru.appspot.com',
+        iosBundleId: 'com.vassar.gka',
+      )
+    //options: DefaultFirebaseOptions.currentPlatform,
   );
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: []);
   runApp(const MyApp());
 }
 
@@ -60,16 +70,20 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: Text(widget.title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w500, color: Colors.black),),
+      appBar: PreferredSize(
+        preferredSize: const ui.Size.fromHeight(20),
+        child: AppBar(
+          centerTitle: true,
+          backgroundColor: Colors.white,
+          elevation: 0,
+          title: Text(widget.title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w500, color: Colors.black),),
+        ),
       ),
       body: Row(
         mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Image.asset('assets/images/kfc_menu.png'),
+          Image.asset('assets/images/drive_thru_menu.png'),
           const ChatWidget(),
         ],
       ),
@@ -134,14 +148,14 @@ class _ChatWidgetState extends State<ChatWidget> {
               isFirstTime = true;
             });
           }
-    }, sessionId: sessionId!,)
+        }, sessionId: sessionId!,)
     );
   }
 
   Future<String?> createSession() async {
     try {
-      String url =
-          'https://3330-196-12-47-4.ngrok-free.app/vassar_kfc_chatbot/create_session';
+      String url = "https://dashing-next-rat.ngrok-free.app/vassar_kfc_chatbot/create_session";
+      //String url = 'https://vani.vassardigital.ai/vassar_kfc_chatbot/create_session';
 
       Response response = await post(
           Uri.parse(url),
