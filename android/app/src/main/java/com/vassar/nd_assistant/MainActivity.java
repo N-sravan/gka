@@ -1,4 +1,4 @@
-package com.vassar.gka;
+package com.vassar.nd_assistant;
 
 import io.flutter.embedding.android.FlutterActivity;
 

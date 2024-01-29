@@ -62,7 +62,7 @@ class _ChatWindowState extends State<ChatWindow> {
     );
     //print("Available voices ${await tts.getVoice()}");
     print("Available languages ${await tts.getLanguages()}");
-    await tts.setLanguage("hi-IN");
+    await tts.setLanguage("en-US");
   }
 
   /// Each time to start a speech recognition session
@@ -75,7 +75,7 @@ class _ChatWindowState extends State<ChatWindow> {
     // 55 for Spanish
 
     // 23 for Ipad English
-    var selectedLocale = locales[34];
+    var selectedLocale = locales[5];
 
     //for android tab english locale at 5
     print("_onSpeechResult_startListening");
@@ -111,7 +111,7 @@ class _ChatWindowState extends State<ChatWindow> {
   /// the platform returns recognized words.
   Future<void> _onSpeechResult(SpeechRecognitionResult result) async {
     print("_onSpeechResult ${result.recognizedWords}");
-    DatabaseReference ref = FirebaseDatabase.instance.ref("KFC/${widget.sessionId}");
+    DatabaseReference ref = FirebaseDatabase.instance.ref("ND_ASSISTANT/${widget.sessionId}");
 
     await ref.push().set({
         "isUser": true,
@@ -149,7 +149,7 @@ class _ChatWindowState extends State<ChatWindow> {
           children: [
             Expanded(
               child: StreamBuilder(
-                stream: FirebaseDatabase.instance.ref("KFC/${widget.sessionId}").onValue,
+                stream: FirebaseDatabase.instance.ref("ND_ASSISTANT/${widget.sessionId}").onValue,
                 builder: (context, AsyncSnapshot snapshot) {
                   if (snapshot.hasData &&
                       snapshot.data != null) {
@@ -225,7 +225,7 @@ class _ChatWindowState extends State<ChatWindow> {
                       return SizedBox(
                         height: 100,
                           width: 100,
-                          child: Image.asset('assets/images/chat_loading_burger.gif'));
+                          child: Image.asset('assets/images/chat_loading_medico.gif'));
                     }
                     return SizedBox() ;
                   },

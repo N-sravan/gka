@@ -39,8 +39,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const ScreenUtilInit(
       child: MaterialApp(
-        title: 'GPT Drive-Thru',
-        home: MyHomePage(title: 'GPT Drive-Thru'),
+        title: 'NurseDaisy Assistant',
+        home: MyHomePage(title: 'NurseDaisy Assistant'),
       ),
     );
   }
@@ -83,7 +83,7 @@ class _MyHomePageState extends State<MyHomePage> {
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Image.asset('assets/images/drive_thru_menu.png'),
+          Image.asset('assets/images/nurse.jpg'),
           const ChatWidget(),
         ],
       ),
@@ -115,15 +115,15 @@ class _ChatWidgetState extends State<ChatWidget> {
             SizedBox(
                 width: 200,
                 height: 200,
-                child: Image.asset('assets/images/gka_logo.png')),
-            const Padding(
+                child: Image.asset('assets/images/buds1.png')),
+            /*const Padding(
               padding: EdgeInsets.only(top: 10.0),
               child: Text("Please place your order!", style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: Colors.black),),
             ),
             const Padding(
               padding: EdgeInsets.only(top: 8.0),
               child: Text("Your Voice, Your Order, Your Way!", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400, color: Colors.black),),
-            ),
+            ),*/
             SizedBox(
               width: 104,
               height: 104,
@@ -154,7 +154,8 @@ class _ChatWidgetState extends State<ChatWidget> {
 
   Future<String?> createSession() async {
     try {
-      String url = "https://dashing-next-rat.ngrok-free.app/vassar_kfc_chatbot/create_session";
+      String url = "https://dashing-next-rat.ngrok-free.app/nd_assistant_chatbot/create_session";
+      //String url = "https://weekly-tender-bluegill.ngrok-free.app/vassar_kfc_chatbot/create_session";
       //String url = 'https://vani.vassardigital.ai/vassar_kfc_chatbot/create_session';
 
       Response response = await post(
