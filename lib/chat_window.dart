@@ -225,7 +225,7 @@ class _ChatWindowState extends State<ChatWindow> {
                       return SizedBox(
                         height: 100,
                           width: 100,
-                          child: Image.asset('assets/images/chat_loading_medico.gif'));
+                          child: Image.asset('assets/images/response_bubble.gif'));
                     }
                     return SizedBox() ;
                   },
