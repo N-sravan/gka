@@ -1,4 +1,4 @@
-package com.vassar.nd_assistant;
+package com.vassar.apwrimschatbot;
 
 import io.flutter.embedding.android.FlutterActivity;
 

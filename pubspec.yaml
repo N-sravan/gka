@@ -6,7 +6,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.1.5 <4.0.0'
+  sdk: '>=3.2.0 <4.0.0'
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -27,10 +27,33 @@ dependencies:
   firebase_core: ^2.24.2
   firebase_database: ^10.3.8
   text_to_speech: ^0.2.3
+  flutter_tts: ^3.0.1
   http: ^1.1.2
   avatar_glow: ^3.0.1
   livespeechtotext: ^1.0.9
   flutter_speech: ^2.0.0
+  uuid: ^4.3.3
+  workmanager: ^0.5.2
+  permission_handler: ^9.1.0
+  notification_permissions: ^0.6.1
+  firebase_messaging: ^14.6.9
+  flutter_local_notifications: ^16.3.2
+#  flutter_background_service: ^5.0.5
+  flutter_background_service: ^2.4.6
+  shared_preferences: ^2.2.2
+  device_info_plus: ^9.1.2
+  fluttertoast : ^8.1.1
+  path_provider: ^2.0.15
+  image_picker: ^0.8.6
+  flutter_native_image: ^0.0.6
+  connectivity_plus: ^4.0.0
+  firebase_storage: ^11.6.8
+  provider: ^6.0.5
+  flutter_secure_storage: ^8.0.0
+  jwt_decoder: ^2.0.1
+  event_bus: ^2.0.0
+  get_it: ^7.6.0
+#  transliteration: ^0.0.5
 
 dev_dependencies:
   flutter_test:

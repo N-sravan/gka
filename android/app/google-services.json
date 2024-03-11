@@ -1,22 +1,22 @@
 {
   "project_info": {
-    "project_number": "298120067435",
-    "firebase_url": "https://gpt-drive-thru-default-rtdb.firebaseio.com",
-    "project_id": "gpt-drive-thru",
-    "storage_bucket": "gpt-drive-thru.appspot.com"
+    "project_number": "1062998944432",
+    "firebase_url": "https://apwrims---chatbot-default-rtdb.firebaseio.com",
+    "project_id": "apwrims---chatbot",
+    "storage_bucket": "apwrims---chatbot.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:298120067435:android:e42d862fd74cf345bf342e",
+        "mobilesdk_app_id": "1:1062998944432:android:183b1324072b14def22975",
         "android_client_info": {
-          "package_name": "com.vassar.gka"
+          "package_name": "com.vassar.apwrimschatbot"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDyyxZ1SI-Hqk9zqT_x1x61rvS1zpQXjw0"
+          "current_key": "AIzaSyAyiFb_LYf7vgGvENVaycJo7nud4gfrjxU"
         }
       ],
       "services": {
