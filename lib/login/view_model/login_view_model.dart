@@ -49,8 +49,8 @@ class LoginViewModel extends LoadingViewModel {
 
         if (loginResult.statusCode == 200 && loginResult.accessToken != null) {
           /// Login is successful
-          String? fcmToken = await FirebaseMessaging.instance.getToken();
-          print("token::${fcmToken}");
+          // String? fcmToken = await FirebaseMessaging.instance.getToken();
+          // print("token::${fcmToken}");
           Map<String, dynamic> decodedToken =
               JwtDecoder.decode(loginResult.accessToken!);
           String userId = decodedToken["sub"];

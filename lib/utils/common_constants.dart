@@ -58,7 +58,8 @@ const String appIcon = 'assets/images/flutter_logo.png';
 const String baseUrl = 'https://keralakrishistack.vassarlabs.com/';
 // const String baseUrl = 'https://agriwise.vassarlabs.com/';
 // const String krishidsBaseUrl = 'http://acerkrishidss.vassarlabs.com/staging/api';
-const String krishidsBaseUrl = 'https://agriwise.vassarlabs.com/staging/api';
+// const String krishidsBaseUrl = 'https://agriwise.vassarlabs.com/staging/api';
+const String imageUploadUrl = 'https://agriwise.vassarlabs.com/agribot/bucket/insert_file';
 const String geoJsonSurveyPointsUrl ='http://acerkrishidss.vassarlabs.com/geoserver/krishidss/wms?service=WMS&version=1.1.0&request=GetMap&layers=krishidss%3Atemp_farm_meta_data&bbox=-180.0%2C-90.0%2C180.0%2C90.0&width=768&height=384&format=geojson&cql_filter=';
 /*const String krishidsBaseUrl =
     'http://agriwise.vassarlabs.com/api';*/    //-
@@ -72,7 +73,7 @@ const String userPermissionsEndPoint = 'um/user-permissions/';
 const String submittedImageBaseUrl =
     'http://acerkrishidss.vassarlabs.com/pa/images/';
 const String submittedImagePath = '/pictorialAnalysisData/rawImages/';
-const String submitFarmerImageEndPoint = '/pictorialAnalysisData/rawImages/';
+const String submitImageEndPoint = '/pictorialAnalysisData/rawImages/';
 
 
 //UUIDs & keys
@@ -827,7 +828,7 @@ enum CropNameVerifyRadioOptions {agree, disagree}
 
 //Role Names
 const String aoRoleName = "Agricultural Officer";
-const String ngrok = "https://3356-196-12-47-4.ngrok-free.app/vassar/create_session";
+const String ngrok = "https://79f3-196-12-47-4.ngrok-free.app/vassar/create_session";
 
 const int ownerCultivator = 1;
 const int ownerCultivatorCumTenant = 2;

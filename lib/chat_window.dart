@@ -158,9 +158,27 @@ class _ChatWindowState extends State<ChatWindow> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
+    return WillPopScope(
+      onWillPop: () async {
+        bool? result = await showSessionDialog();
+        if(result !=null && result){
+          Navigator.pop(context);
+        }
+        return false;
+      },
       child: Scaffold(
+        appBar: AppBar(
+          centerTitle: true,
+          backgroundColor: Colors.white,
+          elevation: 0,
+          title: const Text(
+            'AgriBot',
+            style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w500,
+                color: Colors.black),
+          ),
+        ),
         body: Container(
           color: Colors.grey[100],
           child: Column(
@@ -183,7 +201,10 @@ class _ChatWindowState extends State<ChatWindow> {
                           print("SORTED MESSAGES ${datalast['message']}");
                           messageList.add(ChatBubble(
                               text: datalast['message'],
-                              isUser: datalast['isUser']));
+                              isUser: datalast['isUser'],
+                              imageUrl: datalast['mediaUrl'],
+                          )
+                          );
                         }
                       });
                       //messageList.reversed;
@@ -202,12 +223,12 @@ class _ChatWindowState extends State<ChatWindow> {
                           showLoader.value = true;
                         });
 
-                        Timer(const Duration(seconds: 5), () {
+                        Timer(const Duration(seconds: 3), () {
                           if (showLoader.value) {
                             tts.speak("Please wait, while we are fetching ${messageList[messageList.length - 1].text}");
                           }
                         });
-                          // tts.speak("Please wait,while we are fetching ${messageList[messageList.length - 1].text}");
+                        // tts.speak("Please wait,while we are fetching ${messageList[messageList.length - 1].text}");
                       }
                       return ListView.builder(
                         reverse: true,
@@ -249,7 +270,7 @@ class _ChatWindowState extends State<ChatWindow> {
                   ),
                 ),
               ),
-              Padding(
+             /* Padding(
                 padding: const EdgeInsets.only(bottom: 30.0),
                 child: Align(
                   alignment: Alignment.bottomCenter,
@@ -261,8 +282,8 @@ class _ChatWindowState extends State<ChatWindow> {
                         glowColor: Colors.purple,
                         child: FloatingActionButton(
                           onPressed:
-                              // If not yet listening for speech start, otherwise stop
-                              !value ? _startListening : _stopListening,
+                          // If not yet listening for speech start, otherwise stop
+                          !value ? _startListening : _stopListening,
                           tooltip: 'Listen',
                           child: Icon(!value ? Icons.mic_off : Icons.mic),
                         ),
@@ -270,11 +291,11 @@ class _ChatWindowState extends State<ChatWindow> {
                     },
                   ), // your widget would go here
                 ),
-              ),
-             /* Padding(
+              ),*/
+               Padding(
                 padding: const EdgeInsets.all(20),
                 child: bottomBar(),
-              )*/
+              )
             ],
           ),
         ),
@@ -346,12 +367,17 @@ class _ChatWindowState extends State<ChatWindow> {
                           color: Color(0xFF4BA164),
                         ),
                         onPressed: () async {
+                          addUserUploadedImageToChat();
+                          addUserMessageToChat(chatController.text);
                           print("capturedPhoto::$capturedPhoto");
                           if(chatController.text.isEmpty){
                             Fluttertoast.showToast(msg: "Please enter your question.");
+                          } else {
+                            String? imageUrl = await submitImage(
+                                context, capturedPhoto!.path);
+                            insertImageDataIntoDb(
+                                imageUrl, chatController.text);
                           }
-                          submitFarmerPhoto(context,capturedPhoto!.path);
-                          chatController.clear();
                         },
                       ),
                     ),
@@ -425,9 +451,9 @@ class _ChatWindowState extends State<ChatWindow> {
   saveCapturedPhoto(XFile photo) {
     capturedPhoto = File(photo.path);
     setState(() {});
-    if (capturedPhoto != null) {
+    /*if (capturedPhoto != null) {
       updateChatControllerWithPhotoName(photo.name);
-    }
+    }*/
   }
 
   updateChatControllerWithPhotoName(String name) {
@@ -435,11 +461,11 @@ class _ChatWindowState extends State<ChatWindow> {
     setState(() {});
   }
 
-  createQueryString() {
+ /* createQueryString() {
     queryString = chatController.text;
     chatController.clear();
     setState(() {});
-  }
+  }*/
 
   addUserUploadedImageToChat() {
     MessageBubble messageBubble = MessageBubble(
@@ -450,11 +476,11 @@ class _ChatWindowState extends State<ChatWindow> {
       isTextToSpeechRunning: false,
     );
     chatMessages.add(messageBubble);
-    chatController.clear();
+    // chatController.clear();
     setState(() {});
   }
 
-  Future uploadImage() async {
+  /*Future uploadImage() async {
     MessageBubble messageBubble = MessageBubble(
       user: false,
       textToSpeechEnabled: false,
@@ -508,9 +534,9 @@ class _ChatWindowState extends State<ChatWindow> {
       Fluttertoast.showToast(
           msg: 'Please check your network connection, no internet available');
     }
-  }
+  }*/
 
-  initAndPlayText() async {
+  /*initAndPlayText() async {
     int? playStatus;
     String language = "en-US";
     TextToSpeechService.instance
@@ -522,7 +548,7 @@ class _ChatWindowState extends State<ChatWindow> {
       textToSpeechMessageBubble!.isTextToSpeechRunning = false;
       setState(() {});
     }
-  }
+  }*/
 
   addUserMessageToChat(String message) {
     MessageBubble messageBubble = MessageBubble(
@@ -536,30 +562,62 @@ class _ChatWindowState extends State<ChatWindow> {
     setState(() {});
   }
 
-  Future<bool?> submitFarmerPhoto(BuildContext context, String imagePath) async {
-      if (await networkUtils.hasActiveInternet()) {
-        try {
-          Map<String, String> params = {};
-            params = {
-              'appUUID': constants.appUUID,
-              'farmerUUID': '48984q',
-              'src': 'MOBILE_APP',
-              // 'imageLabel': '${AppState.instance.farmerUUID}_$farmerName.png',
-              'imageLocType': 'VILLAGE',
-          };
-          bool result = await ApiProvider.instance.submitFarmerImage(params, imagePath);
-          return result;
-        } catch (e) {
-          Fluttertoast.showToast(
-              msg: constants.genericErrorMsg, toastLength: Toast.LENGTH_LONG);
+  Future<String?> submitImage(BuildContext context, String imagePath) async {
+    if (await networkUtils.hasActiveInternet()) {
+      try {
+        Map<String, String> params = {};
+        params = {
+          "bucket_name" : "crop_bucket"
+        };
+        String? url = await ApiProvider.instance.submitImage(params, imagePath);
+        if(url!=null && url.isNotEmpty){
+          return url;
         }
-      } else {
-        Navigator.pop(context);
+      } catch (e) {
         Fluttertoast.showToast(
-            msg: constants.noNetworkAvailability, toastLength: Toast.LENGTH_LONG);
+            msg: constants.genericErrorMsg, toastLength: Toast.LENGTH_LONG);
       }
-      setState(() {
-      });
-      return null;
+    } else {
+      Navigator.pop(context);
+      Fluttertoast.showToast(
+          msg: constants.noNetworkAvailability, toastLength: Toast.LENGTH_LONG);
     }
+    setState(() {
+    });
+    return null;
+  }
+
+  showSessionDialog() {
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Do you want to end the session?',style: constants.black16W500,),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false); // Pop the dialog and return false
+              },
+              child: Text('No'),
+            ),
+            TextButton(
+              onPressed: () async {
+                // bool? result = await viewModel.endSession();
+                Navigator.of(context).pop(true); // Pop the dialog and return true
+              },
+              child: const Text('Yes'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> insertImageDataIntoDb(String? imageUrl, String text) async {
+    DatabaseReference ref = FirebaseDatabase.instance.ref("CHAT_BOT_WEATHER/${widget.sessionId}");
+    await ref.push().set({"isUser": true, "message": text, "mediaUrl" : imageUrl});
+    chatController.clear();
+    capturedPhoto = null;
+    setState(() {});
+  }
 }

@@ -37,11 +37,11 @@ class ApiProvider {
     return userPermissionsResult;
   }
 
-  Future<bool> submitFarmerImage(data,imagePath) async {
-    String submissionUrl = '${constants.krishidsBaseUrl}${constants.submitFarmerImageEndPoint}';
+  Future<String?> submitImage(data,imagePath) async {
+    String submissionUrl = constants.imageUploadUrl;
     Map<String, String> headersMap = {
       'Content-Type': constants.headerJson,
-      "endpoints": constants.submitFarmerImageEndPoint
+      "endpoints": constants.headerMultipart
     };
 
     var request = http.MultipartRequest('POST', Uri.parse(submissionUrl));
@@ -57,7 +57,7 @@ class ApiProvider {
       var stream = http.ByteStream(compressedFile.openRead());
       var length = await compressedFile.length();
       var multipartFile = http.MultipartFile(
-        'image', // Field name in the API endpoint
+        'file', // Field name in the API endpoint
         stream,
         length,
         filename: imagePath.split('/').last,
@@ -68,7 +68,7 @@ class ApiProvider {
       var stream = http.ByteStream(imageFile.openRead());
       var length = await imageFile.length();
       var multipartFile = http.MultipartFile(
-        'image', // Field name in the API endpoint
+        'file', // Field name in the API endpoint
         stream,
         length,
         filename: imageFile.path.split('/').last,
@@ -80,14 +80,14 @@ class ApiProvider {
     var response = await request.send();
     var responseString = await response.stream.bytesToString();
     dynamic finalRes = json.decode(responseString);
-    if(finalRes["result"]) {
+    if(finalRes["message"] == "File uploaded successfully") {
       print("IMAGE SUBMISSION SUCCESS");
-      return true;
+      return finalRes["url"];
     }
     else {
       // Fluttertoast.showToast(
       //     msg: constants.genericErrorMsg, toastLength: Toast.LENGTH_LONG);
-      return false;
+      return null;
     }
   }
 }

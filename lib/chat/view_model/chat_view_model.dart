@@ -22,7 +22,7 @@ class ChatViewModel extends ChangeNotifier {
       );
       if (response.statusCode == 200) {
         print("sessionId:: ${jsonDecode(response.body)["session_id"]}");
-        String sessionId = jsonDecode(response.body)["session_id"];
+        sessionId = jsonDecode(response.body)["session_id"];
         isFirstTime = false;
         notifyListeners();
         return sessionId;
