@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'dart:developer' as developer;
+import 'package:flutter/cupertino.dart';
+
 import 'app_state.dart';
 import 'package:flutter/services.dart';
 import 'common_constants.dart' as constants;
@@ -109,6 +111,22 @@ class Util {
         }
       }
     }
+  }
+
+
+  AnimatedSwitcher iconSwitcher(IconData icon1, Color icon1Color, IconData icon2, Color icon2Color, bool switchIcon) {
+    return AnimatedSwitcher(
+        duration: const Duration(milliseconds: 350),
+        transitionBuilder: (child, anim) => FadeTransition(
+          opacity: child.key == const ValueKey('icon1')
+              ? Tween<double>(begin: 1, end: 1).animate(anim)
+              : Tween<double>(begin: 1, end: 1).animate(anim),
+          child: ScaleTransition(scale: anim, child: child),
+        ),
+        child: switchIcon == false
+            ? Icon(icon1, key: const ValueKey('icon1'), color: icon1Color)
+            : Icon(icon2, key: const ValueKey('icon2'), color: icon2Color)
+    );
   }
 
 }

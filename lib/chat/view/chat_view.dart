@@ -21,56 +21,45 @@ class ChatView extends StatelessWidget {
       ),
       body: Consumer<ChatViewModel>(
         builder: (_, model, child) {
-          return Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Center(
-                    child: SizedBox(
-                      width: 104,
-                      height: 104,
-                      child: GestureDetector(
-                        onTap: () async {
-                          final viewModel = Provider.of<ChatViewModel>(
-                              context,
-                              listen: false);
-                          await viewModel.createSession(userData);
-                          if (viewModel.sessionId != null) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ChatWindow(
-                                  isFirstTime: viewModel.isFirstTime,
-                                  finishSession: (bool finishSession) {
-                                    if (finishSession) {
-                                      viewModel.updateFirstTimeValue();
-                                    }
-                                  },
-                                  sessionId: viewModel.sessionId!,
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 16.0),
-                          child: Image.asset('assets/images/mic.png'),
-                        ),
-                      ),
-                    ),
-                  )
-                ],
-              )
-            /* : ChatWindow(
-                    isFirstTime: model.isFirstTime,
-                    finishSession: (bool finishSession) {
-                      if (finishSession) {
-                        model.updateFirstTimeValue();
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Center(
+                child: SizedBox(
+                  width: 104,
+                  height: 104,
+                  child: GestureDetector(
+                    onTap: () async {
+                      final viewModel = Provider.of<ChatViewModel>(
+                          context,
+                          listen: false);
+                      await viewModel.createSession(userData);
+                      if (viewModel.sessionId != null) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ChatWindow(
+                              isFirstTime: viewModel.isFirstTime,
+                              finishSession: (bool finishSession) {
+                                if (finishSession) {
+                                  viewModel.updateFirstTimeValue();
+                                }
+                              },
+                              sessionId: viewModel.sessionId!,
+                            ),
+                          ),
+                        );
                       }
                     },
-                    sessionId: model.sessionId!,
-                  ),*/
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 16.0),
+                      child: Image.asset('assets/images/mic.png'),
+                    ),
+                  ),
+                ),
+              )
+            ],
           );
         },
       ),

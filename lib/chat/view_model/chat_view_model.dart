@@ -3,6 +3,7 @@ import 'package:http/http.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
+import 'package:uuid/uuid.dart';
 import '../../login/model/department_user_permission_response.dart' as response;
 
 class ChatViewModel extends ChangeNotifier {
@@ -33,6 +34,11 @@ class ChatViewModel extends ChangeNotifier {
       Fluttertoast.showToast(msg: "Couldn't create Session");
       print("Error Stacktrace $error $stacktrace");
     }
+  /*  String uuid = const Uuid().v4();
+    sessionId = uuid;
+    isFirstTime = true;
+    notifyListeners();
+    return uuid;*/
     return null;
   }
 

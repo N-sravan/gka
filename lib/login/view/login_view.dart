@@ -4,9 +4,9 @@ import 'package:provider/provider.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 import '../../utils/network_utils.dart';
 import '../view_model/login_view_model.dart';
+import '../../login/model/department_user_permission_response.dart' as response;
 
 class LoginScreenWidget extends StatefulWidget {
-
   const LoginScreenWidget({super.key});
 
   @override
@@ -19,11 +19,62 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
   late bool _passwordVisible;
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  response.Meta data = response.Meta(
+    userId: "b7a7ca67-6fd3-4f2e-97c6-b9b84fdbd7da",
+    username: "kerala_ao",
+    firstName: "Aswin",
+    lastName: "Kumar",
+    email: "keralaao@gmail.com",
+    mobileNo: "+919889786767",
+    userDetails: response.UserDetails(
+      data: response.Data(
+          locType: "Panchayat",
+          location: response.Location(country: [
+            response.Country(
+                countryName: "INDIA",
+                countryUUID: "d6b37905-d2d3-4275-9317-d9b6f47cd783",
+                state: [
+                  response.State(
+                      stateName: "KERALA",
+                      stateUUID: "62d3dc99-5bc3-4303-8be1-d4fa1f7deee5",
+                      district: [
+                        response.District(
+                            districtName: "Palakkad",
+                            districtUUID:
+                                "1270f554-20cc-43ee-803e-1532f00e047c",
+                            block: [
+                              response.Block(
+                                  blockName: "Sreekrishnapuram",
+                                  blockUUID:
+                                      "db64691f-a7de-4e88-b5af-ecbe4dc6d191",
+                                  panchayat: [
+                                    response.Panchayat(
+                                        panchayatName: "Karimpuzha",
+                                        panchayatUUID:
+                                            "0ec4c732-5db9-4a3e-896a-f7baf24b2966")
+                                  ])
+                            ])
+                      ])
+                ])
+          ])),
+      scope: null,
+    ),
+    createdTs: null,
+    updatedTs: null,
+    lastLoginTs: "2024-03-11T10:45:55.398+00:00",
+    status: true,
+    title: null,
+    customerId: "931e0a8e-54e9-49f4-87db-d6e1fe350432",
+    customerName: "keralacustomer",
+    customAttributes: null,
+  );
 
   @override
   void initState() {
     super.initState();
     viewModel = Provider.of<LoginViewModel>(context, listen: false);
+    _usernameController.text = "kerala_ao";
+    _passwordController.text = "agri123";
     WidgetsBinding.instance.addPostFrameCallback((_) {
       /// This will start tracking the current network status and give us
       /// information on the current status of the internet connection
@@ -51,11 +102,12 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                     Expanded(
                       child: SingleChildScrollView(
                         child: Padding(
-                          padding: const EdgeInsets.all(constants.mediumPadding),
+                          padding:
+                              const EdgeInsets.all(constants.mediumPadding),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                             /* GestureDetector(
+                              /* GestureDetector(
                                   onTap: () {
                                     if (!model.isLoading) {
                                       Navigator.of(context).pop();
@@ -100,20 +152,20 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                     constants.mediumPadding),
                                 child: Container(
                                   decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10.0), // Set your desired border radius
-                                    color: constants.inputFieldColor, // Background color
+                                    borderRadius: BorderRadius.circular(10.0),
+                                    // Set your desired border radius
+                                    color: constants
+                                        .inputFieldColor, // Background color
                                   ),
                                   child: TextFormField(
                                     keyboardType: TextInputType.text,
                                     autovalidateMode:
                                         AutovalidateMode.onUserInteraction,
                                     controller: _usernameController,
-                                    style:const TextStyle(
-                                      color: Colors.black
-                                    ),
+                                    style: const TextStyle(color: Colors.black),
                                     decoration: InputDecoration(
                                       filled: true,
-                                      fillColor:Colors.transparent,
+                                      fillColor: Colors.transparent,
                                       hintText: constants.enterUserName,
                                       hintStyle: constants.grey16W400,
                                       focusedBorder: InputBorder.none,
@@ -146,8 +198,10 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                     constants.mediumPadding),
                                 child: Container(
                                   decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10.0), // Set your desired border radius
-                                    color: constants.inputFieldColor, // Background color
+                                    borderRadius: BorderRadius.circular(10.0),
+                                    // Set your desired border radius
+                                    color: constants
+                                        .inputFieldColor, // Background color
                                   ),
                                   child: TextFormField(
                                     autovalidateMode:
@@ -158,30 +212,31 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                     autocorrect: false,
                                     style: const TextStyle(color: Colors.black),
                                     decoration: InputDecoration(
-                                      filled: true,
-                                      fillColor:Colors.transparent,
-                                      hintText: constants.enterPassword,
-                                      hintStyle: constants.grey16W400,
-                                      suffixIcon: IconButton(
-                                        icon: Icon(
-                                          _passwordVisible
-                                              ? Icons.visibility
-                                              : Icons.visibility_off,
-                                          color: Colors.grey,
+                                        filled: true,
+                                        fillColor: Colors.transparent,
+                                        hintText: constants.enterPassword,
+                                        hintStyle: constants.grey16W400,
+                                        suffixIcon: IconButton(
+                                          icon: Icon(
+                                            _passwordVisible
+                                                ? Icons.visibility
+                                                : Icons.visibility_off,
+                                            color: Colors.grey,
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              _passwordVisible =
+                                                  !_passwordVisible;
+                                            });
+                                          },
                                         ),
-                                        onPressed: () {
-                                          setState(() {
-                                            _passwordVisible = !_passwordVisible;
-                                          });
-                                        },
-                                      ),
-                                      enabledBorder:InputBorder.none,
-                                      focusedBorder: InputBorder.none,
-                                     errorBorder: const UnderlineInputBorder(borderSide: BorderSide.none),
-                                      errorStyle: const TextStyle(
-                                        color: Colors.redAccent,
-                                      )
-                                    ),
+                                        enabledBorder: InputBorder.none,
+                                        focusedBorder: InputBorder.none,
+                                        errorBorder: const UnderlineInputBorder(
+                                            borderSide: BorderSide.none),
+                                        errorStyle: const TextStyle(
+                                          color: Colors.redAccent,
+                                        )),
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
                                         return constants.emptyPasswordErrorMsg;
@@ -203,48 +258,49 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                       padding: const EdgeInsets.all(constants.mediumPadding),
                       child: model.isLoading
                           ? const Padding(
-                        padding: EdgeInsets.fromLTRB(
-                            0.0,
-                            constants.largePadding,
-                            0.0,
-                            constants.mediumPadding),
-                        child: CircularProgressIndicator(
-                          color: Colors.black,
-                        ),
-                      )
+                              padding: EdgeInsets.fromLTRB(
+                                  0.0,
+                                  constants.largePadding,
+                                  0.0,
+                                  constants.mediumPadding),
+                              child: CircularProgressIndicator(
+                                color: Colors.black,
+                              ),
+                            )
                           : Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                            0.0,
-                            constants.largePadding,
-                            0.0,
-                            constants.mediumPadding),
-                        child: SizedBox(
-                          width: MediaQuery.of(context).size.width,
-                          height: constants.buttonHeight,
-                          child: ElevatedButton(
-                            onPressed: () async {
-                              if (_formKey.currentState!
-                                  .validate()) {
-                                /// Data entered in the form is valid, continue to login
-                                String userId =
-                                    _usernameController.text;
-                                String password =
-                                    _passwordController.text;
-                                viewModel.authenticate(
-                                    userId, password, context);
-                             /*   Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => const HomeScreenWidget()));*/
-                              }
-                            },
-                            style: constants.buttonStyle,
-                            child: Text(
-                              constants.loginString,
-                              style: constants.white16W500,
+                              padding: const EdgeInsets.fromLTRB(
+                                  0.0,
+                                  constants.largePadding,
+                                  0.0,
+                                  constants.mediumPadding),
+                              child: SizedBox(
+                                width: MediaQuery.of(context).size.width,
+                                height: constants.buttonHeight,
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    if (_formKey.currentState!.validate()) {
+                                      /// Data entered in the form is valid, continue to login
+                                      String userId = _usernameController.text;
+                                      String password =
+                                          _passwordController.text;
+                                      /*  viewModel.authenticate(
+                                          userId, password, context);*/
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  HomeScreenWidget(
+                                                      data: data)));
+                                    }
+                                  },
+                                  style: constants.buttonStyle,
+                                  child: Text(
+                                    constants.loginString,
+                                    style: constants.white16W500,
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                      ),
                     ),
                   ],
                 ),

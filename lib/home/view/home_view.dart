@@ -19,7 +19,8 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
   void initState() {
     data = widget.data;
     SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp
+      DeviceOrientation.landscapeRight, // Set landscape orientation
+      DeviceOrientation.landscapeLeft,
     ]);
     super.initState();
   }

@@ -44,7 +44,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                   ),
                 ),
               ),
-            if (widget.imageUrl != null)
+           widget.imageUrl != null && widget.imageUrl!.isNotEmpty ?
               Padding(
                 padding: const EdgeInsets.only(right: 8.0),
                 child: SizedBox(
@@ -58,7 +58,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                     ),
                   ),
                 ),
-              ),
+              ): SizedBox(),
             Flexible(
               child: DecoratedBox(
                 decoration: BoxDecoration(

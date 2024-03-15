@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'package:avatar_glow/avatar_glow.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -18,15 +17,16 @@ import 'package:speech_to_text/speech_to_text.dart';
 import 'package:text_to_speech/text_to_speech.dart';
 import 'dart:developer' as developer;
 import 'camera_screen.dart';
+import 'chat/view/speech_to_text.dart';
 import 'message_bubble.dart';
 import 'utils/network_utils.dart';
 
 class ChatWindow extends StatefulWidget {
   const ChatWindow(
       {Key? key,
-        required this.isFirstTime,
-        required this.finishSession,
-        required this.sessionId})
+      required this.isFirstTime,
+      required this.finishSession,
+      required this.sessionId})
       : super(key: key);
 
   final bool isFirstTime;
@@ -50,6 +50,7 @@ class _ChatWindowState extends State<ChatWindow> {
   List<MessageBubble> chatMessages = [];
   TextToSpeechService? textToSpeechService;
   MessageBubble? textToSpeechMessageBubble;
+  String summaryData="";
 
   // Create a transparent overlay to cover the whole screen
   OverlayEntry? overlayEntry;
@@ -98,12 +99,21 @@ class _ChatWindowState extends State<ChatWindow> {
 
     //for android tab english locale at 5
     print("_onSpeechResult_startListening");
+    SpeechRecognitionResult result;
     try {
       await _speechToText.listen(
           onSoundLevelChange: onSoundLevelChange,
           /*localeId: selectedLocale.localeId,*/
           partialResults: false,
           onResult: _onSpeechResult,
+          /*   onResult: (data) async {
+            result = data;
+            if (result.recognizedWords.toLowerCase() == 'summarize') {
+              _onSummarizeResult(data);
+            } else {
+              _onSpeechResult(data);
+            }
+          },*/
           pauseFor: const Duration(seconds: 3),
           listenFor: const Duration(seconds: 15),
           cancelOnError: true);
@@ -138,12 +148,15 @@ class _ChatWindowState extends State<ChatWindow> {
   Future<void> _onSpeechResult(SpeechRecognitionResult result) async {
     print("_onSpeechResult ${result.recognizedWords}");
     DatabaseReference ref =
-    FirebaseDatabase.instance.ref("CHAT_BOT_WEATHER/${widget.sessionId}");
+        FirebaseDatabase.instance.ref("CHAT_BOT_WEATHER/${widget.sessionId}");
 
     // TransliterationResponse? response = await Transliteration.transliterate(result.recognizedWords, Languages.TELUGU);
     // final translatedText =response?.transliterationSuggestions[0].toString();
     // print("translated::$translatedText");
     await ref.push().set({"isUser": true, "message": result.recognizedWords});
+    // if(result.recognizedWords.toLowerCase() == "give summary"){
+    //   await ref.push().set({"isUser": false, "message": "Summaryy"});
+    // }
     // await ref.push().set({"isUser": false, "message": "Response ${responseCount++}"});
     /* String responseMsg = "Cheppandi";
     TransliterationResponse? _response = await Transliteration.transliterate(responseMsg, Languages.TELUGU);
@@ -161,7 +174,7 @@ class _ChatWindowState extends State<ChatWindow> {
     return WillPopScope(
       onWillPop: () async {
         bool? result = await showSessionDialog();
-        if(result !=null && result){
+        if (result != null && result) {
           Navigator.pop(context);
         }
         return false;
@@ -172,11 +185,9 @@ class _ChatWindowState extends State<ChatWindow> {
           backgroundColor: Colors.white,
           elevation: 0,
           title: const Text(
-            'AgriBot',
+            'APWRIMS Bot',
             style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w500,
-                color: Colors.black),
+                fontSize: 17, fontWeight: FontWeight.w500, color: Colors.black),
           ),
         ),
         body: Container(
@@ -185,12 +196,15 @@ class _ChatWindowState extends State<ChatWindow> {
             children: [
               Expanded(
                 child: StreamBuilder(
-                  stream: FirebaseDatabase.instance.ref("CHAT_BOT_WEATHER/${widget.sessionId}").onValue,
+                  stream: FirebaseDatabase.instance
+                      .ref("CHAT_BOT_WEATHER/${widget.sessionId}")
+                      .onValue,
                   builder: (context, AsyncSnapshot snapshot) {
                     if (snapshot.hasData && snapshot.data != null) {
                       List<ChatBubble> messageList = [];
                       var data =
-                          (snapshot.data! as DatabaseEvent).snapshot.value ?? {};
+                          (snapshot.data! as DatabaseEvent).snapshot.value ??
+                              {};
                       print("DATAFJLDLFHGLD $data");
                       data = data as Map<dynamic, dynamic>;
                       var sortedByKeyMap = Map.fromEntries(data.entries.toList()
@@ -200,11 +214,10 @@ class _ChatWindowState extends State<ChatWindow> {
                           final datalast = Map<String, dynamic>.from(value);
                           print("SORTED MESSAGES ${datalast['message']}");
                           messageList.add(ChatBubble(
-                              text: datalast['message'],
-                              isUser: datalast['isUser'],
-                              imageUrl: datalast['mediaUrl'],
-                          )
-                          );
+                            text: datalast['message'],
+                            isUser: datalast['isUser'],
+                            imageUrl: datalast['mediaUrl'],
+                          ));
                         }
                       });
                       //messageList.reversed;
@@ -215,20 +228,38 @@ class _ChatWindowState extends State<ChatWindow> {
                           showLoader.value = false;
                         });
                         tts.speak(messageList[messageList.length - 1].text);
-                      }
-                      prevChatLength = messageList.length;
-                      if (messageList.isNotEmpty &&
-                          messageList[messageList.length - 1].isUser) {
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          showLoader.value = true;
-                        });
+                        /*if(messageList[messageList.length-1].text == "Give Summary"){
+                          prevChatLength = messageList.length;
+                          if (messageList.isNotEmpty &&
+                              messageList[messageList.length - 1].isUser) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              showLoader.value = true;
+                            });
 
-                        Timer(const Duration(seconds: 3), () {
-                          if (showLoader.value) {
-                            tts.speak("Please wait, while we are fetching ${messageList[messageList.length - 1].text}");
+                            Timer(const Duration(seconds: 3), () {
+                              if (showLoader.value) {
+                                tts.speak(
+                                    "Please wait, while we are fetching ${messageList[messageList
+                                        .length - 1].text}");
+                              }
+                            });
                           }
-                        });
-                        // tts.speak("Please wait,while we are fetching ${messageList[messageList.length - 1].text}");
+                        }*/
+                        prevChatLength = messageList.length;
+                        if (messageList.isNotEmpty &&
+                            messageList[messageList.length - 1].isUser) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            showLoader.value = true;
+                          });
+
+                          Timer(const Duration(seconds: 3), () {
+                            if (showLoader.value) {
+                              tts.speak(
+                                  "Please wait, while we are fetching ${messageList[messageList
+                                      .length - 1].text}");
+                            }
+                          });
+                        }
                       }
                       return ListView.builder(
                         reverse: true,
@@ -239,7 +270,8 @@ class _ChatWindowState extends State<ChatWindow> {
                           if (index < messageList.length) {
                             return Padding(
                               padding: const EdgeInsets.all(4.0),
-                              child: messageList[messageList.length - 1 - index],
+                              child:
+                                  messageList[messageList.length - 1 - index],
                             );
                           }
                           return null;
@@ -262,15 +294,15 @@ class _ChatWindowState extends State<ChatWindow> {
                         return SizedBox(
                             height: 100,
                             width: 100,
-                            child:
-                            Image.asset('assets/images/response_bubble.gif'));
+                            child: Image.asset(
+                                'assets/images/response_bubble.gif'));
                       }
                       return const SizedBox();
                     },
                   ),
                 ),
               ),
-             /* Padding(
+              Padding(
                 padding: const EdgeInsets.only(bottom: 30.0),
                 child: Align(
                   alignment: Alignment.bottomCenter,
@@ -282,8 +314,8 @@ class _ChatWindowState extends State<ChatWindow> {
                         glowColor: Colors.purple,
                         child: FloatingActionButton(
                           onPressed:
-                          // If not yet listening for speech start, otherwise stop
-                          !value ? _startListening : _stopListening,
+                              // If not yet listening for speech start, otherwise stop
+                              !value ? _startListening : _stopListening,
                           tooltip: 'Listen',
                           child: Icon(!value ? Icons.mic_off : Icons.mic),
                         ),
@@ -291,11 +323,15 @@ class _ChatWindowState extends State<ChatWindow> {
                     },
                   ), // your widget would go here
                 ),
-              ),*/
-               Padding(
+              ),
+            /*  Padding(
                 padding: const EdgeInsets.all(20),
                 child: bottomBar(),
-              )
+              ),*/
+              /*Padding(
+                padding: const EdgeInsets.all(20),
+                child: summaryBottomBar(),
+              )*/
             ],
           ),
         ),
@@ -309,7 +345,9 @@ class _ChatWindowState extends State<ChatWindow> {
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
       child: Row(
         children: [
-          Padding(
+          SpeechToTextWidget(
+              updateSpeech: updateChatControllerForSpeech, localeId: "en-US"),
+          /*Padding(
             padding: const EdgeInsets.all(4.0),
             child: Align(
               alignment: Alignment.bottomCenter,
@@ -328,7 +366,7 @@ class _ChatWindowState extends State<ChatWindow> {
                 },
               ),
             ),
-          ),
+          ),*/
           CameraWidget(saveCapturedPhoto: saveCapturedPhoto),
           Expanded(
             child: Stack(
@@ -370,12 +408,15 @@ class _ChatWindowState extends State<ChatWindow> {
                           addUserUploadedImageToChat();
                           addUserMessageToChat(chatController.text);
                           print("capturedPhoto::$capturedPhoto");
-                          if(chatController.text.isEmpty){
-                            Fluttertoast.showToast(msg: "Please enter your question.");
+                          if (chatController.text.isEmpty) {
+                            Fluttertoast.showToast(
+                                msg: "Please enter your question.");
                           } else {
-                            String? imageUrl = await submitImage(
-                                context, capturedPhoto!.path);
-                            insertImageDataIntoDb(
+                            String? imageUrl = '';
+                            if (capturedPhoto != null) {
+                              await submitImage(context, capturedPhoto!.path);
+                            }
+                            await insertImageDataIntoDb(
                                 imageUrl, chatController.text);
                           }
                         },
@@ -442,11 +483,126 @@ class _ChatWindowState extends State<ChatWindow> {
     );
   }
 
+  Widget summaryBottomBar() {
+    return Container(
+      width: MediaQuery.of(context).size.width,
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+      child: Row(
+        children: [
+          SpeechToTextWidget(
+              updateSpeech: updateChatControllerForSpeech, localeId: "en-US"),
+          // CameraWidget(saveCapturedPhoto: saveCapturedPhoto),
+          Expanded(
+            child: Stack(
+              children: [
+                Container(
+                  margin: EdgeInsets.only(left: capturedPhoto != null ? 60 : 0),
+                  child: TextFormField(
+                    controller: chatController,
+                    maxLines: 10,
+                    minLines: 1,
+                    textCapitalization: TextCapitalization.sentences,
+                    onChanged: (value) {
+                      if (capturedPhoto != null) {}
+                    },
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderSide: const BorderSide(
+                          color: Color(0xFF4BA164),
+                          width: 2,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      contentPadding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+                      suffixIcon: IconButton(
+                        icon: const Icon(
+                          Icons.send,
+                          color: Color(0xFF4BA164),
+                        ),
+                        onPressed: () async {
+                          // addUserUploadedImageToChat();
+                          addUserMessageToChat(chatController.text);
+                          summaryData=chatController.text;
+                          print("summaryData::$summaryData");
+                          insertDataIntoDb(summaryData);
+                          print("capturedPhoto::$capturedPhoto");
+                          if (chatController.text.isEmpty) {
+                            Fluttertoast.showToast(
+                                msg: "Please enter your question.");
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          /*Expanded(
+            child: Stack(
+              children: [
+                if (capturedPhoto != null)
+                  Positioned(
+                    left: 0,
+                    child: Container(
+                      width: 50,
+                      height: 50,
+                      child: Image.file(capturedPhoto!, fit: BoxFit.cover),
+                    ),
+                  ),
+                Container(
+                  margin: EdgeInsets.only(left: capturedPhoto != null ? 60 : 0),
+                  child: TextFormField(
+                    controller: chatController,
+                    maxLines: 10,
+                    minLines: 1,
+                    textCapitalization: TextCapitalization.sentences,
+                    onChanged: (value) {
+                      if (capturedPhoto != null) {}
+                    },
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderSide: const BorderSide(
+                          color: Color(0xFF4BA164),
+                          width: 2,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      contentPadding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+                      suffixIcon: IconButton(
+                        icon: const Icon(
+                          Icons.send,
+                          color: Color(0xFF4BA164),
+                        ),
+                        onPressed: () async {
+                          print("capturedPhoto::${capturedPhoto}");
+
+                          if(chatController.text.isEmpty){
+                            Fluttertoast.showToast(msg: "Please enter your question.");
+                          }
+                          chatController.clear();
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),*/
+        ],
+      ),
+    );
+  }
 
   updateChatControllerForSpeech(String text) {
-    chatController.text = text;
+    String existingText = chatController.text;
+    String newText = "$existingText $text";
+    chatController.text = newText;
     setState(() {});
   }
+
+
+
 
   saveCapturedPhoto(XFile photo) {
     capturedPhoto = File(photo.path);
@@ -461,7 +617,7 @@ class _ChatWindowState extends State<ChatWindow> {
     setState(() {});
   }
 
- /* createQueryString() {
+  /* createQueryString() {
     queryString = chatController.text;
     chatController.clear();
     setState(() {});
@@ -526,7 +682,7 @@ class _ChatWindowState extends State<ChatWindow> {
       } catch (e) {
         developer.log(
           'Upload Image',
-          name: 'AgriBot',
+          name: 'APWRIMS Bot',
           error: e.toString(),
         );
       }
@@ -566,11 +722,9 @@ class _ChatWindowState extends State<ChatWindow> {
     if (await networkUtils.hasActiveInternet()) {
       try {
         Map<String, String> params = {};
-        params = {
-          "bucket_name" : "crop_bucket"
-        };
+        params = {"bucket_name": "crop_bucket"};
         String? url = await ApiProvider.instance.submitImage(params, imagePath);
-        if(url!=null && url.isNotEmpty){
+        if (url != null && url.isNotEmpty) {
           return url;
         }
       } catch (e) {
@@ -582,8 +736,7 @@ class _ChatWindowState extends State<ChatWindow> {
       Fluttertoast.showToast(
           msg: constants.noNetworkAvailability, toastLength: Toast.LENGTH_LONG);
     }
-    setState(() {
-    });
+    setState(() {});
     return null;
   }
 
@@ -592,18 +745,23 @@ class _ChatWindowState extends State<ChatWindow> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Do you want to end the session?',style: constants.black16W500,),
+          title: Text(
+            'Do you want to end the session?',
+            style: constants.black16W500,
+          ),
           actions: <Widget>[
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(false); // Pop the dialog and return false
+                Navigator.of(context)
+                    .pop(false); // Pop the dialog and return false
               },
               child: Text('No'),
             ),
             TextButton(
               onPressed: () async {
                 // bool? result = await viewModel.endSession();
-                Navigator.of(context).pop(true); // Pop the dialog and return true
+                Navigator.of(context)
+                    .pop(true); // Pop the dialog and return true
               },
               child: const Text('Yes'),
             ),
@@ -614,10 +772,38 @@ class _ChatWindowState extends State<ChatWindow> {
   }
 
   Future<void> insertImageDataIntoDb(String? imageUrl, String text) async {
-    DatabaseReference ref = FirebaseDatabase.instance.ref("CHAT_BOT_WEATHER/${widget.sessionId}");
-    await ref.push().set({"isUser": true, "message": text, "mediaUrl" : imageUrl});
+    DatabaseReference ref =
+        FirebaseDatabase.instance.ref("CHAT_BOT_WEATHER/${widget.sessionId}");
+    await ref
+        .push()
+        .set({"isUser": true, "message": text, "mediaUrl": imageUrl});
     chatController.clear();
     capturedPhoto = null;
     setState(() {});
+  }
+
+  Future<void> insertDataIntoDb(String text) async {
+    DatabaseReference ref =
+    FirebaseDatabase.instance.ref("CHAT_BOT_WEATHER/${widget.sessionId}");
+    await ref
+        .push()
+        .set({"isUser": true, "message": text});
+    chatController.clear();
+    capturedPhoto = null;
+    setState(() {});
+  }
+
+  _onSummarizeResult(SpeechRecognitionResult result) async {
+    DatabaseReference ref =
+        FirebaseDatabase.instance.ref("CHAT_BOT_WEATHER/${widget.sessionId}");
+    List<String> summaryContent = [];
+    int i = 0;
+    while (i < 5) {
+      if (result.recognizedWords.isNotEmpty) {
+        summaryContent.add("${result.recognizedWords}");
+        addUserMessageToChat("${result.recognizedWords}");
+        i++;
+      }
+    }
   }
 }
