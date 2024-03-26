@@ -74,6 +74,7 @@ class LoginViewModel extends LoadingViewModel {
               isLoading = false;
               notifyListeners();
               Meta? userData = userPermissionsResponse.response?.meta;
+              // userData?.is_mobile_app = true;
               Navigator.push(
                   context,
                   MaterialPageRoute(

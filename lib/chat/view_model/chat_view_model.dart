@@ -13,7 +13,9 @@ class ChatViewModel extends ChangeNotifier {
   Future<String?> createSession(response.Meta requestData) async {
     try {
       String url = constants.ngrok;
+      print("Request data before encode::${requestData}");
       Object object = json.encode(requestData);
+      print("Request data after encode::${object}");
       Response response = await post(
         Uri.parse(url),
         body: object,
@@ -34,7 +36,7 @@ class ChatViewModel extends ChangeNotifier {
       Fluttertoast.showToast(msg: "Couldn't create Session");
       print("Error Stacktrace $error $stacktrace");
     }
-  /*  String uuid = const Uuid().v4();
+   /* String uuid = const Uuid().v4();
     sessionId = uuid;
     isFirstTime = true;
     notifyListeners();

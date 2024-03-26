@@ -830,7 +830,8 @@ enum CropNameVerifyRadioOptions {agree, disagree}
 
 //Role Names
 const String aoRoleName = "Agricultural Officer";
-const String ngrok = "https://866d-196-12-47-4.ngrok-free.app/vassar/create_session";
+const String ngrok = "https://d5d8-196-12-47-4.ngrok-free.app/session/create_session";   ///apwrims
+// const String ngrok = "https://ded2-196-12-47-4.ngrok-free.app/session/create_session";   ///gowater
 
 const int ownerCultivator = 1;
 const int ownerCultivatorCumTenant = 2;
@@ -838,14 +839,3 @@ const int ownerNotCultivating = 3;
 const int landlessTenant = 4;
 const int wetland = 1;
 const int dryLand = 2;
-
-//Regular Expressions
-final List<TextInputFormatter> mlNameInputFormatter = [
-  LengthLimitingTextInputFormatter(30),
-  FilteringTextInputFormatter.allow(RegExp("[ം-ൿ \s]")),
-];
-
-final List<TextInputFormatter> enNameInputFormatter = [
-  LengthLimitingTextInputFormatter(30),
-  FilteringTextInputFormatter.allow(RegExp("[a-zA-Z \s]")),
-];

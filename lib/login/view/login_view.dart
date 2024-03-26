@@ -67,6 +67,7 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
     customerId: "931e0a8e-54e9-49f4-87db-d6e1fe350432",
     customerName: "keralacustomer",
     customAttributes: null,
+    is_mobile_app : true,
   );
 
   @override

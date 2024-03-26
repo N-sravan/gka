@@ -18,10 +18,10 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
   @override
   void initState() {
     data = widget.data;
-    SystemChrome.setPreferredOrientations([
+ /*   SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeRight, // Set landscape orientation
       DeviceOrientation.landscapeLeft,
-    ]);
+    ]);*/
     super.initState();
   }
 

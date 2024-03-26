@@ -1,13 +1,12 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 import 'package:avatar_glow/avatar_glow.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:gka/services/api_provider.dart';
 import '../utils/common_constants.dart' as constants;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_native_image/flutter_native_image.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/chat_bubble.dart';
 import 'package:gka/text_to_speech.dart';
@@ -47,15 +46,23 @@ class _ChatWindowState extends State<ChatWindow> {
   TextEditingController chatController = TextEditingController();
   bool speechToTextOn = false;
   File? capturedPhoto;
+  int timerCounter = 0;
   List<MessageBubble> chatMessages = [];
+  List<String> loaderMsgList = [
+    'Please wait',
+    'we are checking',
+    'Looking for the result',
+    'Hold on a moment',
+    'Searching for results',
+    'Gathering the data',
+    'Just a moment'
+  ];
   TextToSpeechService? textToSpeechService;
   MessageBubble? textToSpeechMessageBubble;
-  String summaryData="";
-
-  // Create a transparent overlay to cover the whole screen
+  String summaryData = "";
+  bool displayUserText = false;
+  bool isLoadingResponse = false;
   OverlayEntry? overlayEntry;
-
-  // final OnDeviceTranslator translator = GoogleMlKit.nlp.onDeviceTranslator(sourceLanguage: TranslateLanguage.english, targetLanguage: TranslateLanguage.telugu);
 
   @override
   void initState() {
@@ -106,14 +113,6 @@ class _ChatWindowState extends State<ChatWindow> {
           /*localeId: selectedLocale.localeId,*/
           partialResults: false,
           onResult: _onSpeechResult,
-          /*   onResult: (data) async {
-            result = data;
-            if (result.recognizedWords.toLowerCase() == 'summarize') {
-              _onSummarizeResult(data);
-            } else {
-              _onSpeechResult(data);
-            }
-          },*/
           pauseFor: const Duration(seconds: 3),
           listenFor: const Duration(seconds: 15),
           cancelOnError: true);
@@ -140,7 +139,7 @@ class _ChatWindowState extends State<ChatWindow> {
     await _speechToText.stop();
     bool active = _speechToText.isListening;
     listeningActive.value = active;
-    /*setState(() {});*/
+    setState(() {});
   }
 
   /// This is the callback that the SpeechToText plugin calls when
@@ -148,12 +147,13 @@ class _ChatWindowState extends State<ChatWindow> {
   Future<void> _onSpeechResult(SpeechRecognitionResult result) async {
     print("_onSpeechResult ${result.recognizedWords}");
     DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_WEATHER/${widget.sessionId}");
+        FirebaseDatabase.instance.ref("CHAT_BOT_APWRIMS/${widget.sessionId}");
 
     // TransliterationResponse? response = await Transliteration.transliterate(result.recognizedWords, Languages.TELUGU);
     // final translatedText =response?.transliterationSuggestions[0].toString();
     // print("translated::$translatedText");
     await ref.push().set({"isUser": true, "message": result.recognizedWords});
+    // await ref.push().set({"isUser": false, "message": "Hello how are you"});
     // if(result.recognizedWords.toLowerCase() == "give summary"){
     //   await ref.push().set({"isUser": false, "message": "Summaryy"});
     // }
@@ -166,7 +166,6 @@ class _ChatWindowState extends State<ChatWindow> {
     await ref.push().set({"isUser": false, "message": translatedResponse});*/
     bool active = _speechToText.isListening;
     listeningActive.value = active;
-    // tts.speak(translatedResponse!);
   }
 
   @override
@@ -175,6 +174,7 @@ class _ChatWindowState extends State<ChatWindow> {
       onWillPop: () async {
         bool? result = await showSessionDialog();
         if (result != null && result) {
+          tts.stop();
           Navigator.pop(context);
         }
         return false;
@@ -197,7 +197,7 @@ class _ChatWindowState extends State<ChatWindow> {
               Expanded(
                 child: StreamBuilder(
                   stream: FirebaseDatabase.instance
-                      .ref("CHAT_BOT_WEATHER/${widget.sessionId}")
+                      .ref("CHAT_BOT_APWRIMS/${widget.sessionId}")
                       .onValue,
                   builder: (context, AsyncSnapshot snapshot) {
                     if (snapshot.hasData && snapshot.data != null) {
@@ -213,11 +213,31 @@ class _ChatWindowState extends State<ChatWindow> {
                         if (key != "cart") {
                           final datalast = Map<String, dynamic>.from(value);
                           print("SORTED MESSAGES ${datalast['message']}");
+
                           messageList.add(ChatBubble(
                             text: datalast['message'],
                             isUser: datalast['isUser'],
                             imageUrl: datalast['mediaUrl'],
                           ));
+
+                          Timer.periodic(const Duration(seconds: 70), (timer) {
+                            timerCounter++;
+                            print("loader&&&&&&&&77");
+                            if(showLoader.value) {;
+                            messageList.add(ChatBubble(
+                              text: "Data Not Found",
+                              isUser: false,
+                              imageUrl: "",
+                            ));
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              showLoader.value = false;
+                            });
+                            tts.speak("Data Not found");
+                            print("messagelist::${messageList.last.text}");
+                            if (timerCounter >= 1) {
+                              timer.cancel();
+                            }
+                          }});
                         }
                       });
                       //messageList.reversed;
@@ -228,7 +248,8 @@ class _ChatWindowState extends State<ChatWindow> {
                           showLoader.value = false;
                         });
                         tts.speak(messageList[messageList.length - 1].text);
-                        /*if(messageList[messageList.length-1].text == "Give Summary"){
+                      }
+                      /*if(messageList[messageList.length-1].text == "Give Summary"){
                           prevChatLength = messageList.length;
                           if (messageList.isNotEmpty &&
                               messageList[messageList.length - 1].isUser) {
@@ -245,22 +266,31 @@ class _ChatWindowState extends State<ChatWindow> {
                             });
                           }
                         }*/
-                        prevChatLength = messageList.length;
-                        if (messageList.isNotEmpty &&
-                            messageList[messageList.length - 1].isUser) {
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            showLoader.value = true;
-                          });
-
-                          Timer(const Duration(seconds: 3), () {
-                            if (showLoader.value) {
-                              tts.speak(
-                                  "Please wait, while we are fetching ${messageList[messageList
-                                      .length - 1].text}");
-                            }
-                          });
-                        }
+                      prevChatLength = messageList.length;
+                      if (messageList.isNotEmpty &&
+                          messageList[messageList.length - 1].isUser) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          showLoader.value = true;
+                        });
+/*
+                        Timer.periodic(const Duration(seconds: 60), (timer) {
+                          print("loader&&&&&&&&77");
+                          showLoader.value = false;
+                          tts.speak("Data Not found");
+                          messageList.last.text = "Telugu lo cheppu";
+                          timer.cancel();
+                          print("messagelist::${messageList.last.text}");
+                        });*/
+                        Timer(const Duration(seconds: 4), () {
+                          if (showLoader.value) {
+                            int randomIndex =
+                                Random().nextInt(loaderMsgList.length);
+                            print("Random Index::${randomIndex}");
+                            tts.speak(loaderMsgList[randomIndex]);
+                          }
+                        });
                       }
+
                       return ListView.builder(
                         reverse: true,
                         physics: const AlwaysScrollableScrollPhysics(),
@@ -324,7 +354,7 @@ class _ChatWindowState extends State<ChatWindow> {
                   ), // your widget would go here
                 ),
               ),
-            /*  Padding(
+              /* Padding(
                 padding: const EdgeInsets.all(20),
                 child: bottomBar(),
               ),*/
@@ -414,7 +444,8 @@ class _ChatWindowState extends State<ChatWindow> {
                           } else {
                             String? imageUrl = '';
                             if (capturedPhoto != null) {
-                              await submitImage(context, capturedPhoto!.path);
+                              imageUrl = await submitImage(
+                                  context, capturedPhoto!.path);
                             }
                             await insertImageDataIntoDb(
                                 imageUrl, chatController.text);
@@ -522,7 +553,7 @@ class _ChatWindowState extends State<ChatWindow> {
                         onPressed: () async {
                           // addUserUploadedImageToChat();
                           addUserMessageToChat(chatController.text);
-                          summaryData=chatController.text;
+                          summaryData = chatController.text;
                           print("summaryData::$summaryData");
                           insertDataIntoDb(summaryData);
                           print("capturedPhoto::$capturedPhoto");
@@ -595,14 +626,9 @@ class _ChatWindowState extends State<ChatWindow> {
   }
 
   updateChatControllerForSpeech(String text) {
-    String existingText = chatController.text;
-    String newText = "$existingText $text";
-    chatController.text = newText;
+    chatController.text = text;
     setState(() {});
   }
-
-
-
 
   saveCapturedPhoto(XFile photo) {
     capturedPhoto = File(photo.path);
@@ -682,7 +708,7 @@ class _ChatWindowState extends State<ChatWindow> {
       } catch (e) {
         developer.log(
           'Upload Image',
-          name: 'APWRIMS Bot',
+          name: 'Odisha Bot',
           error: e.toString(),
         );
       }
@@ -752,16 +778,14 @@ class _ChatWindowState extends State<ChatWindow> {
           actions: <Widget>[
             TextButton(
               onPressed: () {
-                Navigator.of(context)
-                    .pop(false); // Pop the dialog and return false
+                Navigator.of(context).pop(false);
               },
-              child: Text('No'),
+              child: const Text('No'),
             ),
             TextButton(
               onPressed: () async {
                 // bool? result = await viewModel.endSession();
-                Navigator.of(context)
-                    .pop(true); // Pop the dialog and return true
+                Navigator.of(context).pop(true);
               },
               child: const Text('Yes'),
             ),
@@ -773,7 +797,7 @@ class _ChatWindowState extends State<ChatWindow> {
 
   Future<void> insertImageDataIntoDb(String? imageUrl, String text) async {
     DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_WEATHER/${widget.sessionId}");
+        FirebaseDatabase.instance.ref("CHAT_BOT_APWRIMS/${widget.sessionId}");
     await ref
         .push()
         .set({"isUser": true, "message": text, "mediaUrl": imageUrl});
@@ -784,10 +808,8 @@ class _ChatWindowState extends State<ChatWindow> {
 
   Future<void> insertDataIntoDb(String text) async {
     DatabaseReference ref =
-    FirebaseDatabase.instance.ref("CHAT_BOT_WEATHER/${widget.sessionId}");
-    await ref
-        .push()
-        .set({"isUser": true, "message": text});
+        FirebaseDatabase.instance.ref("CHAT_BOT_APWRIMS/${widget.sessionId}");
+    await ref.push().set({"isUser": true, "message": text});
     chatController.clear();
     capturedPhoto = null;
     setState(() {});
@@ -795,7 +817,7 @@ class _ChatWindowState extends State<ChatWindow> {
 
   _onSummarizeResult(SpeechRecognitionResult result) async {
     DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_WEATHER/${widget.sessionId}");
+        FirebaseDatabase.instance.ref("CHAT_BOT_APWRIMS/${widget.sessionId}");
     List<String> summaryContent = [];
     int i = 0;
     while (i < 5) {

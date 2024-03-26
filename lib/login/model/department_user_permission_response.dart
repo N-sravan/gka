@@ -74,6 +74,7 @@ class Meta {
   String? customerId;
   String? customerName;
   dynamic customAttributes;
+  bool? is_mobile_app;
 
   Meta({
     this.userId,
@@ -91,6 +92,7 @@ class Meta {
     this.customerId,
     this.customerName,
     this.customAttributes,
+    this.is_mobile_app,
   });
 
   factory Meta.fromJson(Map<String, dynamic> json) {
@@ -110,6 +112,7 @@ class Meta {
       customerId: json['customerId'],
       customerName: json['customerName'],
       customAttributes: json['customAttributes'],
+      is_mobile_app: true
     );
   }
 
@@ -130,6 +133,7 @@ class Meta {
       'customerId': customerId,
       'customerName': customerName,
       'customAttributes': customAttributes,
+      'is_mobile_app' : true
     };
   }
 }

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:gka/chat/view_model/chat_view_model.dart';
 import 'package:gka/login/model/department_user_permission_response.dart'
-as response;
+    as response;
 import 'package:provider/provider.dart';
-
 import '../../chat_window.dart';
 
 class ChatView extends StatelessWidget {
@@ -31,11 +30,10 @@ class ChatView extends StatelessWidget {
                   height: 104,
                   child: GestureDetector(
                     onTap: () async {
-                      final viewModel = Provider.of<ChatViewModel>(
-                          context,
-                          listen: false);
-                      await viewModel.createSession(userData);
-                      if (viewModel.sessionId != null) {
+                      final viewModel =
+                          Provider.of<ChatViewModel>(context, listen: false);
+                      String? sessionId=await viewModel.createSession(userData);
+                      if (sessionId!=null && viewModel.sessionId != null) {
                         Navigator.push(
                           context,
                           MaterialPageRoute(

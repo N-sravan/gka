@@ -2,13 +2,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class ChatBubble extends StatefulWidget {
-  const ChatBubble({
+  ChatBubble({
     Key? key,
     required this.text,
     required this.isUser,
     this.imageUrl,
   }) : super(key: key);
-  final String text;
+  String text;
   final bool isUser;
   final String? imageUrl;
 
