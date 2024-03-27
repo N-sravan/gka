@@ -68,13 +68,13 @@ void main() async {
 
   await Firebase.initializeApp(
       options: const FirebaseOptions(
-        apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
-        appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
-        messagingSenderId: '1062998944432',
-        projectId: 'apwrims---chatbot',
-        storageBucket: 'apwrims---chatbot.appspot.com',
-        iosBundleId: 'com.vassar.apwrimschatbot',
-      ));
+    apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
+    appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
+    messagingSenderId: '1062998944432',
+    projectId: 'apwrims---chatbot',
+    storageBucket: 'apwrims---chatbot.appspot.com',
+    iosBundleId: 'com.vassar.apwrimschatbot',
+  ));
 
   setupLocator();
 
@@ -109,7 +109,7 @@ void main() async {
       child: const MyApp(),
     ),
   );
-  // await initializeService();
+  await initializeService();
 }
 
 Future<void> requestPermissions() async {
@@ -139,14 +139,14 @@ void callbackDispatcher() {
 
 Future<void> showNotification() async {
   const AndroidNotificationDetails androidPlatformChannelSpecifics =
-  AndroidNotificationDetails(
+      AndroidNotificationDetails(
     'high_importance_channel',
     'High Importance Notifications',
     importance: Importance.max,
     priority: Priority.high,
   );
   const NotificationDetails platformChannelSpecifics =
-  NotificationDetails(android: androidPlatformChannelSpecifics);
+      NotificationDetails(android: androidPlatformChannelSpecifics);
   await flutterLocalNotificationsPlugin.show(
     0,
     'test',
@@ -180,7 +180,7 @@ Future<void> initializeService() async {
   );
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-  FlutterLocalNotificationsPlugin();
+      FlutterLocalNotificationsPlugin();
 
   if (platform.Platform.isAndroid || platform.Platform.isAndroid) {
     await flutterLocalNotificationsPlugin.initialize(
@@ -193,7 +193,7 @@ Future<void> initializeService() async {
 
   await flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<
-      AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin>()
       ?.createNotificationChannel(channel);
 
   await service.configure(
@@ -241,7 +241,7 @@ void onStart(ServiceInstance service) async {
 
   /// OPTIONAL when use custom notification
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-  FlutterLocalNotificationsPlugin();
+      FlutterLocalNotificationsPlugin();
 
   if (service is AndroidServiceInstance) {
     service.on('setAsForeground').listen((event) {
@@ -314,17 +314,18 @@ void onStart(ServiceInstance service) async {
 }
 
 Future<void> initializeSpeechToText() async {
-  String sessionId = '';
+  String sessionId = Uuid().v4();
+  print("sessionId::$sessionId");
   print(("startListeningToHello: starting listening"));
   await Firebase.initializeApp(
       options: const FirebaseOptions(
-        apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
-        appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
-        messagingSenderId: '1062998944432',
-        projectId: 'apwrims---chatbot',
-        storageBucket: 'apwrims---chatbot.appspot.com',
-        iosBundleId: 'com.vassar.apwrimschatbot',
-      ));
+    apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
+    appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
+    messagingSenderId: '1062998944432',
+    projectId: 'apwrims---chatbot',
+    storageBucket: 'apwrims---chatbot.appspot.com',
+    iosBundleId: 'com.vassar.apwrimschatbot',
+  ));
 
   bool initialized = await speechToText.initialize(
     onStatus: (status) async {
@@ -332,47 +333,105 @@ Future<void> initializeSpeechToText() async {
       print('sessionId: $sessionId');
       if (status == 'notListening') {
         //await speechToText.stop();
-        if (sessionId.isEmpty) {
-          sessionId = await listenForSessionId();
-        } else {
-          await startListenings(sessionId!);
-        }
+        await startListenings(sessionId!);
       }
     },
     onError: (error) async {
       print('Error: $error');
       //await speechToText.stop();
-      if (sessionId != null && sessionId!.isEmpty) {
-        sessionId = await listenForSessionId();
-      } else {
-        await startListenings(sessionId!);
-      }
+      await startListenings(sessionId);
     },
   );
 
-  if (sessionId != null && sessionId!.isEmpty) {
-    sessionId = await listenForSessionId();
-  } else {
-    await startListenings(sessionId!);
-  }
+  await startListenings(sessionId);
 }
 
 bool isSpeaking = false; // Variable to track TTS speaking status
 
 Future<void> startListenings(String sessionId) async {
-  DatabaseReference ref = FirebaseDatabase.instance.ref("CHAT_BOT_WEATHER/$sessionId");
+  DatabaseReference ref =
+      FirebaseDatabase.instance.ref("CHAT_BOT_ALERT/CHANGE_LOG_ALERT/$sessionId");
+  /*List<String> listeningModeKeyWords = [
+    "Rainfall",
+    "Rainfall Forecast data",
+    "Rainfall historical data",
+    "Rainfall Alert",
+    "Maximum Rainfall",
+    "Drought Prediction",
+    "Rainfall Trend",
+    "Rainfall Analysis",
+    "Rainfall Prediction",
+    "Rainfall Deviation",
+    "Rainfall Cumulative",
+    "Reservoir",
+    "Reservoir Levels",
+    "Reservoir Storage",
+    "Reservoir Capacity",
+    "Reservoir Inflow",
+    "Reservoir Outflow",
+    "Reservoir Splits",
+    "Power house under Reservoir",
+    "Reservoir Canals",
+    "Reservoir Canal Splits",
+    "MI Tanks",
+    "MI Tank count",
+    "MI tank Storage",
+    "Tank fill %",
+    "MI Tank command area",
+    "MI Tank catchment area",
+    "MI Tank historical data",
+    "Groundwater",
+    "Groundwater Level",
+    "Groundwater Fluctuation",
+    "Groundwater Water Quality",
+    "Groundwater Aquifer",
+    "Groundwater status of village",
+    "Groundwater Recharge",
+    "Groundwater Trends",
+    "Groundwater current levels",
+    "Gorundwater premonsoon",
+    "Groundwater Assessment",
+    "Soil Moisture",
+    "Soil moisture depth",
+    "Soil moisture percentage",
+    "Soil moisture change",
+    "Water Conservation Structure",
+    "WC Capacity",
+    "WC Storage",
+    "Farmponds",
+    "Checkdams",
+    "Percolation Tanks",
+    "Run-off Conserved",
+    "Excess Rainfall",
+    "Counter Trenches",
+    "LI Scheme",
+    "LI Scheme Benificiaries",
+    "LI Scheme contemplated Ayacut",
+    "LI Scheme capacity",
+    "Yield under LI scheme",
+    "Catchment area under LI scheme",
+    "River Gauge",
+    "River gauge trend",
+    "River gauge level",
+    "River gauge depth",
+    "River gauge high flow"
+  ];*/
   SpeechRecognitionResult result;
 
   await speechToText.listen(
     partialResults: false,
     onResult: (data) async {
       result = data;
-      if (result.recognizedWords.isNotEmpty && !isSpeaking) {
-        // speechStatus.value = SpeechStatus.speaking;
+      if (result.recognizedWords.isNotEmpty &&
+          !isSpeaking &&
+          result.recognizedWords.toLowerCase() == 'rainfall') {
         print("111111-input::${result.recognizedWords}");
-        await ref.push().set({"isUser": true, "message": result.recognizedWords});
-        await ref.push().set({"isUser": false, "message": "How can I help you tell me recognized word. Average rainfall here is 9.7 degrees in HYer"});
-
+        await ref.push().set({
+          "isUser": true,
+          "message": result.recognizedWords,
+          "trigger_word": 'RAINFALL',
+          "event_name": "CONTINUOUS_LISTEN_MODE"
+        });
         await ref.orderByKey().limitToLast(1).once().then((event) async {
           DataSnapshot snapshot = event.snapshot;
           if (snapshot.value != null) {
@@ -385,7 +444,7 @@ Future<void> startListenings(String sessionId) async {
             });
           }
         });
-        // speechStatus.value = SpeechStatus.listening;
+        await tts.speak("Would you like to know the Rainfall data?");
         await speechToText.stop();
         Future.delayed(const Duration(seconds: 5), () async {
           await startListenings(sessionId);
@@ -404,7 +463,7 @@ Future<void> speak(String text) async {
 
 /*Future<void> startListenings(String sessionId) async {
   DatabaseReference ref =
-      FirebaseDatabase.instance.ref("CHAT_BOT_WEATHER/$sessionId");
+      FirebaseDatabase.instance.ref("CHAT_BOT_APWRIMS/$sessionId");
   SpeechRecognitionResult result;
 
   await speechToText.listen(
@@ -491,17 +550,17 @@ Future<String> listenForSessionId() async {
                               response.District(
                                   districtName: "Palakkad",
                                   districtUUID:
-                                  "1270f554-20cc-43ee-803e-1532f00e047c",
+                                      "1270f554-20cc-43ee-803e-1532f00e047c",
                                   block: [
                                     response.Block(
                                         blockName: "Sreekrishnapuram",
                                         blockUUID:
-                                        "db64691f-a7de-4e88-b5af-ecbe4dc6d191",
+                                            "db64691f-a7de-4e88-b5af-ecbe4dc6d191",
                                         panchayat: [
                                           response.Panchayat(
                                               panchayatName: "Karimpuzha",
                                               panchayatUUID:
-                                              "0ec4c732-5db9-4a3e-896a-f7baf24b2966")
+                                                  "0ec4c732-5db9-4a3e-896a-f7baf24b2966")
                                         ])
                                   ])
                             ])

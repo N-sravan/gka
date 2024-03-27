@@ -148,7 +148,7 @@ class _ChatWindowState extends State<ChatWindow> {
   Future<void> _onSpeechResult(SpeechRecognitionResult result) async {
     print("_onSpeechResult ${result.recognizedWords}");
     DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_WEATHER/${widget.sessionId}");
+        FirebaseDatabase.instance.ref("CHAT_BOT_APWRIMS/${widget.sessionId}");
 
     // TransliterationResponse? response = await Transliteration.transliterate(result.recognizedWords, Languages.TELUGU);
     // final translatedText =response?.transliterationSuggestions[0].toString();
@@ -197,7 +197,7 @@ class _ChatWindowState extends State<ChatWindow> {
               Expanded(
                 child: StreamBuilder(
                   stream: FirebaseDatabase.instance
-                      .ref("CHAT_BOT_WEATHER/${widget.sessionId}")
+                      .ref("CHAT_BOT_APWRIMS/${widget.sessionId}")
                       .onValue,
                   builder: (context, AsyncSnapshot snapshot) {
                     if (snapshot.hasData && snapshot.data != null) {
@@ -773,7 +773,7 @@ class _ChatWindowState extends State<ChatWindow> {
 
   Future<void> insertImageDataIntoDb(String? imageUrl, String text) async {
     DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_WEATHER/${widget.sessionId}");
+        FirebaseDatabase.instance.ref("CHAT_BOT_APWRIMS/${widget.sessionId}");
     await ref
         .push()
         .set({"isUser": true, "message": text, "mediaUrl": imageUrl});
@@ -784,7 +784,7 @@ class _ChatWindowState extends State<ChatWindow> {
 
   Future<void> insertDataIntoDb(String text) async {
     DatabaseReference ref =
-    FirebaseDatabase.instance.ref("CHAT_BOT_WEATHER/${widget.sessionId}");
+    FirebaseDatabase.instance.ref("CHAT_BOT_APWRIMS/${widget.sessionId}");
     await ref
         .push()
         .set({"isUser": true, "message": text});
@@ -795,7 +795,7 @@ class _ChatWindowState extends State<ChatWindow> {
 
   _onSummarizeResult(SpeechRecognitionResult result) async {
     DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_WEATHER/${widget.sessionId}");
+        FirebaseDatabase.instance.ref("CHAT_BOT_APWRIMS/${widget.sessionId}");
     List<String> summaryContent = [];
     int i = 0;
     while (i < 5) {
