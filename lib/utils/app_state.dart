@@ -47,7 +47,9 @@ class AppState {
   late String role;
   late String farmerUUID;
   late String tappedFieldUUID;
+  String triggeredWord = '';
   bool hasFarmerData=false;
+  bool isVoiceUpdateEnabled=false;
   bool isVillageSelected = true;
   bool isMalayalamSelected = false;
 

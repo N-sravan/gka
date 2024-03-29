@@ -46,12 +46,13 @@ class SplashViewModel extends LoadingViewModel {
           context,
           MaterialPageRoute(builder: (context) => const LoginScreenWidget()),
         );
-      }  else {
+      }
+    /*  else {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const PermissionsScreenWidget()),
         );
-      }
+      }*/
     });
   }
 

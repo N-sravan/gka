@@ -4,6 +4,9 @@ import 'dart:math';
 import 'package:avatar_glow/avatar_glow.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:gka/services/api_provider.dart';
+import 'package:uuid/parsing.dart';
+import 'package:uuid/uuid.dart';
+import 'package:uuid/v4.dart';
 import '../utils/common_constants.dart' as constants;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +20,7 @@ import 'package:text_to_speech/text_to_speech.dart';
 import 'dart:developer' as developer;
 import 'camera_screen.dart';
 import 'chat/view/speech_to_text.dart';
+import 'main.dart';
 import 'message_bubble.dart';
 import 'utils/network_utils.dart';
 
@@ -45,6 +49,7 @@ class _ChatWindowState extends State<ChatWindow> {
   String queryString = "";
   TextEditingController chatController = TextEditingController();
   bool speechToTextOn = false;
+  bool isVoiceInitiated = false;
   File? capturedPhoto;
   int timerCounter = 0;
   List<MessageBubble> chatMessages = [];
@@ -62,13 +67,23 @@ class _ChatWindowState extends State<ChatWindow> {
   String summaryData = "";
   bool displayUserText = false;
   bool isLoadingResponse = false;
+  bool _toggleValue = true;
   OverlayEntry? overlayEntry;
+  late Timer periodicTimer;
+  String autoSessionId= '';
 
   @override
   void initState() {
     super.initState();
     _initSpeech();
     tts.setRate(1);
+  }
+
+  @override
+  void dispose() {
+    // Dispose of the timer when the widget is removed
+    periodicTimer.cancel();
+    super.dispose();
   }
 
   final SpeechToText _speechToText = SpeechToText();
@@ -93,7 +108,7 @@ class _ChatWindowState extends State<ChatWindow> {
   }
 
   /// Each time to start a speech recognition session
-  void _startListening() async {
+  _startListening() async {
     var locales = await _speechToText.locales();
     for (int i = 0; i < locales.length; i++) {
       print("LOCALESDSD $i   ${locales[i].name}");
@@ -126,6 +141,34 @@ class _ChatWindowState extends State<ChatWindow> {
     listeningActive.value = active;
   }
 
+  _startListeningForAutoMode() async {
+    var locales = await _speechToText.locales();
+    for (int i = 0; i < locales.length; i++) {
+      print("LOCALESDSD $i   ${locales[i].name}");
+    }
+
+    print("_onSpeechResult_startListening_auto_mode");
+    SpeechRecognitionResult result;
+    try {
+      await _speechToText.listen(
+          onSoundLevelChange: onSoundLevelChange,
+          /*localeId: selectedLocale.localeId,*/
+          partialResults: false,
+          onResult: _onSpeechResultForAutoMode,
+          pauseFor: const Duration(seconds: 3),
+          listenFor: const Duration(seconds: 15),
+          cancelOnError: true);
+    } catch (e) {
+      print('EXCEPTIONKJSKFJK An exception occurred: $e');
+    }
+
+    print(
+        "_onSpeechResult_startListening_auto_mode aferfdf ${_speechToText.lastStatus}");
+    bool active = _speechToText.isListening;
+    tts.stop();
+    listeningActive.value = active;
+  }
+
   dynamic Function(double)? onSoundLevelChange(double value) {
     print("onSoundLevelChange  $value");
     return null;
@@ -146,8 +189,8 @@ class _ChatWindowState extends State<ChatWindow> {
   /// the platform returns recognized words.
   Future<void> _onSpeechResult(SpeechRecognitionResult result) async {
     print("_onSpeechResult ${result.recognizedWords}");
-    DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_GOWATER/${widget.sessionId}");
+    DatabaseReference ref = FirebaseDatabase.instance
+        .ref("CHAT_BOT_TEST/${constants.apwrimsUUID}/${widget.sessionId}");
 
     // TransliterationResponse? response = await Transliteration.transliterate(result.recognizedWords, Languages.TELUGU);
     // final translatedText =response?.transliterationSuggestions[0].toString();
@@ -168,6 +211,33 @@ class _ChatWindowState extends State<ChatWindow> {
     listeningActive.value = active;
   }
 
+  Future<void> _onSpeechResultForAutoMode(
+      SpeechRecognitionResult result) async {
+    print("_onSpeechResultForAutoMode ${result.recognizedWords}");
+    print("_onSpeechResultForAutoMode autoSessionId ${autoSessionId}");
+    DatabaseReference ref = FirebaseDatabase.instance
+        .ref("CHAT_BOT_TEST/${constants.apwrimsUUID}/${autoSessionId}");
+
+    if (result.recognizedWords.toLowerCase() == "hello" && !isVoiceInitiated) {
+      await _speechToText.stop();
+      await tts.speak("Hello");
+      isVoiceInitiated = true;
+      setState(() {});
+    }
+    print("wewewewewe recognizedWords ::${result.recognizedWords}");
+    print("wewewewewe isVoiceInitiated ::$isVoiceInitiated");
+
+    if (result.recognizedWords.isNotEmpty &&
+        isVoiceInitiated &&
+        result.recognizedWords.toLowerCase() != 'hello') {
+      await ref.push().set({"isUser": true, "message": result.recognizedWords});
+      await ref.push().set({"isUser": false, "message": "response"});
+    }
+
+    bool active = _speechToText.isListening;
+    listeningActive.value = active;
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -175,6 +245,7 @@ class _ChatWindowState extends State<ChatWindow> {
         bool? result = await showSessionDialog();
         if (result != null && result) {
           tts.stop();
+          periodicTimer.cancel();
           Navigator.pop(context);
         }
         return false;
@@ -184,10 +255,50 @@ class _ChatWindowState extends State<ChatWindow> {
           centerTitle: true,
           backgroundColor: Colors.white,
           elevation: 0,
-          title: const Text(
-            'Odisha Bot',
-            style: TextStyle(
-                fontSize: 17, fontWeight: FontWeight.w500, color: Colors.black),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                'APWRIMS Bot',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black,
+                ),
+              ),
+              const Spacer(), // Add spacing between title and toggle
+              Text(
+                _toggleValue ? 'Manual Mode' : 'Auto Mode',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: _toggleValue ? Colors.green : Colors.grey,
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                onPressed: () async {
+                  setState(() {
+                    _toggleValue = !_toggleValue; // Toggle the value
+                  });
+                  print("wewewewewew _toggleValue::$_toggleValue");
+                  if (!_toggleValue) {
+                    autoSessionId= Uuid().v4();
+                    periodicTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+                      await initializeSpeechToText(autoSessionId);
+                    });
+                  } else {
+                    await _speechToText.stop();
+                    await tts.stop();
+                    periodicTimer.cancel();
+                  }
+                },
+                icon: Icon(
+                  _toggleValue ? Icons.toggle_on : Icons.toggle_off,
+                  color: _toggleValue ? Colors.green : Colors.grey,
+                  size: 30,
+                ),
+              ),
+            ],
           ),
         ),
         body: Container(
@@ -196,9 +307,15 @@ class _ChatWindowState extends State<ChatWindow> {
             children: [
               Expanded(
                 child: StreamBuilder(
-                  stream: FirebaseDatabase.instance
-                      .ref("CHAT_BOT_GOWATER/${widget.sessionId}")
-                      .onValue,
+                  stream: _toggleValue
+                      ? FirebaseDatabase.instance
+                          .ref(
+                              "CHAT_BOT_TEST/${constants.apwrimsUUID}/${widget.sessionId}")
+                          .onValue
+                      : FirebaseDatabase.instance
+                          .ref(
+                              "CHAT_BOT_TEST/${constants.apwrimsUUID}/${autoSessionId}")
+                          .onValue,
                   builder: (context, AsyncSnapshot snapshot) {
                     if (snapshot.hasData && snapshot.data != null) {
                       List<ChatBubble> messageList = [];
@@ -213,31 +330,33 @@ class _ChatWindowState extends State<ChatWindow> {
                         if (key != "cart") {
                           final datalast = Map<String, dynamic>.from(value);
                           print("SORTED MESSAGES ${datalast['message']}");
-
                           messageList.add(ChatBubble(
                             text: datalast['message'],
                             isUser: datalast['isUser'],
                             imageUrl: datalast['mediaUrl'],
+                            logMessage: datalast['log'] ?? '',
                           ));
 
-                          Timer.periodic(const Duration(seconds: 70), (timer) {
+                          Timer.periodic(const Duration(seconds: 60), (timer) {
                             timerCounter++;
                             print("loader&&&&&&&&77");
-                            if(showLoader.value) {;
-                            messageList.add(ChatBubble(
-                              text: "Data Not Found",
-                              isUser: false,
-                              imageUrl: "",
-                            ));
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              showLoader.value = false;
-                            });
-                            tts.speak("Data Not found");
-                            print("messagelist::${messageList.last.text}");
-                            if (timerCounter >= 1) {
-                              timer.cancel();
+                            if (showLoader.value && _toggleValue) {
+                              messageList.add(ChatBubble(
+                                text: "Data Not Found",
+                                isUser: false,
+                                imageUrl: "",
+                                logMessage: '',
+                              ));
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                showLoader.value = false;
+                              });
+                              tts.speak("Data Not found");
+                              print("messagelist::${messageList.last.text}");
+                              if (timerCounter >= 1) {
+                                timer.cancel();
+                              }
                             }
-                          }});
+                          });
                         }
                       });
                       //messageList.reversed;
@@ -249,40 +368,15 @@ class _ChatWindowState extends State<ChatWindow> {
                         });
                         tts.speak(messageList[messageList.length - 1].text);
                       }
-                      /*if(messageList[messageList.length-1].text == "Give Summary"){
-                          prevChatLength = messageList.length;
-                          if (messageList.isNotEmpty &&
-                              messageList[messageList.length - 1].isUser) {
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              showLoader.value = true;
-                            });
-
-                            Timer(const Duration(seconds: 3), () {
-                              if (showLoader.value) {
-                                tts.speak(
-                                    "Please wait, while we are fetching ${messageList[messageList
-                                        .length - 1].text}");
-                              }
-                            });
-                          }
-                        }*/
                       prevChatLength = messageList.length;
                       if (messageList.isNotEmpty &&
                           messageList[messageList.length - 1].isUser) {
                         WidgetsBinding.instance.addPostFrameCallback((_) {
                           showLoader.value = true;
                         });
-/*
-                        Timer.periodic(const Duration(seconds: 60), (timer) {
-                          print("loader&&&&&&&&77");
-                          showLoader.value = false;
-                          tts.speak("Data Not found");
-                          messageList.last.text = "Telugu lo cheppu";
-                          timer.cancel();
-                          print("messagelist::${messageList.last.text}");
-                        });*/
+
                         Timer(const Duration(seconds: 4), () {
-                          if (showLoader.value) {
+                          if (showLoader.value && _toggleValue) {
                             int randomIndex =
                                 Random().nextInt(loaderMsgList.length);
                             print("Random Index::${randomIndex}");
@@ -313,26 +407,28 @@ class _ChatWindowState extends State<ChatWindow> {
                   },
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(left: 80.0),
-                child: Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: ValueListenableBuilder(
-                    valueListenable: showLoader,
-                    builder: (context, value, _) {
-                      if (value) {
-                        return SizedBox(
-                            height: 100,
-                            width: 100,
-                            child: Image.asset(
-                                'assets/images/response_bubble.gif'));
-                      }
-                      return const SizedBox();
-                    },
-                  ),
-                ),
-              ),
-              Padding(
+              _toggleValue
+                  ? Padding(
+                      padding: const EdgeInsets.only(left: 80.0),
+                      child: Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: ValueListenableBuilder(
+                          valueListenable: showLoader,
+                          builder: (context, value, _) {
+                            if (value) {
+                              return SizedBox(
+                                  height: 100,
+                                  width: 100,
+                                  child: Image.asset(
+                                      'assets/images/response_bubble.gif'));
+                            }
+                            return const SizedBox();
+                          },
+                        ),
+                      ),
+                    )
+                  : const SizedBox(),
+              /*Padding(
                 padding: const EdgeInsets.only(bottom: 30.0),
                 child: Align(
                   alignment: Alignment.bottomCenter,
@@ -353,11 +449,16 @@ class _ChatWindowState extends State<ChatWindow> {
                     },
                   ), // your widget would go here
                 ),
-              ),
-              /* Padding(
-                padding: const EdgeInsets.all(20),
-                child: bottomBar(),
               ),*/
+              _toggleValue
+                  ? Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: bottomBar(),
+                    )
+                  : const Padding(
+                      padding: EdgeInsets.all(20),
+                      child: SizedBox(),
+                    )
               /*Padding(
                 padding: const EdgeInsets.all(20),
                 child: summaryBottomBar(),
@@ -796,8 +897,8 @@ class _ChatWindowState extends State<ChatWindow> {
   }
 
   Future<void> insertImageDataIntoDb(String? imageUrl, String text) async {
-    DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_GOWATER/${widget.sessionId}");
+    DatabaseReference ref = FirebaseDatabase.instance
+        .ref("CHAT_BOT_TEST/${constants.apwrimsUUID}/${widget.sessionId}");
     await ref
         .push()
         .set({"isUser": true, "message": text, "mediaUrl": imageUrl});
@@ -807,25 +908,27 @@ class _ChatWindowState extends State<ChatWindow> {
   }
 
   Future<void> insertDataIntoDb(String text) async {
-    DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_GOWATER/${widget.sessionId}");
+    DatabaseReference ref = FirebaseDatabase.instance
+        .ref("CHAT_BOT_TEST/${constants.apwrimsUUID}/${widget.sessionId}");
     await ref.push().set({"isUser": true, "message": text});
     chatController.clear();
     capturedPhoto = null;
     setState(() {});
   }
 
-  _onSummarizeResult(SpeechRecognitionResult result) async {
-    DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_GOWATER/${widget.sessionId}");
-    List<String> summaryContent = [];
-    int i = 0;
-    while (i < 5) {
-      if (result.recognizedWords.isNotEmpty) {
-        summaryContent.add("${result.recognizedWords}");
-        addUserMessageToChat("${result.recognizedWords}");
-        i++;
-      }
+  Future<void> initializeSpeechToText(String sessionId) async {
+    print(("startListeningToHello: starting listening"));
+
+    bool available = await speechToText.initialize(
+      onStatus: (status) async {
+        print('Status: $status');
+      },
+      onError: (error) async {
+        print('Error: $error');
+      },
+    );
+    if (available) {
+      await _startListeningForAutoMode();
     }
   }
 }

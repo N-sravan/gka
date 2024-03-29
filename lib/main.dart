@@ -2,8 +2,11 @@ import 'dart:async';
 import 'dart:isolate';
 import 'dart:ui';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:gka/utils/app_state.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
+import 'package:gka/utils/shared_preference_util.dart';
 import 'package:http/http.dart';
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -34,6 +37,7 @@ import 'package:workmanager/workmanager.dart';
 import '../../login/model/department_user_permission_response.dart' as response;
 import 'dart:developer' as developer;
 import 'dart:io' as platform;
+import 'chat_bubble.dart';
 import 'locator.dart';
 
 var initializationSettingsAndroid = const AndroidInitializationSettings(
@@ -52,15 +56,86 @@ bool speechEnabled = false;
 bool shouldListen = true;
 bool isListening = false;
 String bgChatSessionId = '';
+int prevChatLength = 0;
+// String AppState.instance.triggeredWord = "";
+PermissionStatus? notificationStatus;
+/*List<String> listeningModeKeywords = [
+  "Rainfall",
+  "Rainfall Forecast data",
+  "Rainfall historical data",
+  "Rainfall Alert",
+  "Maximum Rainfall",
+  "Drought Prediction",
+  "Rainfall Trend",
+  "Rainfall Analysis",
+  "Rainfall Prediction",
+  "Rainfall Deviation",
+  "Rainfall Cumulative",
+  "Reservoir",
+  "Reservoir Levels",
+  "Reservoir Storage",
+  "Reservoir Capacity",
+  "Reservoir Inflow",
+  "Reservoir Outflow",
+  "Reservoir Splits",
+  "Power house under Reservoir",
+  "Reservoir Canals",
+  "Reservoir Canal Splits",
+  "MI Tanks",
+  "MI Tank count",
+  "MI tank Storage",
+  "Tank fill %",
+  "MI Tank command area",
+  "MI Tank catchment area",
+  "MI Tank historical data",
+  "Groundwater",
+  "Groundwater Level",
+  "Groundwater Fluctuation",
+  "Groundwater Water Quality",
+  "Groundwater Aquifer",
+  "Groundwater status of village",
+  "Groundwater Recharge",
+  "Groundwater Trends",
+  "Groundwater current levels",
+  "Gorundwater premonsoon",
+  "Groundwater Assessment",
+  "Soil Moisture",
+  "Soil moisture depth",
+  "Soil moisture percentage",
+  "Soil moisture change",
+  "Water Conservation Structure",
+  "WC Capacity",
+  "WC Storage",
+  "Farmponds",
+  "Checkdams",
+  "Percolation Tanks",
+  "Run-off Conserved",
+  "Excess Rainfall",
+  "Counter Trenches",
+  "LI Scheme",
+  "LI Scheme Benificiaries",
+  "LI Scheme contemplated Ayacut",
+  "LI Scheme capacity",
+  "Yield under LI scheme",
+  "Catchment area under LI scheme",
+  "River Gauge",
+  "River gauge trend",
+  "River gauge level",
+  "River gauge depth",
+  "River gauge high flow"
+];*/
 
 ValueNotifier<SpeechStatus> speechStatus =
     ValueNotifier<SpeechStatus>(SpeechStatus.idle);
 
 enum SpeechStatus { listening, speaking, idle }
 
+bool? isVoiceEnabled;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await requestPermissions();
+  final permissionsGranted = await requestPermissions();
+
   /*  SystemChrome.setPreferredOrientations([
     DeviceOrientation.landscapeRight, // Set landscape orientation
     DeviceOrientation.landscapeLeft,
@@ -83,13 +158,17 @@ void main() async {
     DeviceOrientation.landscapeRight, // Set landscape orientation
     DeviceOrientation.landscapeLeft,
   ]);*/
-  Workmanager().initialize(callbackDispatcher);
+  isVoiceEnabled =
+      await SharedPreferenceUtil.instance.getBoolPreference('isVoiceEnabled');
+
+  print("wewewewewew:::$isVoiceEnabled");
+/*  Workmanager().initialize(callbackDispatcher);
   Workmanager().registerPeriodicTask(
     "speechTask",
     "speechTask",
     frequency: const Duration(minutes: 15),
     initialDelay: const Duration(minutes: 2),
-  );
+  );*/
   runApp(
     MultiProvider(
       providers: [
@@ -109,15 +188,31 @@ void main() async {
       child: const MyApp(),
     ),
   );
-  await initializeService();
+  // await initializeService();
 }
 
-Future<void> requestPermissions() async {
-  await Permission.microphone.request();
-  await Permission.notification.request();
+Future<bool> requestPermissions() async {
+/*  // Request microphone permission
+  final microphoneStatus = await Permission.microphone.request();
+  if (microphoneStatus == PermissionStatus.granted) {
+    return true;
+  }
+  return false;*/
+
+  // Request notification permission
+  final microphoneStatus = await Permission.microphone.request();
+  notificationStatus = await Permission.notification.request();
+
+  // Check if both permissions are granted
+  if (microphoneStatus == PermissionStatus.granted &&
+      notificationStatus == PermissionStatus.granted) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
-void callbackDispatcher() {
+callbackDispatcher() {
   Workmanager().executeTask((
     task,
     inputData,
@@ -127,17 +222,20 @@ void callbackDispatcher() {
       await Isolate.spawn(
           complexTask3, {'iteration': 1, 'sendPort': receivePort.sendPort});
       receivePort.listen((total) async {
+        print("wewewewewew started bg");
         await showNotification();
-        await tts.speak("Would you like to know the APWRIMS Data?");
-        print("wewewewewew before timer ${DateTime.now().second}");
-        Timer(const Duration(seconds: 3), () async {
-          try {
-            print("wewewewewew after timer ${DateTime.now().second}");
-            await initializeSpeechToTextBg();
-          } catch (e) {
-            print("Error occurred: $e");
-          }
-        });
+        if (notificationStatus == PermissionStatus.granted) {
+          await tts.speak("Would you like to know the APWRIMS Data?");
+          print("wewewewewew before timer ${DateTime.now().second}");
+          Timer(const Duration(seconds: 3), () async {
+            try {
+              print("wewewewewew after timer ${DateTime.now().second}");
+              await initializeSpeechToTextBg();
+            } catch (e) {
+              print("Error occurred: $e");
+            }
+          });
+        }
       });
     }
     return Future.delayed(const Duration(seconds: 20), () async {
@@ -147,33 +245,96 @@ void callbackDispatcher() {
 }
 
 Future<void> showNotification() async {
+  await Firebase.initializeApp(
+      options: const FirebaseOptions(
+    apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
+    appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
+    messagingSenderId: '1062998944432',
+    projectId: 'apwrims---chatbot',
+    storageBucket: 'apwrims---chatbot.appspot.com',
+    iosBundleId: 'com.vassar.apwrimschatbot',
+  ));
+  DatabaseReference ref = FirebaseDatabase.instance
+      .ref("CHAT_BOT_ALERT/HOURLY_NOTIFICATION/${constants.apwrimsUUID}");
+  String responseMessage = '';
+
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
+  void onDidReceiveNotificationResponse(
+      NotificationResponse notificationResponse) async {
+    final String? payload = notificationResponse.payload;
+    if (notificationResponse.payload != null) {
+      print('notification payload: $payload');
+    }
+    /*await Navigator.push(
+      context,
+      MaterialPageRoute<void>(builder: (context) => SecondScreen(payload)),
+    );*/
+  }
+
+  void notificationTapBackground(
+      NotificationResponse notificationResponse) async {
+    final String? payload = notificationResponse.payload;
+    if (notificationResponse.payload != null) {
+      print('notification payload: $payload');
+    }
+    /*await Navigator.push(
+      context,
+      MaterialPageRoute<void>(builder: (context) => SecondScreen(payload)),
+    );*/
+  }
+
   if (platform.Platform.isAndroid || platform.Platform.isAndroid) {
-    await flutterLocalNotificationsPlugin.initialize(
+    /*   await flutterLocalNotificationsPlugin.initialize(
       const InitializationSettings(
         iOS: DarwinInitializationSettings(),
         android: AndroidInitializationSettings('ic_bg_service_small'),
       ),
+    );*/
+    await flutterLocalNotificationsPlugin.initialize(
+      initializationSettings,
+      /* onDidReceiveNotificationResponse: onDidReceiveNotificationResponse,
+      onDidReceiveBackgroundNotificationResponse: notificationTapBackground,*/
     );
   }
 
-  const AndroidNotificationDetails androidPlatformChannelSpecifics =
-      AndroidNotificationDetails(
-    'high_importance_channel',
-    'High Importance Notifications',
-    importance: Importance.max,
-    priority: Priority.high,
-  );
-  const NotificationDetails platformChannelSpecifics =
+/*  final BigTextStyleInformation bigTextStyleInformation =
+      const BigTextStyleInformation(
+    'Tap to view details',
+    htmlFormatBigText: true,
+    htmlFormatContentTitle: true,
+    htmlFormatSummaryText: true,
+  );*/
+
+  AndroidNotificationDetails androidPlatformChannelSpecifics =
+      const AndroidNotificationDetails(
+          'high_importance_channel', 'High Importance Notifications',
+          importance: Importance.max,
+          priority: Priority.high,
+          ongoing: true,
+          styleInformation: BigTextStyleInformation(''));
+  NotificationDetails platformChannelSpecifics =
       NotificationDetails(android: androidPlatformChannelSpecifics);
-  await flutterLocalNotificationsPlugin.show(
-    0,
-    'APWRIMS',
-    'APWRIMS data is Updated',
-    platformChannelSpecifics,
-  );
+
+  await ref.orderByKey().limitToLast(1).once().then((event) async {
+    DataSnapshot snapshot = event.snapshot;
+    if (snapshot.value != null) {
+      dynamic values = snapshot.value;
+      values.forEach((key, value) async {
+        if (value['isUser'] == false) {
+          // responseMessage = value['message'].toString() ?? '';
+          responseMessage =
+              "In Andhra Pradesh, the current water year has seen a total rainfall of 4,197.08 TMC, with actual rainfall measuring 727.82 mm. The state hosts 108 reservoirs currently holding 270.60 TMC of water, complemented by a network of 38,441 minor irrigation tanks contributing 100.08 TMC. Groundwater levels have decreased slightly to 8.35 m from the previous month's 8.48 m. Soil moisture levels are promising, with 369.29 TMC of available moisture, distributed at 11.95% at 30 cm depth and 49.78% at 100 cm depth. The region demonstrates proactive water conservation efforts with 1,399,238 water conservation structures storing 1.80 TMC of water. Overall water availability stands at 741.77 TMC, sourced predominantly from reservoirs (741.77 TMC) with the remaining 471.17 TMC coming from other sources.";
+        }
+      });
+    }
+  });
+  print("wewewewewew::$responseMessage");
+
+  await flutterLocalNotificationsPlugin.show(0, 'APWRIMS Summary',
+      responseMessage.toString().trim(), platformChannelSpecifics,
+      payload: 'shh');
 }
 
 void complexTask3(Map<String, dynamic> data) {
@@ -194,10 +355,10 @@ Future<void> initializeService() async {
 
   /// OPTIONAL, using custom notification channel id
   const AndroidNotificationChannel channel = AndroidNotificationChannel(
-    'my_foreground', // id
-    'MY FOREGROUND SERVICE', // title
+    'my_foreground',
+    'MY FOREGROUND SERVICE',
     description: 'This channel is used for important notifications.',
-    importance: Importance.low, // importance must be at low or higher level
+    importance: Importance.low,
   );
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -221,14 +382,12 @@ Future<void> initializeService() async {
     androidConfiguration: AndroidConfiguration(
       // this will be executed when app is in foreground or background in separated isolate
       onStart: onStart,
-
       // auto start service
       autoStart: true,
       isForegroundMode: true,
-
       notificationChannelId: 'my_foreground',
-      initialNotificationTitle: 'AWESOME SERVICE',
-      initialNotificationContent: 'Initializing',
+      // initialNotificationTitle: 'AWESOME SERVICE',
+      // initialNotificationContent: 'Initializing',
       foregroundServiceNotificationId: 888,
     ),
     iosConfiguration: IosConfiguration(
@@ -260,6 +419,8 @@ void onStart(ServiceInstance service) async {
   SharedPreferences preferences = await SharedPreferences.getInstance();
   await preferences.setString("hello", "world");
 
+  String sessionId = const Uuid().v4();
+
   /// OPTIONAL when use custom notification
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
@@ -279,11 +440,11 @@ void onStart(ServiceInstance service) async {
   });
 
   // bring to foreground
-  Timer.periodic(const Duration(seconds: 1), (timer) async {
+  Timer.periodic(const Duration(seconds: 10), (timer) async {
     if (service is AndroidServiceInstance) {
       if (await service.isForegroundService()) {
         /// the notification id must be equals with AndroidConfiguration when you call configure() method.
-        flutterLocalNotificationsPlugin.show(
+        /*      flutterLocalNotificationsPlugin.show(
           888,
           'COOL SERVICE',
           'Awesome ${DateTime.now()}',
@@ -295,13 +456,13 @@ void onStart(ServiceInstance service) async {
               ongoing: true,
             ),
           ),
-        );
+        );*/
 
-        // if you don't using custom notification, uncomment this
+        /* // if you don't using custom notification, uncomment this
         service.setForegroundNotificationInfo(
           title: "Agri Data",
           content: "Updated at ${DateTime.now()}",
-        );
+        );*/
       }
     }
 
@@ -328,13 +489,11 @@ void onStart(ServiceInstance service) async {
         "device": device,
       },
     );
+    await initializeSpeechToText(sessionId);
   });
-
-  await initializeSpeechToText();
 }
 
-Future<void> initializeSpeechToText() async {
-  String sessionId = '';
+Future<void> initializeSpeechToText(String sessionId) async {
   print(("startListeningToHello: starting listening"));
   await Firebase.initializeApp(
       options: const FirebaseOptions(
@@ -346,35 +505,45 @@ Future<void> initializeSpeechToText() async {
     iosBundleId: 'com.vassar.apwrimschatbot',
   ));
 
-  bool initialized = await speechToText.initialize(
+  bool available = await speechToText.initialize(
+    onStatus: (status) async {
+      print('Status: $status');
+      /*  if (status == 'notListening') {
+        await startListeningBg();
+      }*/
+    },
+    onError: (error) async {
+      print('Error: $error');
+      // await startListeningBg();
+    },
+  );
+  print("wewewewewew AppState.instance.triggeredWord ::  ${AppState.instance.triggeredWord}");
+  print("wewewewewew session $sessionId");
+  if (available && AppState.instance.triggeredWord == "") {
+    AppState.instance.triggeredWord= await startListenings(sessionId);
+  }
+
+  if (available && AppState.instance.triggeredWord.isNotEmpty) {
+    await startListeningToYes(sessionId, AppState.instance.triggeredWord);
+  }
+
+/*  bool initialized = await speechToText.initialize(
     onStatus: (status) async {
       print('Status: $status');
       print('sessionId: $sessionId');
       if (status == 'notListening') {
         //await speechToText.stop();
-        if (sessionId.isEmpty) {
-          sessionId = await listenForSessionId();
-        } else {
-          await startListenings(sessionId);
-        }
+        // await startListenings(sessionId);
       }
     },
     onError: (error) async {
       print('Error: $error');
       //await speechToText.stop();
-      if (sessionId.isEmpty) {
-        sessionId = await listenForSessionId();
-      } else {
-        await startListenings(sessionId);
-      }
+      await startListenings(sessionId);
     },
   );
 
-  if (sessionId != null && sessionId!.isEmpty) {
-    sessionId = await listenForSessionId();
-  } else {
-    await startListenings(sessionId!);
-  }
+  await startListenings(sessionId);*/
 }
 
 Future<void> initializeSpeechToTextBg() async {
@@ -401,7 +570,6 @@ Future<void> initializeSpeechToTextBg() async {
       // await startListeningBg();
     },
   );
-  print("wewewewewew available $available");
   if (available) {
     startListeningBg();
   }
@@ -409,31 +577,72 @@ Future<void> initializeSpeechToTextBg() async {
 
 bool isSpeaking = false; // Variable to track TTS speaking status
 
-Future<void> startListenings(String sessionId) async {
-  DatabaseReference ref =
-      FirebaseDatabase.instance.ref("CHAT_BOT_GOWATER/$sessionId");
+Future<String> startListenings(String sessionId) async {
+  int i = 0;
+  DatabaseReference ref = FirebaseDatabase.instance
+      .ref("CHAT_BOT_CHANGELOG/${constants.apwrimsUUID}/${sessionId}");
   SpeechRecognitionResult result;
 
   await speechToText.listen(
     partialResults: false,
     onResult: (data) async {
       result = data;
-      if (result.recognizedWords.isNotEmpty && !isSpeaking) {
-        // speechStatus.value = SpeechStatus.speaking;
-        print("111111-input::${result.recognizedWords}");
-        await ref
-            .push()
-            .set({"isUser": true, "message": result.recognizedWords});
-        // await ref.push().set({"isUser": false, "message": "How can I help you tell me recognized word. Average rainfall here is 9.7 degrees in HYer"});
+      print("111111-input::${result.recognizedWords}");
 
+      if (result.recognizedWords.isNotEmpty &&
+          result.recognizedWords.toLowerCase().contains('rainfall')) {
+        await speechToText.stop();
+        i++;
+        AppState.instance.triggeredWord = "RAINFALL";
+        await tts.speak('Would you like to know the rainfall data');
+      }
+      if (result.recognizedWords.isNotEmpty &&
+          result.recognizedWords.toLowerCase().contains('reservoir')) {
+        await speechToText.stop();
+        i++;
+        AppState.instance.triggeredWord = "RESERVOIR";
+        await tts.speak('Would you like to know reservoir data');
+      }
+      if (result.recognizedWords.isNotEmpty &&
+          result.recognizedWords.toLowerCase().contains('groundwater')) {
+        await speechToText.stop();
+        i++;
+        AppState.instance.triggeredWord = "GROUNDWATER";
+        await tts.speak('Would you like to know groundwater data');
+      }
+      if (result.recognizedWords.isNotEmpty &&
+          result.recognizedWords.toLowerCase().contains('soil moisture')) {
+        await speechToText.stop();
+        i++;
+        AppState.instance.triggeredWord = "SOIL_MOISTURE";
+        await tts.speak('Would you like to know soil moisture data');
+      }
+
+      /* Future.delayed(const Duration(seconds: 10),() async {
+        await startListeningToYes(sessionId, AppState.instance.triggeredWord);
+      });*/
+/*
+      if (result.recognizedWords.toLowerCase() == 'yes') {
+        await ref.push().set({
+          "isUser": true,
+          "event_name": 'CONTINUOUS_LISTEN_MODE',
+          "trigger_word": AppState.instance.triggeredWord
+        });
+
+        await ref.push().set({
+          "isUser": false,
+          "event_name": 'CONTINUOUS_LISTEN_MODE',
+          "changelog": 'No Change in $AppState.instance.triggeredWord Data'
+        });
         await ref.orderByKey().limitToLast(1).once().then((event) async {
           DataSnapshot snapshot = event.snapshot;
+          print("values::${snapshot.value}");
           if (snapshot.value != null) {
             dynamic values = snapshot.value;
             values.forEach((key, value) async {
               if (value['isUser'] == false) {
-                String responseMessage = value['message'] ?? '';
-                await speak(responseMessage);
+                String responseMessage = value['changelog'] ?? '';
+                await tts.speak(responseMessage);
               }
             });
           }
@@ -443,14 +652,97 @@ Future<void> startListenings(String sessionId) async {
         Future.delayed(const Duration(seconds: 5), () async {
           await startListenings(sessionId);
         });
-      }
+      }*/
     },
   );
+  return AppState.instance.triggeredWord;
 }
 
+Future<void> startListeningToYes(String sessionId, String word) async {
+  print("startListeningToYes");
+  print("wewewewewew trigger word :: ${AppState.instance.triggeredWord}");
+  await speechToText.stop();
+  print("wewewewewew speechToText.isListening:: ${speechToText.isListening}");
+  DatabaseReference ref = FirebaseDatabase.instance.ref("CHAT_BOT_CHANGELOG/${constants.apwrimsUUID}/${sessionId}");
+  SpeechRecognitionResult result;
+
+  await speechToText.listen(
+      partialResults: false,
+      onResult: (data) async {
+        result = data;
+        print("wewewewewew 111111-input::${result.recognizedWords}");
+        if (result.recognizedWords.isNotEmpty &&
+            result.recognizedWords.toLowerCase() == "yes") {
+          print("wewewewewew 111111-yes::${result.recognizedWords}");
+          await speechToText.stop();
+          await ref.push().set({
+            "isUser": true,
+            "event_name": 'CONTINUOUS_LISTEN_MODE',
+            "trigger_word": '${AppState.instance.triggeredWord}'
+          });
+          print("111111-pushed}");
+          /* await ref.push().set({
+            "isUser": false,
+            "event_name": 'CONTINUOUS_LISTEN_MODE',
+            "changelog": 'No Change in $AppState.instance.triggeredWord Data'
+          });*/
+          Future.delayed(const Duration(seconds: 2),() async {
+            print("wewewewewe AppState.instance.triggeredWord after completion::${AppState.instance.triggeredWord}");
+            await ref.orderByKey().limitToLast(1).once().then((event) async {
+              DataSnapshot snapshot = event.snapshot;
+              print("values::${snapshot.value}");
+              if (snapshot.value != null) {
+                dynamic values = snapshot.value;
+                values.forEach((key, value) async {
+                  if (value['isUser'] == false) {
+                    String responseMessage = value['changelog'] ?? '';
+                    AppState.instance.triggeredWord = "";
+                    await tts.speak(responseMessage);
+                  }
+                });
+              }
+            });
+          });
+        }
+      });
+  // await startListenings(sessionId);
+}
+/*
+      if (result.recognizedWords.toLowerCase() == 'yes') {
+        await ref.push().set({
+          "isUser": true,
+          "event_name": 'CONTINUOUS_LISTEN_MODE',
+          "trigger_word": AppState.instance.triggeredWord
+        });
+
+        await ref.push().set({
+          "isUser": false,
+          "event_name": 'CONTINUOUS_LISTEN_MODE',
+          "changelog": 'No Change in $AppState.instance.triggeredWord Data'
+        });
+        await ref.orderByKey().limitToLast(1).once().then((event) async {
+          DataSnapshot snapshot = event.snapshot;
+          print("values::${snapshot.value}");
+          if (snapshot.value != null) {
+            dynamic values = snapshot.value;
+            values.forEach((key, value) async {
+              if (value['isUser'] == false) {
+                String responseMessage = value['changelog'] ?? '';
+                await tts.speak(responseMessage);
+              }
+            });
+          }
+        });
+        // speechStatus.value = SpeechStatus.listening;
+        await speechToText.stop();
+        Future.delayed(const Duration(seconds: 5), () async {
+          await startListenings(sessionId);
+        });
+      }*/
+
 Future<void> startListeningBg() async {
-  DatabaseReference ref =
-      FirebaseDatabase.instance.ref("CHAT_BOT_ALERT/HOURLY_ALERT");
+  DatabaseReference ref = FirebaseDatabase.instance
+      .ref("CHAT_BOT_ALERT/HOURLY_UPDATES/${constants.apwrimsUUID}");
   SpeechRecognitionResult result;
 
   await speechToText.listen(
@@ -466,7 +758,6 @@ Future<void> startListeningBg() async {
         await ref.orderByKey().limitToLast(1).once().then((event) async {
           DataSnapshot snapshot = event.snapshot;
           print("wewewewewew snapshot $snapshot");
-          await tts.speak('Hold a moment');
           if (snapshot.value != null) {
             dynamic values = snapshot.value;
             values.forEach((key, value) async {
@@ -493,7 +784,7 @@ Future<void> speak(String text) async {
 
 /*Future<void> startListenings(String sessionId) async {
   DatabaseReference ref =
-      FirebaseDatabase.instance.ref("CHAT_BOT_GOWATER/$sessionId");
+      FirebaseDatabase.instance.ref("CHAT_BOT_TEST/$sessionId");
   SpeechRecognitionResult result;
 
   await speechToText.listen(
@@ -681,7 +972,6 @@ class MyApp extends StatelessWidget {
         initialRoute: '/splash',
         routes: {
           '/splash': (context) => const SplashScreenWidget(),
-          '/permissions': (context) => const PermissionsScreenWidget(),
           '/login': (context) => const LoginScreenWidget(),
         },
       ),

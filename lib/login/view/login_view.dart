@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gka/home/view/home_view.dart';
+import 'package:gka/permissions/view/permissions_view.dart';
 import 'package:provider/provider.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 import '../../utils/network_utils.dart';
@@ -67,7 +68,7 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
     customerId: "931e0a8e-54e9-49f4-87db-d6e1fe350432",
     customerName: "keralacustomer",
     customAttributes: null,
-    is_mobile_app : true,
+    is_mobile_app: true,
   );
 
   @override
@@ -286,6 +287,13 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                           _passwordController.text;
                                       /*  viewModel.authenticate(
                                           userId, password, context);*/
+
+                                      /* Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => PermissionsScreenWidget(data: data,)
+                                        ),
+                                      );*/
                                       Navigator.push(
                                           context,
                                           MaterialPageRoute(

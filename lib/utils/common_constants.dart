@@ -82,6 +82,7 @@ const String indiaUUID = 'd6b37905-d2d3-4275-9317-d9b6f47cd783';
 const String keralaStateUUID = '62d3dc99-5bc3-4303-8be1-d4fa1f7deee5';
 // const String appUUID = '62feedb6-024d-4c3e-bd9e-5d4ee96a5d9d';
 const String appUUID = '1516fd33-c918-4ee6-92a1-445a02977a9b';
+const String apwrimsUUID = '6f86292b-dd9a-4987-bb8f-c3940263b349';
 const String countryKey = 'COUNTRY';
 const String stateKey = 'STATE';
 const String districtKey = 'DISTRICT';
@@ -823,15 +824,14 @@ const String locationPermissionMsg = 'Please grant Location permission to use th
 
 const String mapType = 'Map Type';
 
-
 enum CropSownRadioOptions {village, field}
 enum NameSortRadioOptions {ascending, descending}
 enum CropNameVerifyRadioOptions {agree, disagree}
 
 //Role Names
 const String aoRoleName = "Agricultural Officer";
-// const String ngrok = "https://d5d8-196-12-47-4.ngrok-free.app/session/create_session";   ///apwrims
-const String ngrok = "https://ded2-196-12-47-4.ngrok-free.app/session/create_session";   ///gowater
+const String ngrok = "https://d5d8-196-12-47-4.ngrok-free.app/session/create_session";   ///apwrims
+// const String ngrok = "https://ded2-196-12-47-4.ngrok-free.app/session/create_session";   ///gowater
 
 const int ownerCultivator = 1;
 const int ownerCultivatorCumTenant = 2;
