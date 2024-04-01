@@ -76,8 +76,8 @@ class _ChatWindowState extends State<ChatWindow> {
   bool _toggleValue = false;
   OverlayEntry? overlayEntry;
   late Timer periodicTimer;
-  late Timer dataTimer;
-  late Timer loadingTimer;
+  Timer? dataTimer;
+  Timer? loadingTimer;
   String autoSessionId = '';
 
   @override
@@ -91,8 +91,8 @@ class _ChatWindowState extends State<ChatWindow> {
   void dispose() {
     // Dispose of the timer when the widget is removed
     // periodicTimer.cancel();
-    dataTimer.cancel();
-    loadingTimer.cancel();
+    dataTimer?.cancel();
+    loadingTimer?.cancel();
     showLoader.value = false;
     super.dispose();
   }
@@ -140,7 +140,7 @@ class _ChatWindowState extends State<ChatWindow> {
           partialResults: false,
           onResult: _onSpeechResult,
           pauseFor: const Duration(seconds: 3),
-          listenFor: const Duration(seconds: 15),
+          listenFor: const Duration(seconds: 20),
           cancelOnError: true);
     } catch (e) {
       print('EXCEPTIONKJSKFJK An exception occurred: $e');
@@ -332,13 +332,13 @@ class _ChatWindowState extends State<ChatWindow> {
                   builder: (context, AsyncSnapshot snapshot) {
                     if (snapshot.hasData && snapshot.data != null) {
                       List<ChatBubble> messageList = [];
-                      dataTimer.cancel();
-                      loadingTimer.cancel();
                       var data =
                           (snapshot.data! as DatabaseEvent).snapshot.value ??
                               {};
                       print("DATAFJLDLFHGLD $data");
                       data = data as Map<dynamic, dynamic>;
+                      dataTimer?.cancel();
+                      loadingTimer?.cancel();
                       var sortedByKeyMap = Map.fromEntries(data.entries.toList()
                         ..sort((e1, e2) => e1.key.compareTo(e2.key)));
                       sortedByKeyMap.forEach((key, value) {
