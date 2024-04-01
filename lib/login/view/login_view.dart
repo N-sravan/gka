@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/home/view/home_view.dart';
+import 'package:gka/login/model/ap_data_model.dart' as apdata;
 import 'package:gka/permissions/view/permissions_view.dart';
 import 'package:provider/provider.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
@@ -20,7 +22,8 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
   late bool _passwordVisible;
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  response.Meta data = response.Meta(
+
+/*  response.Meta data = response.Meta(
     userId: "b7a7ca67-6fd3-4f2e-97c6-b9b84fdbd7da",
     username: "kerala_ao",
     firstName: "Aswin",
@@ -69,14 +72,58 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
     customerName: "keralacustomer",
     customAttributes: null,
     is_mobile_app: true,
+  );*/
+
+  apdata.UserDetailsJsonForAp data = apdata.UserDetailsJsonForAp(
+    userId: "44",
+    username: "sklm_burja",
+    firstName: "sklm",
+    lastName: "burja",
+    email: "testing@gmail.com",
+    mobileNo: "9999999999",
+    roles: null,
+    permissions: null,
+    userDetailsJson: apdata.UserDetailsJson(
+      data: apdata.Data(
+        location: apdata.Location(
+          state: [
+            apdata.State(
+              stateName: "Andhra Pradesh",
+              stateUUID: "6f86292b-dd9a-4987-bb8f-c3940263b349",
+              district: [
+                apdata.District(
+                  districtName: "Srikakulam",
+                  districtUUID: "00bb53a0-a27e-46c4-9016-fe9545766cb9",
+                  mandal: [
+                    apdata.Mandal(
+                      mandalName: "BURJA",
+                      mndalUUID: "1437f9bf-207a-4d7e-bd9d-0af79b6ef8db",
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+        locType: "mandal",
+      ),
+    ),
+    approver: null,
+    passwordHash: null,
+    createdTs: null,
+    updatedTs: null,
+    deleted: null,
+    token: null,
+    status: null,
+    userInfoEncrypted: false,
   );
 
   @override
   void initState() {
     super.initState();
     viewModel = Provider.of<LoginViewModel>(context, listen: false);
-    _usernameController.text = "kerala_ao";
-    _passwordController.text = "agri123";
+    _usernameController.text = "sklm_burja";
+    _passwordController.text = "test123";
     WidgetsBinding.instance.addPostFrameCallback((_) {
       /// This will start tracking the current network status and give us
       /// information on the current status of the internet connection
@@ -294,12 +341,17 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                           builder: (context) => PermissionsScreenWidget(data: data,)
                                         ),
                                       );*/
-                                      Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                              builder: (context) =>
-                                                  HomeScreenWidget(
-                                                      data: data)));
+                                      if (userId == 'sklm_burja' &&
+                                          password == 'test123') {
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    HomeScreenWidget(
+                                                        data: data)));
+                                      }
+                                    } else {
+                                      Fluttertoast.showToast(msg: "Invalid Credentials");
                                     }
                                   },
                                   style: constants.buttonStyle,

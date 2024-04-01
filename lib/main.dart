@@ -6,7 +6,6 @@ import 'package:gka/utils/app_state.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 import 'package:gka/utils/shared_preference_util.dart';
 import 'package:http/http.dart';
-import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -161,14 +160,16 @@ void main() async {
   isVoiceEnabled =
       await SharedPreferenceUtil.instance.getBoolPreference('isVoiceEnabled');
 
-  print("wewewewewew:::$isVoiceEnabled");
-/*  Workmanager().initialize(callbackDispatcher);
-  Workmanager().registerPeriodicTask(
-    "speechTask",
-    "speechTask",
-    frequency: const Duration(minutes: 15),
-    initialDelay: const Duration(minutes: 2),
-  );*/
+  if(notificationStatus == PermissionStatus.granted) {
+    print("wewewewewew notificationStatus:::${PermissionStatus.granted}");
+    Workmanager().initialize(callbackDispatcher);
+    Workmanager().registerPeriodicTask(
+      "speechTask",
+      "speechTask",
+      frequency: const Duration(minutes: 15),
+      initialDelay: const Duration(minutes: 2),
+    );
+  }
   runApp(
     MultiProvider(
       providers: [
@@ -192,13 +193,6 @@ void main() async {
 }
 
 Future<bool> requestPermissions() async {
-/*  // Request microphone permission
-  final microphoneStatus = await Permission.microphone.request();
-  if (microphoneStatus == PermissionStatus.granted) {
-    return true;
-  }
-  return false;*/
-
   // Request notification permission
   final microphoneStatus = await Permission.microphone.request();
   notificationStatus = await Permission.notification.request();
@@ -224,7 +218,6 @@ callbackDispatcher() {
       receivePort.listen((total) async {
         print("wewewewewew started bg");
         await showNotification();
-        if (notificationStatus == PermissionStatus.granted) {
           await tts.speak("Would you like to know the APWRIMS Data?");
           print("wewewewewew before timer ${DateTime.now().second}");
           Timer(const Duration(seconds: 3), () async {
@@ -235,7 +228,6 @@ callbackDispatcher() {
               print("Error occurred: $e");
             }
           });
-        }
       });
     }
     return Future.delayed(const Duration(seconds: 20), () async {
@@ -517,10 +509,11 @@ Future<void> initializeSpeechToText(String sessionId) async {
       // await startListeningBg();
     },
   );
-  print("wewewewewew AppState.instance.triggeredWord ::  ${AppState.instance.triggeredWord}");
+  print(
+      "wewewewewew AppState.instance.triggeredWord ::  ${AppState.instance.triggeredWord}");
   print("wewewewewew session $sessionId");
   if (available && AppState.instance.triggeredWord == "") {
-    AppState.instance.triggeredWord= await startListenings(sessionId);
+    AppState.instance.triggeredWord = await startListenings(sessionId);
   }
 
   if (available && AppState.instance.triggeredWord.isNotEmpty) {
@@ -663,7 +656,8 @@ Future<void> startListeningToYes(String sessionId, String word) async {
   print("wewewewewew trigger word :: ${AppState.instance.triggeredWord}");
   await speechToText.stop();
   print("wewewewewew speechToText.isListening:: ${speechToText.isListening}");
-  DatabaseReference ref = FirebaseDatabase.instance.ref("CHAT_BOT_CHANGELOG/${constants.apwrimsUUID}/${sessionId}");
+  DatabaseReference ref = FirebaseDatabase.instance
+      .ref("CHAT_BOT_CHANGELOG/${constants.apwrimsUUID}/${sessionId}");
   SpeechRecognitionResult result;
 
   await speechToText.listen(
@@ -686,8 +680,9 @@ Future<void> startListeningToYes(String sessionId, String word) async {
             "event_name": 'CONTINUOUS_LISTEN_MODE',
             "changelog": 'No Change in $AppState.instance.triggeredWord Data'
           });*/
-          Future.delayed(const Duration(seconds: 2),() async {
-            print("wewewewewe AppState.instance.triggeredWord after completion::${AppState.instance.triggeredWord}");
+          Future.delayed(const Duration(seconds: 2), () async {
+            print(
+                "wewewewewe AppState.instance.triggeredWord after completion::${AppState.instance.triggeredWord}");
             await ref.orderByKey().limitToLast(1).once().then((event) async {
               DataSnapshot snapshot = event.snapshot;
               print("values::${snapshot.value}");

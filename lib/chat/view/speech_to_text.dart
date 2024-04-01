@@ -20,7 +20,7 @@ class SpeechToTextWidget extends StatefulWidget {
 }
 
 class _SpeechToTextWidgetState extends State<SpeechToTextWidget> {
-  SpeechToText _speechToText = SpeechToText();
+  final SpeechToText _speechToText = SpeechToText();
   bool _speechEnabled = false;
   bool speechToTextOn = false;
   String _lastWords = '';

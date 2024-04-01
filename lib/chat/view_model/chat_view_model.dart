@@ -4,13 +4,47 @@ import 'package:flutter/cupertino.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 import 'package:uuid/uuid.dart';
+import 'package:gka/login/model/ap_data_model.dart' as apdata;
 import '../../login/model/department_user_permission_response.dart' as response;
 
 class ChatViewModel extends ChangeNotifier {
   bool isFirstTime = true;
   String? sessionId;
 
-  Future<String?> createSession(response.Meta requestData) async {
+  /*Future<String?> createSession(response.Meta requestData) async {
+    try {
+      String url = constants.ngrok;
+      print("Request data before encode::${requestData}");
+      Object object = json.encode(requestData);
+      print("Request data after encode::${object}");
+      Response response = await post(
+        Uri.parse(url),
+        body: object,
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+      );
+      if (response.statusCode == 200) {
+        print("sessionId:: ${jsonDecode(response.body)["session_id"]}");
+        sessionId = jsonDecode(response.body)["session_id"];
+        isFirstTime = false;
+        notifyListeners();
+        return sessionId;
+      } else {
+        Fluttertoast.showToast(msg: "Couldn't create Session");
+      }
+    } catch (error, stacktrace) {
+      Fluttertoast.showToast(msg: "Couldn't create Session");
+      print("Error Stacktrace $error $stacktrace");
+    }
+   *//* String uuid = const Uuid().v4();
+    sessionId = uuid;
+    isFirstTime = true;
+    notifyListeners();
+    return uuid;*//*
+    return null;
+  }*/
+  Future<String?> createSession(apdata.UserDetailsJsonForAp requestData) async {
     try {
       String url = constants.ngrok;
       print("Request data before encode::${requestData}");

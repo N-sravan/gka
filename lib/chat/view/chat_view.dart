@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:gka/chat/view_model/chat_view_model.dart';
 import 'package:gka/login/model/department_user_permission_response.dart'
     as response;
+import 'package:gka/login/model/ap_data_model.dart' as apdata;
 import 'package:provider/provider.dart';
 import '../../chat_window.dart';
 
 class ChatView extends StatelessWidget {
-  final response.Meta userData;
+  // final response.Meta userData;
+  final apdata.UserDetailsJsonForAp userData;
 
-  const ChatView(this.userData, {Key? key}) : super(key: key);
+   ChatView(this.userData, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

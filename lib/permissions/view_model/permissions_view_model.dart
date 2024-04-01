@@ -144,10 +144,10 @@ class PermissionsViewModel extends LoadingViewModel {
         customAttributes: null,
       );
 
-      Navigator.push(
+    /*  Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => HomeScreenWidget(data: data)),
-      );
+      );*/
     } else {
       /// User isn't logged in
       Navigator.push(

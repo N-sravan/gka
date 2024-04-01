@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:gka/login/model/ap_data_model.dart' as apdata;
 import '../../chat/view/chat_view.dart';
 import '../../login/model/department_user_permission_response.dart' as response;
 
 class HomeScreenWidget extends StatefulWidget {
-  final response.Meta data;
+  // final response.Meta data;
+  final apdata.UserDetailsJsonForAp data;
 
   const HomeScreenWidget({Key? key, required this.data});
 
@@ -13,7 +15,8 @@ class HomeScreenWidget extends StatefulWidget {
 }
 
 class _HomeScreenWidgetState extends State<HomeScreenWidget> {
-  late final response.Meta data;
+  // late final response.Meta data;
+  late final apdata.UserDetailsJsonForAp data;
 
   @override
   void initState() {

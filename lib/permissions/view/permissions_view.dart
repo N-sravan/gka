@@ -97,11 +97,11 @@ class _PermissionsScreenWidgetState extends State<PermissionsScreenWidget> {
             const SizedBox(height: 400),
             ElevatedButton(
               onPressed: () {
-                Navigator.push(
+               /* Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                            HomeScreenWidget(data: widget.data)));
+                            HomeScreenWidget(data: widget.data)));*/
               },
               child: Text('Continue'),
             ),

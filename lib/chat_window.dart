@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 import 'package:avatar_glow/avatar_glow.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:gka/services/api_provider.dart';
 import 'package:uuid/parsing.dart';
 import 'package:uuid/uuid.dart';
@@ -43,15 +44,19 @@ class ChatWindow extends StatefulWidget {
 class _ChatWindowState extends State<ChatWindow> {
   var scrollControllerListView = ScrollController();
   int prevChatLength = 0;
-  TextToSpeech tts = TextToSpeech();
+
+  // TextToSpeech tts = TextToSpeech();
+  FlutterTts tts = FlutterTts();
   int responseCount = 1;
   String sessionId = "";
   String queryString = "";
+  String llmType = '';
   TextEditingController chatController = TextEditingController();
   bool speechToTextOn = false;
   bool isVoiceInitiated = false;
   File? capturedPhoto;
   int timerCounter = 0;
+  int loaderCounter = 0;
   List<MessageBubble> chatMessages = [];
   List<String> loaderMsgList = [
     'Please wait',
@@ -67,22 +72,28 @@ class _ChatWindowState extends State<ChatWindow> {
   String summaryData = "";
   bool displayUserText = false;
   bool isLoadingResponse = false;
-  bool _toggleValue = true;
+
+  bool _toggleValue = false;
   OverlayEntry? overlayEntry;
   late Timer periodicTimer;
-  String autoSessionId= '';
+  late Timer dataTimer;
+  late Timer loadingTimer;
+  String autoSessionId = '';
 
   @override
   void initState() {
     super.initState();
     _initSpeech();
-    tts.setRate(1);
+    // tts.setRate(1);
   }
 
   @override
   void dispose() {
     // Dispose of the timer when the widget is removed
-    periodicTimer.cancel();
+    // periodicTimer.cancel();
+    dataTimer.cancel();
+    loadingTimer.cancel();
+    showLoader.value = false;
     super.dispose();
   }
 
@@ -103,7 +114,7 @@ class _ChatWindowState extends State<ChatWindow> {
     );
 
     //print("Available voices ${await tts.getVoice()}");
-    print("Available languages ${await tts.getLanguages()}");
+    print("Available languages ${await tts.getLanguages}");
     await tts.setLanguage("en-US");
   }
 
@@ -189,13 +200,20 @@ class _ChatWindowState extends State<ChatWindow> {
   /// the platform returns recognized words.
   Future<void> _onSpeechResult(SpeechRecognitionResult result) async {
     print("_onSpeechResult ${result.recognizedWords}");
-    DatabaseReference ref = FirebaseDatabase.instance
-        .ref("CHAT_BOT_TEST/${constants.apwrimsUUID}/${widget.sessionId}");
-
+    await updateChatControllerForSpeech(result.recognizedWords);
+    DatabaseReference ref =
+        FirebaseDatabase.instance.ref("CHAT_BOT_APWRIMS/${widget.sessionId}");
+    !_toggleValue ? llmType = "internal" : llmType = "external";
+    print("llmType::${llmType}");
     // TransliterationResponse? response = await Transliteration.transliterate(result.recognizedWords, Languages.TELUGU);
     // final translatedText =response?.transliterationSuggestions[0].toString();
     // print("translated::$translatedText");
-    await ref.push().set({"isUser": true, "message": result.recognizedWords});
+    await ref.push().set({
+      "isUser": true,
+      "message": result.recognizedWords,
+      "mediaUrl": '',
+      "llm_type": llmType
+    });
     // await ref.push().set({"isUser": false, "message": "Hello how are you"});
     // if(result.recognizedWords.toLowerCase() == "give summary"){
     //   await ref.push().set({"isUser": false, "message": "Summaryy"});
@@ -215,8 +233,8 @@ class _ChatWindowState extends State<ChatWindow> {
       SpeechRecognitionResult result) async {
     print("_onSpeechResultForAutoMode ${result.recognizedWords}");
     print("_onSpeechResultForAutoMode autoSessionId ${autoSessionId}");
-    DatabaseReference ref = FirebaseDatabase.instance
-        .ref("CHAT_BOT_TEST/${constants.apwrimsUUID}/${autoSessionId}");
+    DatabaseReference ref =
+        FirebaseDatabase.instance.ref("CHAT_BOT_APWRIMS/${autoSessionId}");
 
     if (result.recognizedWords.toLowerCase() == "hello" && !isVoiceInitiated) {
       await _speechToText.stop();
@@ -245,7 +263,8 @@ class _ChatWindowState extends State<ChatWindow> {
         bool? result = await showSessionDialog();
         if (result != null && result) {
           tts.stop();
-          periodicTimer.cancel();
+          _speechToText.stop();
+          // periodicTimer.cancel();
           Navigator.pop(context);
         }
         return false;
@@ -268,20 +287,20 @@ class _ChatWindowState extends State<ChatWindow> {
               ),
               const Spacer(), // Add spacing between title and toggle
               Text(
-                _toggleValue ? 'Manual Mode' : 'Auto Mode',
+                _toggleValue ? 'External LLM' : 'Internal LLM',
                 style: TextStyle(
                   fontSize: 12,
-                  color: _toggleValue ? Colors.green : Colors.grey,
+                  color: _toggleValue ? Colors.black : Colors.green,
                 ),
               ),
-              const Spacer(),
+
               IconButton(
                 onPressed: () async {
                   setState(() {
                     _toggleValue = !_toggleValue; // Toggle the value
                   });
                   print("wewewewewew _toggleValue::$_toggleValue");
-                  if (!_toggleValue) {
+                  /* if (!_toggleValue) {
                     autoSessionId= Uuid().v4();
                     periodicTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
                       await initializeSpeechToText(autoSessionId);
@@ -290,11 +309,11 @@ class _ChatWindowState extends State<ChatWindow> {
                     await _speechToText.stop();
                     await tts.stop();
                     periodicTimer.cancel();
-                  }
+                  }*/
                 },
                 icon: Icon(
-                  _toggleValue ? Icons.toggle_on : Icons.toggle_off,
-                  color: _toggleValue ? Colors.green : Colors.grey,
+                  !_toggleValue ? Icons.toggle_on : Icons.toggle_off,
+                  color: !_toggleValue ? Colors.green : Colors.black,
                   size: 30,
                 ),
               ),
@@ -307,18 +326,14 @@ class _ChatWindowState extends State<ChatWindow> {
             children: [
               Expanded(
                 child: StreamBuilder(
-                  stream: _toggleValue
-                      ? FirebaseDatabase.instance
-                          .ref(
-                              "CHAT_BOT_TEST/${constants.apwrimsUUID}/${widget.sessionId}")
-                          .onValue
-                      : FirebaseDatabase.instance
-                          .ref(
-                              "CHAT_BOT_TEST/${constants.apwrimsUUID}/${autoSessionId}")
-                          .onValue,
+                  stream: FirebaseDatabase.instance
+                      .ref("CHAT_BOT_APWRIMS/${widget.sessionId}")
+                      .onValue,
                   builder: (context, AsyncSnapshot snapshot) {
                     if (snapshot.hasData && snapshot.data != null) {
                       List<ChatBubble> messageList = [];
+                      dataTimer.cancel();
+                      loadingTimer.cancel();
                       var data =
                           (snapshot.data! as DatabaseEvent).snapshot.value ??
                               {};
@@ -330,33 +345,13 @@ class _ChatWindowState extends State<ChatWindow> {
                         if (key != "cart") {
                           final datalast = Map<String, dynamic>.from(value);
                           print("SORTED MESSAGES ${datalast['message']}");
+                          print("Session Id ${widget.sessionId}");
                           messageList.add(ChatBubble(
                             text: datalast['message'],
                             isUser: datalast['isUser'],
                             imageUrl: datalast['mediaUrl'],
                             logMessage: datalast['log'] ?? '',
                           ));
-
-                          Timer.periodic(const Duration(seconds: 60), (timer) {
-                            timerCounter++;
-                            print("loader&&&&&&&&77");
-                            if (showLoader.value && _toggleValue) {
-                              messageList.add(ChatBubble(
-                                text: "Data Not Found",
-                                isUser: false,
-                                imageUrl: "",
-                                logMessage: '',
-                              ));
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                showLoader.value = false;
-                              });
-                              tts.speak("Data Not found");
-                              print("messagelist::${messageList.last.text}");
-                              if (timerCounter >= 1) {
-                                timer.cancel();
-                              }
-                            }
-                          });
                         }
                       });
                       //messageList.reversed;
@@ -375,12 +370,27 @@ class _ChatWindowState extends State<ChatWindow> {
                           showLoader.value = true;
                         });
 
-                        Timer(const Duration(seconds: 4), () {
-                          if (showLoader.value && _toggleValue) {
-                            int randomIndex =
-                                Random().nextInt(loaderMsgList.length);
-                            print("Random Index::${randomIndex}");
+                        loadingTimer = Timer(const Duration(seconds: 4), () {
+                          int randomIndex =
+                              Random().nextInt(loaderMsgList.length);
+                          if (showLoader.value) {
                             tts.speak(loaderMsgList[randomIndex]);
+                          }
+                        });
+
+                        dataTimer = Timer(const Duration(seconds: 15), () {
+                          print("timerCounter::$timerCounter");
+                          if (showLoader.value) {
+                            /* messageList.add(ChatBubble(
+                              text: "Data Not Found",
+                              isUser: false,
+                              imageUrl: "",
+                              logMessage: '',
+                            ));*/
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              showLoader.value = false;
+                            });
+                            tts.speak("Data Not found");
                           }
                         });
                       }
@@ -407,28 +417,26 @@ class _ChatWindowState extends State<ChatWindow> {
                   },
                 ),
               ),
-              _toggleValue
-                  ? Padding(
-                      padding: const EdgeInsets.only(left: 80.0),
-                      child: Align(
-                        alignment: AlignmentDirectional.centerStart,
-                        child: ValueListenableBuilder(
-                          valueListenable: showLoader,
-                          builder: (context, value, _) {
-                            if (value) {
-                              return SizedBox(
-                                  height: 100,
-                                  width: 100,
-                                  child: Image.asset(
-                                      'assets/images/response_bubble.gif'));
-                            }
-                            return const SizedBox();
-                          },
-                        ),
-                      ),
-                    )
-                  : const SizedBox(),
-              /*Padding(
+              Padding(
+                padding: const EdgeInsets.only(left: 80.0),
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: ValueListenableBuilder(
+                    valueListenable: showLoader,
+                    builder: (context, value, _) {
+                      if (value) {
+                        return SizedBox(
+                            height: 100,
+                            width: 100,
+                            child: Image.asset(
+                                'assets/images/response_bubble.gif'));
+                      }
+                      return const SizedBox();
+                    },
+                  ),
+                ),
+              ),
+              Padding(
                 padding: const EdgeInsets.only(bottom: 30.0),
                 child: Align(
                   alignment: Alignment.bottomCenter,
@@ -449,20 +457,11 @@ class _ChatWindowState extends State<ChatWindow> {
                     },
                   ), // your widget would go here
                 ),
-              ),*/
-              _toggleValue
-                  ? Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: bottomBar(),
-                    )
-                  : const Padding(
-                      padding: EdgeInsets.all(20),
-                      child: SizedBox(),
-                    )
+              ),
               /*Padding(
                 padding: const EdgeInsets.all(20),
-                child: summaryBottomBar(),
-              )*/
+                child: bottomBar(),
+              ),*/
             ],
           ),
         ),
@@ -476,9 +475,8 @@ class _ChatWindowState extends State<ChatWindow> {
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
       child: Row(
         children: [
-          SpeechToTextWidget(
-              updateSpeech: updateChatControllerForSpeech, localeId: "en-US"),
-          /*Padding(
+          /*SpeechToTextWidget(updateSpeech: updateChatControllerForSpeech, localeId: "en-US"),*/
+          Padding(
             padding: const EdgeInsets.all(4.0),
             child: Align(
               alignment: Alignment.bottomCenter,
@@ -497,7 +495,7 @@ class _ChatWindowState extends State<ChatWindow> {
                 },
               ),
             ),
-          ),*/
+          ),
           CameraWidget(saveCapturedPhoto: saveCapturedPhoto),
           Expanded(
             child: Stack(
@@ -550,117 +548,6 @@ class _ChatWindowState extends State<ChatWindow> {
                             }
                             await insertImageDataIntoDb(
                                 imageUrl, chatController.text);
-                          }
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          /*Expanded(
-            child: Stack(
-              children: [
-                if (capturedPhoto != null)
-                  Positioned(
-                    left: 0,
-                    child: Container(
-                      width: 50,
-                      height: 50,
-                      child: Image.file(capturedPhoto!, fit: BoxFit.cover),
-                    ),
-                  ),
-                Container(
-                  margin: EdgeInsets.only(left: capturedPhoto != null ? 60 : 0),
-                  child: TextFormField(
-                    controller: chatController,
-                    maxLines: 10,
-                    minLines: 1,
-                    textCapitalization: TextCapitalization.sentences,
-                    onChanged: (value) {
-                      if (capturedPhoto != null) {}
-                    },
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                        borderSide: const BorderSide(
-                          color: Color(0xFF4BA164),
-                          width: 2,
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      contentPadding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
-                      suffixIcon: IconButton(
-                        icon: const Icon(
-                          Icons.send,
-                          color: Color(0xFF4BA164),
-                        ),
-                        onPressed: () async {
-                          print("capturedPhoto::${capturedPhoto}");
-
-                          if(chatController.text.isEmpty){
-                            Fluttertoast.showToast(msg: "Please enter your question.");
-                          }
-                          chatController.clear();
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),*/
-        ],
-      ),
-    );
-  }
-
-  Widget summaryBottomBar() {
-    return Container(
-      width: MediaQuery.of(context).size.width,
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-      child: Row(
-        children: [
-          SpeechToTextWidget(
-              updateSpeech: updateChatControllerForSpeech, localeId: "en-US"),
-          // CameraWidget(saveCapturedPhoto: saveCapturedPhoto),
-          Expanded(
-            child: Stack(
-              children: [
-                Container(
-                  margin: EdgeInsets.only(left: capturedPhoto != null ? 60 : 0),
-                  child: TextFormField(
-                    controller: chatController,
-                    maxLines: 10,
-                    minLines: 1,
-                    textCapitalization: TextCapitalization.sentences,
-                    onChanged: (value) {
-                      if (capturedPhoto != null) {}
-                    },
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                        borderSide: const BorderSide(
-                          color: Color(0xFF4BA164),
-                          width: 2,
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      contentPadding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
-                      suffixIcon: IconButton(
-                        icon: const Icon(
-                          Icons.send,
-                          color: Color(0xFF4BA164),
-                        ),
-                        onPressed: () async {
-                          // addUserUploadedImageToChat();
-                          addUserMessageToChat(chatController.text);
-                          summaryData = chatController.text;
-                          print("summaryData::$summaryData");
-                          insertDataIntoDb(summaryData);
-                          print("capturedPhoto::$capturedPhoto");
-                          if (chatController.text.isEmpty) {
-                            Fluttertoast.showToast(
-                                msg: "Please enter your question.");
                           }
                         },
                       ),
@@ -897,20 +784,27 @@ class _ChatWindowState extends State<ChatWindow> {
   }
 
   Future<void> insertImageDataIntoDb(String? imageUrl, String text) async {
-    DatabaseReference ref = FirebaseDatabase.instance
-        .ref("CHAT_BOT_TEST/${constants.apwrimsUUID}/${widget.sessionId}");
-    await ref
-        .push()
-        .set({"isUser": true, "message": text, "mediaUrl": imageUrl});
+    DatabaseReference ref =
+        FirebaseDatabase.instance.ref("CHAT_BOT_APWRIMS/${widget.sessionId}");
+    !_toggleValue ? llmType = "internal" : llmType = "external";
+    await ref.push().set({
+      "isUser": true,
+      "message": text,
+      "mediaUrl": imageUrl,
+      "llm_type": llmType
+    });
     chatController.clear();
     capturedPhoto = null;
     setState(() {});
   }
 
   Future<void> insertDataIntoDb(String text) async {
-    DatabaseReference ref = FirebaseDatabase.instance
-        .ref("CHAT_BOT_TEST/${constants.apwrimsUUID}/${widget.sessionId}");
-    await ref.push().set({"isUser": true, "message": text});
+    DatabaseReference ref =
+        FirebaseDatabase.instance.ref("CHAT_BOT_APWRIMS/${widget.sessionId}");
+    !_toggleValue ? llmType = "internal" : llmType = "external";
+    await ref
+        .push()
+        .set({"isUser": true, "message": text, "llm_type": llmType});
     chatController.clear();
     capturedPhoto = null;
     setState(() {});
