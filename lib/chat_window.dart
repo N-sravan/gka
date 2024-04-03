@@ -202,7 +202,7 @@ class _ChatWindowState extends State<ChatWindow> {
     print("_onSpeechResult ${result.recognizedWords}");
     await updateChatControllerForSpeech(result.recognizedWords);
     DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_APWRIMS/${widget.sessionId}");
+        FirebaseDatabase.instance.ref("CHAT_BOT_GOWATER/${widget.sessionId}");
     !_toggleValue ? llmType = "internal" : llmType = "external";
     print("llmType::${llmType}");
     // TransliterationResponse? response = await Transliteration.transliterate(result.recognizedWords, Languages.TELUGU);
@@ -214,17 +214,7 @@ class _ChatWindowState extends State<ChatWindow> {
       "mediaUrl": '',
       "llm_type": llmType
     });
-    // await ref.push().set({"isUser": false, "message": "Hello how are you"});
-    // if(result.recognizedWords.toLowerCase() == "give summary"){
-    //   await ref.push().set({"isUser": false, "message": "Summaryy"});
-    // }
-    // await ref.push().set({"isUser": false, "message": "Response ${responseCount++}"});
-    /* String responseMsg = "Cheppandi";
-    TransliterationResponse? _response = await Transliteration.transliterate(responseMsg, Languages.TELUGU);
-    final translatedResponse = _response?.transliterationSuggestions[0].toString();
-    print("translated::$translatedText");
-    await ref.push().set({"isUser": true, "message": translatedText});
-    await ref.push().set({"isUser": false, "message": translatedResponse});*/
+
     bool active = _speechToText.isListening;
     listeningActive.value = active;
   }
@@ -234,7 +224,7 @@ class _ChatWindowState extends State<ChatWindow> {
     print("_onSpeechResultForAutoMode ${result.recognizedWords}");
     print("_onSpeechResultForAutoMode autoSessionId ${autoSessionId}");
     DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_APWRIMS/${autoSessionId}");
+        FirebaseDatabase.instance.ref("CHAT_BOT_GOWATER/${autoSessionId}");
 
     if (result.recognizedWords.toLowerCase() == "hello" && !isVoiceInitiated) {
       await _speechToText.stop();
@@ -327,7 +317,7 @@ class _ChatWindowState extends State<ChatWindow> {
               Expanded(
                 child: StreamBuilder(
                   stream: FirebaseDatabase.instance
-                      .ref("CHAT_BOT_APWRIMS/${widget.sessionId}")
+                      .ref("CHAT_BOT_GOWATER/${widget.sessionId}")
                       .onValue,
                   builder: (context, AsyncSnapshot snapshot) {
                     if (snapshot.hasData && snapshot.data != null) {
@@ -785,7 +775,7 @@ class _ChatWindowState extends State<ChatWindow> {
 
   Future<void> insertImageDataIntoDb(String? imageUrl, String text) async {
     DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_APWRIMS/${widget.sessionId}");
+        FirebaseDatabase.instance.ref("CHAT_BOT_GOWATER/${widget.sessionId}");
     !_toggleValue ? llmType = "internal" : llmType = "external";
     await ref.push().set({
       "isUser": true,
@@ -800,7 +790,7 @@ class _ChatWindowState extends State<ChatWindow> {
 
   Future<void> insertDataIntoDb(String text) async {
     DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_APWRIMS/${widget.sessionId}");
+        FirebaseDatabase.instance.ref("CHAT_BOT_GOWATER/${widget.sessionId}");
     !_toggleValue ? llmType = "internal" : llmType = "external";
     await ref
         .push()
