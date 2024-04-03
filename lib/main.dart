@@ -2,9 +2,11 @@ import 'dart:async';
 import 'dart:isolate';
 import 'dart:ui';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:gka/utils/app_state.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 import 'package:gka/utils/shared_preference_util.dart';
+import 'package:gka/utils/util.dart';
 import 'package:http/http.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
@@ -37,6 +39,7 @@ import '../../login/model/department_user_permission_response.dart' as response;
 import 'dart:developer' as developer;
 import 'dart:io' as platform;
 import 'chat_bubble.dart';
+import 'helpers/notification_helper.dart';
 import 'locator.dart';
 
 var initializationSettingsAndroid = const AndroidInitializationSettings(
@@ -48,7 +51,7 @@ SpeechToText speechToText = SpeechToText();
 ValueNotifier<bool> listeningActive = ValueNotifier<bool>(false);
 ValueNotifier<bool> showLoader = ValueNotifier<bool>(false);
 ValueNotifier<bool> speakCompleted = ValueNotifier<bool>(true);
-TextToSpeech tts = TextToSpeech();
+FlutterTts tts = FlutterTts();
 Completer<void> ttsCompleter = Completer<void>();
 // int response = 1;
 bool speechEnabled = false;
@@ -157,18 +160,18 @@ void main() async {
     DeviceOrientation.landscapeRight, // Set landscape orientation
     DeviceOrientation.landscapeLeft,
   ]);*/
-  isVoiceEnabled =
-      await SharedPreferenceUtil.instance.getBoolPreference('isVoiceEnabled');
 
-  if(notificationStatus == PermissionStatus.granted) {
+  NotificationHelper.initializeNotification(myBackgroundMessageHandler);
+
+  if (notificationStatus == PermissionStatus.granted) {
     print("wewewewewew notificationStatus:::${PermissionStatus.granted}");
-    Workmanager().initialize(callbackDispatcher);
+   /* Workmanager().initialize(callbackDispatcher);
     Workmanager().registerPeriodicTask(
       "speechTask",
       "speechTask",
       frequency: const Duration(minutes: 15),
       initialDelay: const Duration(minutes: 2),
-    );
+    );*/
   }
   runApp(
     MultiProvider(
@@ -218,19 +221,19 @@ callbackDispatcher() {
       receivePort.listen((total) async {
         print("wewewewewew started bg");
         await showNotification();
-          await tts.speak("Would you like to know the APWRIMS Data?");
-          print("wewewewewew before timer ${DateTime.now().second}");
-          Timer(const Duration(seconds: 3), () async {
-            try {
-              print("wewewewewew after timer ${DateTime.now().second}");
-              await initializeSpeechToTextBg();
-            } catch (e) {
-              print("Error occurred: $e");
-            }
-          });
+        await tts.speak("Would you like to know the APWRIMS Data?");
+        print("wewewewewew before timer ${DateTime.now().second}");
+        Timer(const Duration(seconds: 3), () async {
+          try {
+            print("wewewewewew after timer ${DateTime.now().second}");
+            await initializeSpeechToTextBg();
+          } catch (e) {
+            print("Error occurred: $e");
+          }
+        });
       });
     }
-    return Future.delayed(const Duration(seconds: 20), () async {
+    return Future.delayed(const Duration(minutes: 2), () async {
       return Future.value(true);
     });
   });
@@ -972,4 +975,12 @@ class MyApp extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Handling firebase notifications
+Future<dynamic> myBackgroundMessageHandler(RemoteMessage message) async {
+  Util.instance.logMessage(
+      'on Background: ',
+      '${message.notification?.title}/'
+          '${message.notification?.body}/${message.notification?.titleLocKey}');
 }

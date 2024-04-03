@@ -1,6 +1,8 @@
 
 import 'package:event_bus/event_bus.dart';
 
+import '../login/model/login_api_response_model.dart';
+
 class AppState {
   static AppState? _instance;
 
@@ -47,11 +49,13 @@ class AppState {
   late String role;
   late String farmerUUID;
   late String tappedFieldUUID;
+  late Content userData;
   String triggeredWord = '';
   bool hasFarmerData=false;
   bool isVoiceUpdateEnabled=false;
   bool isVillageSelected = true;
-  bool isMalayalamSelected = false;
+  bool isTeluguSelected = false;
+  bool isExternalLLM = false;
 
   //For Background Sync
   bool isSyncInProgress = false;

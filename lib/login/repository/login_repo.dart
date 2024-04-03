@@ -20,18 +20,20 @@ class LoginRepositoryImpl extends LoginRepository {
   Future<LoginResult> authenticate(
       Map<String, String> params, BuildContext context) async {
     Map<String, String> authHeaders = {
-      constants.headerContentType: constants.headerContentTypeFormUrl
+      constants.headerContentType: constants.headerJson
     };
-    String authUrl = constants.baseUrl + constants.loginEndpoint;
+    String authUrl = constants.loginEndpoint;
+    String requestBody = jsonEncode(params);
+
     http.Response response = await http.post(
       Uri.parse(authUrl),
       headers: authHeaders,
-      body: params,
+      body: requestBody,
     );
     Map<String, dynamic> responseMap = jsonDecode(response.body);
 
+    // LoginResult loginResult = LoginResult.fromJson(responseMap);
     LoginResult loginResult = LoginResult.fromJson(responseMap);
-    loginResult.statusCode = response.statusCode;
     return loginResult;
   }
 

@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:gka/chat/view_model/chat_view_model.dart';
 import 'package:gka/login/model/department_user_permission_response.dart'
-    as response;
-import 'package:gka/login/model/ap_data_model.dart' as apdata;
+as response;
+import '../../login/model/login_api_response_model.dart' as response;
 import 'package:provider/provider.dart';
 import '../../chat_window.dart';
 
 class ChatView extends StatelessWidget {
-  // final response.Meta userData;
-  final apdata.UserDetailsJsonForAp userData;
 
-   ChatView(this.userData, {Key? key}) : super(key: key);
+  const ChatView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -32,9 +30,9 @@ class ChatView extends StatelessWidget {
                   child: GestureDetector(
                     onTap: () async {
                       final viewModel =
-                          Provider.of<ChatViewModel>(context, listen: false);
-                      String? sessionId=await viewModel.createSession(userData);
-                      if (sessionId!=null && viewModel.sessionId != null) {
+                      Provider.of<ChatViewModel>(context, listen: false);
+                      String? sessionId = await viewModel.createSession();
+                      if (sessionId != null && viewModel.sessionId != null) {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -57,7 +55,7 @@ class ChatView extends StatelessWidget {
                     ),
                   ),
                 ),
-              )
+              ),
             ],
           );
         },

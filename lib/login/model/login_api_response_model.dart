@@ -1,56 +1,287 @@
 class LoginResult {
-  String? accessToken;
-  int? expiresIn;
-  int? refreshExpiresIn;
-  String? refreshToken;
-  String? tokenType;
-  int? notBeforePolicy;
-  String? sessionState;
-  String? scope;
-  String? error;
-  String? errorDescription;
-  int? statusCode;
+  String? id;
+  Result? result;
 
-  LoginResult(
-      {this.accessToken,
-      this.expiresIn,
-      this.refreshExpiresIn,
-      this.refreshToken,
-      this.tokenType,
-      this.notBeforePolicy,
-      this.sessionState,
-      this.scope,
-      this.error,
-      this.errorDescription,
-      this.statusCode});
+  LoginResult({
+    this.id,
+    this.result,
+  });
 
-  LoginResult.fromJson(Map<String, dynamic> json) {
-    accessToken = json['access_token'];
-    expiresIn = json['expires_in'];
-    refreshExpiresIn = json['refresh_expires_in'];
-    refreshToken = json['refresh_token'];
-    tokenType = json['token_type'];
-    notBeforePolicy = json['not-before-policy'];
-    sessionState = json['session_state'];
-    scope = json['scope'];
-    error = json['error'];
-    errorDescription = json['error_description'];
-    statusCode = json['status_code'];
+  factory LoginResult.fromJson(Map<String, dynamic> json) {
+    return LoginResult(
+      id: json['id'],
+      result: json['result'] != null ? Result.fromJson(json['result']) : null,
+    );
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['access_token'] = accessToken;
-    data['expires_in'] = expiresIn;
-    data['refresh_expires_in'] = refreshExpiresIn;
-    data['refresh_token'] = refreshToken;
-    data['token_type'] = tokenType;
-    data['not-before-policy'] = notBeforePolicy;
-    data['session_state'] = sessionState;
-    data['scope'] = scope;
-    data['error'] = error;
-    data['error_description'] = errorDescription;
-    data['status_code'] = statusCode;
-    return data;
+    return {
+      'id': id,
+      'result': result?.toJson(),
+    };
+  }
+}
+
+class Result {
+  bool? success;
+  int? status;
+  dynamic metadata;
+  Content? content;
+  String? message;
+
+  Result({
+    this.success,
+    this.status,
+    this.metadata,
+    this.content,
+    this.message,
+  });
+
+  factory Result.fromJson(Map<String, dynamic> json) {
+    return Result(
+      success: json['success'],
+      status: json['status'],
+      metadata: json['metadata'],
+      content: json['content'] != null ? Content.fromJson(json['content']) : null,
+      message: json['message'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'success': success,
+      'status': status,
+      'metadata': metadata,
+      'content': content?.toJson(),
+      'message': message,
+    };
+  }
+}
+
+class Content {
+  String? username;
+  String? firstName;
+  String? lastName;
+  String? email;
+  String? mobileNo;
+  dynamic roles;
+  dynamic permissions;
+  UserDetailsJson? userDetailsJson;
+  dynamic approver;
+  dynamic passwordHash;
+  dynamic createdTs;
+  dynamic updatedTs;
+  dynamic deleted;
+  dynamic token;
+  dynamic status;
+  bool? userInfoEncrypted;
+  String? userId;
+
+  Content({
+    this.username,
+    this.firstName,
+    this.lastName,
+    this.email,
+    this.mobileNo,
+    this.roles,
+    this.permissions,
+    this.userDetailsJson,
+    this.approver,
+    this.passwordHash,
+    this.createdTs,
+    this.updatedTs,
+    this.deleted,
+    this.token,
+    this.status,
+    this.userInfoEncrypted,
+    this.userId,
+  });
+
+  factory Content.fromJson(Map<String, dynamic> json) {
+    return Content(
+      username: json['username'],
+      firstName: json['firstName'],
+      lastName: json['lastName'],
+      email: json['email'],
+      mobileNo: json['mobileNo'],
+      roles: json['roles'],
+      permissions: json['permissions'],
+      userDetailsJson: json['userDetailsJson'] != null ? UserDetailsJson.fromJson(json['userDetailsJson']) : null,
+      approver: json['approver'],
+      passwordHash: json['passwordHash'],
+      createdTs: json['createdTs'],
+      updatedTs: json['updatedTs'],
+      deleted: json['deleted'],
+      token: json['token'],
+      status: json['status'],
+      userInfoEncrypted: json['userInfoEncrypted'],
+      userId: json['userId'].toString(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'username': username,
+      'firstName': firstName,
+      'lastName': lastName,
+      'email': email,
+      'mobileNo': mobileNo,
+      'roles': roles,
+      'permissions': permissions,
+      'userDetailsJson': userDetailsJson?.toJson(),
+      'approver': approver,
+      'passwordHash': passwordHash,
+      'createdTs': createdTs,
+      'updatedTs': updatedTs,
+      'deleted': deleted,
+      'token': token,
+      'status': status,
+      'userInfoEncrypted': userInfoEncrypted,
+      'userId': userId,
+    };
+  }
+}
+
+class UserDetailsJson {
+  Data? data;
+
+  UserDetailsJson({
+    this.data,
+  });
+
+  factory UserDetailsJson.fromJson(Map<String, dynamic> json) {
+    return UserDetailsJson(
+      data: json['data'] != null ? Data.fromJson(json['data']) : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'data': data?.toJson(),
+    };
+  }
+}
+
+class Data {
+  Location? location;
+  String? locType;
+
+  Data({
+    this.location,
+    this.locType,
+  });
+
+  factory Data.fromJson(Map<String, dynamic> json) {
+    return Data(
+      location: json['location'] != null ? Location.fromJson(json['location']) : null,
+      locType: json['locType'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'location': location?.toJson(),
+      'locType': locType,
+    };
+  }
+}
+
+class Location {
+  List<State>? state;
+
+  Location({
+    this.state,
+  });
+
+  factory Location.fromJson(Map<String, dynamic> json) {
+    return Location(
+      state: json['state'] != null ? List<State>.from(json['state'].map((x) => State.fromJson(x))) : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'state': state?.map((x) => x.toJson()).toList(),
+    };
+  }
+}
+
+class State {
+  String? stateName;
+  String? stateUUID;
+  List<District>? district;
+
+  State({
+    this.stateName,
+    this.stateUUID,
+    this.district,
+  });
+
+  factory State.fromJson(Map<String, dynamic> json) {
+    return State(
+      stateName: json['stateName'],
+      stateUUID: json['stateUUID'],
+      district: json['district'] != null ? List<District>.from(json['district'].map((x) => District.fromJson(x))) : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'stateName': stateName,
+      'stateUUID': stateUUID,
+      'district': district?.map((x) => x.toJson()).toList(),
+    };
+  }
+}
+
+class District {
+  String? districtName;
+  String? districtUUID;
+  List<Mandal>? mandal;
+
+  District({
+    this.districtName,
+    this.districtUUID,
+    this.mandal,
+  });
+
+  factory District.fromJson(Map<String, dynamic> json) {
+    return District(
+      districtName: json['districtName'],
+      districtUUID: json['districtUUID'],
+      mandal: json['mandal'] != null ? List<Mandal>.from(json['mandal'].map((x) => Mandal.fromJson(x))) : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'districtName': districtName,
+      'districtUUID': districtUUID,
+      'mandal': mandal?.map((x) => x.toJson()).toList(),
+    };
+  }
+}
+
+class Mandal {
+  String? mandalName;
+  String? mndalUUID;
+
+  Mandal({
+    this.mandalName,
+    this.mndalUUID,
+  });
+
+  factory Mandal.fromJson(Map<String, dynamic> json) {
+    return Mandal(
+      mandalName: json['mandalName'],
+      mndalUUID: json['mndalUUID'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'mandalName': mandalName,
+      'mndalUUID': mndalUUID,
+    };
   }
 }

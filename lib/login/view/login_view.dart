@@ -1,13 +1,14 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/home/view/home_view.dart';
-import 'package:gka/login/model/ap_data_model.dart' as apdata;
 import 'package:gka/permissions/view/permissions_view.dart';
+import 'package:gka/utils/app_state.dart';
 import 'package:provider/provider.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 import '../../utils/network_utils.dart';
+import '../model/login_api_response_model.dart' as response;
 import '../view_model/login_view_model.dart';
-import '../../login/model/department_user_permission_response.dart' as response;
 
 class LoginScreenWidget extends StatefulWidget {
   const LoginScreenWidget({super.key});
@@ -23,100 +24,6 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-/*  response.Meta data = response.Meta(
-    userId: "b7a7ca67-6fd3-4f2e-97c6-b9b84fdbd7da",
-    username: "kerala_ao",
-    firstName: "Aswin",
-    lastName: "Kumar",
-    email: "keralaao@gmail.com",
-    mobileNo: "+919889786767",
-    userDetails: response.UserDetails(
-      data: response.Data(
-          locType: "Panchayat",
-          location: response.Location(country: [
-            response.Country(
-                countryName: "INDIA",
-                countryUUID: "d6b37905-d2d3-4275-9317-d9b6f47cd783",
-                state: [
-                  response.State(
-                      stateName: "KERALA",
-                      stateUUID: "62d3dc99-5bc3-4303-8be1-d4fa1f7deee5",
-                      district: [
-                        response.District(
-                            districtName: "Palakkad",
-                            districtUUID:
-                                "1270f554-20cc-43ee-803e-1532f00e047c",
-                            block: [
-                              response.Block(
-                                  blockName: "Sreekrishnapuram",
-                                  blockUUID:
-                                      "db64691f-a7de-4e88-b5af-ecbe4dc6d191",
-                                  panchayat: [
-                                    response.Panchayat(
-                                        panchayatName: "Karimpuzha",
-                                        panchayatUUID:
-                                            "0ec4c732-5db9-4a3e-896a-f7baf24b2966")
-                                  ])
-                            ])
-                      ])
-                ])
-          ])),
-      scope: null,
-    ),
-    createdTs: null,
-    updatedTs: null,
-    lastLoginTs: "2024-03-11T10:45:55.398+00:00",
-    status: true,
-    title: null,
-    customerId: "931e0a8e-54e9-49f4-87db-d6e1fe350432",
-    customerName: "keralacustomer",
-    customAttributes: null,
-    is_mobile_app: true,
-  );*/
-
-  apdata.UserDetailsJsonForAp data = apdata.UserDetailsJsonForAp(
-    userId: "44",
-    username: "sklm_burja",
-    firstName: "sklm",
-    lastName: "burja",
-    email: "testing@gmail.com",
-    mobileNo: "9999999999",
-    roles: null,
-    permissions: null,
-    userDetailsJson: apdata.UserDetailsJson(
-      data: apdata.Data(
-        location: apdata.Location(
-          state: [
-            apdata.State(
-              stateName: "Andhra Pradesh",
-              stateUUID: "6f86292b-dd9a-4987-bb8f-c3940263b349",
-              district: [
-                apdata.District(
-                  districtName: "Srikakulam",
-                  districtUUID: "00bb53a0-a27e-46c4-9016-fe9545766cb9",
-                  mandal: [
-                    apdata.Mandal(
-                      mandalName: "BURJA",
-                      mndalUUID: "1437f9bf-207a-4d7e-bd9d-0af79b6ef8db",
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
-        locType: "mandal",
-      ),
-    ),
-    approver: null,
-    passwordHash: null,
-    createdTs: null,
-    updatedTs: null,
-    deleted: null,
-    token: null,
-    status: null,
-    userInfoEncrypted: false,
-  );
 
   @override
   void initState() {
@@ -332,16 +239,62 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                       String userId = _usernameController.text;
                                       String password =
                                           _passwordController.text;
-                                      /*  viewModel.authenticate(
-                                          userId, password, context);*/
-
-                                      /* Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => PermissionsScreenWidget(data: data,)
+                                      AppState.instance.userData = response.Content(
+                                        userId: "44",
+                                        username: "sklm_burja",
+                                        firstName: "sklm",
+                                        lastName: "burja",
+                                        email: "testing@gmail.com",
+                                        mobileNo: "9999999999",
+                                        roles: null,
+                                        permissions: null,
+                                        userDetailsJson: response.UserDetailsJson(
+                                          data: response.Data(
+                                            location: response.Location(
+                                              state: [
+                                                response.State(
+                                                  stateName: "Andhra Pradesh",
+                                                  stateUUID: "6f86292b-dd9a-4987-bb8f-c3940263b349",
+                                                  district: [
+                                                    response.District(
+                                                      districtName: "Srikakulam",
+                                                      districtUUID: "00bb53a0-a27e-46c4-9016-fe9545766cb9",
+                                                      mandal: [
+                                                        response.Mandal(
+                                                          mandalName: "BURJA",
+                                                          mndalUUID: "1437f9bf-207a-4d7e-bd9d-0af79b6ef8db",
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                            locType: "mandal",
+                                          ),
                                         ),
-                                      );*/
-                                      if (userId == 'sklm_burja' &&
+                                        approver: null,
+                                        passwordHash: null,
+                                        createdTs: null,
+                                        updatedTs: null,
+                                        deleted: null,
+                                        token: null,
+                                        status: null,
+                                        userInfoEncrypted: false,
+                                      );
+                                      String? fcmToken = await FirebaseMessaging.instance.getToken();
+                                      print('fcmToken::$fcmToken');
+                                      response.Content? content =
+                                          await viewModel.authenticate(
+                                              userId, password, context);
+                                      if (true) {
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    HomeScreenWidget()));
+                                      }
+                                      /*    if (userId == 'sklm_burja' &&
                                           password == 'test123') {
                                         Navigator.push(
                                             context,
@@ -349,9 +302,10 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                                 builder: (context) =>
                                                     HomeScreenWidget(
                                                         data: data)));
-                                      }
-                                    } else {
-                                      Fluttertoast.showToast(msg: "Invalid Credentials");
+                                      } else {
+                                        Fluttertoast.showToast(
+                                            msg: "Invalid Credentials");
+                                      }*/
                                     }
                                   },
                                   style: constants.buttonStyle,

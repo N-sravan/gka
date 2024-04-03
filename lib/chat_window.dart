@@ -4,10 +4,12 @@ import 'dart:math';
 import 'package:avatar_glow/avatar_glow.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:gka/chat/view/drawer_widget.dart';
 import 'package:gka/services/api_provider.dart';
-import 'package:uuid/parsing.dart';
+import 'package:gka/utils/app_state.dart';
+import 'package:transliteration/response/transliteration_response.dart';
+import 'package:transliteration/transliteration.dart';
 import 'package:uuid/uuid.dart';
-import 'package:uuid/v4.dart';
 import '../utils/common_constants.dart' as constants;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +23,6 @@ import 'package:text_to_speech/text_to_speech.dart';
 import 'dart:developer' as developer;
 import 'camera_screen.dart';
 import 'chat/view/speech_to_text.dart';
-import 'main.dart';
 import 'message_bubble.dart';
 import 'utils/network_utils.dart';
 
@@ -46,18 +47,17 @@ class _ChatWindowState extends State<ChatWindow> {
   int prevChatLength = 0;
 
   // TextToSpeech tts = TextToSpeech();
-  FlutterTts tts = FlutterTts();
   int responseCount = 1;
   String sessionId = "";
   String queryString = "";
-  String llmType = '';
   TextEditingController chatController = TextEditingController();
   bool speechToTextOn = false;
   bool isVoiceInitiated = false;
   File? capturedPhoto;
   int timerCounter = 0;
-  int loaderCounter = 0;
   List<MessageBubble> chatMessages = [];
+  FlutterTts tts = FlutterTts();
+
   List<String> loaderMsgList = [
     'Please wait',
     'we are checking',
@@ -67,33 +67,41 @@ class _ChatWindowState extends State<ChatWindow> {
     'Gathering the data',
     'Just a moment'
   ];
+
+  List<String> teluguLoaderMsgList = [
+    'దయచేసి వేచి ఉండండి',
+    'ఒక్క క్షణం వేచి ఉండండి'
+    // 'సమాచారం శోధిస్తున్నాము'
+  ];
   TextToSpeechService? textToSpeechService;
   MessageBubble? textToSpeechMessageBubble;
   String summaryData = "";
   bool displayUserText = false;
   bool isLoadingResponse = false;
-
-  bool _toggleValue = false;
+  bool _toggleValue = true;
   OverlayEntry? overlayEntry;
-  late Timer periodicTimer;
+  Timer? periodicTimer;
   Timer? dataTimer;
   Timer? loadingTimer;
-  String autoSessionId = '';
+  String? autoSessionId;
+  String llmType = '';
+  String language = '';
 
   @override
   void initState() {
     super.initState();
     _initSpeech();
-    // tts.setRate(1);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _getChatHistory();
+      // tts.setRate(1);
+    });
   }
 
   @override
   void dispose() {
     // Dispose of the timer when the widget is removed
-    // periodicTimer.cancel();
     dataTimer?.cancel();
     loadingTimer?.cancel();
-    showLoader.value = false;
     super.dispose();
   }
 
@@ -116,6 +124,7 @@ class _ChatWindowState extends State<ChatWindow> {
     //print("Available voices ${await tts.getVoice()}");
     print("Available languages ${await tts.getLanguages}");
     await tts.setLanguage("en-US");
+    // await tts.setLanguage("or-IN");
   }
 
   /// Each time to start a speech recognition session
@@ -124,6 +133,10 @@ class _ChatWindowState extends State<ChatWindow> {
     for (int i = 0; i < locales.length; i++) {
       print("LOCALESDSD $i   ${locales[i].name}");
     }
+
+    String langId = '';
+    AppState.instance.isTeluguSelected ? langId = 'or-IN' : langId = 'en-US';
+    // AppState.instance.isTeluguSelected ? langId = 'te-IN' : langId='en-US';
     // 34 for hindi
     // 55 for Spanish
 
@@ -137,10 +150,11 @@ class _ChatWindowState extends State<ChatWindow> {
       await _speechToText.listen(
           onSoundLevelChange: onSoundLevelChange,
           /*localeId: selectedLocale.localeId,*/
+          localeId: 'en-US',
           partialResults: false,
           onResult: _onSpeechResult,
           pauseFor: const Duration(seconds: 3),
-          listenFor: const Duration(seconds: 20),
+          listenFor: const Duration(seconds: 15),
           cancelOnError: true);
     } catch (e) {
       print('EXCEPTIONKJSKFJK An exception occurred: $e');
@@ -200,31 +214,47 @@ class _ChatWindowState extends State<ChatWindow> {
   /// the platform returns recognized words.
   Future<void> _onSpeechResult(SpeechRecognitionResult result) async {
     print("_onSpeechResult ${result.recognizedWords}");
-    await updateChatControllerForSpeech(result.recognizedWords);
-    DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_APWRIMS/${widget.sessionId}");
-    !_toggleValue ? llmType = "internal" : llmType = "external";
-    print("llmType::${llmType}");
-    // TransliterationResponse? response = await Transliteration.transliterate(result.recognizedWords, Languages.TELUGU);
-    // final translatedText =response?.transliterationSuggestions[0].toString();
-    // print("translated::$translatedText");
+    DatabaseReference ref = FirebaseDatabase.instance
+        .ref("CHAT_BOT_TEST/${constants.apwrimsUUID}/${widget.sessionId}");
+
+    /*  AppState.instance.isExternalLLM
+        ? llmType = 'external'
+        : llmType = 'internal';
+    AppState.instance.isTeluguSelected
+        ? language = 'odia'
+        : language = 'english';
+
     await ref.push().set({
       "isUser": true,
       "message": result.recognizedWords,
       "mediaUrl": '',
-      "llm_type": llmType
-    });
-    // await ref.push().set({"isUser": false, "message": "Hello how are you"});
-    // if(result.recognizedWords.toLowerCase() == "give summary"){
-    //   await ref.push().set({"isUser": false, "message": "Summaryy"});
-    // }
-    // await ref.push().set({"isUser": false, "message": "Response ${responseCount++}"});
-    /* String responseMsg = "Cheppandi";
-    TransliterationResponse? _response = await Transliteration.transliterate(responseMsg, Languages.TELUGU);
-    final translatedResponse = _response?.transliterationSuggestions[0].toString();
+      'llm_type': llmType,
+      'language': language
+    });*/
+
+    TransliterationResponse? response = await Transliteration.transliterate(
+        result.recognizedWords, Languages.ORIYA);
+    final translatedText = response?.transliterationSuggestions[0].toString();
+    String? message = '';
     print("translated::$translatedText");
-    await ref.push().set({"isUser": true, "message": translatedText});
-    await ref.push().set({"isUser": false, "message": translatedResponse});*/
+    AppState.instance.isExternalLLM
+        ? llmType = 'external'
+        : llmType = 'internal';
+    AppState.instance.isTeluguSelected
+        ? language = 'odia'
+        : language = 'english';
+
+    AppState.instance.isTeluguSelected
+        ? message = translatedText
+        : message = result.recognizedWords;
+    await ref.push().set({
+      "isUser": true,
+      "message": message,
+      "mediaUrl": '',
+      'llm_type': llmType,
+      'language': language
+    });
+
     bool active = _speechToText.isListening;
     listeningActive.value = active;
   }
@@ -232,9 +262,8 @@ class _ChatWindowState extends State<ChatWindow> {
   Future<void> _onSpeechResultForAutoMode(
       SpeechRecognitionResult result) async {
     print("_onSpeechResultForAutoMode ${result.recognizedWords}");
-    print("_onSpeechResultForAutoMode autoSessionId ${autoSessionId}");
-    DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_APWRIMS/${autoSessionId}");
+    DatabaseReference ref = FirebaseDatabase.instance
+        .ref("CHAT_BOT_TEST/${constants.apwrimsUUID}/${autoSessionId}");
 
     if (result.recognizedWords.toLowerCase() == "hello" && !isVoiceInitiated) {
       await _speechToText.stop();
@@ -251,8 +280,8 @@ class _ChatWindowState extends State<ChatWindow> {
       await ref.push().set({"isUser": true, "message": result.recognizedWords});
       await ref.push().set({"isUser": false, "message": "response"});
     }
-
     bool active = _speechToText.isListening;
+    tts.stop();
     listeningActive.value = active;
   }
 
@@ -263,13 +292,14 @@ class _ChatWindowState extends State<ChatWindow> {
         bool? result = await showSessionDialog();
         if (result != null && result) {
           tts.stop();
-          _speechToText.stop();
-          // periodicTimer.cancel();
+          await _speechToText.stop();
+          periodicTimer?.cancel();
           Navigator.pop(context);
         }
         return false;
       },
       child: Scaffold(
+        drawer: const DrawerWidget(),
         appBar: AppBar(
           centerTitle: true,
           backgroundColor: Colors.white,
@@ -287,33 +317,41 @@ class _ChatWindowState extends State<ChatWindow> {
               ),
               const Spacer(), // Add spacing between title and toggle
               Text(
-                _toggleValue ? 'External LLM' : 'Internal LLM',
+                _toggleValue ? 'Manual Mode' : 'Auto Mode',
                 style: TextStyle(
                   fontSize: 12,
-                  color: _toggleValue ? Colors.black : Colors.green,
+                  color: _toggleValue ? Colors.green : Colors.grey,
                 ),
               ),
-
+              const Spacer(),
               IconButton(
                 onPressed: () async {
                   setState(() {
                     _toggleValue = !_toggleValue; // Toggle the value
                   });
                   print("wewewewewew _toggleValue::$_toggleValue");
-                  /* if (!_toggleValue) {
-                    autoSessionId= Uuid().v4();
-                    periodicTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
-                      await initializeSpeechToText(autoSessionId);
-                    });
-                  } else {
-                    await _speechToText.stop();
+                  if (!_toggleValue) {
+                    // If switching to auto mode
+                    autoSessionId = const Uuid().v4();
                     await tts.stop();
-                    periodicTimer.cancel();
-                  }*/
+                    periodicTimer = Timer.periodic(
+                      const Duration(seconds: 5),
+                      (timer) async {
+                        // await initializeSpeechToText(autoSessionId!);
+                      },
+                    );
+                  } else {
+                    listeningActive.value = false; // Stop speech recognition
+                    await tts.stop();
+                    await _speechToText.stop(); // Stop speech recognition
+                    if (periodicTimer != null && periodicTimer!.isActive) {
+                      periodicTimer?.cancel(); // Cancel the periodic timer
+                    }
+                  }
                 },
                 icon: Icon(
-                  !_toggleValue ? Icons.toggle_on : Icons.toggle_off,
-                  color: !_toggleValue ? Colors.green : Colors.black,
+                  _toggleValue ? Icons.toggle_on : Icons.toggle_off,
+                  color: _toggleValue ? Colors.green : Colors.grey,
                   size: 30,
                 ),
               ),
@@ -326,9 +364,15 @@ class _ChatWindowState extends State<ChatWindow> {
             children: [
               Expanded(
                 child: StreamBuilder(
-                  stream: FirebaseDatabase.instance
-                      .ref("CHAT_BOT_APWRIMS/${widget.sessionId}")
-                      .onValue,
+                  stream: _toggleValue
+                      ? FirebaseDatabase.instance
+                          .ref(
+                              "CHAT_BOT_TEST/${constants.apwrimsUUID}/${widget.sessionId}")
+                          .onValue
+                      : FirebaseDatabase.instance
+                          .ref(
+                              "CHAT_BOT_TEST/${constants.apwrimsUUID}/$autoSessionId")
+                          .onValue,
                   builder: (context, AsyncSnapshot snapshot) {
                     if (snapshot.hasData && snapshot.data != null) {
                       List<ChatBubble> messageList = [];
@@ -345,9 +389,9 @@ class _ChatWindowState extends State<ChatWindow> {
                         if (key != "cart") {
                           final datalast = Map<String, dynamic>.from(value);
                           print("SORTED MESSAGES ${datalast['message']}");
-                          print("Session Id ${widget.sessionId}");
+                          print("Session ID ${sessionId}");
                           messageList.add(ChatBubble(
-                            text: datalast['message'],
+                            text: datalast['message'] ?? '',
                             isUser: datalast['isUser'],
                             imageUrl: datalast['mediaUrl'],
                             logMessage: datalast['log'] ?? '',
@@ -357,7 +401,8 @@ class _ChatWindowState extends State<ChatWindow> {
                       //messageList.reversed;
                       if (messageList.isNotEmpty &&
                           !messageList[messageList.length - 1].isUser &&
-                          messageList.length > prevChatLength) {
+                          messageList.length > prevChatLength &&
+                          _toggleValue) {
                         WidgetsBinding.instance.addPostFrameCallback((_) {
                           showLoader.value = false;
                         });
@@ -370,13 +415,23 @@ class _ChatWindowState extends State<ChatWindow> {
                           showLoader.value = true;
                         });
 
-                        loadingTimer = Timer(const Duration(seconds: 4), () {
-                          int randomIndex =
-                              Random().nextInt(loaderMsgList.length);
-                          if (showLoader.value) {
-                            tts.speak(loaderMsgList[randomIndex]);
-                          }
-                        });
+                        AppState.instance.isTeluguSelected
+                            ? loadingTimer =
+                                Timer(const Duration(seconds: 4), () {
+                                int randomIndex = Random()
+                                    .nextInt(teluguLoaderMsgList.length);
+                                if (showLoader.value) {
+                                  tts.speak(teluguLoaderMsgList[randomIndex]);
+                                }
+                              })
+                            : loadingTimer =
+                                Timer(const Duration(seconds: 4), () {
+                                int randomIndex =
+                                    Random().nextInt(loaderMsgList.length);
+                                if (showLoader.value) {
+                                  tts.speak(loaderMsgList[randomIndex]);
+                                }
+                              });
 
                         dataTimer = Timer(const Duration(seconds: 15), () {
                           print("timerCounter::$timerCounter");
@@ -385,12 +440,14 @@ class _ChatWindowState extends State<ChatWindow> {
                               text: "Data Not Found",
                               isUser: false,
                               imageUrl: "",
-                              logMessage: '',
+                              logMessage: F'',
                             ));*/
                             WidgetsBinding.instance.addPostFrameCallback((_) {
                               showLoader.value = false;
                             });
-                            tts.speak("Data Not found");
+                            AppState.instance.isTeluguSelected
+                                ? tts.speak("సమాచారం దొరకట్లేదు")
+                                : tts.speak("Data Not found");
                           }
                         });
                       }
@@ -417,26 +474,28 @@ class _ChatWindowState extends State<ChatWindow> {
                   },
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(left: 80.0),
-                child: Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: ValueListenableBuilder(
-                    valueListenable: showLoader,
-                    builder: (context, value, _) {
-                      if (value) {
-                        return SizedBox(
-                            height: 100,
-                            width: 100,
-                            child: Image.asset(
-                                'assets/images/response_bubble.gif'));
-                      }
-                      return const SizedBox();
-                    },
-                  ),
-                ),
-              ),
-              Padding(
+              _toggleValue
+                  ? Padding(
+                      padding: const EdgeInsets.only(left: 80.0),
+                      child: Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: ValueListenableBuilder(
+                          valueListenable: showLoader,
+                          builder: (context, value, _) {
+                            if (value) {
+                              return SizedBox(
+                                  height: 100,
+                                  width: 100,
+                                  child: Image.asset(
+                                      'assets/images/response_bubble.gif'));
+                            }
+                            return const SizedBox();
+                          },
+                        ),
+                      ),
+                    )
+                  : const SizedBox(),
+              /*Padding(
                 padding: const EdgeInsets.only(bottom: 30.0),
                 child: Align(
                   alignment: Alignment.bottomCenter,
@@ -457,11 +516,37 @@ class _ChatWindowState extends State<ChatWindow> {
                     },
                   ), // your widget would go here
                 ),
-              ),
-              /*Padding(
-                padding: const EdgeInsets.all(20),
-                child: bottomBar(),
               ),*/
+              _toggleValue
+                  ? Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 30.0),
+                        child: Align(
+                          alignment: Alignment.bottomCenter,
+                          child: ValueListenableBuilder(
+                            valueListenable: listeningActive,
+                            builder: (context, value, _) {
+                              return AvatarGlow(
+                                animate: value,
+                                glowColor: Colors.purple,
+                                child: FloatingActionButton(
+                                  onPressed:
+                                      // If not yet listening for speech start, otherwise stop
+                                      !value ? _startListening : _stopListening,
+                                  tooltip: 'Listen',
+                                  child:
+                                      Icon(!value ? Icons.mic_off : Icons.mic),
+                                ),
+                              );
+                            },
+                          ), // your widget would go here
+                        ),
+                      ))
+                  : const Padding(
+                      padding: EdgeInsets.all(20),
+                      child: SizedBox(),
+                    )
             ],
           ),
         ),
@@ -475,8 +560,9 @@ class _ChatWindowState extends State<ChatWindow> {
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
       child: Row(
         children: [
-          /*SpeechToTextWidget(updateSpeech: updateChatControllerForSpeech, localeId: "en-US"),*/
-          Padding(
+          SpeechToTextWidget(
+              updateSpeech: updateChatControllerForSpeech, localeId: "en-US"),
+          /*Padding(
             padding: const EdgeInsets.all(4.0),
             child: Align(
               alignment: Alignment.bottomCenter,
@@ -495,7 +581,7 @@ class _ChatWindowState extends State<ChatWindow> {
                 },
               ),
             ),
-          ),
+          ),*/
           CameraWidget(saveCapturedPhoto: saveCapturedPhoto),
           Expanded(
             child: Stack(
@@ -784,33 +870,26 @@ class _ChatWindowState extends State<ChatWindow> {
   }
 
   Future<void> insertImageDataIntoDb(String? imageUrl, String text) async {
-    DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_APWRIMS/${widget.sessionId}");
-    !_toggleValue ? llmType = "internal" : llmType = "external";
-    await ref.push().set({
-      "isUser": true,
-      "message": text,
-      "mediaUrl": imageUrl,
-      "llm_type": llmType
-    });
+    DatabaseReference ref = FirebaseDatabase.instance
+        .ref("CHAT_BOT_TEST/${constants.apwrimsUUID}/${widget.sessionId}");
+    await ref
+        .push()
+        .set({"isUser": true, "message": text, "mediaUrl": imageUrl});
     chatController.clear();
     capturedPhoto = null;
     setState(() {});
   }
 
   Future<void> insertDataIntoDb(String text) async {
-    DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_APWRIMS/${widget.sessionId}");
-    !_toggleValue ? llmType = "internal" : llmType = "external";
-    await ref
-        .push()
-        .set({"isUser": true, "message": text, "llm_type": llmType});
+    DatabaseReference ref = FirebaseDatabase.instance
+        .ref("CHAT_BOT_TEST/${constants.apwrimsUUID}/${widget.sessionId}");
+    await ref.push().set({"isUser": true, "message": text});
     chatController.clear();
     capturedPhoto = null;
     setState(() {});
   }
 
-  Future<void> initializeSpeechToText(String sessionId) async {
+  /*Future<void> initializeSpeechToText(String sessionId) async {
     print(("startListeningToHello: starting listening"));
 
     bool available = await speechToText.initialize(
@@ -824,5 +903,10 @@ class _ChatWindowState extends State<ChatWindow> {
     if (available) {
       await _startListeningForAutoMode();
     }
+  }*/
+
+  _getChatHistory() {
+    DatabaseReference ref =
+        FirebaseDatabase.instance.ref("CHAT_BOT_TEST/${constants.apwrimsUUID}");
   }
 }
