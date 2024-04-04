@@ -17,26 +17,6 @@ class ApiProvider {
   static ApiProvider get instance => _instance ??= ApiProvider._();
 
 
-  @override
-  Future<DepartmentUserPermissionsResponse> fetchUserPermissionsForDepartmentLogin(
-      BuildContext context) async {
-    Map<String, String> authHeaders = {
-      constants.headerContentType: constants.headerJson,
-      'Authorization': 'Bearer ${AppState.instance.token}',
-      'Csrf-Token': AppState.instance.csrfToken
-    };
-    String authUrl =
-        "${constants.baseUrl}${constants.userPermissionsEndPoint}${AppState.instance.userId}";
-    http.Response response = await http.get(
-      Uri.parse(authUrl),
-      headers: authHeaders,
-    );
-    Map<String, dynamic> responseMap = jsonDecode(response.body);
-    DepartmentUserPermissionsResponse userPermissionsResult =
-    DepartmentUserPermissionsResponse.fromJson(responseMap);
-    return userPermissionsResult;
-  }
-
   Future<String?> submitImage(data,imagePath) async {
     String submissionUrl = constants.imageUploadUrl;
     Map<String, String> headersMap = {

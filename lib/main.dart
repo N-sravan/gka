@@ -162,13 +162,13 @@ void main() async {
 
   if(notificationStatus == PermissionStatus.granted) {
     print("wewewewewew notificationStatus:::${PermissionStatus.granted}");
-    Workmanager().initialize(callbackDispatcher);
+    /*Workmanager().initialize(callbackDispatcher);
     Workmanager().registerPeriodicTask(
       "speechTask",
       "speechTask",
       frequency: const Duration(minutes: 15),
       initialDelay: const Duration(minutes: 2),
-    );
+    );*/
   }
   runApp(
     MultiProvider(
@@ -247,7 +247,7 @@ Future<void> showNotification() async {
     iosBundleId: 'com.vassar.apwrimschatbot',
   ));
   DatabaseReference ref = FirebaseDatabase.instance
-      .ref("CHAT_BOT_ALERT/HOURLY_NOTIFICATION/${constants.apwrimsUUID}");
+      .ref("CHAT_BOT_ALERT/HOURLY_NOTIFICATION/${constants.odishaUUID}");
   String responseMessage = '';
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -573,7 +573,7 @@ bool isSpeaking = false; // Variable to track TTS speaking status
 Future<String> startListenings(String sessionId) async {
   int i = 0;
   DatabaseReference ref = FirebaseDatabase.instance
-      .ref("CHAT_BOT_CHANGELOG/${constants.apwrimsUUID}/${sessionId}");
+      .ref("CHAT_BOT_CHANGELOG/${constants.odishaUUID}/${sessionId}");
   SpeechRecognitionResult result;
 
   await speechToText.listen(
@@ -657,7 +657,7 @@ Future<void> startListeningToYes(String sessionId, String word) async {
   await speechToText.stop();
   print("wewewewewew speechToText.isListening:: ${speechToText.isListening}");
   DatabaseReference ref = FirebaseDatabase.instance
-      .ref("CHAT_BOT_CHANGELOG/${constants.apwrimsUUID}/${sessionId}");
+      .ref("CHAT_BOT_CHANGELOG/${constants.odishaUUID}/${sessionId}");
   SpeechRecognitionResult result;
 
   await speechToText.listen(
@@ -737,7 +737,7 @@ Future<void> startListeningToYes(String sessionId, String word) async {
 
 Future<void> startListeningBg() async {
   DatabaseReference ref = FirebaseDatabase.instance
-      .ref("CHAT_BOT_ALERT/HOURLY_UPDATES/${constants.apwrimsUUID}");
+      .ref("CHAT_BOT_ALERT/HOURLY_UPDATES/${constants.odishaUUID}");
   SpeechRecognitionResult result;
 
   await speechToText.listen(

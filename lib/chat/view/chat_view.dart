@@ -7,10 +7,8 @@ import 'package:provider/provider.dart';
 import '../../chat_window.dart';
 
 class ChatView extends StatelessWidget {
-  // final response.Meta userData;
-  final apdata.UserDetailsJsonForAp userData;
 
-   ChatView(this.userData, {Key? key}) : super(key: key);
+   ChatView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +31,7 @@ class ChatView extends StatelessWidget {
                     onTap: () async {
                       final viewModel =
                           Provider.of<ChatViewModel>(context, listen: false);
-                      String? sessionId=await viewModel.createSession(userData);
+                      String? sessionId=await viewModel.createSession();
                       if (sessionId!=null && viewModel.sessionId != null) {
                         Navigator.push(
                           context,

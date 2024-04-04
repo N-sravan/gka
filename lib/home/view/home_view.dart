@@ -5,10 +5,8 @@ import '../../chat/view/chat_view.dart';
 import '../../login/model/department_user_permission_response.dart' as response;
 
 class HomeScreenWidget extends StatefulWidget {
-  // final response.Meta data;
-  final apdata.UserDetailsJsonForAp data;
 
-  const HomeScreenWidget({Key? key, required this.data});
+  const HomeScreenWidget({Key? key});
 
   @override
   State<HomeScreenWidget> createState() => _HomeScreenWidgetState();
@@ -20,7 +18,6 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
 
   @override
   void initState() {
-    data = widget.data;
  /*   SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeRight, // Set landscape orientation
       DeviceOrientation.landscapeLeft,
@@ -31,7 +28,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: ChatView(data),
+      body: ChatView(),
     );
   }
 }

@@ -75,11 +75,11 @@ class SplashViewModel extends LoadingViewModel {
         .readSecureData(constants.preferenceCsrfToken);
     dynamic userSelectedRoleScreen = await SecuredStorageUtil.instance
         .readSecureData(constants.preferenceUserRole);
-    if (userId != null && userId.isNotEmpty && isLoggedIn && userSelectedRoleScreen != null) {
+    /*if (userId != null && userId.isNotEmpty && isLoggedIn && userSelectedRoleScreen != null) {
       AppState.instance.userName = userFirstName;
       AppState.instance.token = token;
       AppState.instance.refreshToken = refreshToken;
-      AppState.instance.userId = userId;
+      AppState.instance.userUUID = userId;
       AppState.instance.csrfToken = csrfToken;
       AppState.instance.role = userSelectedRoleScreen;
     if(userSelectedRoleScreen == constants.department) {
@@ -102,11 +102,10 @@ class SplashViewModel extends LoadingViewModel {
           // NavigationUtil.instance.navigateToRoleScreen(context);
         }
       }
-    } else {
+    } else {*/
       /// User isn't logged in
       // NavigationUtil.instance.navigateToRoleScreen(context);
     }
-  }
 
   _setUserPermissionsSharedPreferences(String email, String mobileNo,String roleName) async {
     await SecuredStorageUtil.instance
@@ -117,5 +116,5 @@ class SplashViewModel extends LoadingViewModel {
     AppState.instance.userMobileNo = mobileNo;
     AppState.instance.userAssignedRole = roleName;
   }
-
 }
+

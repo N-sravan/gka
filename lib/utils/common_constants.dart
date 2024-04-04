@@ -55,8 +55,8 @@ const String headerRefeshToken = 'refresh_token';
 const String appIcon = 'assets/images/flutter_logo.png';
 
 // URLs
-const String baseUrl = 'https://keralakrishistack.vassarlabs.com/';
-// const String baseUrl = 'https://agriwise.vassarlabs.com/';
+// const String baseUrl = 'https://keralakrishistack.vassarlabs.com/';
+const String baseUrl = 'https://agriwise.vassarlabs.com/';
 // const String krishidsBaseUrl = 'http://acerkrishidss.vassarlabs.com/staging/api';
 // const String krishidsBaseUrl = 'https://agriwise.vassarlabs.com/staging/api';
 const String imageUploadUrl = 'https://agriwise.vassarlabs.com/agribot/bucket/insert_file';
@@ -82,7 +82,8 @@ const String indiaUUID = 'd6b37905-d2d3-4275-9317-d9b6f47cd783';
 const String keralaStateUUID = '62d3dc99-5bc3-4303-8be1-d4fa1f7deee5';
 // const String appUUID = '62feedb6-024d-4c3e-bd9e-5d4ee96a5d9d';
 const String appUUID = '1516fd33-c918-4ee6-92a1-445a02977a9b';
-const String apwrimsUUID = '6f86292b-dd9a-4987-bb8f-c3940263b349';
+// const String apwrimsUUID = '6f86292b-dd9a-4987-bb8f-c3940263b349';
+const String odishaUUID = 'd19a5290-2e40-494a-83d2-98f4c845b1f1';
 const String countryKey = 'COUNTRY';
 const String stateKey = 'STATE';
 const String districtKey = 'DISTRICT';
@@ -830,8 +831,8 @@ enum CropNameVerifyRadioOptions {agree, disagree}
 
 //Role Names
 const String aoRoleName = "Agricultural Officer";
-// const String ngrok = "https://d5d8-196-12-47-4.ngrok-free.app/session/create_session";   ///apwrims
-const String ngrok = "https://ded2-196-12-47-4.ngrok-free.app/session/create_session";   ///gowater
+const String ngrok = "https://d5d8-196-12-47-4.ngrok-free.app/session/create_session";   ///apwrims
+// const String ngrok = "https://ded2-196-12-47-4.ngrok-free.app/session/create_session";   ///gowater
 
 const int ownerCultivator = 1;
 const int ownerCultivatorCumTenant = 2;

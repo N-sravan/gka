@@ -1,6 +1,8 @@
 
 import 'package:event_bus/event_bus.dart';
 
+import '../login/model/department_user_permission_response.dart';
+
 class AppState {
   static AppState? _instance;
 
@@ -12,7 +14,7 @@ class AppState {
   late String userAssignedRole;
   late String userEmail;
   late String userMobileNo;
-  late String userId;
+  late String userUUID;
   late String token;
   late String refreshToken;
   late String csrfToken;
@@ -47,6 +49,7 @@ class AppState {
   late String role;
   late String farmerUUID;
   late String tappedFieldUUID;
+  late Meta userData;
   String triggeredWord = '';
   bool hasFarmerData=false;
   bool isVoiceUpdateEnabled=false;

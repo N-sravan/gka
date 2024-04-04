@@ -5,6 +5,7 @@ import 'package:avatar_glow/avatar_glow.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:gka/services/api_provider.dart';
+import 'package:gka/utils/app_state.dart';
 import 'package:uuid/parsing.dart';
 import 'package:uuid/uuid.dart';
 import 'package:uuid/v4.dart';
@@ -202,7 +203,7 @@ class _ChatWindowState extends State<ChatWindow> {
     print("_onSpeechResult ${result.recognizedWords}");
     await updateChatControllerForSpeech(result.recognizedWords);
     DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_GOWATER/${widget.sessionId}");
+        FirebaseDatabase.instance.ref("CHAT_BOT_ONDEMAND_DATA/${constants.odishaUUID}/${AppState.instance.userUUID}/${widget.sessionId}");
     !_toggleValue ? llmType = "internal" : llmType = "external";
     print("llmType::${llmType}");
     // TransliterationResponse? response = await Transliteration.transliterate(result.recognizedWords, Languages.TELUGU);
@@ -224,7 +225,7 @@ class _ChatWindowState extends State<ChatWindow> {
     print("_onSpeechResultForAutoMode ${result.recognizedWords}");
     print("_onSpeechResultForAutoMode autoSessionId ${autoSessionId}");
     DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_GOWATER/${autoSessionId}");
+        FirebaseDatabase.instance.ref("CHAT_BOT_ONDEMAND_DATA/${constants.odishaUUID}/${AppState.instance.userUUID}/${autoSessionId}");
 
     if (result.recognizedWords.toLowerCase() == "hello" && !isVoiceInitiated) {
       await _speechToText.stop();
@@ -268,7 +269,7 @@ class _ChatWindowState extends State<ChatWindow> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Text(
-                'APWRIMS Bot',
+                'GoWater Bot',
                 style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w500,
@@ -317,7 +318,7 @@ class _ChatWindowState extends State<ChatWindow> {
               Expanded(
                 child: StreamBuilder(
                   stream: FirebaseDatabase.instance
-                      .ref("CHAT_BOT_GOWATER/${widget.sessionId}")
+                      .ref("CHAT_BOT_ONDEMAND_DATA/${constants.odishaUUID}/${AppState.instance.userUUID}/${widget.sessionId}")
                       .onValue,
                   builder: (context, AsyncSnapshot snapshot) {
                     if (snapshot.hasData && snapshot.data != null) {
@@ -536,7 +537,7 @@ class _ChatWindowState extends State<ChatWindow> {
                               imageUrl = await submitImage(
                                   context, capturedPhoto!.path);
                             }
-                            await insertImageDataIntoDb(
+                            await insertDataIntoDb(
                                 imageUrl, chatController.text);
                           }
                         },
@@ -773,9 +774,9 @@ class _ChatWindowState extends State<ChatWindow> {
     );
   }
 
-  Future<void> insertImageDataIntoDb(String? imageUrl, String text) async {
+  Future<void> insertDataIntoDb(String? imageUrl, String text) async {
     DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_GOWATER/${widget.sessionId}");
+        FirebaseDatabase.instance.ref("CHAT_BOT_ONDEMAND_DATA/${constants.odishaUUID}/${AppState.instance.userUUID}/${widget.sessionId}");
     !_toggleValue ? llmType = "internal" : llmType = "external";
     await ref.push().set({
       "isUser": true,
@@ -787,18 +788,7 @@ class _ChatWindowState extends State<ChatWindow> {
     capturedPhoto = null;
     setState(() {});
   }
-
-  Future<void> insertDataIntoDb(String text) async {
-    DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_GOWATER/${widget.sessionId}");
-    !_toggleValue ? llmType = "internal" : llmType = "external";
-    await ref
-        .push()
-        .set({"isUser": true, "message": text, "llm_type": llmType});
-    chatController.clear();
-    capturedPhoto = null;
-    setState(() {});
-  }
+  
 
   Future<void> initializeSpeechToText(String sessionId) async {
     print(("startListeningToHello: starting listening"));
