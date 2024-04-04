@@ -24,7 +24,6 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-
   @override
   void initState() {
     super.initState();
@@ -239,55 +238,13 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                       String userId = _usernameController.text;
                                       String password =
                                           _passwordController.text;
-                                      AppState.instance.userData = response.Content(
-                                        userId: "44",
-                                        username: "sklm_burja",
-                                        firstName: "sklm",
-                                        lastName: "burja",
-                                        email: "testing@gmail.com",
-                                        mobileNo: "9999999999",
-                                        roles: null,
-                                        permissions: null,
-                                        userDetailsJson: response.UserDetailsJson(
-                                          data: response.Data(
-                                            location: response.Location(
-                                              state: [
-                                                response.State(
-                                                  stateName: "Andhra Pradesh",
-                                                  stateUUID: "6f86292b-dd9a-4987-bb8f-c3940263b349",
-                                                  district: [
-                                                    response.District(
-                                                      districtName: "Srikakulam",
-                                                      districtUUID: "00bb53a0-a27e-46c4-9016-fe9545766cb9",
-                                                      mandal: [
-                                                        response.Mandal(
-                                                          mandalName: "BURJA",
-                                                          mndalUUID: "1437f9bf-207a-4d7e-bd9d-0af79b6ef8db",
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                            locType: "mandal",
-                                          ),
-                                        ),
-                                        approver: null,
-                                        passwordHash: null,
-                                        createdTs: null,
-                                        updatedTs: null,
-                                        deleted: null,
-                                        token: null,
-                                        status: null,
-                                        userInfoEncrypted: false,
-                                      );
-                                      String? fcmToken = await FirebaseMessaging.instance.getToken();
-                                      print('fcmToken::$fcmToken');
+                                      AppState.instance.userData =
+                                          response.Content();
                                       response.Content? content =
                                           await viewModel.authenticate(
                                               userId, password, context);
-                                      if (true) {
+                                      if (content != null) {
+                                        await viewModel.sendFcmToken();
                                         Navigator.push(
                                             context,
                                             MaterialPageRoute(

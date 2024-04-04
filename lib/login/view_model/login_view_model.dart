@@ -49,10 +49,14 @@ class LoginViewModel extends LoadingViewModel {
              Content? userContent = loginResult.result!.content;
              /// Generating token and sending to backend
              String? fcmToken = await  FirebaseMessaging.instance.getToken();
-             print('fcmToken::$fcmToken');
 
              if(userContent !=null){
                AppState.instance.userData = userContent;
+               AppState.instance.fcmToken = fcmToken!;
+               AppState.instance.locType = userContent.userDetailsJson!.data!.locType!;
+               // AppState.instance.locUUID = userContent;
+               // AppState.instance.locName = userContent;
+               AppState.instance.userId = userContent.userId!;
              }
              return userContent;
           }
@@ -207,5 +211,9 @@ class LoginViewModel extends LoadingViewModel {
       return true; // Valid mobile number
     }
     return false; // Invalid mobile number
+  }
+
+  sendFcmToken() {
+
   }
 }

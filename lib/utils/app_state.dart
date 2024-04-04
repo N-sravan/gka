@@ -17,6 +17,7 @@ class AppState {
   late String userId;
   late String token;
   late String refreshToken;
+  late String fcmToken;
   late String csrfToken;
   late String userState;
   late String stateUUID;
@@ -48,7 +49,9 @@ class AppState {
   late bool? isPlotForm;
   late String role;
   late String farmerUUID;
-  late String tappedFieldUUID;
+  late String locUUID;
+  late String locType;
+  late String locName;
   late Content userData;
   String triggeredWord = '';
   bool hasFarmerData=false;
