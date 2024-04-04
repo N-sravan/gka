@@ -58,71 +58,6 @@ String bgChatSessionId = '';
 int prevChatLength = 0;
 // String AppState.instance.triggeredWord = "";
 PermissionStatus? notificationStatus;
-/*List<String> listeningModeKeywords = [
-  "Rainfall",
-  "Rainfall Forecast data",
-  "Rainfall historical data",
-  "Rainfall Alert",
-  "Maximum Rainfall",
-  "Drought Prediction",
-  "Rainfall Trend",
-  "Rainfall Analysis",
-  "Rainfall Prediction",
-  "Rainfall Deviation",
-  "Rainfall Cumulative",
-  "Reservoir",
-  "Reservoir Levels",
-  "Reservoir Storage",
-  "Reservoir Capacity",
-  "Reservoir Inflow",
-  "Reservoir Outflow",
-  "Reservoir Splits",
-  "Power house under Reservoir",
-  "Reservoir Canals",
-  "Reservoir Canal Splits",
-  "MI Tanks",
-  "MI Tank count",
-  "MI tank Storage",
-  "Tank fill %",
-  "MI Tank command area",
-  "MI Tank catchment area",
-  "MI Tank historical data",
-  "Groundwater",
-  "Groundwater Level",
-  "Groundwater Fluctuation",
-  "Groundwater Water Quality",
-  "Groundwater Aquifer",
-  "Groundwater status of village",
-  "Groundwater Recharge",
-  "Groundwater Trends",
-  "Groundwater current levels",
-  "Gorundwater premonsoon",
-  "Groundwater Assessment",
-  "Soil Moisture",
-  "Soil moisture depth",
-  "Soil moisture percentage",
-  "Soil moisture change",
-  "Water Conservation Structure",
-  "WC Capacity",
-  "WC Storage",
-  "Farmponds",
-  "Checkdams",
-  "Percolation Tanks",
-  "Run-off Conserved",
-  "Excess Rainfall",
-  "Counter Trenches",
-  "LI Scheme",
-  "LI Scheme Benificiaries",
-  "LI Scheme contemplated Ayacut",
-  "LI Scheme capacity",
-  "Yield under LI scheme",
-  "Catchment area under LI scheme",
-  "River Gauge",
-  "River gauge trend",
-  "River gauge level",
-  "River gauge depth",
-  "River gauge high flow"
-];*/
 
 ValueNotifier<SpeechStatus> speechStatus =
     ValueNotifier<SpeechStatus>(SpeechStatus.idle);
@@ -157,8 +92,6 @@ void main() async {
     DeviceOrientation.landscapeRight, // Set landscape orientation
     DeviceOrientation.landscapeLeft,
   ]);*/
-  isVoiceEnabled =
-      await SharedPreferenceUtil.instance.getBoolPreference('isVoiceEnabled');
 
   if(notificationStatus == PermissionStatus.granted) {
     print("wewewewewew notificationStatus:::${PermissionStatus.granted}");

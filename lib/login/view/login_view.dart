@@ -79,8 +79,6 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
   void initState() {
     super.initState();
     viewModel = Provider.of<LoginViewModel>(context, listen: false);
-    _usernameController.text = "kerala_ao";
-    _passwordController.text = "agri123";
     WidgetsBinding.instance.addPostFrameCallback((_) {
       /// This will start tracking the current network status and give us
       /// information on the current status of the internet connection
@@ -289,23 +287,22 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                       String userId = _usernameController.text;
                                       String password =
                                           _passwordController.text;
-                                      /*  viewModel.authenticate(
-                                          userId, password, context);*/
+                                      await viewModel.authenticate(
+                                          userId, password, context);
 
-                                      if (userId == 'kerala_ao' &&
+                                 /*     if (userId == 'kerala_ao' &&
                                           password == 'agri123') {
                                         AppState.instance.userData = data;
-                                        AppState.instance.userUUID = data.userId!;
-                                        print("AppState.instance.userUUID:::${AppState.instance.userUUID}");
+                                        AppState.instance.userUUID =
+                                            data.userId!;
+                                        print(
+                                            "AppState.instance.userUUID:::${AppState.instance.userUUID}");
                                         Navigator.push(
                                             context,
                                             MaterialPageRoute(
                                                 builder: (context) =>
                                                     const HomeScreenWidget()));
-                                      }
-                                    } else {
-                                      Fluttertoast.showToast(
-                                          msg: "Invalid Credentials");
+                                      }*/
                                     }
                                   },
                                   style: constants.buttonStyle,

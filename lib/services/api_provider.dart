@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_native_image/flutter_native_image.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
+import '../login/model/user_permission_response_model.dart';
 import 'api_service_provider.dart';
 import '../utils/app_state.dart';
 import '../utils/common_constants.dart' as constants;
@@ -16,6 +17,25 @@ class ApiProvider {
 
   static ApiProvider get instance => _instance ??= ApiProvider._();
 
+  @override
+  Future<DepartmentUserPermissionsResponse> fetchUserPermissionsForSurveyorLogin(
+      BuildContext context) async {
+    Map<String, String> authHeaders = {
+      constants.headerContentType: constants.headerJson,
+      'Authorization': 'Bearer ${AppState.instance.token}',
+      'Csrf-Token': AppState.instance.csrfToken
+    };
+    String authUrl =
+        "${constants.baseUrl}${constants.userPermissionsEndPoint}${AppState.instance.userUUID}";
+    http.Response response = await http.get(
+      Uri.parse(authUrl),
+      headers: authHeaders,
+    );
+    Map<String, dynamic> responseMap = jsonDecode(response.body);
+    DepartmentUserPermissionsResponse userPermissionsResult =
+    DepartmentUserPermissionsResponse.fromJson(responseMap);
+    return userPermissionsResult;
+  }
 
   Future<String?> submitImage(data,imagePath) async {
     String submissionUrl = constants.imageUploadUrl;

@@ -202,8 +202,8 @@ class _ChatWindowState extends State<ChatWindow> {
   Future<void> _onSpeechResult(SpeechRecognitionResult result) async {
     print("_onSpeechResult ${result.recognizedWords}");
     await updateChatControllerForSpeech(result.recognizedWords);
-    DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_ONDEMAND_DATA/${constants.odishaUUID}/${AppState.instance.userUUID}/${widget.sessionId}");
+    DatabaseReference ref = FirebaseDatabase.instance.ref(
+        "CHAT_BOT_ONDEMAND_DATA/${constants.odishaUUID}/${AppState.instance.userUUID}/${widget.sessionId}");
     !_toggleValue ? llmType = "internal" : llmType = "external";
     print("llmType::${llmType}");
     // TransliterationResponse? response = await Transliteration.transliterate(result.recognizedWords, Languages.TELUGU);
@@ -224,8 +224,8 @@ class _ChatWindowState extends State<ChatWindow> {
       SpeechRecognitionResult result) async {
     print("_onSpeechResultForAutoMode ${result.recognizedWords}");
     print("_onSpeechResultForAutoMode autoSessionId ${autoSessionId}");
-    DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_ONDEMAND_DATA/${constants.odishaUUID}/${AppState.instance.userUUID}/${autoSessionId}");
+    DatabaseReference ref = FirebaseDatabase.instance.ref(
+        "CHAT_BOT_ONDEMAND_DATA/${constants.odishaUUID}/${AppState.instance.userUUID}/${autoSessionId}");
 
     if (result.recognizedWords.toLowerCase() == "hello" && !isVoiceInitiated) {
       await _speechToText.stop();
@@ -318,7 +318,8 @@ class _ChatWindowState extends State<ChatWindow> {
               Expanded(
                 child: StreamBuilder(
                   stream: FirebaseDatabase.instance
-                      .ref("CHAT_BOT_ONDEMAND_DATA/${constants.odishaUUID}/${AppState.instance.userUUID}/${widget.sessionId}")
+                      .ref(
+                          "CHAT_BOT_ONDEMAND_DATA/${constants.odishaUUID}/${AppState.instance.userUUID}/${widget.sessionId}")
                       .onValue,
                   builder: (context, AsyncSnapshot snapshot) {
                     if (snapshot.hasData && snapshot.data != null) {
@@ -775,8 +776,8 @@ class _ChatWindowState extends State<ChatWindow> {
   }
 
   Future<void> insertDataIntoDb(String? imageUrl, String text) async {
-    DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_ONDEMAND_DATA/${constants.odishaUUID}/${AppState.instance.userUUID}/${widget.sessionId}");
+    DatabaseReference ref = FirebaseDatabase.instance.ref(
+        "CHAT_BOT_ONDEMAND_DATA/${constants.odishaUUID}/${AppState.instance.userUUID}/${widget.sessionId}");
     !_toggleValue ? llmType = "internal" : llmType = "external";
     await ref.push().set({
       "isUser": true,
@@ -788,7 +789,6 @@ class _ChatWindowState extends State<ChatWindow> {
     capturedPhoto = null;
     setState(() {});
   }
-  
 
   Future<void> initializeSpeechToText(String sessionId) async {
     print(("startListeningToHello: starting listening"));

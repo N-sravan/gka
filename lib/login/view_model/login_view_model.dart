@@ -28,7 +28,6 @@ class LoginViewModel extends LoadingViewModel {
   final otpKey = GlobalKey();
   final formKey = GlobalKey<FormState>();
 
-
   /// Restricting user after 10 unsuccessful attempts
   /// If user reaches 10 attempts then they have to wait for 15 minutes
   Future<bool> restrictLoginAttempts() async {
@@ -89,7 +88,7 @@ class LoginViewModel extends LoadingViewModel {
   _setCSRFSharedPreferences(String csrfToken) async {
     await SecuredStorageUtil.instance
         .writeSecureData(constants.preferenceCsrfToken, csrfToken);
- /*   await SecuredStorageUtil.instance
+    /*   await SecuredStorageUtil.instance
         .writeSecureData(constants.preferenceUserRole, AppState.instance.role);*/
     AppState.instance.csrfToken = csrfToken;
   }
@@ -156,5 +155,99 @@ class LoginViewModel extends LoadingViewModel {
       return true; // Valid mobile number
     }
     return false; // Invalid mobile number
+  }
+
+  Future<void> authenticate(
+      String userName, String password, BuildContext context) async {
+    /// Checking for active internet connection
+    if (await networkUtils.hasActiveInternet()) {
+      // if (!await restrictLoginAttempts()) {
+      late LoginResult loginResult;
+      isLoading = true;
+      try {
+        /// Creating login request parameters
+        Map<String, String> params = {
+          constants.userName: userName,
+          constants.password: password,
+          constants.clientId: constants.agriwiseClient,
+          constants.grantType: constants.password,
+        };
+
+        /// Calling the login API
+        loginResult = await repo.authenticate(params, context);
+
+        if (loginResult.statusCode == 200 && loginResult.accessToken != null) {
+          /// Login is successful
+          Map<String, dynamic> decodedToken =
+              JwtDecoder.decode(loginResult.accessToken!);
+          String userId = decodedToken["sub"];
+          await _setLoginSharedPreferences(userName, userId,
+              loginResult.accessToken!, loginResult.refreshToken!);
+          Map csrfResponse = await repo.fetchCsrfToken(context);
+          if (csrfResponse["statusCode"] == 200) {
+            await _setCSRFSharedPreferences(
+                csrfResponse["response"]["tokens"]["csrf"]);
+            DepartmentUserPermissionsResponse userPermissionsResponse;
+            userPermissionsResponse = await ApiProvider.instance
+                .fetchUserPermissionsForSurveyorLogin(context);
+            if (userPermissionsResponse.statusCode == 200 && userPermissionsResponse.response !=null && userPermissionsResponse.response!.meta !=null) {
+              await _setUserPermissionsSharedPreferences(
+                  userPermissionsResponse.response!.meta!.email!,
+                  userPermissionsResponse.response!.meta!.mobileNo!,
+                  userPermissionsResponse.response!.meta!.firstName!);
+              Meta? data = userPermissionsResponse!.response!.meta;
+              if (data != null) {
+                AppState.instance.userData = data!;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HomeScreenWidget()),
+                );
+              }
+              /*await Util.instance.fetchUserAssignedLocationHierarchy(
+                    userPermissionsResponse);
+                Map<String, String> userSessionParams = {
+                  "user_uuid": userId,
+                  "role": userPermissionsResponse.response!.permissions!
+                      .krishidss!.roleName!
+                };*/
+            } else {
+              isLoading = false;
+              notifyListeners();
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(constants.genericErrorMsg),
+              ));
+            }
+          } else {
+            isLoading = false;
+            notifyListeners();
+            ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(constants.genericErrorMsg)));
+          }
+        } else {
+          /// Login is unsuccessful
+          isLoading = false;
+          notifyListeners();
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(loginResult.errorDescription!),
+          ));
+        }
+      } catch (e) {
+        isLoading = false;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(constants.genericErrorMsg),
+        ));
+        Util.instance
+            .logMessage('Login Model', 'Error while authenticating $e');
+      }
+      /*} else {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(constants.toManyLoginAttempts),
+        ));
+      }*/
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(constants.noNetworkAvailability),
+      ));
+    }
   }
 }
