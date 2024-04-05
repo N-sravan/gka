@@ -3,6 +3,8 @@ import 'dart:isolate';
 import 'dart:ui';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:gka/home/repository/home_repo.dart';
+import 'package:gka/home/view_model/home_view_model.dart';
 import 'package:gka/utils/app_state.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 import 'package:gka/utils/shared_preference_util.dart';
@@ -61,71 +63,6 @@ String bgChatSessionId = '';
 int prevChatLength = 0;
 // String AppState.instance.triggeredWord = "";
 PermissionStatus? notificationStatus;
-/*List<String> listeningModeKeywords = [
-  "Rainfall",
-  "Rainfall Forecast data",
-  "Rainfall historical data",
-  "Rainfall Alert",
-  "Maximum Rainfall",
-  "Drought Prediction",
-  "Rainfall Trend",
-  "Rainfall Analysis",
-  "Rainfall Prediction",
-  "Rainfall Deviation",
-  "Rainfall Cumulative",
-  "Reservoir",
-  "Reservoir Levels",
-  "Reservoir Storage",
-  "Reservoir Capacity",
-  "Reservoir Inflow",
-  "Reservoir Outflow",
-  "Reservoir Splits",
-  "Power house under Reservoir",
-  "Reservoir Canals",
-  "Reservoir Canal Splits",
-  "MI Tanks",
-  "MI Tank count",
-  "MI tank Storage",
-  "Tank fill %",
-  "MI Tank command area",
-  "MI Tank catchment area",
-  "MI Tank historical data",
-  "Groundwater",
-  "Groundwater Level",
-  "Groundwater Fluctuation",
-  "Groundwater Water Quality",
-  "Groundwater Aquifer",
-  "Groundwater status of village",
-  "Groundwater Recharge",
-  "Groundwater Trends",
-  "Groundwater current levels",
-  "Gorundwater premonsoon",
-  "Groundwater Assessment",
-  "Soil Moisture",
-  "Soil moisture depth",
-  "Soil moisture percentage",
-  "Soil moisture change",
-  "Water Conservation Structure",
-  "WC Capacity",
-  "WC Storage",
-  "Farmponds",
-  "Checkdams",
-  "Percolation Tanks",
-  "Run-off Conserved",
-  "Excess Rainfall",
-  "Counter Trenches",
-  "LI Scheme",
-  "LI Scheme Benificiaries",
-  "LI Scheme contemplated Ayacut",
-  "LI Scheme capacity",
-  "Yield under LI scheme",
-  "Catchment area under LI scheme",
-  "River Gauge",
-  "River gauge trend",
-  "River gauge level",
-  "River gauge depth",
-  "River gauge high flow"
-];*/
 
 ValueNotifier<SpeechStatus> speechStatus =
     ValueNotifier<SpeechStatus>(SpeechStatus.idle);
@@ -187,6 +124,9 @@ void main() async {
         ),
         ChangeNotifierProvider(
           create: (_) => PermissionsViewModel(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => HomeViewModel(repo: locator<HomeRepository>()),
         ),
       ],
       child: const MyApp(),
@@ -256,41 +196,14 @@ Future<void> showNotification() async {
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
-  void onDidReceiveNotificationResponse(
-      NotificationResponse notificationResponse) async {
-    final String? payload = notificationResponse.payload;
-    if (notificationResponse.payload != null) {
-      print('notification payload: $payload');
-    }
-    /*await Navigator.push(
-      context,
-      MaterialPageRoute<void>(builder: (context) => SecondScreen(payload)),
-    );*/
-  }
 
-  void notificationTapBackground(
-      NotificationResponse notificationResponse) async {
-    final String? payload = notificationResponse.payload;
-    if (notificationResponse.payload != null) {
-      print('notification payload: $payload');
-    }
-    /*await Navigator.push(
-      context,
-      MaterialPageRoute<void>(builder: (context) => SecondScreen(payload)),
-    );*/
-  }
 
   if (platform.Platform.isAndroid || platform.Platform.isAndroid) {
-    /*   await flutterLocalNotificationsPlugin.initialize(
+       await flutterLocalNotificationsPlugin.initialize(
       const InitializationSettings(
         iOS: DarwinInitializationSettings(),
         android: AndroidInitializationSettings('ic_bg_service_small'),
       ),
-    );*/
-    await flutterLocalNotificationsPlugin.initialize(
-      initializationSettings,
-      /* onDidReceiveNotificationResponse: onDidReceiveNotificationResponse,
-      onDidReceiveBackgroundNotificationResponse: notificationTapBackground,*/
     );
   }
 
@@ -318,9 +231,7 @@ Future<void> showNotification() async {
       dynamic values = snapshot.value;
       values.forEach((key, value) async {
         if (value['isUser'] == false) {
-          // responseMessage = value['message'].toString() ?? '';
-          responseMessage =
-              "In Andhra Pradesh, the current water year has seen a total rainfall of 4,197.08 TMC, with actual rainfall measuring 727.82 mm. The state hosts 108 reservoirs currently holding 270.60 TMC of water, complemented by a network of 38,441 minor irrigation tanks contributing 100.08 TMC. Groundwater levels have decreased slightly to 8.35 m from the previous month's 8.48 m. Soil moisture levels are promising, with 369.29 TMC of available moisture, distributed at 11.95% at 30 cm depth and 49.78% at 100 cm depth. The region demonstrates proactive water conservation efforts with 1,399,238 water conservation structures storing 1.80 TMC of water. Overall water availability stands at 741.77 TMC, sourced predominantly from reservoirs (741.77 TMC) with the remaining 471.17 TMC coming from other sources.";
+          responseMessage = value['message'].toString() ?? '';
         }
       });
     }

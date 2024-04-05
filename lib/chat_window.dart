@@ -27,16 +27,18 @@ import 'message_bubble.dart';
 import 'utils/network_utils.dart';
 
 class ChatWindow extends StatefulWidget {
-  const ChatWindow(
-      {Key? key,
-      required this.isFirstTime,
-      required this.finishSession,
-      required this.sessionId})
-      : super(key: key);
+  const ChatWindow({
+    Key? key,
+    required this.isFirstTime,
+    required this.finishSession,
+    required this.sessionId,
+    this.isFromHistory,
+  }) : super(key: key);
 
   final bool isFirstTime;
   final Function(bool finishSession) finishSession;
   final String sessionId;
+  final bool? isFromHistory;
 
   @override
   State<ChatWindow> createState() => _ChatWindowState();
@@ -45,6 +47,8 @@ class ChatWindow extends StatefulWidget {
 class _ChatWindowState extends State<ChatWindow> {
   var scrollControllerListView = ScrollController();
   int prevChatLength = 0;
+  int prevChatLengthHistory = 0;
+  int c = 0;
 
   // TextToSpeech tts = TextToSpeech();
   int responseCount = 1;
@@ -91,10 +95,6 @@ class _ChatWindowState extends State<ChatWindow> {
   void initState() {
     super.initState();
     _initSpeech();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _getChatHistory();
-      // tts.setRate(1);
-    });
   }
 
   @override
@@ -135,13 +135,8 @@ class _ChatWindowState extends State<ChatWindow> {
     }
 
     String langId = '';
-    AppState.instance.isTeluguSelected ? langId = 'or-IN' : langId = 'en-US';
-    // AppState.instance.isTeluguSelected ? langId = 'te-IN' : langId='en-US';
-    // 34 for hindi
-    // 55 for Spanish
-
-    // 23 for Ipad English
-    //var selectedLocale = locales[5];
+    // AppState.instance.isTeluguSelected ? langId = 'or-IN' : langId = 'en-US';
+    AppState.instance.isTeluguSelected ? langId = 'te-IN' : langId = 'en-US';
 
     //for android tab english locale at 5
     print("_onSpeechResult_startListening");
@@ -150,7 +145,7 @@ class _ChatWindowState extends State<ChatWindow> {
       await _speechToText.listen(
           onSoundLevelChange: onSoundLevelChange,
           /*localeId: selectedLocale.localeId,*/
-          localeId: 'en-US',
+          localeId: langId,
           partialResults: false,
           onResult: _onSpeechResult,
           pauseFor: const Duration(seconds: 3),
@@ -214,8 +209,8 @@ class _ChatWindowState extends State<ChatWindow> {
   /// the platform returns recognized words.
   Future<void> _onSpeechResult(SpeechRecognitionResult result) async {
     print("_onSpeechResult ${result.recognizedWords}");
-    DatabaseReference ref = FirebaseDatabase.instance
-        .ref("CHAT_BOT_TEST/${constants.apwrimsUUID}/${widget.sessionId}");
+    DatabaseReference ref = FirebaseDatabase.instance.ref(
+        "CHAT_BOT_ONDEMAND_DATA/${constants.apwrimsUUID}/${AppState.instance.userId}/${widget.sessionId}");
 
     /*  AppState.instance.isExternalLLM
         ? llmType = 'external'
@@ -232,24 +227,25 @@ class _ChatWindowState extends State<ChatWindow> {
       'language': language
     });*/
 
-    TransliterationResponse? response = await Transliteration.transliterate(
+/*    TransliterationResponse? response = await Transliteration.transliterate(
         result.recognizedWords, Languages.ORIYA);
     final translatedText = response?.transliterationSuggestions[0].toString();
     String? message = '';
-    print("translated::$translatedText");
+    print("translated::$translatedText");*/
     AppState.instance.isExternalLLM
         ? llmType = 'external'
         : llmType = 'internal';
     AppState.instance.isTeluguSelected
-        ? language = 'odia'
+        ? language = 'telugu'
         : language = 'english';
 
-    AppState.instance.isTeluguSelected
+/*    AppState.instance.isTeluguSelected
         ? message = translatedText
-        : message = result.recognizedWords;
+        : message = result.recognizedWords;*/
+
     await ref.push().set({
       "isUser": true,
-      "message": message,
+      "message": result.recognizedWords,
       "mediaUrl": '',
       'llm_type': llmType,
       'language': language
@@ -262,8 +258,8 @@ class _ChatWindowState extends State<ChatWindow> {
   Future<void> _onSpeechResultForAutoMode(
       SpeechRecognitionResult result) async {
     print("_onSpeechResultForAutoMode ${result.recognizedWords}");
-    DatabaseReference ref = FirebaseDatabase.instance
-        .ref("CHAT_BOT_TEST/${constants.apwrimsUUID}/${autoSessionId}");
+    DatabaseReference ref = FirebaseDatabase.instance.ref(
+        "CHAT_BOT_ONDEMAND_DATA/${constants.apwrimsUUID}/${AppState.instance.userId}/${autoSessionId}");
 
     if (result.recognizedWords.toLowerCase() == "hello" && !isVoiceInitiated) {
       await _speechToText.stop();
@@ -367,11 +363,11 @@ class _ChatWindowState extends State<ChatWindow> {
                   stream: _toggleValue
                       ? FirebaseDatabase.instance
                           .ref(
-                              "CHAT_BOT_TEST/${constants.apwrimsUUID}/${widget.sessionId}")
+                              "CHAT_BOT_ONDEMAND_DATA/${constants.apwrimsUUID}/${AppState.instance.userId}/${widget.sessionId}")
                           .onValue
                       : FirebaseDatabase.instance
                           .ref(
-                              "CHAT_BOT_TEST/${constants.apwrimsUUID}/$autoSessionId")
+                              "CHAT_BOT_ONDEMAND_DATA/${constants.apwrimsUUID}/${AppState.instance.userId}/$autoSessionId")
                           .onValue,
                   builder: (context, AsyncSnapshot snapshot) {
                     if (snapshot.hasData && snapshot.data != null) {
@@ -398,15 +394,29 @@ class _ChatWindowState extends State<ChatWindow> {
                           ));
                         }
                       });
-                      //messageList.reversed;
-                      if (messageList.isNotEmpty &&
-                          !messageList[messageList.length - 1].isUser &&
-                          messageList.length > prevChatLength &&
-                          _toggleValue) {
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          showLoader.value = false;
-                        });
-                        tts.speak(messageList[messageList.length - 1].text);
+
+                      if (widget.isFromHistory != null &&
+                          widget.isFromHistory == true &&
+                          c == 0) {
+                        //messageList.reversed;
+                        if (messageList.isNotEmpty &&
+                            !messageList[messageList.length - 1].isUser &&
+                            messageList.length > prevChatLength) {
+                          c++;
+                          /*  WidgetsBinding.instance.addPostFrameCallback((_) {
+                            showLoader.value = false;
+                          });
+                          tts.speak(messageList[messageList.length - 1].text);*/
+                        }
+                      } else {
+                        if (messageList.isNotEmpty &&
+                            !messageList[messageList.length - 1].isUser &&
+                            messageList.length > prevChatLength) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            showLoader.value = false;
+                          });
+                          tts.speak(messageList[messageList.length - 1].text);
+                        }
                       }
                       prevChatLength = messageList.length;
                       if (messageList.isNotEmpty &&
@@ -433,14 +443,17 @@ class _ChatWindowState extends State<ChatWindow> {
                                 }
                               });
 
-                        dataTimer = Timer(const Duration(seconds: 15), () {
+                        dataTimer =
+                            Timer(const Duration(seconds: 15), () async {
                           print("timerCounter::$timerCounter");
                           if (showLoader.value) {
+                            DatabaseReference ref = FirebaseDatabase.instance.ref(
+                                "CHAT_BOT_ONDEMAND_DATA/${constants.apwrimsUUID}/${AppState.instance.userId}/${widget.sessionId}");
                             /* messageList.add(ChatBubble(
                               text: "Data Not Found",
                               isUser: false,
                               imageUrl: "",
-                              logMessage: F'',
+                              logMessage: '',
                             ));*/
                             WidgetsBinding.instance.addPostFrameCallback((_) {
                               showLoader.value = false;
@@ -870,8 +883,8 @@ class _ChatWindowState extends State<ChatWindow> {
   }
 
   Future<void> insertImageDataIntoDb(String? imageUrl, String text) async {
-    DatabaseReference ref = FirebaseDatabase.instance
-        .ref("CHAT_BOT_TEST/${constants.apwrimsUUID}/${widget.sessionId}");
+    DatabaseReference ref = FirebaseDatabase.instance.ref(
+        "CHAT_BOT_ONDEMAND_DATA/${constants.apwrimsUUID}/${AppState.instance.userId}/${widget.sessionId}");
     await ref
         .push()
         .set({"isUser": true, "message": text, "mediaUrl": imageUrl});
@@ -881,15 +894,15 @@ class _ChatWindowState extends State<ChatWindow> {
   }
 
   Future<void> insertDataIntoDb(String text) async {
-    DatabaseReference ref = FirebaseDatabase.instance
-        .ref("CHAT_BOT_TEST/${constants.apwrimsUUID}/${widget.sessionId}");
+    DatabaseReference ref = FirebaseDatabase.instance.ref(
+        "CHAT_BOT_ONDEMAND_DATA/${constants.apwrimsUUID}/${AppState.instance.userId}/${widget.sessionId}");
     await ref.push().set({"isUser": true, "message": text});
     chatController.clear();
     capturedPhoto = null;
     setState(() {});
   }
 
-  /*Future<void> initializeSpeechToText(String sessionId) async {
+/*Future<void> initializeSpeechToText(String sessionId) async {
     print(("startListeningToHello: starting listening"));
 
     bool available = await speechToText.initialize(
@@ -904,9 +917,4 @@ class _ChatWindowState extends State<ChatWindow> {
       await _startListeningForAutoMode();
     }
   }*/
-
-  _getChatHistory() {
-    DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_TEST/${constants.apwrimsUUID}");
-  }
 }

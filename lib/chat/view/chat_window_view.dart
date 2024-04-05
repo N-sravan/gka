@@ -128,7 +128,7 @@
 //                   Expanded(
 //                     child: StreamBuilder(
 //                       stream: FirebaseDatabase.instance
-//                           .ref("CHAT_BOT_APWRIMS/${viewModel.sessionId}")
+//                           .ref("CHAT_BOT_ONDEMAND_DATA/${viewModel.sessionId}")
 //                           .onValue,
 //                       builder: (context, AsyncSnapshot snapshot) {
 //                         if (snapshot.hasData && snapshot.data != null) {

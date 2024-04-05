@@ -28,13 +28,10 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
   void initState() {
     super.initState();
     viewModel = Provider.of<LoginViewModel>(context, listen: false);
-    _usernameController.text = "sklm_burja";
-    _passwordController.text = "test123";
+    // _usernameController.text = "sklm_burja";
+    // _passwordController.text = "test123";
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      /// This will start tracking the current network status and give us
-      /// information on the current status of the internet connection
       networkUtils.startTrackingConnection();
-      // viewModel.checkPermissionsAndNavigate(context);
     });
     _passwordVisible = false;
   }
@@ -238,31 +235,23 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                       String userId = _usernameController.text;
                                       String password =
                                           _passwordController.text;
-                                      AppState.instance.userData =
-                                          response.Content();
-                                      response.Content? content =
-                                          await viewModel.authenticate(
-                                              userId, password, context);
+                                      response.Content? content = await viewModel.authenticate(userId, password, context);
                                       if (content != null) {
-                                        await viewModel.sendFcmToken();
+                                       /* bool? result = await viewModel
+                                            .sendFcmToken(context);*/
                                         Navigator.push(
                                             context,
                                             MaterialPageRoute(
                                                 builder: (context) =>
                                                     HomeScreenWidget()));
+                                        /*    if (result !=null && result) {
+                                          Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      HomeScreenWidget()));
+                                        }*/
                                       }
-                                      /*    if (userId == 'sklm_burja' &&
-                                          password == 'test123') {
-                                        Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) =>
-                                                    HomeScreenWidget(
-                                                        data: data)));
-                                      } else {
-                                        Fluttertoast.showToast(
-                                            msg: "Invalid Credentials");
-                                      }*/
                                     }
                                   },
                                   style: constants.buttonStyle,

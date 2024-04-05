@@ -24,7 +24,11 @@ const String preferenceUserEmail = 'userEmail';
 const String preferenceUserFirstName = 'userFirstName';
 const String preferenceUserMobileNo = 'userMobileNo';
 const String preferenceUserId = 'userId';
+const String preferenceUserData = 'userData';
 const String preferenceToken = 'token';
+const String preferencelocName = 'locName';
+const String preferencelocUUID= 'locUUID';
+const String preferencelocType= 'locType';
 const String preferenceRefreshToken = 'refreshToken';
 const String preferenceCsrfToken = 'csrfToken';
 const String preferenceUserRole = 'userRole';
@@ -65,6 +69,8 @@ const String geoJsonSurveyPointsUrl ='http://acerkrishidss.vassarlabs.com/geoser
     'http://agriwise.vassarlabs.com/api';*/    //-
 
 const String loginEndpoint = 'https://apwrims.ap.gov.in/auth/login-user-details';
+const String saveFcmToken = 'https://apwrims.ap.gov.in/auth/login-user-details';
+const String deleteToken = 'https://apwrims.ap.gov.in/auth/login-user-details';
 const String logoutEndpoint =
     'auth/realms/agriwiserealm/protocol/openid-connect/logout';
 const String csrfEndPoint = 'um/generate-csrf-token';
@@ -830,7 +836,7 @@ enum CropNameVerifyRadioOptions {agree, disagree}
 //Role Names
 const String aoRoleName = "Agricultural Officer";
 // const String ngrok = "https://d5d8-196-12-47-4.ngrok-free.app/session/create_session";   ///apwrims
-const String ngrok = "https://c525-196-12-47-4.ngrok-free.app/session/create_session";   ///apwrims
+const String ngrok = "https://a2ee-196-12-47-4.ngrok-free.app/session/create_session";   ///apwrims
 // const String ngrok = "https://ded2-196-12-47-4.ngrok-free.app/session/create_session";   ///gowater
 
 const int ownerCultivator = 1;

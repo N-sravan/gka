@@ -66,7 +66,7 @@ class ChatViewModel extends ChangeNotifier {
   bool speechEnabled = false;
 
   Future<String?> createSession() async {
-   /* try {
+    try {
       String url = constants.ngrok;
       Content data = AppState.instance.userData;
       print("Request data before encode::$data");
@@ -90,12 +90,12 @@ class ChatViewModel extends ChangeNotifier {
     } catch (error, stacktrace) {
       Fluttertoast.showToast(msg: "Couldn't create Session");
       print("Error Stacktrace $error $stacktrace");
-    }*/
-    String uuid = const Uuid().v4();
+    }
+ /*   String uuid = const Uuid().v4();
     sessionId = uuid;
     isFirstTime = true;
     notifyListeners();
-    return uuid;
+    return uuid;*/
     return null;
   }
 
@@ -185,7 +185,7 @@ class ChatViewModel extends ChangeNotifier {
     print("_onSpeechResult ${result.recognizedWords}");
     await updateChatControllerForSpeech(result.recognizedWords);
     DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_APWRIMS/$sessionId}");
+        FirebaseDatabase.instance.ref("CHAT_BOT_ONDEMAND_DATA/$sessionId}");
     toggleValue ? llmType = "internal" : llmType = "external";
     print("llmType::${llmType}");
     // TransliterationResponse? response = await Transliteration.transliterate(result.recognizedWords, Languages.TELUGU);
@@ -217,7 +217,7 @@ class ChatViewModel extends ChangeNotifier {
     print("_onSpeechResultForAutoMode ${result.recognizedWords}");
     print("_onSpeechResultForAutoMode autoSessionId ${autoSessionId}");
     DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_APWRIMS/${autoSessionId}");
+        FirebaseDatabase.instance.ref("CHAT_BOT_ONDEMAND_DATA/${autoSessionId}");
 
     if (result.recognizedWords.toLowerCase() == "hello" && !isVoiceInitiated) {
       await _speechToText.stop();

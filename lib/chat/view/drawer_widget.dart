@@ -1,4 +1,5 @@
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../utils/common_constants.dart' as constants;
@@ -65,10 +66,9 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                     ),
                   ),
                 ),
-                // Show session IDs as list tiles
                 StreamBuilder(
                   stream: FirebaseDatabase.instance
-                      .ref("CHAT_BOT_TEST/${constants.apwrimsUUID}")
+                      .ref("CHAT_BOT_ONDEMAND_DATA/${constants.apwrimsUUID}/${AppState.instance.userId}")
                       .onValue,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
@@ -85,7 +85,11 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                       return Text('Error: ${snapshot.error}');
                     }
                     if (snapshot.hasData && snapshot.data == null) {
-                      return const Text('No session IDs available');
+                      return Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Center(
+                            child: Text('No Past History'),
+                          ));
                     }
                     var data =
                         (snapshot.data! as DatabaseEvent).snapshot.value ?? {};
@@ -101,12 +105,14 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                       sessionId = key;
                       if (value != null) {
                         final datalast = Map<String, dynamic>.from(value);
-                        if (datalast != null) {
+                        if (datalast != null ) {
+                          bool titleValue = false;
                           datalast.forEach((key, value) {
                             if (value['isUser'] &&
                                 value['message'] != null &&
-                                value['message'].isNotEmpty) {
-                              title = value['message'] ?? '';
+                                value['message'].isNotEmpty && !titleValue) {
+                              title = value['message'];
+                              titleValue = true;
                             }
                           });
                         }
@@ -199,7 +205,8 @@ class _DrawerWidgetState extends State<DrawerWidget> {
               MaterialPageRoute(
                 builder: (context) => ChatWindow(
                   sessionId: key,
-                  isFirstTime: true, // Adjust accordingly
+                  isFirstTime: true,
+                  isFromHistory: true,
                   finishSession: (finishSession) {}, // Adjust accordingly
                 ),
               ),
@@ -208,6 +215,6 @@ class _DrawerWidgetState extends State<DrawerWidget> {
         ),
       );
     });
-      return listTiles;
+    return listTiles;
   }
 }

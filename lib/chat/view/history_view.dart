@@ -59,7 +59,7 @@ class _HistoryChatViewState extends State<HistoryChatView> {
                   Expanded(
                     child: StreamBuilder(
                       stream: FirebaseDatabase.instance
-                          .ref("CHAT_BOT_APWRIMS/${widget.sessionId}")
+                          .ref("CHAT_BOT_ONDEMAND_DATA/${widget.sessionId}")
                           .onValue,
                       builder: (context, AsyncSnapshot snapshot) {
                         if (snapshot.hasData && snapshot.data != null) {
