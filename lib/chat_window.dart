@@ -6,6 +6,8 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:gka/services/api_provider.dart';
 import 'package:gka/utils/app_state.dart';
+import 'package:transliteration/response/transliteration_response.dart';
+import 'package:transliteration/transliteration.dart';
 import 'package:uuid/parsing.dart';
 import 'package:uuid/uuid.dart';
 import 'package:uuid/v4.dart';
@@ -117,6 +119,7 @@ class _ChatWindowState extends State<ChatWindow> {
     //print("Available voices ${await tts.getVoice()}");
     print("Available languages ${await tts.getLanguages}");
     await tts.setLanguage("en-US");
+    // await tts.setLanguage("or-IN");
   }
 
   /// Each time to start a speech recognition session
@@ -138,6 +141,7 @@ class _ChatWindowState extends State<ChatWindow> {
       await _speechToText.listen(
           onSoundLevelChange: onSoundLevelChange,
           /*localeId: selectedLocale.localeId,*/
+          localeId: 'en-US',
           partialResults: false,
           onResult: _onSpeechResult,
           pauseFor: const Duration(seconds: 3),
@@ -209,11 +213,17 @@ class _ChatWindowState extends State<ChatWindow> {
     // TransliterationResponse? response = await Transliteration.transliterate(result.recognizedWords, Languages.TELUGU);
     // final translatedText =response?.transliterationSuggestions[0].toString();
     // print("translated::$translatedText");
+    TransliterationResponse? response = await Transliteration.transliterate(
+        result.recognizedWords, Languages.ORIYA);
+    final translatedText = response?.transliterationSuggestions[0].toString();
+    String? message = '';
+    print("translated::$translatedText");
     await ref.push().set({
       "isUser": true,
       "message": result.recognizedWords,
       "mediaUrl": '',
-      "llm_type": llmType
+      "llm_type": llmType,
+      'language': 'english'
     });
 
     bool active = _speechToText.isListening;
