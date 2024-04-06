@@ -20,7 +20,7 @@ class HomeViewModel extends LoadingViewModel {
   String selectedValue = '';
   String selectedLang = '';
   List<String> selectionList = ['Internal LLM', 'External LLM'];
-  List<String> langList = ['Telugu', 'English'];
+  List<String> langList = ['English','Telugu'];
 
   void updateSelectedValue(String value) {
     selectedValue = value;

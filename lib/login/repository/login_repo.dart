@@ -44,10 +44,11 @@ class LoginRepositoryImpl extends LoginRepository {
   Future<int?> saveFcmToken(BuildContext context) async {
     Map<String, dynamic> params = {
       "fcmToken": AppState.instance.fcmToken,
-      "userId": AppState.instance.userId,
-      "locationUuid": AppState.instance.locUUID,
-      "locationType": AppState.instance.locType,
-      "locationName": AppState.instance.locName
+      "userId": '44',
+      "locationUuid": '1437f9bf-207a-4d7e-bd9d-0af79b6ef8db',
+      "locationType": 'MANDAL',
+      "locationName": 'BURJA',
+      "project_uuid": "6f86292b-dd9a-4987-bb8f-c3940263b349"
     };
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson

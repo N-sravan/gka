@@ -89,7 +89,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                 ),
               ),
             ),
-            /*!widget.isUser ? GestureDetector(
+            !widget.isUser ? GestureDetector(
               onTap: showInformation,
               child: const Padding(
                 padding: EdgeInsets.only(left: 8.0),
@@ -98,7 +98,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                   color: Colors.grey,
                 ),
               ),
-            ) : const SizedBox(),*/
+            ) : const SizedBox(),
             if (widget.isUser)
               const Padding(
                 padding: EdgeInsets.only(left: 16.0),

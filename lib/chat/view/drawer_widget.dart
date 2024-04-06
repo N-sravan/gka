@@ -68,7 +68,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                 ),
                 StreamBuilder(
                   stream: FirebaseDatabase.instance
-                      .ref("CHAT_BOT_ONDEMAND_DATA/${constants.apwrimsUUID}/${AppState.instance.userId}")
+                      .ref("CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.apwrimsUUID}/${AppState.instance.userId}")
                       .onValue,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {

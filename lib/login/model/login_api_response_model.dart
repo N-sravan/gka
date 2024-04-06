@@ -1,3 +1,5 @@
+import 'package:gka/utils/common_constants.dart' as constants;
+
 class LoginResult {
   String? id;
   Result? result;
@@ -59,6 +61,7 @@ class Result {
 }
 
 class Content {
+  String? project_uuid;
   String? username;
   String? firstName;
   String? lastName;
@@ -78,6 +81,7 @@ class Content {
   String? userId;
 
   Content({
+    this.project_uuid,
     this.username,
     this.firstName,
     this.lastName,
@@ -99,6 +103,7 @@ class Content {
 
   factory Content.fromJson(Map<String, dynamic> json) {
     return Content(
+      project_uuid: constants.apwrimsUUID.toString(),
       username: json['username'],
       firstName: json['firstName'],
       lastName: json['lastName'],
@@ -138,6 +143,7 @@ class Content {
       'status': status,
       'userInfoEncrypted': userInfoEncrypted,
       'userId': userId,
+      'project_uuid': constants.apwrimsUUID.toString(),
     };
   }
 }

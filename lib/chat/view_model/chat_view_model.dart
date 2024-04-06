@@ -15,7 +15,7 @@ import 'package:gka/utils/common_constants.dart' as constants;
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:uuid/uuid.dart';
-import '../../login/model/login_api_response_model.dart' as response;
+import '../../login/model/login_api_response_model.dart' as login;
 import '../../login/model/login_api_response_model.dart';
 import '../../message_bubble.dart';
 
@@ -68,7 +68,32 @@ class ChatViewModel extends ChangeNotifier {
   Future<String?> createSession() async {
     try {
       String url = constants.ngrok;
-      Content data = AppState.instance.userData;
+      Content data = login.Content(
+        project_uuid: '6f86292b-dd9a-4987-bb8f-c3940263b349',
+        username: "APWRIMS",
+        userId: '44',
+        firstName: 'APWRIMS',
+        userDetailsJson: UserDetailsJson(
+          data: login.Data(
+            locType: 'mandal',
+            location: login.Location(state: [
+              login.State(
+                  stateName: 'Andhra Pradesh',
+                  stateUUID: "6f86292b-dd9a-4987-bb8f-c3940263b349",
+                  district: [
+                    login.District(
+                        districtName: 'Srikakulam',
+                        districtUUID: '00bb53a0-a27e-46c4-9016-fe9545766cb9',
+                        mandal: [
+                          login.Mandal(
+                              mandalName: 'BURJA',
+                              mndalUUID: '1437f9bf-207a-4d7e-bd9d-0af79b6ef8db')
+                        ]),
+                  ]),
+            ]),
+          ),
+        ),
+      );
       print("Request data before encode::$data");
       String requestBody = jsonEncode(data);
       Response response = await post(
@@ -91,7 +116,7 @@ class ChatViewModel extends ChangeNotifier {
       Fluttertoast.showToast(msg: "Couldn't create Session");
       print("Error Stacktrace $error $stacktrace");
     }
- /*   String uuid = const Uuid().v4();
+    /*   String uuid = const Uuid().v4();
     sessionId = uuid;
     isFirstTime = true;
     notifyListeners();
@@ -185,7 +210,7 @@ class ChatViewModel extends ChangeNotifier {
     print("_onSpeechResult ${result.recognizedWords}");
     await updateChatControllerForSpeech(result.recognizedWords);
     DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_ONDEMAND_DATA/$sessionId}");
+        FirebaseDatabase.instance.ref("CHAT_BOT_ONDEMAND_QUERY_DATA/$sessionId}");
     toggleValue ? llmType = "internal" : llmType = "external";
     print("llmType::${llmType}");
     // TransliterationResponse? response = await Transliteration.transliterate(result.recognizedWords, Languages.TELUGU);
@@ -216,8 +241,8 @@ class ChatViewModel extends ChangeNotifier {
   Future<void> onSpeechResultForAutoMode(SpeechRecognitionResult result) async {
     print("_onSpeechResultForAutoMode ${result.recognizedWords}");
     print("_onSpeechResultForAutoMode autoSessionId ${autoSessionId}");
-    DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_ONDEMAND_DATA/${autoSessionId}");
+    DatabaseReference ref = FirebaseDatabase.instance
+        .ref("CHAT_BOT_ONDEMAND_QUERY_DATA/${autoSessionId}");
 
     if (result.recognizedWords.toLowerCase() == "hello" && !isVoiceInitiated) {
       await _speechToText.stop();

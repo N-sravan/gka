@@ -17,6 +17,7 @@ class HomeRepositoryImpl extends HomeRepository {
   Future<int?> deleteToken(BuildContext context) async {
     Map<String, dynamic> params = {
       "fcmToken": AppState.instance.fcmToken,
+      "project_uuid": "6f86292b-dd9a-4987-bb8f-c3940263b349"
     };
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
