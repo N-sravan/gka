@@ -75,6 +75,7 @@ class Meta {
   String? customerName;
   dynamic customAttributes;
   bool? is_mobile_app;
+  String? project_uuid;
 
   Meta({
     this.userId,
@@ -93,6 +94,7 @@ class Meta {
     this.customerName,
     this.customAttributes,
     this.is_mobile_app,
+    this.project_uuid,
   });
 
   factory Meta.fromJson(Map<String, dynamic> json) {
@@ -112,7 +114,8 @@ class Meta {
       customerId: json['customerId'],
       customerName: json['customerName'],
       customAttributes: json['customAttributes'],
-      is_mobile_app: true
+      is_mobile_app: true,
+        project_uuid: 'd19a5290-2e40-494a-83d2-98f4c845b1f1'
     );
   }
 
@@ -133,7 +136,8 @@ class Meta {
       'customerId': customerId,
       'customerName': customerName,
       'customAttributes': customAttributes,
-      'is_mobile_app' : true
+      'is_mobile_app' : true,
+      'project_uuid' : 'd19a5290-2e40-494a-83d2-98f4c845b1f1'
     };
   }
 }

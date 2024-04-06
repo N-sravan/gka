@@ -287,10 +287,13 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                       String userId = _usernameController.text;
                                       String password =
                                           _passwordController.text;
-                                      await viewModel.authenticate(
-                                          userId, password, context);
+                                      if (userId.isNotEmpty &&
+                                          password.isNotEmpty) {
+                                        await viewModel.authenticate(
+                                            userId, password, context);
+                                      }
 
-                                 /*     if (userId == 'kerala_ao' &&
+                                      /*     if (userId == 'kerala_ao' &&
                                           password == 'agri123') {
                                         AppState.instance.userData = data;
                                         AppState.instance.userUUID =

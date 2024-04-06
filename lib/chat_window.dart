@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:avatar_glow/avatar_glow.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:gka/chat/view/drawer_widget.dart';
 import 'package:gka/services/api_provider.dart';
 import 'package:gka/utils/app_state.dart';
 import 'package:transliteration/response/transliteration_response.dart';
@@ -33,12 +34,15 @@ class ChatWindow extends StatefulWidget {
       {Key? key,
       required this.isFirstTime,
       required this.finishSession,
-      required this.sessionId})
+      required this.sessionId,
+        this.isFromHistory,
+      })
       : super(key: key);
 
   final bool isFirstTime;
   final Function(bool finishSession) finishSession;
   final String sessionId;
+  final bool? isFromHistory;
 
   @override
   State<ChatWindow> createState() => _ChatWindowState();
@@ -82,6 +86,7 @@ class _ChatWindowState extends State<ChatWindow> {
   Timer? dataTimer;
   Timer? loadingTimer;
   String autoSessionId = '';
+  int c=0;
 
   @override
   void initState() {
@@ -118,8 +123,9 @@ class _ChatWindowState extends State<ChatWindow> {
 
     //print("Available voices ${await tts.getVoice()}");
     print("Available languages ${await tts.getLanguages}");
-    await tts.setLanguage("en-US");
-    // await tts.setLanguage("or-IN");
+    AppState.instance.isOriyaSelected
+        ? await tts.setLanguage("or-IN")
+        : await tts.setLanguage("en-US");
   }
 
   /// Each time to start a speech recognition session
@@ -128,6 +134,9 @@ class _ChatWindowState extends State<ChatWindow> {
     for (int i = 0; i < locales.length; i++) {
       print("LOCALESDSD $i   ${locales[i].name}");
     }
+
+    String langId = '';
+    AppState.instance.isOriyaSelected ? langId = 'or-IN' : langId = 'en-US';
     // 34 for hindi
     // 55 for Spanish
 
@@ -141,7 +150,7 @@ class _ChatWindowState extends State<ChatWindow> {
       await _speechToText.listen(
           onSoundLevelChange: onSoundLevelChange,
           /*localeId: selectedLocale.localeId,*/
-          localeId: 'en-US',
+          localeId: langId,
           partialResults: false,
           onResult: _onSpeechResult,
           pauseFor: const Duration(seconds: 3),
@@ -207,24 +216,29 @@ class _ChatWindowState extends State<ChatWindow> {
     print("_onSpeechResult ${result.recognizedWords}");
     await updateChatControllerForSpeech(result.recognizedWords);
     DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_ONDEMAND_DATA/${constants.odishaUUID}/${AppState.instance.userUUID}/${widget.sessionId}");
+        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.odishaUUID}/${AppState.instance.userUUID}/${widget.sessionId}");
     !_toggleValue ? llmType = "internal" : llmType = "external";
     print("llmType::${llmType}");
-    // TransliterationResponse? response = await Transliteration.transliterate(result.recognizedWords, Languages.TELUGU);
-    // final translatedText =response?.transliterationSuggestions[0].toString();
-    // print("translated::$translatedText");
+
     TransliterationResponse? response = await Transliteration.transliterate(
         result.recognizedWords, Languages.ORIYA);
     final translatedText = response?.transliterationSuggestions[0].toString();
-    String? message = '';
     print("translated::$translatedText");
-    await ref.push().set({
-      "isUser": true,
-      "message": result.recognizedWords,
-      "mediaUrl": '',
-      "llm_type": llmType,
-      'language': 'english'
-    });
+    AppState.instance.isOriyaSelected
+        ? await ref.push().set({
+            "isUser": true,
+            "message": translatedText,
+            "mediaUrl": '',
+            "llm_type": llmType,
+            'language': 'odia'
+          })
+        : await ref.push().set({
+            "isUser": true,
+            "message": result.recognizedWords,
+            "mediaUrl": '',
+            "llm_type": llmType,
+            'language': 'english'
+          });
 
     bool active = _speechToText.isListening;
     listeningActive.value = active;
@@ -235,7 +249,7 @@ class _ChatWindowState extends State<ChatWindow> {
     print("_onSpeechResultForAutoMode ${result.recognizedWords}");
     print("_onSpeechResultForAutoMode autoSessionId ${autoSessionId}");
     DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_ONDEMAND_DATA/${constants.odishaUUID}/${AppState.instance.userUUID}/${autoSessionId}");
+        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.odishaUUID}/${AppState.instance.userUUID}/${autoSessionId}");
 
     if (result.recognizedWords.toLowerCase() == "hello" && !isVoiceInitiated) {
       await _speechToText.stop();
@@ -271,6 +285,7 @@ class _ChatWindowState extends State<ChatWindow> {
         return false;
       },
       child: Scaffold(
+        drawer: const DrawerWidget(),
         appBar: AppBar(
           centerTitle: true,
           backgroundColor: Colors.white,
@@ -329,7 +344,7 @@ class _ChatWindowState extends State<ChatWindow> {
                 child: StreamBuilder(
                   stream: FirebaseDatabase.instance
                       .ref(
-                          "CHAT_BOT_ONDEMAND_DATA/${constants.odishaUUID}/${AppState.instance.userUUID}/${widget.sessionId}")
+                          "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.odishaUUID}/${AppState.instance.userUUID}/${widget.sessionId}")
                       .onValue,
                   builder: (context, AsyncSnapshot snapshot) {
                     if (snapshot.hasData && snapshot.data != null) {
@@ -356,14 +371,28 @@ class _ChatWindowState extends State<ChatWindow> {
                           ));
                         }
                       });
-                      //messageList.reversed;
-                      if (messageList.isNotEmpty &&
-                          !messageList[messageList.length - 1].isUser &&
-                          messageList.length > prevChatLength) {
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          showLoader.value = false;
-                        });
-                        tts.speak(messageList[messageList.length - 1].text);
+                      if (widget.isFromHistory != null &&
+                          widget.isFromHistory == true &&
+                          c == 0) {
+                        //messageList.reversed;
+                        if (messageList.isNotEmpty &&
+                            !messageList[messageList.length - 1].isUser &&
+                            messageList.length > prevChatLength) {
+                          c++;
+                          /*  WidgetsBinding.instance.addPostFrameCallback((_) {
+                            showLoader.value = false;
+                          });
+                          tts.speak(messageList[messageList.length - 1].text);*/
+                        }
+                      } else {
+                        if (messageList.isNotEmpty &&
+                            !messageList[messageList.length - 1].isUser &&
+                            messageList.length > prevChatLength) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            showLoader.value = false;
+                          });
+                          tts.speak(messageList[messageList.length - 1].text);
+                        }
                       }
                       prevChatLength = messageList.length;
                       if (messageList.isNotEmpty &&
@@ -698,7 +727,7 @@ class _ChatWindowState extends State<ChatWindow> {
       } catch (e) {
         developer.log(
           'Upload Image',
-          name: 'APWRIMS Bot',
+          name: 'GoWater Bot',
           error: e.toString(),
         );
       }
@@ -787,7 +816,7 @@ class _ChatWindowState extends State<ChatWindow> {
 
   Future<void> insertDataIntoDb(String? imageUrl, String text) async {
     DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_ONDEMAND_DATA/${constants.odishaUUID}/${AppState.instance.userUUID}/${widget.sessionId}");
+        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.odishaUUID}/${AppState.instance.userUUID}/${widget.sessionId}");
     !_toggleValue ? llmType = "internal" : llmType = "external";
     await ref.push().set({
       "isUser": true,

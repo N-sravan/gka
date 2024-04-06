@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:isolate';
 import 'dart:ui';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:gka/home/view_model/home_view_model.dart';
 import 'package:gka/utils/app_state.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 import 'package:gka/utils/shared_preference_util.dart';
@@ -117,6 +118,9 @@ void main() async {
         ),
         ChangeNotifierProvider(
           create: (_) => PermissionsViewModel(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => HomeViewModel(),
         ),
       ],
       child: const MyApp(),

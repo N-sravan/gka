@@ -198,6 +198,7 @@ class LoginViewModel extends LoadingViewModel {
               Meta? data = userPermissionsResponse!.response!.meta;
               if (data != null) {
                 AppState.instance.userData = data!;
+                isLoading = false;
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const HomeScreenWidget()),
@@ -233,6 +234,7 @@ class LoginViewModel extends LoadingViewModel {
         }
       } catch (e) {
         isLoading = false;
+        notifyListeners();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(constants.genericErrorMsg),
         ));

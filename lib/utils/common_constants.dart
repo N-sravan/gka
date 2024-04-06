@@ -831,7 +831,7 @@ enum CropNameVerifyRadioOptions {agree, disagree}
 
 //Role Names
 const String aoRoleName = "Agricultural Officer";
-const String ngrok = "https://a2ee-196-12-47-4.ngrok-free.app/session/create_session";   ///apwrims
+const String ngrok = "https://genai.vassarlabs.com/session/create_session";   ///apwrims
 // const String ngrok = "https://ded2-196-12-47-4.ngrok-free.app/session/create_session";   ///gowater
 
 const int ownerCultivator = 1;

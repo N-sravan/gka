@@ -54,7 +54,7 @@ class AppState {
   bool hasFarmerData=false;
   bool isVoiceUpdateEnabled=false;
   bool isVillageSelected = true;
-  bool isMalayalamSelected = false;
+  bool isOriyaSelected = false;
 
   //For Background Sync
   bool isSyncInProgress = false;

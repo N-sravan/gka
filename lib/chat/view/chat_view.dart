@@ -12,13 +12,8 @@ class ChatView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async{
-        return false;
-      },
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(
-          automaticallyImplyLeading: false,
           centerTitle: true,
           title: const Text('Session'),
         ),
@@ -65,7 +60,6 @@ class ChatView extends StatelessWidget {
             );
           },
         ),
-      ),
-    );
+      );
   }
 }
