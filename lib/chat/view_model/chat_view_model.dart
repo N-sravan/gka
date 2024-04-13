@@ -68,7 +68,8 @@ class ChatViewModel extends ChangeNotifier {
   Future<String?> createSession() async {
     try {
       String url = constants.ngrok;
-      Content data = login.Content(
+      String data = AppState.instance.userData;
+      /* Content data = login.Content(
         project_uuid: '6f86292b-dd9a-4987-bb8f-c3940263b349',
         username: "APWRIMS",
         userId: '44',
@@ -93,12 +94,12 @@ class ChatViewModel extends ChangeNotifier {
             ]),
           ),
         ),
-      );
+      );*/
       print("Request data before encode::$data");
       String requestBody = jsonEncode(data);
       Response response = await post(
         Uri.parse(url),
-        body: requestBody,
+        body: data,
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },

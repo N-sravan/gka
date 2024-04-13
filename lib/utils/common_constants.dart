@@ -26,6 +26,7 @@ const String preferenceUserMobileNo = 'userMobileNo';
 const String preferenceUserId = 'userId';
 const String preferenceUserData = 'userData';
 const String preferenceToken = 'token';
+const String preferenceFcmToken = 'fcmToken';
 const String preferencelocName = 'locName';
 const String preferencelocUUID= 'locUUID';
 const String preferencelocType= 'locType';

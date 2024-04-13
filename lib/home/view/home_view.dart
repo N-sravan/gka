@@ -1,10 +1,13 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/home/view_model/home_view_model.dart';
 import 'package:gka/utils/app_state.dart';
 import 'package:provider/provider.dart';
 import '../../chat/view/chat_view.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import '../../login/model/login_api_response_model.dart' as response;
 
 class HomeScreenWidget extends StatefulWidget {
@@ -16,6 +19,13 @@ class HomeScreenWidget extends StatefulWidget {
 
 class _HomeScreenWidgetState extends State<HomeScreenWidget> {
   late HomeViewModel viewModel;
+  String? selectedNotificationPayload;
+
+  /// A notification action which triggers a url launch event
+  String urlLaunchActionId = 'id_1';
+
+  /// A notification action which triggers a App navigation event
+  String navigationActionId = 'id_3';
 
   @override
   void initState() {
@@ -25,6 +35,10 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
     ]);*/
     super.initState();
     viewModel = Provider.of<HomeViewModel>(context, listen: false);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      viewModel.configureDidReceiveLocalNotificationSubject(context);
+      viewModel.configureSelectNotificationSubject(context);
+    });
   }
 
   @override
@@ -285,6 +299,12 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                       ),
                     ),
                     const SizedBox(height: 20),
+                    PaddedElevatedButton(
+                      buttonText: 'Show notification with plain actions',
+                      onPressed: () async {
+                        await _showNotificationWithActions();
+                      },
+                    ),
                     ElevatedButton(
                       onPressed: () {
                         if (viewModel.selectedValue.isNotEmpty &&
@@ -317,4 +337,101 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
       },
     );
   }
+}
+
+class PaddedElevatedButton extends StatelessWidget {
+  const PaddedElevatedButton({
+    required this.buttonText,
+    required this.onPressed,
+    Key? key,
+  }) : super(key: key);
+
+  final String buttonText;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+        child: ElevatedButton(
+          onPressed: onPressed,
+          child: Text(buttonText),
+        ),
+      );
+}
+
+String? selectedNotificationPayload;
+
+/// A notification action which triggers a url launch event
+const String urlLaunchActionId = 'id_1';
+
+/// A notification action which triggers a App navigation event
+const String navigationActionId = 'id_3';
+
+Future<void> _showNotificationWithActions() async {
+  const AndroidNotificationDetails androidNotificationDetails =
+      AndroidNotificationDetails(
+    'your channel id',
+    'your channel name',
+    channelDescription: 'your channel description',
+    importance: Importance.max,
+    priority: Priority.high,
+    ticker: 'ticker',
+    actions: <AndroidNotificationAction>[
+      AndroidNotificationAction(
+        urlLaunchActionId,
+        'Action 1',
+        icon: DrawableResourceAndroidBitmap('food'),
+        contextual: true,
+      ),
+      AndroidNotificationAction(
+        'id_2',
+        'Action 2',
+        titleColor: Color.fromARGB(255, 255, 0, 0),
+        icon: DrawableResourceAndroidBitmap('secondary_icon'),
+      ),
+      AndroidNotificationAction(
+        navigationActionId,
+        'Action 3',
+        icon: DrawableResourceAndroidBitmap('secondary_icon'),
+        showsUserInterface: true,
+        // By default, Android plugin will dismiss the notification when the
+        // user tapped on a action (this mimics the behavior on iOS).
+        cancelNotification: false,
+      ),
+    ],
+  );
+
+  // const DarwinNotificationDetails iosNotificationDetails =
+  // DarwinNotificationDetails(
+  //   categoryIdentifier: darwinNotificationCategoryPlain,
+  // );
+  //
+  // const DarwinNotificationDetails macOSNotificationDetails =
+  // DarwinNotificationDetails(
+  //   categoryIdentifier: darwinNotificationCategoryPlain,
+  // );
+
+  // const LinuxNotificationDetails linuxNotificationDetails =
+  // LinuxNotificationDetails(
+  //   actions: <LinuxNotificationAction>[
+  //     LinuxNotificationAction(
+  //       key: urlLaunchActionId,
+  //       label: 'Action 1',
+  //     ),
+  //     LinuxNotificationAction(
+  //       key: navigationActionId,
+  //       label: 'Action 2',
+  //     ),
+  //   ],
+  // );
+  //
+  // const NotificationDetails notificationDetails = NotificationDetails(
+  //   android: androidNotificationDetails,
+  //   iOS: iosNotificationDetails,
+  //   macOS: macOSNotificationDetails,
+  //   linux: linuxNotificationDetails,
+  // );
+  // await flutterLocalNotificationsPlugin.show(
+  //     id++, 'plain title', 'plain body', notificationDetails,
+  //     payload: 'item z');
 }

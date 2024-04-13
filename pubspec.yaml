@@ -34,6 +34,8 @@ dependencies:
   flutter_speech: ^2.0.0
   uuid: ^4.3.3
   workmanager: ^0.5.2
+  timezone: ^0.9.0
+  image: ^3.0.8
   permission_handler: ^10.4.3
   notification_permissions: ^0.6.1
   firebase_messaging: ^14.6.9
@@ -56,6 +58,8 @@ dependencies:
   audioplayers: ^5.2.1
   dropdown_button2: ^2.0.1
   transliteration: ^0.0.5
+  flutter_timezone: ^1.0.4
+
 
 dev_dependencies:
   flutter_test:
@@ -69,4 +73,6 @@ flutter:
   assets:
     - assets/images/
     - assets/audio/
+    - assets/icons/
+    - icons/
 

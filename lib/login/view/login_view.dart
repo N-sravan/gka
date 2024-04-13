@@ -28,8 +28,8 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
   void initState() {
     super.initState();
     viewModel = Provider.of<LoginViewModel>(context, listen: false);
-    _usernameController.text = "APWRIMS";
-    _passwordController.text = "test123";
+  /*  _usernameController.text = "APWRIMS";
+    _passwordController.text = "test123";*/
     WidgetsBinding.instance.addPostFrameCallback((_) {
       networkUtils.startTrackingConnection();
     });
@@ -236,19 +236,21 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                       String password =
                                           _passwordController.text;
                                       // response.Content? content = await viewModel.authenticate(userId, password, context);
-                                      if (userId == "APWRIMS" && password == 'test123') {
-                                        AppState.instance.userId = '44';
+                                      if (userId.isNotEmpty && password.isNotEmpty) {
+                                        // AppState.instance.userId = '44';
                                         String? fcmToken = await FirebaseMessaging.instance.getToken();
-                                        if(fcmToken !=null && fcmToken.isNotEmpty){
+                                        response.Content? content = await viewModel.authenticate(userId, password, context);
+                                        if(fcmToken !=null && fcmToken.isNotEmpty && content !=null){
                                           AppState.instance.fcmToken = fcmToken;
                                           bool? result = await viewModel
                                               .sendFcmToken(context);
                                           if(result !=null && result == true) {
-                                            Navigator.push(
+                                            Navigator.pushNamed(context, '/home');
+                                           /* Navigator.push(
                                                 context,
                                                 MaterialPageRoute(
                                                     builder: (context) =>
-                                                        HomeScreenWidget()));
+                                                        HomeScreenWidget()));*/
                                           }
                                         }
                                         /*    if (result !=null && result) {

@@ -6,16 +6,20 @@ import '../../login/model/login_api_response_model.dart' as response;
 import 'package:provider/provider.dart';
 import '../../chat_window.dart';
 
-class ChatView extends StatelessWidget {
-
+class ChatView extends StatefulWidget {
   const ChatView({Key? key}) : super(key: key);
 
+  @override
+  State<ChatView> createState() => _ChatViewState();
+}
+
+class _ChatViewState extends State<ChatView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text('Session'),
+        title: Text('Session'),
       ),
       body: Consumer<ChatViewModel>(
         builder: (_, model, child) {
@@ -63,3 +67,5 @@ class ChatView extends StatelessWidget {
     );
   }
 }
+
+

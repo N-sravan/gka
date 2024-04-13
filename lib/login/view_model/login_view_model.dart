@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -51,9 +52,10 @@ class LoginViewModel extends LoadingViewModel {
         if (loginResult.result != null) {
           if (loginResult.result?.status != null &&
               loginResult.result?.status == 200) {
-            // login.Content? userContent = loginResult.result!.content;
+            login.Content? userContent = loginResult.result!.content;
+            String encodedContent = json.encode(userContent?.toJson());
 
-            login.Content? userContent = login.Content(
+/*            login.Content? userContent = login.Content(
               username: "APWRIMS",
               userId: '44',
               userDetailsJson: login.UserDetailsJson(
@@ -78,7 +80,7 @@ class LoginViewModel extends LoadingViewModel {
                   ]),
                 ),
               ),
-            );
+            );*/
 
             if (userContent != null && userContent.userDetailsJson != null) {
               switch ('state') {
@@ -103,7 +105,7 @@ class LoginViewModel extends LoadingViewModel {
                 default:
                   break;
               }
-              AppState.instance.userData = userContent;
+              AppState.instance.userData = encodedContent;
               AppState.instance.fcmToken = fcmToken!;
               AppState.instance.locType =
               userContent.userDetailsJson!.data!.locType!;
@@ -118,7 +120,8 @@ class LoginViewModel extends LoadingViewModel {
                   AppState.instance.locName,
                   AppState.instance.locType,
                   AppState.instance.userData,
-                  AppState.instance.locUUID);
+                  AppState.instance.locUUID,
+                  AppState.instance.fcmToken);
               notifyListeners();
             }
             isLoading = false;
@@ -262,7 +265,7 @@ class LoginViewModel extends LoadingViewModel {
   /// Saving user logged in status, userId,token and refresh token
   /// Initialize userId and username to app state
   _setLoginSharedPreferences(String userName, String userId, String locName,
-      String locType, login.Content userData, String locUUID) async {
+      String locType, String userData, String locUUID, String fcmToken) async {
     await SharedPreferenceUtil.instance.setPreferenceValue(
         constants.preferenceIsLoggedIn, true, constants.preferenceTypeBool);
     await SecuredStorageUtil.instance
@@ -273,13 +276,13 @@ class LoginViewModel extends LoadingViewModel {
         .writeSecureData(constants.preferencelocName, locName);
     await SecuredStorageUtil.instance
         .writeSecureData(constants.preferencelocUUID, locUUID);
-    await SecuredStorageUtil.instance
-        .writeSecureData(constants.preferencelocType, locType);
+    await SecuredStorageUtil.instance.writeSecureData(constants.preferencelocType, locType);
+    await SecuredStorageUtil.instance.writeSecureData(constants.preferenceFcmToken, fcmToken);
     await SecuredStorageUtil.instance.writeSecureData(
         constants.preferenceLastLoginTime,
         DateTime.now().millisecondsSinceEpoch.toString());
     await SecuredStorageUtil.instance
-        .writeSecureData(constants.preferenceUserData, userData.toString());
+        .writeSecureData(constants.preferenceUserData, userData);
   }
 
   Future<bool?> sendFcmToken(BuildContext context) async {

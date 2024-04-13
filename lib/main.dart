@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:gka/home/repository/home_repo.dart';
+import 'package:gka/home/view/home_view.dart';
 import 'package:gka/home/view_model/home_view_model.dart';
 import 'package:gka/utils/app_state.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
@@ -61,19 +62,25 @@ bool shouldListen = true;
 bool isListening = false;
 String bgChatSessionId = '';
 int prevChatLength = 0;
+const String navigationActionId = 'id_3';
 // String AppState.instance.triggeredWord = "";
 PermissionStatus? notificationStatus;
 
 ValueNotifier<SpeechStatus> speechStatus =
-    ValueNotifier<SpeechStatus>(SpeechStatus.idle);
+ValueNotifier<SpeechStatus>(SpeechStatus.idle);
 
 enum SpeechStatus { listening, speaking, idle }
+
+final StreamController<String?> selectNotificationStream =
+StreamController<String?>.broadcast();
+
+String? selectedNotificationPayload;
 
 bool? isVoiceEnabled;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final permissionsGranted = await requestPermissions();
+  await requestPermissions();
 
   /*  SystemChrome.setPreferredOrientations([
     DeviceOrientation.landscapeRight, // Set landscape orientation
@@ -82,13 +89,13 @@ void main() async {
 
   await Firebase.initializeApp(
       options: const FirebaseOptions(
-    apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
-    appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
-    messagingSenderId: '1062998944432',
-    projectId: 'apwrims---chatbot',
-    storageBucket: 'apwrims---chatbot.appspot.com',
-    iosBundleId: 'com.vassar.apwrimschatbot',
-  ));
+        apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
+        appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
+        messagingSenderId: '1062998944432',
+        projectId: 'apwrims---chatbot',
+        storageBucket: 'apwrims---chatbot.appspot.com',
+        iosBundleId: 'com.vassar.apwrimschatbot',
+      ));
 
   setupLocator();
 
@@ -102,14 +109,15 @@ void main() async {
 
   if (notificationStatus == PermissionStatus.granted) {
     print("wewewewewew notificationStatus:::${PermissionStatus.granted}");
-    Workmanager().initialize(callbackDispatcher);
+     Workmanager().initialize(callbackDispatcher);
     Workmanager().registerPeriodicTask(
       "speechTask",
       "speechTask",
-      frequency: const Duration(hours: 1),
-      // initialDelay: const Duration(minutes: 2),
+      frequency: const Duration(minutes: 15),
+      initialDelay: const Duration(minutes: 2),
     );
   }
+
   runApp(
     MultiProvider(
       providers: [
@@ -135,6 +143,19 @@ void main() async {
   // await initializeService();
 }
 
+@pragma('vm:entry-point')
+void notificationTapBackground(NotificationResponse notificationResponse) {
+  // ignore: avoid_print
+  print('notification(${notificationResponse.id}) action tapped: '
+      '${notificationResponse.actionId} with'
+      ' payload: ${notificationResponse.payload}');
+  if (notificationResponse.input?.isNotEmpty ?? false) {
+    // ignore: avoid_print
+    print(
+        'notification action tapped with input: ${notificationResponse.input}');
+  }
+}
+
 Future<bool> requestPermissions() async {
   // Request notification permission
   final microphoneStatus = await Permission.microphone.request();
@@ -151,9 +172,9 @@ Future<bool> requestPermissions() async {
 
 callbackDispatcher() {
   Workmanager().executeTask((
-    task,
-    inputData,
-  ) async {
+      task,
+      inputData,
+      ) async {
     if (task == 'speechTask') {
       final receivePort = ReceivePort();
       await Isolate.spawn(
@@ -182,28 +203,51 @@ callbackDispatcher() {
 Future<void> showNotification() async {
   await Firebase.initializeApp(
       options: const FirebaseOptions(
-    apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
-    appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
-    messagingSenderId: '1062998944432',
-    projectId: 'apwrims---chatbot',
-    storageBucket: 'apwrims---chatbot.appspot.com',
-    iosBundleId: 'com.vassar.apwrimschatbot',
-  ));
+        apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
+        appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
+        messagingSenderId: '1062998944432',
+        projectId: 'apwrims---chatbot',
+        storageBucket: 'apwrims---chatbot.appspot.com',
+        iosBundleId: 'com.vassar.apwrimschatbot',
+      ));
   DatabaseReference ref = FirebaseDatabase.instance
       .ref("CHAT_BOT_ALERT/HOURLY_NOTIFICATION/${constants.apwrimsUUID}");
   String responseMessage = '';
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+  FlutterLocalNotificationsPlugin();
 
+  final NotificationAppLaunchDetails? notificationAppLaunchDetails = await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
+  String initialRoute = '/splash';
+  if (notificationAppLaunchDetails?.didNotificationLaunchApp ?? false) {
+    selectedNotificationPayload =
+        notificationAppLaunchDetails!.notificationResponse?.payload;
+    initialRoute = '/home';
+  }
 
-
-  if (platform.Platform.isAndroid || platform.Platform.isAndroid) {
-       await flutterLocalNotificationsPlugin.initialize(
-      const InitializationSettings(
-        iOS: DarwinInitializationSettings(),
-        android: AndroidInitializationSettings('ic_bg_service_small'),
-      ),
+  if (platform.Platform.isAndroid) {
+    // await flutterLocalNotificationsPlugin.initialize(
+    //   const InitializationSettings(
+    //     iOS: DarwinInitializationSettings(),
+    //     android: AndroidInitializationSettings('ic_bg_service_small'),
+    //   ),
+    // );
+    await flutterLocalNotificationsPlugin.initialize(
+      initializationSettings,
+      onDidReceiveNotificationResponse:
+          (NotificationResponse notificationResponse) {
+        switch (notificationResponse.notificationResponseType) {
+          case NotificationResponseType.selectedNotification:
+            selectNotificationStream.add(notificationResponse.payload);
+            break;
+          case NotificationResponseType.selectedNotificationAction:
+            if (notificationResponse.actionId == navigationActionId) {
+              selectNotificationStream.add(notificationResponse.payload);
+            }
+            break;
+        }
+      },
+      onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
     );
   }
 
@@ -216,14 +260,14 @@ Future<void> showNotification() async {
   );*/
 
   AndroidNotificationDetails androidPlatformChannelSpecifics =
-      const AndroidNotificationDetails(
-          'high_importance_channel', 'High Importance Notifications',
-          importance: Importance.max,
-          priority: Priority.high,
-          ongoing: true,
-          styleInformation: BigTextStyleInformation(''));
+  const AndroidNotificationDetails(
+      'high_importance_channel', 'High Importance Notifications',
+      importance: Importance.max,
+      priority: Priority.high,
+      ongoing: true,
+      styleInformation: BigTextStyleInformation(''));
   NotificationDetails platformChannelSpecifics =
-      NotificationDetails(android: androidPlatformChannelSpecifics);
+  NotificationDetails(android: androidPlatformChannelSpecifics);
 
   await ref.orderByKey().limitToLast(1).once().then((event) async {
     DataSnapshot snapshot = event.snapshot;
@@ -268,7 +312,7 @@ Future<void> initializeService() async {
   );
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+  FlutterLocalNotificationsPlugin();
 
   if (platform.Platform.isAndroid || platform.Platform.isAndroid) {
     await flutterLocalNotificationsPlugin.initialize(
@@ -281,7 +325,7 @@ Future<void> initializeService() async {
 
   await flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
+      AndroidFlutterLocalNotificationsPlugin>()
       ?.createNotificationChannel(channel);
 
   await service.configure(
@@ -329,7 +373,7 @@ void onStart(ServiceInstance service) async {
 
   /// OPTIONAL when use custom notification
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+  FlutterLocalNotificationsPlugin();
 
   if (service is AndroidServiceInstance) {
     service.on('setAsForeground').listen((event) {
@@ -403,13 +447,13 @@ Future<void> initializeSpeechToText(String sessionId) async {
   print(("startListeningToHello: starting listening"));
   await Firebase.initializeApp(
       options: const FirebaseOptions(
-    apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
-    appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
-    messagingSenderId: '1062998944432',
-    projectId: 'apwrims---chatbot',
-    storageBucket: 'apwrims---chatbot.appspot.com',
-    iosBundleId: 'com.vassar.apwrimschatbot',
-  ));
+        apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
+        appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
+        messagingSenderId: '1062998944432',
+        projectId: 'apwrims---chatbot',
+        storageBucket: 'apwrims---chatbot.appspot.com',
+        iosBundleId: 'com.vassar.apwrimschatbot',
+      ));
 
   bool available = await speechToText.initialize(
     onStatus: (status) async {
@@ -457,13 +501,13 @@ Future<void> initializeSpeechToTextBg() async {
   print(("startListeningToHello: starting listening"));
   await Firebase.initializeApp(
       options: const FirebaseOptions(
-    apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
-    appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
-    messagingSenderId: '1062998944432',
-    projectId: 'apwrims---chatbot',
-    storageBucket: 'apwrims---chatbot.appspot.com',
-    iosBundleId: 'com.vassar.apwrimschatbot',
-  ));
+        apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
+        appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
+        messagingSenderId: '1062998944432',
+        projectId: 'apwrims---chatbot',
+        storageBucket: 'apwrims---chatbot.appspot.com',
+        iosBundleId: 'com.vassar.apwrimschatbot',
+      ));
 
   bool available = await speechToText.initialize(
     onStatus: (status) async {
@@ -482,12 +526,10 @@ Future<void> initializeSpeechToTextBg() async {
   }
 }
 
-bool isSpeaking = false; // Variable to track TTS speaking status
-
 Future<String> startListenings(String sessionId) async {
   int i = 0;
   DatabaseReference ref = FirebaseDatabase.instance
-      .ref("CHAT_BOT_CHANGELOG/${constants.apwrimsUUID}/${sessionId}");
+      .ref("CHAT_BOT_CHANGELOG/${constants.apwrimsUUID}/44/${sessionId}");
   SpeechRecognitionResult result;
 
   await speechToText.listen(
@@ -571,7 +613,7 @@ Future<void> startListeningToYes(String sessionId, String word) async {
   await speechToText.stop();
   print("wewewewewew speechToText.isListening:: ${speechToText.isListening}");
   DatabaseReference ref = FirebaseDatabase.instance
-      .ref("CHAT_BOT_CHANGELOG/${constants.apwrimsUUID}/${sessionId}");
+      .ref("CHAT_BOT_CHANGELOG/${constants.apwrimsUUID}/44/${sessionId}");
   SpeechRecognitionResult result;
 
   await speechToText.listen(
@@ -588,22 +630,21 @@ Future<void> startListeningToYes(String sessionId, String word) async {
             "event_name": 'CONTINUOUS_LISTEN_MODE',
             "trigger_word": '${AppState.instance.triggeredWord}'
           });
-          print("111111-pushed}");
+          print("111111-pushed");
           /* await ref.push().set({
             "isUser": false,
             "event_name": 'CONTINUOUS_LISTEN_MODE',
             "changelog": 'No Change in $AppState.instance.triggeredWord Data'
           });*/
           Future.delayed(const Duration(seconds: 2), () async {
-            print(
-                "wewewewewe AppState.instance.triggeredWord after completion::${AppState.instance.triggeredWord}");
+            print("wewewewewe AppState.instance.triggeredWord after completion::${AppState.instance.triggeredWord}");
             await ref.orderByKey().limitToLast(1).once().then((event) async {
               DataSnapshot snapshot = event.snapshot;
               print("values::${snapshot.value}");
               if (snapshot.value != null) {
                 dynamic values = snapshot.value;
                 values.forEach((key, value) async {
-                  if (value['isUser'] == false) {
+                  if (!value['isUser']) {
                     String responseMessage = value['changelog'] ?? '';
                     AppState.instance.triggeredWord = "";
                     await tts.speak(responseMessage);
@@ -616,38 +657,6 @@ Future<void> startListeningToYes(String sessionId, String word) async {
       });
   // await startListenings(sessionId);
 }
-/*
-      if (result.recognizedWords.toLowerCase() == 'yes') {
-        await ref.push().set({
-          "isUser": true,
-          "event_name": 'CONTINUOUS_LISTEN_MODE',
-          "trigger_word": AppState.instance.triggeredWord
-        });
-
-        await ref.push().set({
-          "isUser": false,
-          "event_name": 'CONTINUOUS_LISTEN_MODE',
-          "changelog": 'No Change in $AppState.instance.triggeredWord Data'
-        });
-        await ref.orderByKey().limitToLast(1).once().then((event) async {
-          DataSnapshot snapshot = event.snapshot;
-          print("values::${snapshot.value}");
-          if (snapshot.value != null) {
-            dynamic values = snapshot.value;
-            values.forEach((key, value) async {
-              if (value['isUser'] == false) {
-                String responseMessage = value['changelog'] ?? '';
-                await tts.speak(responseMessage);
-              }
-            });
-          }
-        });
-        // speechStatus.value = SpeechStatus.listening;
-        await speechToText.stop();
-        Future.delayed(const Duration(seconds: 5), () async {
-          await startListenings(sessionId);
-        });
-      }*/
 
 Future<void> startListeningBg() async {
   DatabaseReference ref = FirebaseDatabase.instance
@@ -682,13 +691,6 @@ Future<void> startListeningBg() async {
       }
     },
   );
-}
-
-// Function to speak text using TTS
-Future<void> speak(String text) async {
-  isSpeaking = true;
-  await tts.speak(text);
-  isSpeaking = false;
 }
 
 /*Future<void> startListenings(String sessionId) async {
@@ -749,125 +751,6 @@ Future<void> speak(String text) async {
   );
 }*/
 
-Future<String> listenForSessionId() async {
-  Completer<String> completer = Completer<String>();
-  String sessionId = '';
-  SpeechRecognitionResult result;
-  await speechToText.listen(
-    partialResults: false,
-    onResult: (data) async {
-      result = data;
-      if (result.recognizedWords.toLowerCase() == 'hello') {
-        response.Meta data = response.Meta(
-          userId: "b7a7ca67-6fd3-4f2e-97c6-b9b84fdbd7da",
-          username: "kerala_ao",
-          firstName: "Aswin",
-          lastName: "Kumar",
-          email: "keralaao@gmail.com",
-          mobileNo: "+919889786767",
-          userDetails: response.UserDetails(
-            data: response.Data(
-                locType: "Panchayat",
-                location: response.Location(country: [
-                  response.Country(
-                      countryName: "INDIA",
-                      countryUUID: "d6b37905-d2d3-4275-9317-d9b6f47cd783",
-                      state: [
-                        response.State(
-                            stateName: "KERALA",
-                            stateUUID: "62d3dc99-5bc3-4303-8be1-d4fa1f7deee5",
-                            district: [
-                              response.District(
-                                  districtName: "Palakkad",
-                                  districtUUID:
-                                      "1270f554-20cc-43ee-803e-1532f00e047c",
-                                  block: [
-                                    response.Block(
-                                        blockName: "Sreekrishnapuram",
-                                        blockUUID:
-                                            "db64691f-a7de-4e88-b5af-ecbe4dc6d191",
-                                        panchayat: [
-                                          response.Panchayat(
-                                              panchayatName: "Karimpuzha",
-                                              panchayatUUID:
-                                                  "0ec4c732-5db9-4a3e-896a-f7baf24b2966")
-                                        ])
-                                  ])
-                            ])
-                      ])
-                ])),
-            scope: null,
-          ),
-          createdTs: null,
-          updatedTs: null,
-          lastLoginTs: "2024-03-11T10:45:55.398+00:00",
-          status: true,
-          title: null,
-          customerId: "931e0a8e-54e9-49f4-87db-d6e1fe350432",
-          customerName: "keralacustomer",
-          customAttributes: null,
-        );
-        sessionId = (await createSession(data))!;
-        print("sessionId::${sessionId}");
-        if (sessionId.isNotEmpty) {
-          await tts.speak('Session is Created');
-          completer.complete(sessionId);
-          // return sessionId;
-        } else {
-          await tts.speak("Sorry, Couldn\'t create a session");
-          completer.complete(null);
-        }
-        //await speechToText.stop();
-      }
-    },
-  );
-  return completer.future;
-}
-
-Future<String?> createSession(response.Meta requestData) async {
-  /*try {
-    String url = constants.ngrok;
-    Object object = json.encode(requestData);
-    Response response = await post(
-      Uri.parse(url),
-      body: object,
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-    );
-    if (response.statusCode == 200) {
-      print("sessionId:: ${jsonDecode(response.body)["session_id"]}");
-      String sessionId = jsonDecode(response.body)["session_id"];
-      return sessionId;
-    } else {
-      Fluttertoast.showToast(msg: "Couldn't create Session");
-    }
-  } catch (error, stacktrace) {
-    Fluttertoast.showToast(msg: "Couldn't create Session");
-    print("Error Stacktrace $error $stacktrace");
-  }*/
-
-  String uuid = const Uuid().v4();
-  return uuid;
-  return null;
-}
-
-speakText(String text) async {
-  print("Speak text");
-  try {
-    FlutterTts flutterTts = FlutterTts();
-    await flutterTts.setLanguage("en-US");
-    await flutterTts.setPitch(1.0);
-    await flutterTts.setSpeechRate(0.5);
-    flutterTts.errorHandler = (error) {
-      print("An error occurred: $error");
-    };
-    await flutterTts.speak(text);
-  } catch (e) {
-    print("ERROR FOR speakText() $e");
-  }
-}
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -877,11 +760,11 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'ChatBot Weather',
-        // home: const MyHomePage(title: 'ChatBot Weather'),
         initialRoute: '/splash',
         routes: {
           '/splash': (context) => const SplashScreenWidget(),
           '/login': (context) => const LoginScreenWidget(),
+          '/home': (context) => const HomeScreenWidget(),
         },
       ),
     );
