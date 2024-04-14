@@ -57,6 +57,7 @@ class _ChatWindowState extends State<ChatWindow> {
   int responseCount = 1;
   String sessionId = "";
   String queryString = "";
+  String language = "";
   String llmType = '';
   TextEditingController chatController = TextEditingController();
   bool speechToTextOn = false;
@@ -126,6 +127,8 @@ class _ChatWindowState extends State<ChatWindow> {
     AppState.instance.isOriyaSelected
         ? await tts.setLanguage("or-IN")
         : await tts.setLanguage("en-US");
+
+    AppState.instance.isOriyaSelected ? language = 'odia' : language = 'english';
   }
 
   /// Each time to start a speech recognition session
@@ -467,6 +470,7 @@ class _ChatWindowState extends State<ChatWindow> {
                   ),
                 ),
               ),
+/*
               Padding(
                 padding: const EdgeInsets.only(bottom: 30.0),
                 child: Align(
@@ -489,10 +493,11 @@ class _ChatWindowState extends State<ChatWindow> {
                   ), // your widget would go here
                 ),
               ),
-              /*Padding(
+*/
+              Padding(
                 padding: const EdgeInsets.all(20),
                 child: bottomBar(),
-              ),*/
+              ),
             ],
           ),
         ),
@@ -822,7 +827,8 @@ class _ChatWindowState extends State<ChatWindow> {
       "isUser": true,
       "message": text,
       "mediaUrl": imageUrl,
-      "llm_type": llmType
+      "llm_type": llmType,
+      "language" : language
     });
     chatController.clear();
     capturedPhoto = null;
