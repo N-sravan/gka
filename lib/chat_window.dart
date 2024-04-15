@@ -470,7 +470,6 @@ class _ChatWindowState extends State<ChatWindow> {
                   ),
                 ),
               ),
-/*
               Padding(
                 padding: const EdgeInsets.only(bottom: 30.0),
                 child: Align(
@@ -493,11 +492,10 @@ class _ChatWindowState extends State<ChatWindow> {
                   ), // your widget would go here
                 ),
               ),
-*/
-              Padding(
+             /* Padding(
                 padding: const EdgeInsets.all(20),
                 child: bottomBar(),
-              ),
+              ),*/
             ],
           ),
         ),
