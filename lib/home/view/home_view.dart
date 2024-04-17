@@ -2,6 +2,7 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:gka/home/view/home_drawer_widget.dart';
 import 'package:gka/home/view_model/home_view_model.dart';
 import 'package:gka/utils/app_state.dart';
 import 'package:provider/provider.dart';
@@ -19,13 +20,6 @@ class HomeScreenWidget extends StatefulWidget {
 
 class _HomeScreenWidgetState extends State<HomeScreenWidget> {
   late HomeViewModel viewModel;
-  String? selectedNotificationPayload;
-
-  /// A notification action which triggers a url launch event
-  String urlLaunchActionId = 'id_1';
-
-  /// A notification action which triggers a App navigation event
-  String navigationActionId = 'id_3';
 
   @override
   void initState() {
@@ -35,9 +29,10 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
     ]);*/
     super.initState();
     viewModel = Provider.of<HomeViewModel>(context, listen: false);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      viewModel.configureDidReceiveLocalNotificationSubject(context);
-      viewModel.configureSelectNotificationSubject(context);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await viewModel.getAvailableModels(context);
+      // viewModel.configureDidReceiveLocalNotificationSubject(context);
+      // viewModel.configureSelectNotificationSubject(context);
     });
   }
 
@@ -55,8 +50,8 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
               return Future.value(false);
             },
             child: Scaffold(
+              drawer: const HomeDrawerWidget(),
               appBar: AppBar(
-                automaticallyImplyLeading: false,
                 centerTitle: true,
                 title: const Text('APWRIMS Bot'),
                 actions: [
@@ -124,9 +119,6 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                         onChanged: (String? value) async {
                           if (value!.isNotEmpty) {
                             viewModel.updateSelectedValue(value);
-                            // setState(() {
-                            //   selectedValue = value;
-                            // });
                           }
                         },
                         buttonStyleData: ButtonStyleData(
@@ -298,13 +290,119 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const Text(
+                      'Select Model',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      width: MediaQuery.of(context).size.width * 0.7,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: DropdownButtonFormField2<String>(
+                        isExpanded: true,
+                        hint: const Text('Select'),
+                        items: viewModel.modelList!
+                            .map((String item) => DropdownMenuItem<String>(
+                                  value: item,
+                                  child: Text(
+                                    item,
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 14,
+                                      fontFamily: 'Poppins',
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                ))
+                            .toList(),
+                        value: viewModel.selectedModel.isNotEmpty == true
+                            ? viewModel.selectedModel
+                            : null,
+                        onChanged: (String? value) async {
+                          if (value!.isNotEmpty) {
+                            viewModel.updateSelectedModel(value);
+                            // setState(() {
+                            //   selectedValue = value;
+                            // });
+                          }
+                        },
+                        buttonStyleData: ButtonStyleData(
+                          height: 50,
+                          padding: const EdgeInsets.only(left: 14, right: 14),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: const Color.fromRGBO(118, 118, 128, 0.12),
+                            boxShadow: const [],
+                          ),
+                          elevation: 0,
+                        ),
+                        iconStyleData: const IconStyleData(
+                          icon: Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                          ),
+                          iconSize: 20,
+                          iconEnabledColor: Color(0xFF666B77),
+                          iconDisabledColor: Color(0xFF666B77),
+                        ),
+                        dropdownStyleData: DropdownStyleData(
+                          maxHeight: 200,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(14),
+                            color: Colors.grey.shade300,
+                            boxShadow: const [],
+                          ),
+                        ),
+                        menuItemStyleData: const MenuItemStyleData(
+                          height: 30,
+                          padding: EdgeInsets.only(left: 14, right: 14),
+                        ),
+                        decoration: const InputDecoration(
+                          filled: true,
+                          fillColor: Colors.transparent,
+                          hintText: 'Select',
+                          hintStyle: TextStyle(
+                            fontFamily: "Poppins",
+                            fontWeight: FontWeight.w400,
+                            fontSize: 14.0,
+                            color: Colors.grey,
+                          ),
+                          contentPadding: EdgeInsets.only(
+                              top: 2, left: 2, right: 2, bottom: 2),
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.black),
+                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide.none,
+                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide.none,
+                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                          ),
+                          errorStyle: TextStyle(
+                            color: Colors.red,
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Colors.red,
+                            ),
+                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                          ),
+                        ),
+                      ),
+                    ),
+                    /* const SizedBox(height: 20),
                     PaddedElevatedButton(
                       buttonText: 'Show notification with plain actions',
                       onPressed: () async {
                         await _showNotificationWithActions();
                       },
-                    ),
+                    ),*/
+                    const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: () {
                         if (viewModel.selectedValue.isNotEmpty &&

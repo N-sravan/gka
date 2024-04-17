@@ -63,8 +63,8 @@ class SplashViewModel extends LoadingViewModel {
       AppState.instance.locName = locName!;
       AppState.instance.userId = userId!;
       AppState.instance.userName = userName;
-/*      Navigator.push(context,
-          MaterialPageRoute(builder: (context) => HomeScreenWidget()));*/
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => HomeScreenWidget()));
         } else {
       // User isn't logged in
       _startSplashTimerAndNavigate(context, '/login');

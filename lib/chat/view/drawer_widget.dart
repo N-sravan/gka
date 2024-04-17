@@ -68,7 +68,8 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                 ),
                 StreamBuilder(
                   stream: FirebaseDatabase.instance
-                      .ref("CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.apwrimsUUID}/${AppState.instance.userId}")
+                      .ref(
+                          "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.apwrimsUUID}/44")
                       .onValue,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
@@ -83,6 +84,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                     }
                     if (snapshot.hasError) {
                       return Text('Error: ${snapshot.error}');
+
                     }
                     if (snapshot.hasData && snapshot.data == null) {
                       return Padding(
@@ -105,12 +107,13 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                       sessionId = key;
                       if (value != null) {
                         final datalast = Map<String, dynamic>.from(value);
-                        if (datalast != null ) {
+                        if (datalast != null) {
                           bool titleValue = false;
                           datalast.forEach((key, value) {
                             if (value['isUser'] &&
                                 value['message'] != null &&
-                                value['message'].isNotEmpty && !titleValue) {
+                                value['message'].isNotEmpty &&
+                                !titleValue) {
                               title = value['message'];
                               titleValue = true;
                             }
@@ -128,7 +131,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(8, 40, 8, 40.0),
+            padding: const EdgeInsets.fromLTRB(8, 8, 8, 40.0),
             child: ListTile(
               title: Row(
                 children: [

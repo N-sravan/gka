@@ -38,7 +38,6 @@ import 'utils/network_utils.dart';
 
 Timer? periodicTimer;
 
-
 class ChatWindow extends StatefulWidget {
   const ChatWindow({
     Key? key,
@@ -73,6 +72,7 @@ class _ChatWindowState extends State<ChatWindow> {
   File? capturedPhoto;
   int timerCounter = 0;
   List<MessageBubble> chatMessages = [];
+  TextToSpeech textToSpeech = TextToSpeech();
   FlutterTts tts = FlutterTts();
 
   List<String> loaderMsgList = [
@@ -122,7 +122,6 @@ class _ChatWindowState extends State<ChatWindow> {
   ValueNotifier<bool> listeningActive = ValueNotifier<bool>(false);
   ValueNotifier<bool> showLoader = ValueNotifier<bool>(false);
 
-
   void _initSpeech() async {
     _speechEnabled = await _speechToText.initialize(
       onError: (error) {
@@ -134,10 +133,9 @@ class _ChatWindowState extends State<ChatWindow> {
       },
     );
 
-    //print("Available voices ${await tts.getVoice()}");
+    // print("Available voices ${await textToSpeech.getVoiceByLang('ta-IN')}");
     print("Available languages ${await tts.getLanguages}");
     await tts.setLanguage("en-US");
-    // await tts.setLanguage("or-IN");
   }
 
   /// Each time to start a speech recognition session
@@ -162,7 +160,7 @@ class _ChatWindowState extends State<ChatWindow> {
           partialResults: false,
           onResult: _onSpeechResult,
           pauseFor: const Duration(seconds: 3),
-          listenFor: const Duration(seconds: 15),
+          listenFor: const Duration(seconds: 35),
           cancelOnError: true);
     } catch (e) {
       print('EXCEPTIONKJSKFJK An exception occurred: $e');
@@ -189,7 +187,7 @@ class _ChatWindowState extends State<ChatWindow> {
           partialResults: false,
           // onResult: _onSpeechResultForAutoMode,
           pauseFor: const Duration(seconds: 3),
-          listenFor: const Duration(seconds: 15),
+          listenFor: const Duration(seconds: 35),
           cancelOnError: true);
     } catch (e) {
       print('EXCEPTIONKJSKFJK An exception occurred: $e');
@@ -223,7 +221,7 @@ class _ChatWindowState extends State<ChatWindow> {
   Future<void> _onSpeechResult(SpeechRecognitionResult result) async {
     print("_onSpeechResult ${result.recognizedWords}");
     DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.apwrimsUUID}/${AppState.instance.userId}/${widget.sessionId}");
+        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.apwrimsUUID}/44/${widget.sessionId}");
 
     /*  AppState.instance.isExternalLLM
         ? llmType = 'external'
@@ -256,12 +254,14 @@ class _ChatWindowState extends State<ChatWindow> {
         ? message = translatedText
         : message = result.recognizedWords;*/
 
+    print("session id::${sessionId}");
     await ref.push().set({
       "isUser": true,
       "message": result.recognizedWords,
       "mediaUrl": '',
       'llm_type': llmType,
-      'language': language
+      'language': language,
+      // 'modelUUID': AppState.instance.modelUUID
     });
 
     bool active = _speechToText.isListening;
@@ -344,7 +344,7 @@ class _ChatWindowState extends State<ChatWindow> {
                     await tts.stop();
                     await initializeService();
 
-                 /*   periodicTimer = Timer.periodic(
+                    /*   periodicTimer = Timer.periodic(
                       const Duration(seconds: 5),
                       (timer) async {
                         // await initializeSpeechToText(autoSessionId!);
@@ -381,9 +381,9 @@ class _ChatWindowState extends State<ChatWindow> {
               Expanded(
                 child: StreamBuilder(
                   stream: FirebaseDatabase.instance
-                          .ref(
-                              "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.apwrimsUUID}/${AppState.instance.userId}/${widget.sessionId}")
-                          .onValue,
+                      .ref(
+                          "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.apwrimsUUID}/44/${widget.sessionId}")
+                      .onValue,
                   builder: (context, AsyncSnapshot snapshot) {
                     if (snapshot.hasData && snapshot.data != null) {
                       List<ChatBubble> messageList = [];
@@ -463,7 +463,7 @@ class _ChatWindowState extends State<ChatWindow> {
                           print("timerCounter::$timerCounter");
                           if (showLoader.value) {
                             DatabaseReference ref = FirebaseDatabase.instance.ref(
-                                "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.apwrimsUUID}/${AppState.instance.userId}/${widget.sessionId}");
+                                "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.apwrimsUUID}/44/${widget.sessionId}");
                             /* messageList.add(ChatBubble(
                               text: "Data Not Found",
                               isUser: false,
@@ -818,7 +818,7 @@ class _ChatWindowState extends State<ChatWindow> {
 
   Future<void> insertImageDataIntoDb(String? imageUrl, String text) async {
     DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.apwrimsUUID}/${AppState.instance.userId}/${widget.sessionId}");
+        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.apwrimsUUID}/44/${widget.sessionId}");
     await ref
         .push()
         .set({"isUser": true, "message": text, "mediaUrl": imageUrl});
@@ -829,7 +829,7 @@ class _ChatWindowState extends State<ChatWindow> {
 
   Future<void> insertDataIntoDb(String text) async {
     DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.apwrimsUUID}/${AppState.instance.userId}/${widget.sessionId}");
+        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.apwrimsUUID}/44/${widget.sessionId}");
     await ref.push().set({"isUser": true, "message": text});
     chatController.clear();
     capturedPhoto = null;
@@ -883,7 +883,6 @@ class _ChatWindowState extends State<ChatWindow> {
       ),
     );
   }
-
 
   Future<void> initializeSpeechToText(String sessionId) async {
     print(("startListeningToHello: starting listening"));
@@ -939,7 +938,6 @@ class _ChatWindowState extends State<ChatWindow> {
   await startListenings(sessionId);*/
   }
 
-
 /*Future<void> initializeSpeechToText(String sessionId) async {
     print(("startListeningToHello: starting listening"));
 
@@ -959,7 +957,7 @@ class _ChatWindowState extends State<ChatWindow> {
 
 @pragma('vm:entry-point')
 onStart(ServiceInstance service) async {
-  String autoSessionId = Uuid().v4();
+  String autoSessionId = const Uuid().v4();
   // Only available for flutter 3.0.0 and later
   DartPluginRegistrant.ensureInitialized();
 
@@ -970,7 +968,7 @@ onStart(ServiceInstance service) async {
 
   /// OPTIONAL when use custom notification
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-  FlutterLocalNotificationsPlugin();
+      FlutterLocalNotificationsPlugin();
 
   if (service is AndroidServiceInstance) {
     service.on('setAsForeground').listen((event) {
@@ -987,7 +985,7 @@ onStart(ServiceInstance service) async {
   });
 
   // bring to foreground
- periodicTimer= Timer.periodic(const Duration(seconds: 10), (timer) async {
+  periodicTimer = Timer.periodic(const Duration(seconds: 10), (timer) async {
     if (service is AndroidServiceInstance) {
       if (await service.isForegroundService()) {
         /// the notification id must be equals with AndroidConfiguration when you call configure() method.
@@ -1037,7 +1035,7 @@ onStart(ServiceInstance service) async {
       },
     );
     if (autoSessionId != null && autoSessionId!.isNotEmpty) {
-      // await initializeSpeechToText(autoSessionId!);
+      await initializeSpeechToText(autoSessionId!);
     } else {
       Fluttertoast.showToast(msg: "Something went wrong, please try again");
     }
@@ -1085,10 +1083,10 @@ onStart(ServiceInstance service) async {
         await tts.speak('Would you like to know soil moisture data');
       }
 
-      *//* Future.delayed(const Duration(seconds: 10),() async {
+      */ /* Future.delayed(const Duration(seconds: 10),() async {
         await startListeningToYes(sessionId, AppState.instance.triggeredWord);
-      });*//*
-*//*
+      });*/ /*
+*/ /*
       if (result.recognizedWords.toLowerCase() == 'yes') {
         await ref.push().set({
           "isUser": true,
@@ -1119,7 +1117,7 @@ onStart(ServiceInstance service) async {
         Future.delayed(const Duration(seconds: 5), () async {
           await startListenings(sessionId);
         });
-      }*//*
+      }*/ /*
     },
   );
   return AppState.instance.triggeredWord;
@@ -1149,11 +1147,11 @@ Future<void> startListeningToYes(String sessionId, String word) async {
             "trigger_word": '${AppState.instance.triggeredWord}'
           });
           print("111111-pushed}");
-          *//* await ref.push().set({
+          */ /* await ref.push().set({
             "isUser": false,
             "event_name": 'CONTINUOUS_LISTEN_MODE',
             "changelog": 'No Change in $AppState.instance.triggeredWord Data'
-          });*//*
+          });*/ /*
           Future.delayed(const Duration(seconds: 2), () async {
             print(
                 "wewewewewe AppState.instance.triggeredWord after completion::${AppState.instance.triggeredWord}");

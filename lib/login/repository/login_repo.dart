@@ -35,7 +35,6 @@ class LoginRepositoryImpl extends LoginRepository {
     );
     Map<String, dynamic> responseMap = jsonDecode(response.body);
 
-    // LoginResult loginResult = LoginResult.fromJson(responseMap);
     LoginResult loginResult = LoginResult.fromJson(responseMap);
     return loginResult;
   }

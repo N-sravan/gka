@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:gka/chat/view/chat_view.dart';
+import 'package:gka/home/model/available_prompt_response_model.dart';
 import 'package:gka/home/repository/home_repo.dart';
 import 'package:gka/login/model/login_api_response_model.dart';
 import 'package:gka/shared/loading_view_model.dart';
@@ -13,6 +14,7 @@ import '../../utils/app_state.dart';
 import '../../utils/network_utils.dart';
 import '../../utils/secure_storage_util.dart';
 import '../../utils/util.dart';
+import '../model/available_models.dart' as model;
 
 class HomeViewModel extends LoadingViewModel {
   HomeViewModel({
@@ -23,15 +25,27 @@ class HomeViewModel extends LoadingViewModel {
 
   String selectedValue = '';
   String selectedLang = '';
+  String selectedModel = '';
   List<String> selectionList = ['Internal LLM', 'External LLM'];
-  List<String> langList = ['English','Telugu'];
+  List<String> langList = ['English', 'Telugu'];
+  List<String>? modelList = [];
+  List<Response>? modelResponseList = [];
+  Map<String,String> modelNameUuidMapping = {};
+  Map<String,String> promptTemplateIntentMapping = {};
 
-
-  final StreamController<ReceivedNotification> didReceiveLocalNotificationStream =
-  StreamController<ReceivedNotification>.broadcast();
+  /*final StreamController<ReceivedNotification>
+      didReceiveLocalNotificationStream =
+      StreamController<ReceivedNotification>.broadcast();*/
 
   final StreamController<String?> selectNotificationStream =
-  StreamController<String?>.broadcast();
+      StreamController<String?>.broadcast();
+
+  void updateSelectedModel(String value) {
+    selectedModel = value;
+    AppState.instance.modelName = value;
+    AppState.instance.modelUUID = modelNameUuidMapping[value]!;
+    notifyListeners();
+  }
 
   void updateSelectedValue(String value) {
     selectedValue = value;
@@ -95,69 +109,90 @@ class HomeViewModel extends LoadingViewModel {
     return null;
   }
 
-   configureDidReceiveLocalNotificationSubject(BuildContext context) {
-    didReceiveLocalNotificationStream.stream
-        .listen((ReceivedNotification receivedNotification) async {
-      await showDialog(
-        context: context,
-        builder: (BuildContext context) =>
-            CupertinoAlertDialog(
-              title: receivedNotification.title != null
-                  ? Text(receivedNotification.title!)
-                  : null,
-              content: receivedNotification.body != null
-                  ? Text(receivedNotification.body!)
-                  : null,
-              actions: <Widget>[
-                CupertinoDialogAction(
-                  isDefaultAction: true,
-                  onPressed: () async {
-                    Navigator.of(context, rootNavigator: true).pop();
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const LoginScreenWidget()),
-                    );
-                   /* await Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (BuildContext context) =>
-                            ChatView(receivedNotification.payload),
-                            ChatView(receivedNotification.payload),
-                      ),
-                    );*/
-                  },
-                  child: const Text('Ok'),
-                )
-              ],
-            ),
-      );
-    });
+  Future? getAvailableModels(BuildContext context) async {
+    /// Checking for active internet connection
+    if (await networkUtils.hasActiveInternet()) {
+      isLoading = true;
+      try {
+        model.AvailabeModelResponse availabeModelResponse = await repo.fetchModels(context);
+
+        if (availabeModelResponse.statusCode == 200 && availabeModelResponse.result == true) {
+          if(availabeModelResponse.response !=null && availabeModelResponse.response?.length !=0) {
+            for(int i=0;i<availabeModelResponse.response!.length;i++){
+              modelNameUuidMapping.addAll({availabeModelResponse.response![i].modelName! : availabeModelResponse.response![i].modelUuid!});
+              modelList!.add(availabeModelResponse.response![i].modelName!);
+            }
+            isLoading = false;
+            print("weweweww modelNameUuidMapping ${modelNameUuidMapping}");
+            notifyListeners();
+          }
+        } else {
+          isLoading = false;
+          notifyListeners();
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Something went wrong,Please try later'),
+          ));
+        }
+            } catch (e) {
+        isLoading = false;
+        notifyListeners();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(constants.genericErrorMsg),
+        ));
+        Util.instance
+            .logMessage('Login Model', 'Error while authenticating $e');
+      }
+    } else {
+      isLoading = false;
+      notifyListeners();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(constants.noNetworkAvailability),
+      ));
+    }
+    return null;
   }
 
-   configureSelectNotificationSubject(BuildContext context) {
-    selectNotificationStream.stream.listen((String? payload) async {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginScreenWidget()),
-      );
-     /* await Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (BuildContext context) => ChatView(payload),
-      ));*/
-    });
+  Future? getAvailablePrompts(BuildContext context) async {
+    /// Checking for active internet connection
+    if (await networkUtils.hasActiveInternet()) {
+      isLoading = true;
+      try {
+        PromptResponseModel promptResponseModel = await repo.fetchPrompts(context);
+
+        if (promptResponseModel.statusCode == 200 && promptResponseModel.result == true) {
+          if(promptResponseModel.response !=null && promptResponseModel.response?.length !=0) {
+            for(int i=0;i<promptResponseModel.response!.length;i++){
+              promptTemplateIntentMapping[promptResponseModel.response![i].promptTemplate!] = promptResponseModel.response![i].intent!;
+            }
+            isLoading = false;
+            print("weweweww promptTemplateIntentMapping ${promptTemplateIntentMapping}");
+            notifyListeners();
+          }
+        } else {
+          isLoading = false;
+          notifyListeners();
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Something went wrong,Please try later'),
+          ));
+        }
+      } catch (e) {
+        isLoading = false;
+        notifyListeners();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(constants.genericErrorMsg),
+        ));
+        Util.instance
+            .logMessage('Login Model', 'Error while authenticating $e');
+      }
+    } else {
+      isLoading = false;
+      notifyListeners();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(constants.noNetworkAvailability),
+      ));
+    }
+    return null;
   }
 
 
-}
-
-class ReceivedNotification {
-  ReceivedNotification({
-    required this.id,
-    required this.title,
-    required this.body,
-    required this.payload,
-  });
-
-  final int id;
-  final String? title;
-  final String? body;
-  final String? payload;
 }

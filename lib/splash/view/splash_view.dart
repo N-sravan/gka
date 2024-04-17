@@ -18,11 +18,11 @@ class _SplashScreenWidgetState extends State<SplashScreenWidget> {
   @override
   void initState() {
     viewModel = Provider.of<SplashViewModel>(context, listen: false);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       /// This will start tracking the current network status and give us
       /// information on the current status of the internet connection
       networkUtils.startTrackingConnection();
-      viewModel.checkPermissionsAndNavigate(context);
+      await viewModel.checkPermissionsAndNavigate(context);
     });
     super.initState();
   }

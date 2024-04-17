@@ -72,14 +72,13 @@ const String geoJsonSurveyPointsUrl ='http://acerkrishidss.vassarlabs.com/geoser
 const String loginEndpoint = 'https://apwrims.ap.gov.in/auth/login-user-details';
 const String saveFcmToken = 'https://genai.vassarlabs.com/fcm_tokens/save_token';
 const String deleteToken = 'https://genai.vassarlabs.com/fcm_tokens/delete_token';
+const String getAvailabeModelsEndpoint = '/get_available_models';
+const String getAvailabePromptsEndpoint = '/get_all_prompt_templates/';
 const String logoutEndpoint =
     'auth/realms/agriwiserealm/protocol/openid-connect/logout';
 const String csrfEndPoint = 'um/generate-csrf-token';
 const String userPermissionsEndPoint = 'um/user-permissions/';
-const String submittedImageBaseUrl =
-    'http://acerkrishidss.vassarlabs.com/pa/images/';
-const String submittedImagePath = '/pictorialAnalysisData/rawImages/';
-const String submitImageEndPoint = '/pictorialAnalysisData/rawImages/';
+
 
 
 //UUIDs & keys
@@ -836,8 +835,8 @@ enum CropNameVerifyRadioOptions {agree, disagree}
 
 //Role Names
 const String aoRoleName = "Agricultural Officer";
-const String ngrok = "https://genai.vassarlabs.com/session/create_session"; ///apwrims
-// const String ngrok = "https://ded2-196-12-47-4.ngrok-free.app/session/create_session";   ///gowater
+const String genAiUrl = "https://genai.vassarlabs.com/session/create_session"; ///apwrims
+const String ngrok = "https://a368-196-12-47-4.ngrok-free.app";   ///gowater
 
 const int ownerCultivator = 1;
 const int ownerCultivatorCumTenant = 2;

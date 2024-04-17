@@ -125,87 +125,11 @@ class LoginViewModel extends LoadingViewModel {
               notifyListeners();
             }
             isLoading = false;
+            debugPrint("User Details fetched successfully");
             return userContent;
           }
         }
-
-        /*if (loginResult.result != null) {
-          if (loginResult.result?.status != null &&
-              loginResult.result?.status == 200) {
-            // login.Content? userContent = loginResult.result!.content;
-
-            login.Content? userContent = login.Content(
-              username: "APWRIMS",
-              userId: '44',
-              userDetailsJson: login.UserDetailsJson(
-                data: login.Data(
-                  locType: 'mandal',
-                  location: login.Location(state: [
-                    login.State(
-                        stateName: 'Andhra Pradesh',
-                        stateUUID: "6f86292b-dd9a-4987-bb8f-c3940263b349",
-                        district: [
-                          login.District(
-                              districtName: 'Srikakulam',
-                              districtUUID:
-                                  '00bb53a0-a27e-46c4-9016-fe9545766cb9',
-                              mandal: [
-                                login.Mandal(
-                                    mandalName: 'BURJA',
-                                    mndalUUID:
-                                        '1437f9bf-207a-4d7e-bd9d-0af79b6ef8db')
-                              ]),
-                        ]),
-                  ]),
-                ),
-              ),
-            );
-
-            if (userContent != null && userContent.userDetailsJson != null) {
-              switch ('state') {
-                case 'mandal':
-                  locUUID = userContent.userDetailsJson!.data!.location!
-                      .state![0].district![0].mandal![0].mndalUUID;
-                  locName = userContent.userDetailsJson!.data!.location!
-                      .state![0].district![0].mandal![0].mandalName;
-                  break;
-                case 'district':
-                  locUUID = userContent.userDetailsJson!.data!.location!
-                      .state![0].district![0].districtUUID;
-                  locName = userContent.userDetailsJson!.data!.location!
-                      .state![0].district![0].districtName;
-                  break;
-                case 'state':
-                  locUUID = userContent
-                      .userDetailsJson!.data!.location!.state![0].stateUUID;
-                  locName = userContent
-                      .userDetailsJson!.data!.location!.state![0].stateName;
-                  break;
-                default:
-                  break;
-              }
-              AppState.instance.userData = userContent;
-              AppState.instance.fcmToken = fcmToken!;
-              AppState.instance.locType =
-                  userContent.userDetailsJson!.data!.locType!;
-              AppState.instance.locUUID = locUUID!;
-              AppState.instance.locName = locName!;
-              AppState.instance.userId = userContent.userId!;
-              AppState.instance.userName = userContent.username!;
-
-              await _setLoginSharedPreferences(
-                  AppState.instance.userName,
-                  AppState.instance.userId,
-                  AppState.instance.locName,
-                  AppState.instance.locType,
-                  AppState.instance.userData,
-                  AppState.instance.locUUID);
-              notifyListeners();
-            }
-            isLoading = false;
-            return userContent;
-          }
-        }*/ else {
+        else {
           /// Login is unsuccessful
           isLoading = false;
           notifyListeners();
@@ -312,7 +236,7 @@ class LoginViewModel extends LoadingViewModel {
           content: Text(constants.genericErrorMsg),
         ));
         Util.instance
-            .logMessage('Login Model', 'Error while authenticating $e');
+            .logMessage('FCM TOKEN', 'Error while authenticating $e');
       }
     } else {
       isLoading = false;

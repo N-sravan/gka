@@ -53,6 +53,8 @@ class AppState {
   late String locType;
   late String locName;
   late String userData;
+  late String modelName;
+  late String modelUUID;
   String triggeredWord = '';
   bool hasFarmerData=false;
   bool isVoiceUpdateEnabled=false;

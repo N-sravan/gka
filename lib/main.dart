@@ -43,6 +43,8 @@ import 'dart:developer' as developer;
 import 'dart:io' as platform;
 import 'chat_bubble.dart';
 import 'helpers/notification_helper.dart';
+import 'home/view/prompt_managemt_view.dart';
+import 'home/view/tool_inventory_view.dart';
 import 'locator.dart';
 
 var initializationSettingsAndroid = const AndroidInitializationSettings(
@@ -67,12 +69,12 @@ const String navigationActionId = 'id_3';
 PermissionStatus? notificationStatus;
 
 ValueNotifier<SpeechStatus> speechStatus =
-ValueNotifier<SpeechStatus>(SpeechStatus.idle);
+    ValueNotifier<SpeechStatus>(SpeechStatus.idle);
 
 enum SpeechStatus { listening, speaking, idle }
 
 final StreamController<String?> selectNotificationStream =
-StreamController<String?>.broadcast();
+    StreamController<String?>.broadcast();
 
 String? selectedNotificationPayload;
 
@@ -89,13 +91,13 @@ void main() async {
 
   await Firebase.initializeApp(
       options: const FirebaseOptions(
-        apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
-        appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
-        messagingSenderId: '1062998944432',
-        projectId: 'apwrims---chatbot',
-        storageBucket: 'apwrims---chatbot.appspot.com',
-        iosBundleId: 'com.vassar.apwrimschatbot',
-      ));
+    apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
+    appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
+    messagingSenderId: '1062998944432',
+    projectId: 'apwrims---chatbot',
+    storageBucket: 'apwrims---chatbot.appspot.com',
+    iosBundleId: 'com.vassar.apwrimschatbot',
+  ));
 
   setupLocator();
 
@@ -109,7 +111,7 @@ void main() async {
 
   if (notificationStatus == PermissionStatus.granted) {
     print("wewewewewew notificationStatus:::${PermissionStatus.granted}");
-     Workmanager().initialize(callbackDispatcher);
+    Workmanager().initialize(callbackDispatcher);
     Workmanager().registerPeriodicTask(
       "speechTask",
       "speechTask",
@@ -172,9 +174,9 @@ Future<bool> requestPermissions() async {
 
 callbackDispatcher() {
   Workmanager().executeTask((
-      task,
-      inputData,
-      ) async {
+    task,
+    inputData,
+  ) async {
     if (task == 'speechTask') {
       final receivePort = ReceivePort();
       await Isolate.spawn(
@@ -203,21 +205,22 @@ callbackDispatcher() {
 Future<void> showNotification() async {
   await Firebase.initializeApp(
       options: const FirebaseOptions(
-        apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
-        appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
-        messagingSenderId: '1062998944432',
-        projectId: 'apwrims---chatbot',
-        storageBucket: 'apwrims---chatbot.appspot.com',
-        iosBundleId: 'com.vassar.apwrimschatbot',
-      ));
+    apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
+    appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
+    messagingSenderId: '1062998944432',
+    projectId: 'apwrims---chatbot',
+    storageBucket: 'apwrims---chatbot.appspot.com',
+    iosBundleId: 'com.vassar.apwrimschatbot',
+  ));
   DatabaseReference ref = FirebaseDatabase.instance
       .ref("CHAT_BOT_ALERT/HOURLY_NOTIFICATION/${constants.apwrimsUUID}");
   String responseMessage = '';
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-  FlutterLocalNotificationsPlugin();
+      FlutterLocalNotificationsPlugin();
 
-  final NotificationAppLaunchDetails? notificationAppLaunchDetails = await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
+  final NotificationAppLaunchDetails? notificationAppLaunchDetails =
+      await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
   String initialRoute = '/splash';
   if (notificationAppLaunchDetails?.didNotificationLaunchApp ?? false) {
     selectedNotificationPayload =
@@ -260,14 +263,14 @@ Future<void> showNotification() async {
   );*/
 
   AndroidNotificationDetails androidPlatformChannelSpecifics =
-  const AndroidNotificationDetails(
-      'high_importance_channel', 'High Importance Notifications',
-      importance: Importance.max,
-      priority: Priority.high,
-      ongoing: true,
-      styleInformation: BigTextStyleInformation(''));
+      const AndroidNotificationDetails(
+          'high_importance_channel', 'High Importance Notifications',
+          importance: Importance.max,
+          priority: Priority.high,
+          ongoing: true,
+          styleInformation: BigTextStyleInformation(''));
   NotificationDetails platformChannelSpecifics =
-  NotificationDetails(android: androidPlatformChannelSpecifics);
+      NotificationDetails(android: androidPlatformChannelSpecifics);
 
   await ref.orderByKey().limitToLast(1).once().then((event) async {
     DataSnapshot snapshot = event.snapshot;
@@ -312,7 +315,7 @@ Future<void> initializeService() async {
   );
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-  FlutterLocalNotificationsPlugin();
+      FlutterLocalNotificationsPlugin();
 
   if (platform.Platform.isAndroid || platform.Platform.isAndroid) {
     await flutterLocalNotificationsPlugin.initialize(
@@ -325,7 +328,7 @@ Future<void> initializeService() async {
 
   await flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<
-      AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin>()
       ?.createNotificationChannel(channel);
 
   await service.configure(
@@ -373,7 +376,7 @@ void onStart(ServiceInstance service) async {
 
   /// OPTIONAL when use custom notification
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-  FlutterLocalNotificationsPlugin();
+      FlutterLocalNotificationsPlugin();
 
   if (service is AndroidServiceInstance) {
     service.on('setAsForeground').listen((event) {
@@ -447,13 +450,13 @@ Future<void> initializeSpeechToText(String sessionId) async {
   print(("startListeningToHello: starting listening"));
   await Firebase.initializeApp(
       options: const FirebaseOptions(
-        apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
-        appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
-        messagingSenderId: '1062998944432',
-        projectId: 'apwrims---chatbot',
-        storageBucket: 'apwrims---chatbot.appspot.com',
-        iosBundleId: 'com.vassar.apwrimschatbot',
-      ));
+    apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
+    appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
+    messagingSenderId: '1062998944432',
+    projectId: 'apwrims---chatbot',
+    storageBucket: 'apwrims---chatbot.appspot.com',
+    iosBundleId: 'com.vassar.apwrimschatbot',
+  ));
 
   bool available = await speechToText.initialize(
     onStatus: (status) async {
@@ -501,13 +504,13 @@ Future<void> initializeSpeechToTextBg() async {
   print(("startListeningToHello: starting listening"));
   await Firebase.initializeApp(
       options: const FirebaseOptions(
-        apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
-        appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
-        messagingSenderId: '1062998944432',
-        projectId: 'apwrims---chatbot',
-        storageBucket: 'apwrims---chatbot.appspot.com',
-        iosBundleId: 'com.vassar.apwrimschatbot',
-      ));
+    apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
+    appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
+    messagingSenderId: '1062998944432',
+    projectId: 'apwrims---chatbot',
+    storageBucket: 'apwrims---chatbot.appspot.com',
+    iosBundleId: 'com.vassar.apwrimschatbot',
+  ));
 
   bool available = await speechToText.initialize(
     onStatus: (status) async {
@@ -637,7 +640,8 @@ Future<void> startListeningToYes(String sessionId, String word) async {
             "changelog": 'No Change in $AppState.instance.triggeredWord Data'
           });*/
           Future.delayed(const Duration(seconds: 2), () async {
-            print("wewewewewe AppState.instance.triggeredWord after completion::${AppState.instance.triggeredWord}");
+            print(
+                "wewewewewe AppState.instance.triggeredWord after completion::${AppState.instance.triggeredWord}");
             await ref.orderByKey().limitToLast(1).once().then((event) async {
               DataSnapshot snapshot = event.snapshot;
               print("values::${snapshot.value}");
@@ -765,6 +769,8 @@ class MyApp extends StatelessWidget {
           '/splash': (context) => const SplashScreenWidget(),
           '/login': (context) => const LoginScreenWidget(),
           '/home': (context) => const HomeScreenWidget(),
+          '/promptManagement': (context) => const PromptManagementView(),
+          '/toolInventory': (context) => const ToolInventoryView(),
         },
       ),
     );

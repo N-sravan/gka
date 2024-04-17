@@ -28,8 +28,8 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
   void initState() {
     super.initState();
     viewModel = Provider.of<LoginViewModel>(context, listen: false);
-  /*  _usernameController.text = "APWRIMS";
-    _passwordController.text = "test123";*/
+    _usernameController.text = "sklm_burja";
+    _passwordController.text = "test123";
     WidgetsBinding.instance.addPostFrameCallback((_) {
       networkUtils.startTrackingConnection();
     });
@@ -229,46 +229,49 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                 width: MediaQuery.of(context).size.width,
                                 height: constants.buttonHeight,
                                 child: ElevatedButton(
-                                  onPressed: () async {
-                                    if (_formKey.currentState!.validate()) {
-                                      /// Data entered in the form is valid, continue to login
-                                      String userId = _usernameController.text;
-                                      String password =
-                                          _passwordController.text;
-                                      // response.Content? content = await viewModel.authenticate(userId, password, context);
-                                      if (userId.isNotEmpty && password.isNotEmpty) {
-                                        // AppState.instance.userId = '44';
-                                        String? fcmToken = await FirebaseMessaging.instance.getToken();
-                                        response.Content? content = await viewModel.authenticate(userId, password, context);
-                                        if(fcmToken !=null && fcmToken.isNotEmpty && content !=null){
-                                          AppState.instance.fcmToken = fcmToken;
-                                          bool? result = await viewModel
-                                              .sendFcmToken(context);
-                                          if(result !=null && result == true) {
-                                            Navigator.pushNamed(context, '/home');
-                                           /* Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        HomeScreenWidget()));*/
+                                    onPressed: () async {
+                                      if (_formKey.currentState!.validate()) {
+                                        /// Data entered in the form is valid, continue to login
+                                        String userId =
+                                            _usernameController.text;
+                                        String password =
+                                            _passwordController.text;
+                                        // response.Content? content = await viewModel.authenticate(userId, password, context);
+                                        if (userId.isNotEmpty &&
+                                            password.isNotEmpty) {
+                                          // AppState.instance.userId = '44';
+                                          String? fcmToken =
+                                              await FirebaseMessaging.instance
+                                                  .getToken();
+                                          response.Content? content =
+                                              await viewModel.authenticate(
+                                                  userId, password, context);
+                                          if (fcmToken != null &&
+                                              fcmToken.isNotEmpty &&
+                                              content != null) {
+                                            AppState.instance.fcmToken =
+                                                fcmToken;
+                                            bool? result = await viewModel
+                                                .sendFcmToken(context);
+                                            if (result != null &&
+                                                result == true) {
+                                              Navigator.pushNamed(
+                                                  context, '/home');
+                                              Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          const HomeScreenWidget()));
+                                            }
                                           }
                                         }
-                                        /*    if (result !=null && result) {
-                                          Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      HomeScreenWidget()));
-                                        }*/
                                       }
-                                    }
-                                  },
-                                  style: constants.buttonStyle,
-                                  child: Text(
-                                    constants.loginString,
-                                    style: constants.white16W500,
-                                  ),
-                                ),
+                                    },
+                                    style: constants.buttonStyle,
+                                    child: Text(
+                                      constants.loginString,
+                                      style: constants.white16W500,
+                                    )),
                               ),
                             ),
                     ),
