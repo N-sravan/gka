@@ -42,6 +42,8 @@ class ChatViewModel extends LoadingViewModel {
   String queryString = "";
   String llmType = '';
   TextEditingController chatController = TextEditingController();
+  TextEditingController promptController = TextEditingController();
+  TextEditingController intentController = TextEditingController();
   bool speechToTextOn = false;
   bool isVoiceInitiated = false;
   File? capturedPhoto;
@@ -101,11 +103,11 @@ class ChatViewModel extends LoadingViewModel {
 
   Future<String?> createSession() async {
     try {
-      /*     String uuid = const Uuid().v4();
+           String uuid = const Uuid().v4();
       sessionId = uuid;
       isFirstTime = true;
       notifyListeners();
-      return uuid;*/
+      return uuid;
       String url = constants.genAiUrl;
       String data = AppState.instance.userData;
       /* Content data = login.Content(

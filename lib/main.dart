@@ -773,7 +773,6 @@ class MyApp extends StatelessWidget {
           '/home': (context) => const HomeScreenWidget(),
           '/promptManagement': (context) => const PromptManagementView(),
           '/toolInventory': (context) => const ToolInventoryView(),
-          '/createPrompt': (context) => const CreatePromptView(),
         },
       ),
     );

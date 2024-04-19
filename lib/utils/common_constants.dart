@@ -845,7 +845,7 @@ const String aoRoleName = "Agricultural Officer";
 const String genAiUrl = "https://genai.vassarlabs.com/session/create_session";
 
 ///apwrims
-const String ngrok = "https://4272-196-12-47-4.ngrok-free.app";
+const String ngrok = "https://d01f-196-12-47-4.ngrok-free.app";
 
 ///gowater
 
