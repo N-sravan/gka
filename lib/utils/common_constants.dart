@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-
 // Shared Preferences
 const String preferenceTypeString = 'string';
 const String preferenceTypeStringList = 'stringList';
@@ -28,8 +27,8 @@ const String preferenceUserData = 'userData';
 const String preferenceToken = 'token';
 const String preferenceFcmToken = 'fcmToken';
 const String preferencelocName = 'locName';
-const String preferencelocUUID= 'locUUID';
-const String preferencelocType= 'locType';
+const String preferencelocUUID = 'locUUID';
+const String preferencelocType = 'locType';
 const String preferenceRefreshToken = 'refreshToken';
 const String preferenceCsrfToken = 'csrfToken';
 const String preferenceUserRole = 'userRole';
@@ -38,7 +37,6 @@ const String preferenceUserStateUUID = 'stateUUID';
 const String preferenceUserDistrict = 'userDistrict';
 const String preferenceUserDistrictUUID = 'districtUUID';
 const String hiveEncryptionKey = 'hiveKey';
-
 
 // HeaderKeys
 const String accept = 'Accept';
@@ -64,22 +62,28 @@ const String baseUrl = 'https://keralakrishistack.vassarlabs.com/';
 // const String baseUrl = 'https://agriwise.vassarlabs.com/';
 // const String krishidsBaseUrl = 'http://acerkrishidss.vassarlabs.com/staging/api';
 // const String krishidsBaseUrl = 'https://agriwise.vassarlabs.com/staging/api';
-const String imageUploadUrl = 'https://agriwise.vassarlabs.com/agribot/bucket/insert_file';
-const String geoJsonSurveyPointsUrl ='http://acerkrishidss.vassarlabs.com/geoserver/krishidss/wms?service=WMS&version=1.1.0&request=GetMap&layers=krishidss%3Atemp_farm_meta_data&bbox=-180.0%2C-90.0%2C180.0%2C90.0&width=768&height=384&format=geojson&cql_filter=';
+const String imageUploadUrl =
+    'https://agriwise.vassarlabs.com/agribot/bucket/insert_file';
+const String geoJsonSurveyPointsUrl =
+    'http://acerkrishidss.vassarlabs.com/geoserver/krishidss/wms?service=WMS&version=1.1.0&request=GetMap&layers=krishidss%3Atemp_farm_meta_data&bbox=-180.0%2C-90.0%2C180.0%2C90.0&width=768&height=384&format=geojson&cql_filter=';
 /*const String krishidsBaseUrl =
-    'http://agriwise.vassarlabs.com/api';*/    //-
+    'http://agriwise.vassarlabs.com/api';*/ //-
 
-const String loginEndpoint = 'https://apwrims.ap.gov.in/auth/login-user-details';
-const String saveFcmToken = 'https://genai.vassarlabs.com/fcm_tokens/save_token';
-const String deleteToken = 'https://genai.vassarlabs.com/fcm_tokens/delete_token';
+const String loginEndpoint =
+    'https://apwrims.ap.gov.in/auth/login-user-details';
+const String saveFcmToken =
+    'https://genai.vassarlabs.com/fcm_tokens/save_token';
+const String deleteToken =
+    'https://genai.vassarlabs.com/fcm_tokens/delete_token';
 const String getAvailabeModelsEndpoint = '/get_available_models';
-const String getAvailabePromptsEndpoint = '/get_all_prompt_templates/';
+const String getAvailabePromptsEndpoint = '/get_all_prompt_templates';
+const String getToolsEndpoint = '/tool_inventory/get_tools';
+const String updatePromptTemplateEndpoint = '/update_prompt_template';
+const String createPromptTemplateEndpoint = '/create_prompt_template';
 const String logoutEndpoint =
     'auth/realms/agriwiserealm/protocol/openid-connect/logout';
 const String csrfEndPoint = 'um/generate-csrf-token';
 const String userPermissionsEndPoint = 'um/user-permissions/';
-
-
 
 //UUIDs & keys
 
@@ -87,7 +91,7 @@ const String indiaUUID = 'd6b37905-d2d3-4275-9317-d9b6f47cd783';
 const String keralaStateUUID = '62d3dc99-5bc3-4303-8be1-d4fa1f7deee5';
 // const String appUUID = '62feedb6-024d-4c3e-bd9e-5d4ee96a5d9d';
 const String appUUID = '1516fd33-c918-4ee6-92a1-445a02977a9b';
-const String apwrimsUUID = '6f86292b-dd9a-4987-bb8f-c3940263b349';
+const String apwrimsUUID = "d19a5290-2e40-494a-83d2-98f4c845b1f1";
 const String countryKey = 'COUNTRY';
 const String stateKey = 'STATE';
 const String districtKey = 'DISTRICT';
@@ -109,7 +113,7 @@ const double xSmallPadding = 4;
 // Dimensions
 const double splashIconHeight = 150;
 const double splashIconWidth = 120;
-const double departmentIconTop=134;
+const double departmentIconTop = 134;
 const double buttonHeight = 46;
 const double minButtonHeight = 32;
 const double mediumButtonHeight = 38;
@@ -146,8 +150,8 @@ const int imageDeletionRetryCount = 2;
 const Color primaryColor = Color.fromRGBO(248, 248, 250, 1);
 const Color secondaryColor = Color.fromRGBO(118, 118, 128, 0.12);
 const Color primaryBgColor = Color(0xffF8F8FA);
-const Color containerColor=Color.fromRGBO(118, 118, 128, 0.12);
-const Color labelColor=Color.fromRGBO(255, 255, 255, 1);
+const Color containerColor = Color.fromRGBO(118, 118, 128, 0.12);
+const Color labelColor = Color.fromRGBO(255, 255, 255, 1);
 const Color mapIconsHighlightColor = Color(0xFF7FD749);
 const Color mapIconsDefaultColor = Color(0xFF1D1F24);
 // const Color buttonColor = Color(0xFF6C9E64);
@@ -175,11 +179,9 @@ const Color blackColor = Colors.black;
 const Color disabledColor = Color(0xFFA4A8B0);
 const Color buttonDisabledColor = Color(0x39E0FCEB);
 const Color lightWhite = Color(0xFFB3B6BD);
-const Color darkBlue =  Color.fromRGBO(6, 32, 64, 1);
-const Color inputFieldColor =Color.fromRGBO(118, 118, 128, 0.12);
+const Color darkBlue = Color.fromRGBO(6, 32, 64, 1);
+const Color inputFieldColor = Color.fromRGBO(118, 118, 128, 0.12);
 const Color tableValueColor = Color(0xFF515466);
-
-
 
 // Crop Colors
 const Color paddyColor = Color(0xFF4BA164);
@@ -214,14 +216,12 @@ TextStyle green32W600 = const TextStyle(
   fontWeight: FontWeight.w600,
 );
 
-
 /*TextStyle green14W500 = const TextStyle(
   color: Color(0XFF4BA164),
   fontSize: 14,
   fontFamily: 'Roboto',
   fontWeight: FontWeight.w500,
 );*/
-
 
 TextStyle greenCB16W500 = const TextStyle(
   color: Color(0xFF4BA164),
@@ -286,12 +286,11 @@ TextStyle grey12W400 = const TextStyle(
   color: Colors.grey,
 );
 
-TextStyle gray24W500= const TextStyle(
+TextStyle gray24W500 = const TextStyle(
     fontFamily: 'Roboto',
     fontWeight: FontWeight.w500,
     fontSize: 24.0,
-    color: Color.fromRGBO(29, 31, 36, 1)
-);
+    color: Color.fromRGBO(29, 31, 36, 1));
 
 TextStyle black14W400 = const TextStyle(
   color: Colors.black,
@@ -369,7 +368,6 @@ TextStyle darkblue20W600 = const TextStyle(
   fontFamily: 'Roboto',
   fontWeight: FontWeight.w600,
 );
-
 
 TextStyle darkGrey20W400 = const TextStyle(
   color: darkGrey,
@@ -651,8 +649,10 @@ const String invalidMobileNumberErrorMsg = 'Enter valid Mobile number';
 const String currentlyUnderDevMsg = 'Currently under development!';
 const String toManyLoginAttempts =
     'Too many login attempts. Please wait for 15 minutes and try again';
-const String noNetworkAvailability = 'Please check your network connection, no internet available';
-const String farmerAccountDeletedSuccessfully = 'Your account has been deleted Successfully';
+const String noNetworkAvailability =
+    'Please check your network connection, no internet available';
+const String farmerAccountDeletedSuccessfully =
+    'Your account has been deleted Successfully';
 const String genericErrorMsg = 'Something went wrong, please try later';
 const String otpExpiredMsg = 'OTP is expired';
 const String invalidOtpErrMsg = 'OTP is Invalid';
@@ -667,7 +667,8 @@ const String fieldRegApprovedMsg = 'Atleast one field was Approved';
 const String fieldRegRejectedMsg = 'All the fields were Rejected';
 const String cropApprovedMsg = 'Atleast one crop was Approved';
 const String cropRejectedMsg = 'All the Crops were Rejected';
-const String markerValidation = 'Please drop atleast two markers on Farm boundary';
+const String markerValidation =
+    'Please drop atleast two markers on Farm boundary';
 const String aims = 'AIMS';
 const String ownerInformation = 'Farmer Registration';
 const String familyInformation = 'Family Information';
@@ -710,14 +711,14 @@ const String home = 'Home';
 const String market = 'Market';
 const String report = 'Report';
 const String helpDesk = 'Helpdesk';
-const String welcomeFarmer =  "Hi, Welcome Farmer";
-const String back =  "Back";
-const String addCrop =  "Add Crop";
-const String viewCropInfo =  "View Crop";
-const String addCropPhoto =  "Add Crop Photo";
-const String fieldHistory =  "Field History";
-const String viewScheme =  "View Scheme";
-const String reportCropLoss =  "Report Crop Loss";
+const String welcomeFarmer = "Hi, Welcome Farmer";
+const String back = "Back";
+const String addCrop = "Add Crop";
+const String viewCropInfo = "View Crop";
+const String addCropPhoto = "Add Crop Photo";
+const String fieldHistory = "Field History";
+const String viewScheme = "View Scheme";
+const String reportCropLoss = "Report Crop Loss";
 const String cropVariety = 'Crop Variety';
 const String enterCropName = 'Enter Correct Crop Name';
 const String cropVarietyError = 'Crop Variety cannot be empty';
@@ -762,7 +763,8 @@ const String aadharNoErrMsg = 'Aadhar Number cannot be empty';
 const String panNoErrMsg = 'PAN Number cannot be empty';
 const String genderErrMsg = 'Gender cannot be empty';
 const String dobErrMsg = 'DOB cannot be empty';
-const String educationQualificationErrMsg = 'Education Qualification cannot be empty';
+const String educationQualificationErrMsg =
+    'Education Qualification cannot be empty';
 const String pincodeErrMsg = 'Pincode cannot be empty';
 const String streetErrMsg = 'Street cannot be empty';
 const String houseNoErrMsg = 'House No cannot be empty';
@@ -772,7 +774,8 @@ const String bankErrMsg = 'Bank Name cannot be empty';
 const String branchNameErrMsg = 'Branch Name cannot be empty';
 const String accountNoErrMsg = 'Account Number cannot be empty';
 const String repeatAccNoErrMsg = 'Repeat account Number cannot be empty';
-const String repeatAccNoNotSameErrMsg = 'Repeat Account No and Account No must be same';
+const String repeatAccNoNotSameErrMsg =
+    'Repeat Account No and Account No must be same';
 const String ifscLengthErrMsg = 'IFSC code must be 11-16 digits';
 const String accountNoLengthErrMsg = 'Account number must be 11-16 digits';
 const String ifscErrMsg = 'IFSC code cannot be empty';
@@ -793,7 +796,8 @@ const String updateFarmsMsg = 'Updating farms';
 const String lineStringText = 'LineString';
 const String search = 'Search';
 const String registeredSuccessfulMsg = 'Farmer registered Successfully!';
-const String fieldDataDeletionSuccessfulMsg = 'Field Data deleted Successfully!';
+const String fieldDataDeletionSuccessfulMsg =
+    'Field Data deleted Successfully!';
 const String mergeSuccessfulMsg = 'Merged Successfully!';
 const String splitSuccessfulMsg = 'Splitted Successfully!';
 const String submitSuccessfulMsg = 'Submitted Successfully!';
@@ -801,7 +805,7 @@ const String surveyedFarmDeletionMsg = 'Surveyed farm cannot be deleted';
 const String farmerRegisteredCheck = 'Please Register the Farmer';
 const String plotInfoCheck = 'Please submit the Plot data';
 const String selectSurveyType = 'Please Select Survey Type';
-const String selectAnOption= 'Please select an option';
+const String selectAnOption = 'Please select an option';
 const String tFarmerName = 'Tenant Farmer Name';
 const String tFarmerNameErrorMessage = 'Tenant Farmer Name cannot be empty';
 const String tMobileNo = 'Tenant Mobile Number';
@@ -816,7 +820,7 @@ const String enterValidMobileNo = 'Please Enter Valid Mobile Number';
 const String enterValidEmailId = 'Please Enter Valid Email Address';
 const String enterValidAadharNo = 'Please Enter Valid Aadhar Number';
 const String enterValidPanNo = 'Please Enter Valid PAN Number';
-const String enterValidPincode= 'Please Enter Valid Pincode';
+const String enterValidPincode = 'Please Enter Valid Pincode';
 const String imageCaptureErrorMessage = 'Did not capture image';
 const String maxImageCaptureMessage =
     'Cannot capture any more photographs, limit reached';
@@ -825,18 +829,25 @@ const String districtErrorMsg = 'District Name cannot be empty';
 const String blockErrorMsg = 'Block Name cannot be empty';
 const String panchayatErrorMsg = 'Panchayat Name cannot be empty';
 const String splitToolTipMsg = 'Please drop markers across boundaries';
-const String locationPermissionMsg = 'Please grant Location permission to use this feature';
+const String locationPermissionMsg =
+    'Please grant Location permission to use this feature';
 
 const String mapType = 'Map Type';
 
-enum CropSownRadioOptions {village, field}
-enum NameSortRadioOptions {ascending, descending}
-enum CropNameVerifyRadioOptions {agree, disagree}
+enum CropSownRadioOptions { village, field }
+
+enum NameSortRadioOptions { ascending, descending }
+
+enum CropNameVerifyRadioOptions { agree, disagree }
 
 //Role Names
 const String aoRoleName = "Agricultural Officer";
-const String genAiUrl = "https://genai.vassarlabs.com/session/create_session"; ///apwrims
-const String ngrok = "https://a368-196-12-47-4.ngrok-free.app";   ///gowater
+const String genAiUrl = "https://genai.vassarlabs.com/session/create_session";
+
+///apwrims
+const String ngrok = "https://4272-196-12-47-4.ngrok-free.app";
+
+///gowater
 
 const int ownerCultivator = 1;
 const int ownerCultivatorCumTenant = 2;

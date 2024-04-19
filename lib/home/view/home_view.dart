@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../../chat/view/chat_view.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import '../../chat_window.dart';
 import '../../login/model/login_api_response_model.dart' as response;
 
 class HomeScreenWidget extends StatefulWidget {
@@ -31,8 +32,6 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
     viewModel = Provider.of<HomeViewModel>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await viewModel.getAvailableModels(context);
-      // viewModel.configureDidReceiveLocalNotificationSubject(context);
-      // viewModel.configureSelectNotificationSubject(context);
     });
   }
 
@@ -404,9 +403,10 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                     ),*/
                     const SizedBox(height: 20),
                     ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         if (viewModel.selectedValue.isNotEmpty &&
-                            viewModel.selectedLang.isNotEmpty) {
+                            viewModel.selectedLang.isNotEmpty &&
+                            viewModel.selectedModel.isNotEmpty) {
                           if (viewModel.selectedValue == 'External LLM') {
                             AppState.instance.isExternalLLM = true;
                           } else {
@@ -418,15 +418,29 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                           } else {
                             AppState.instance.isTeluguSelected = false;
                           }
-                          Navigator.push(
+
+                          String? sessionId = await viewModel.createSession();
+                          if (viewModel.sessionId != null) {
+                            Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => const ChatView()));
+                                builder: (context) => ChatWindow(
+                                  isFirstTime: viewModel.isFirstTime,
+                                  finishSession: (bool finishSession) {
+                                    if (finishSession) {
+                                      viewModel.updateFirstTimeValue();
+                                    }
+                                  },
+                                  sessionId: viewModel.sessionId!,
+                                ),
+                              ),
+                            );
+                          }
                         } else {
                           Fluttertoast.showToast(msg: 'Please select');
                         }
                       },
-                      child: const Text('Continue'),
+                      child: const Text('Start Session'),
                     ),
                   ],
                 ),

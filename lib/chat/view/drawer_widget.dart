@@ -1,7 +1,10 @@
-import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:gka/chat/view/history_view.dart';
+import 'package:gka/chat/view/prompt_managemt_view.dart';
+import 'package:gka/chat/view/tool_inventory_view.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_database/firebase_database.dart';
+
 import '../../../utils/common_constants.dart' as constants;
 import '../../chat_window.dart';
 import '../../utils/app_state.dart';
@@ -55,7 +58,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                             ),
                             Expanded(
                               child: Text(
-                                'View History',
+                                'Hello', // Changed "View History" to "Hello"
                                 style: constants.appBarHeaderTextStyle,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -66,64 +69,69 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                     ),
                   ),
                 ),
-                StreamBuilder(
-                  stream: FirebaseDatabase.instance
-                      .ref(
-                          "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.apwrimsUUID}/44")
-                      .onValue,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Center(
-                            child: CircularProgressIndicator(
-                          strokeWidth: 5,
-                          color: Colors.black,
-                        )),
-                      );
-                    }
-                    if (snapshot.hasError) {
-                      return Text('Error: ${snapshot.error}');
-
-                    }
-                    if (snapshot.hasData && snapshot.data == null) {
-                      return Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Center(
-                            child: Text('No Past History'),
-                          ));
-                    }
-                    var data =
-                        (snapshot.data! as DatabaseEvent).snapshot.value ?? {};
-                    print("DATAFJLDLFHGLD $data");
-                    data = data as Map<dynamic, dynamic>;
-
-                    var sortedByKeyMap = Map.fromEntries(data.entries.toList()
-                      ..sort((e1, e2) => e1.key.compareTo(e2.key)));
-                    String sessionId = '';
-                    String title = '';
-                    Map<String, String> sessionTitleMapping = {};
-                    sortedByKeyMap.forEach((key, value) {
-                      sessionId = key;
-                      if (value != null) {
-                        final datalast = Map<String, dynamic>.from(value);
-                        if (datalast != null) {
-                          bool titleValue = false;
-                          datalast.forEach((key, value) {
-                            if (value['isUser'] &&
-                                value['message'] != null &&
-                                value['message'].isNotEmpty &&
-                                !titleValue) {
-                              title = value['message'];
-                              titleValue = true;
-                            }
-                          });
-                        }
-                        sessionTitleMapping[sessionId] = title;
-                      }
-                    });
-                    return Column(
-                      children: generateListTiles(sessionTitleMapping),
+                ListTile(
+                  title: Row(
+                    children: [
+                      Text(
+                        "View History",
+                        style: constants.appBarListTileTextStyle,
+                      ),
+                      const Spacer(),
+                      const Icon(Icons.history), // Icon for "View History"
+                    ],
+                  ),
+                  onTap: () {
+                    Navigator.pop(context); // Close the drawer
+                    // Navigate to view history page
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChatHistoryView(),
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  title: Row(
+                    children: [
+                      Text(
+                        "Prompt Management",
+                        style: constants.appBarListTileTextStyle,
+                      ),
+                      const Spacer(),
+                      const Icon(Icons.manage_accounts), // Icon for "Prompt Management"
+                    ],
+                  ),
+                  onTap: () {
+                    Navigator.pop(context); // Close the drawer
+                    // Navigate to prompt management page
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PromptManagementView(),
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  title: Row(
+                    children: [
+                      Text(
+                        "Tool Inventory",
+                        style: constants.appBarListTileTextStyle,
+                      ),
+                      const Spacer(),
+                      Icon(Icons.inventory), // Icon for "Tool Inventory"
+                    ],
+                  ),
+                  onTap: () {
+                    Navigator.pop(context); // Close the drawer
+                    // Navigate to tool inventory page
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ToolInventoryView(),
+                      ),
                     );
                   },
                 ),
@@ -192,32 +200,5 @@ class _DrawerWidgetState extends State<DrawerWidget> {
       },
     );
   }
-
-  List<Widget> generateListTiles(Map<String, String> sessionTitleMapping) {
-    List<Widget> listTiles = [];
-    Map<String, String> data = sessionTitleMapping;
-    data.forEach((key, value) {
-      listTiles.add(
-        ListTile(
-          title: Text(value),
-          onTap: () {
-            Navigator.pop(context);
-            Navigator.pop(context);
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ChatWindow(
-                  sessionId: key,
-                  isFirstTime: true,
-                  isFromHistory: true,
-                  finishSession: (finishSession) {}, // Adjust accordingly
-                ),
-              ),
-            );
-          },
-        ),
-      );
-    });
-    return listTiles;
-  }
 }
+

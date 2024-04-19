@@ -5,21 +5,32 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:gka/chat/model/prompt_response.dart';
+import 'package:gka/chat/repo/chat_repo.dart';
 import 'package:gka/chat_bubble.dart';
+import 'package:gka/shared/loading_view_model.dart';
 import 'package:gka/text_to_speech.dart';
 import 'package:gka/utils/app_state.dart';
 import 'dart:developer' as developer;
 import 'dart:convert';
-import 'package:http/http.dart';
+import 'package:http/http.dart' as http;
 import 'package:gka/utils/common_constants.dart' as constants;
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:uuid/uuid.dart';
 import '../../login/model/login_api_response_model.dart' as login;
-import '../../login/model/login_api_response_model.dart';
 import '../../message_bubble.dart';
+import '../../utils/network_utils.dart';
+import '../../utils/util.dart';
+import '../model/available_models.dart' as model;
+import '../model/available_prompt_response_model.dart';
 
-class ChatViewModel extends ChangeNotifier {
+class ChatViewModel extends LoadingViewModel {
+  ChatViewModel({
+    required this.repo,
+  });
+
+  final ChatRepository repo;
   bool isFirstTime = true;
   String? sessionId;
   var scrollControllerListView = ScrollController();
@@ -58,16 +69,39 @@ class ChatViewModel extends ChangeNotifier {
   Timer? dataTimer;
   Timer? loadingTimer;
   String autoSessionId = '';
+  String selectedModel = '';
+  String selectedPromptModel = '';
+  String selectedPromptModelUUID = '';
 
   final SpeechToText _speechToText = SpeechToText();
   ValueNotifier<bool> listeningActive = ValueNotifier<bool>(false);
 
   // ValueNotifier<bool> showLoader = ValueNotifier<bool>(false);
   bool speechEnabled = false;
+  Map<String, String> promptTemplateIntentMapping = {};
+  Map<String, String> modelNameUuidMapping = {};
+  List<String>? modelList = [];
+
+  clearData() {
+    promptTemplateIntentMapping.clear();
+  }
+
+  void updateSelectedModel(String value) {
+    selectedModel = value;
+    AppState.instance.modelName = value;
+    AppState.instance.modelUUID = modelNameUuidMapping[value]!;
+    notifyListeners();
+  }
+
+  updateSelectedModelForPrompt(String value) {
+    selectedPromptModel = value;
+    selectedPromptModelUUID = modelNameUuidMapping[value]!;
+    notifyListeners();
+  }
 
   Future<String?> createSession() async {
     try {
-     /* String uuid = const Uuid().v4();
+      /*     String uuid = const Uuid().v4();
       sessionId = uuid;
       isFirstTime = true;
       notifyListeners();
@@ -102,7 +136,7 @@ class ChatViewModel extends ChangeNotifier {
       );*/
       print("Request data before encode::$data");
       String requestBody = jsonEncode(data);
-      Response response = await post(
+      http.Response response = await http.post(
         Uri.parse(url),
         body: data,
         headers: <String, String>{
@@ -130,159 +164,229 @@ class ChatViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void stopListening() async {
-    await _speechToText.stop();
-    bool active = _speechToText.isListening;
-    listeningActive.value = active;
-    notifyListeners();
-  }
-
-  /// Each time to start a speech recognition session
-  startListening() async {
-    var locales = await _speechToText.locales();
-    for (int i = 0; i < locales.length; i++) {
-      print("LOCALESDSD $i   ${locales[i].name}");
+  Future? getAvailablePrompts(BuildContext context, String modelUUID) async {
+    /// Checking for active internet connection
+    if (await networkUtils.hasActiveInternet()) {
+      isLoading = true;
+      try {
+        PromptResponseModel promptResponseModel =
+            await repo.fetchPrompts(context, modelUUID);
+        Map<String, String> promptTemplates = {};
+        promptTemplateIntentMapping.clear();
+        if (promptResponseModel.statusCode == 200 &&
+            promptResponseModel.result == true) {
+          if (promptResponseModel.response != null &&
+              promptResponseModel.response?.length != 0) {
+            for (int i = 0; i < promptResponseModel.response!.length; i++) {
+              promptTemplates[promptResponseModel.response![i]
+                  .promptTemplate!] = promptResponseModel.response![i].intent!;
+            }
+            isLoading = false;
+            print("weweweww promptTemplateIntentMapping ${promptTemplates}");
+            promptTemplateIntentMapping = promptTemplates;
+            notifyListeners();
+          } else {
+            isLoading = false;
+            notifyListeners();
+          }
+        } else {
+          isLoading = false;
+          notifyListeners();
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Something went wrong,Please try later'),
+          ));
+        }
+      } catch (e) {
+        isLoading = false;
+        notifyListeners();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(constants.genericErrorMsg),
+        ));
+        Util.instance
+            .logMessage('Login Model', 'Error while authenticating $e');
+      }
+    } else {
+      isLoading = false;
+      notifyListeners();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(constants.noNetworkAvailability),
+      ));
     }
-    // 34 for hindi
-    // 55 for Spanish
-
-    // 23 for Ipad English
-    //var selectedLocale = locales[5];
-
-    //for android tab english locale at 5
-    print("_onSpeechResult_startListening");
-    SpeechRecognitionResult result;
-    try {
-      await _speechToText.listen(
-          onSoundLevelChange: onSoundLevelChange,
-          /*localeId: selectedLocale.localeId,*/
-          partialResults: false,
-          onResult: onSpeechResult,
-          pauseFor: const Duration(seconds: 3),
-          listenFor: const Duration(seconds: 20),
-          cancelOnError: true);
-    } catch (e) {
-      print('EXCEPTIONKJSKFJK An exception occurred: $e');
-    }
-
-    print("_onSpeechResult_startListening aferfdf ${_speechToText.lastStatus}");
-    bool active = _speechToText.isListening;
-    tts.stop();
-    listeningActive.value = active;
-    notifyListeners();
-  }
-
-  startListeningForAutoMode() async {
-    var locales = await _speechToText.locales();
-    for (int i = 0; i < locales.length; i++) {
-      print("LOCALESDSD $i   ${locales[i].name}");
-    }
-
-    print("_onSpeechResult_startListening_auto_mode");
-    SpeechRecognitionResult result;
-    try {
-      await _speechToText.listen(
-          onSoundLevelChange: onSoundLevelChange,
-          /*localeId: selectedLocale.localeId,*/
-          partialResults: false,
-          onResult: onSpeechResultForAutoMode,
-          pauseFor: const Duration(seconds: 3),
-          listenFor: const Duration(seconds: 15),
-          cancelOnError: true);
-    } catch (e) {
-      print('EXCEPTIONKJSKFJK An exception occurred: $e');
-    }
-
-    print(
-        "_onSpeechResult_startListening_auto_mode aferfdf ${_speechToText.lastStatus}");
-    bool active = _speechToText.isListening;
-    tts.stop();
-    listeningActive.value = active;
-  }
-
-  dynamic Function(double)? onSoundLevelChange(double value) {
-    print("onSoundLevelChange  $value");
     return null;
   }
 
-  /// This is the callback that the SpeechToText plugin calls when
-  /// the platform returns recognized words.
-  Future<void> onSpeechResult(SpeechRecognitionResult result) async {
-    print("_onSpeechResult ${result.recognizedWords}");
-    await updateChatControllerForSpeech(result.recognizedWords);
-    DatabaseReference ref =
-        FirebaseDatabase.instance.ref("CHAT_BOT_ONDEMAND_QUERY_DATA/$sessionId}");
-    toggleValue ? llmType = "internal" : llmType = "external";
-    print("llmType::${llmType}");
-    // TransliterationResponse? response = await Transliteration.transliterate(result.recognizedWords, Languages.TELUGU);
-    // final translatedText =response?.transliterationSuggestions[0].toString();
-    // print("translated::$translatedText");
-    await ref.push().set({
-      "isUser": true,
-      "message": result.recognizedWords,
-      "mediaUrl": '',
-      "llm_type": llmType
-    });
-    // await ref.push().set({"isUser": false, "message": "Hello how are you"});
-    // if(result.recognizedWords.toLowerCase() == "give summary"){
-    //   await ref.push().set({"isUser": false, "message": "Summaryy"});
-    // }
-    // await ref.push().set({"isUser": false, "message": "Response ${responseCount++}"});
-    /* String responseMsg = "Cheppandi";
-    TransliterationResponse? _response = await Transliteration.transliterate(responseMsg, Languages.TELUGU);
-    final translatedResponse = _response?.transliterationSuggestions[0].toString();
-    print("translated::$translatedText");
-    await ref.push().set({"isUser": true, "message": translatedText});
-    await ref.push().set({"isUser": false, "message": translatedResponse});*/
-    bool active = _speechToText.isListening;
-    listeningActive.value = active;
-    notifyListeners();
-  }
+  Future? getAvailableTools(BuildContext context) async {
+    /// Checking for active internet connection
+    if (await networkUtils.hasActiveInternet()) {
+      isLoading = true;
+      try {
+        PromptResponseModel promptResponseModel =
+            await repo.fetchTools(context);
 
-  Future<void> onSpeechResultForAutoMode(SpeechRecognitionResult result) async {
-    print("_onSpeechResultForAutoMode ${result.recognizedWords}");
-    print("_onSpeechResultForAutoMode autoSessionId ${autoSessionId}");
-    DatabaseReference ref = FirebaseDatabase.instance
-        .ref("CHAT_BOT_ONDEMAND_QUERY_DATA/${autoSessionId}");
-
-    if (result.recognizedWords.toLowerCase() == "hello" && !isVoiceInitiated) {
-      await _speechToText.stop();
-      await tts.speak("Hello");
-      isVoiceInitiated = true;
+        if (promptResponseModel.statusCode == 200 &&
+            promptResponseModel.result == true) {
+          if (promptResponseModel.response != null &&
+              promptResponseModel.response?.length != 0) {
+            for (int i = 0; i < promptResponseModel.response!.length; i++) {
+              promptTemplateIntentMapping[promptResponseModel.response![i]
+                  .promptTemplate!] = promptResponseModel.response![i].intent!;
+            }
+            isLoading = false;
+            print(
+                "weweweww promptTemplateIntentMapping ${promptTemplateIntentMapping}");
+            notifyListeners();
+          }
+        } else {
+          isLoading = false;
+          notifyListeners();
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Something went wrong,Please try later'),
+          ));
+        }
+      } catch (e) {
+        isLoading = false;
+        notifyListeners();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(constants.genericErrorMsg),
+        ));
+        Util.instance
+            .logMessage('Login Model', 'Error while authenticating $e');
+      }
+    } else {
+      isLoading = false;
       notifyListeners();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(constants.noNetworkAvailability),
+      ));
     }
-    print("wewewewewe recognizedWords ::${result.recognizedWords}");
-    print("wewewewewe isVoiceInitiated ::$isVoiceInitiated");
-
-    if (result.recognizedWords.isNotEmpty &&
-        isVoiceInitiated &&
-        result.recognizedWords.toLowerCase() != 'hello') {
-      await ref.push().set({"isUser": true, "message": result.recognizedWords});
-      await ref.push().set({"isUser": false, "message": "response"});
-    }
-
-    bool active = _speechToText.isListening;
-    listeningActive.value = active;
+    return null;
   }
 
-  updateChatControllerForSpeech(String text) {
-    chatController.text = text;
-    notifyListeners();
+  Future<bool> createPrompt(
+      BuildContext context, String prompt, String intent) async {
+    /// Checking for active internet connection
+    if (await networkUtils.hasActiveInternet()) {
+      isLoading = true;
+      try {
+        ResponseModal responseModal =
+            await repo.createPrompt(context, prompt, intent,selectedPromptModelUUID);
+        if (responseModal.statusCode == 200 && responseModal.result == true) {
+          isLoading = false;
+          notifyListeners();
+          return true;
+        } else {
+          isLoading = false;
+          notifyListeners();
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Something went wrong,Please try later'),
+          ));
+        }
+      } catch (e) {
+        isLoading = false;
+        notifyListeners();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(constants.genericErrorMsg),
+        ));
+        Util.instance
+            .logMessage('Login Model', 'Error while authenticating $e');
+      }
+    } else {
+      isLoading = false;
+      notifyListeners();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(constants.noNetworkAvailability),
+      ));
+    }
+    return false;
   }
 
-  void initSpeech() async {
-    speechEnabled = await _speechToText.initialize(
-      onError: (error) {
-        print("FLKJFJLJF ERROR");
-        stopListening();
-      },
-      onStatus: (status) {
-        print("FLKJFJLJF STATUS ${status}");
-      },
-    );
+  Future<bool> updatePrompt(
+      BuildContext context, String prompt, String intent) async {
+    /// Checking for active internet connection
+    if (await networkUtils.hasActiveInternet()) {
+      isLoading = true;
+      try {
+        ResponseModal responseModal =
+            await repo.updatePrompt(context, prompt, intent);
+        if (responseModal.statusCode == 200 && responseModal.result == true) {
+          isLoading = false;
+          notifyListeners();
+          return true;
+        } else {
+          isLoading = false;
+          notifyListeners();
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Something went wrong,Please try later'),
+          ));
+        }
+      } catch (e) {
+        isLoading = false;
+        notifyListeners();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(constants.genericErrorMsg),
+        ));
+        Util.instance
+            .logMessage('Login Model', 'Error while authenticating $e');
+      }
+    } else {
+      isLoading = false;
+      notifyListeners();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(constants.noNetworkAvailability),
+      ));
+    }
+    return false;
+  }
 
-    //print("Available voices ${await tts.getVoice()}");
-    print("Available languages ${await tts.getLanguages}");
-    await tts.setLanguage("en-US");
+  Future? getAvailableModels(BuildContext context) async {
+    /// Checking for active internet connection
+    if (await networkUtils.hasActiveInternet()) {
+      isLoading = true;
+      try {
+        model.AvailabeModelResponse availabeModelResponse =
+            await repo.fetchModels(context);
+
+        if (availabeModelResponse.statusCode == 200 &&
+            availabeModelResponse.result == true) {
+          if (availabeModelResponse.response != null &&
+              availabeModelResponse.response?.length != 0) {
+            for (int i = 0; i < availabeModelResponse.response!.length; i++) {
+              modelNameUuidMapping.addAll({
+                availabeModelResponse.response![i].modelName!:
+                    availabeModelResponse.response![i].modelUuid!
+              });
+              if (!modelList!
+                  .contains(availabeModelResponse.response![i].modelName)) {
+                modelList!.add(availabeModelResponse.response![i].modelName!);
+              }
+            }
+            isLoading = false;
+            print("weweweww modelNameUuidMapping ${modelNameUuidMapping}");
+            notifyListeners();
+          }
+        } else {
+          isLoading = false;
+          notifyListeners();
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Something went wrong,Please try later'),
+          ));
+        }
+      } catch (e) {
+        isLoading = false;
+        notifyListeners();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(constants.genericErrorMsg),
+        ));
+        Util.instance
+            .logMessage('Login Model', 'Error while authenticating $e');
+      }
+    } else {
+      isLoading = false;
+      notifyListeners();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(constants.noNetworkAvailability),
+      ));
+    }
+    return null;
   }
 }

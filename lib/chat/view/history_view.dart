@@ -1,20 +1,22 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:gka/chat/view_model/chat_view_model.dart';
+import 'package:gka/utils/app_state.dart';
 import 'package:provider/provider.dart';
-
+import 'package:gka/utils/common_constants.dart' as constants;
 import '../../chat_bubble.dart';
+import '../../chat_window.dart';
 
-class HistoryChatView extends StatefulWidget {
+class ChatHistoryView extends StatefulWidget {
   String? sessionId;
 
-  HistoryChatView({Key? key, this.sessionId}) : super(key: key);
+  ChatHistoryView({Key? key, this.sessionId}) : super(key: key);
 
   @override
-  State<HistoryChatView> createState() => _HistoryChatViewState();
+  State<ChatHistoryView> createState() => _ChatHistoryViewState();
 }
 
-class _HistoryChatViewState extends State<HistoryChatView> {
+class _ChatHistoryViewState extends State<ChatHistoryView> {
   late ChatViewModel viewModel;
   var scrollControllerListView = ScrollController();
 
@@ -31,18 +33,17 @@ class _HistoryChatViewState extends State<HistoryChatView> {
       builder: (_, model, child) {
         return WillPopScope(
           onWillPop: () async {
-            return false;
+            return true;
           },
           child: Scaffold(
             appBar: AppBar(
-              centerTitle: true,
               backgroundColor: Colors.white,
               elevation: 0,
               title: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'APWRIMS Bot',
+                    'Chat History',
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w500,
@@ -57,72 +58,70 @@ class _HistoryChatViewState extends State<HistoryChatView> {
               child: Column(
                 children: [
                   Expanded(
-                    child: StreamBuilder(
-                      stream: FirebaseDatabase.instance
-                          .ref("CHAT_BOT_ONDEMAND_QUERY_DATA/${widget.sessionId}")
-                          .onValue,
-                      builder: (context, AsyncSnapshot snapshot) {
-                        if (snapshot.hasData && snapshot.data != null) {
-                          List<ChatBubble> messageList = [];
-                          var data = (snapshot.data! as DatabaseEvent)
-                                  .snapshot
-                                  .value ??
-                              {};
+                    child: SingleChildScrollView(
+                      child: StreamBuilder(
+                        stream: FirebaseDatabase.instance
+                            .ref(
+                                "CHAT_BOT_TEST/${constants.apwrimsUUID}/${AppState.instance.userId}")
+                            .onValue,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Padding(
+                              padding: EdgeInsets.all(120.0),
+                              child: Center(
+                                  child: CircularProgressIndicator(
+                                strokeWidth: 5,
+                                color: Colors.black,
+                              )),
+                            );
+                          }
+                          if (snapshot.hasError) {
+                            return Text('Error: ${snapshot.error}');
+                          }
+                          if (snapshot.hasData && snapshot.data == null) {
+                            return Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Center(
+                                  child: Text('No Past History'),
+                                ));
+                          }
+                          var data =
+                              (snapshot.data! as DatabaseEvent).snapshot.value ??
+                                  {};
                           print("DATAFJLDLFHGLD $data");
                           data = data as Map<dynamic, dynamic>;
+                      
                           var sortedByKeyMap = Map.fromEntries(
                               data.entries.toList()
                                 ..sort((e1, e2) => e1.key.compareTo(e2.key)));
+                          String sessionId = '';
+                          String title = '';
+                          Map<String, String> sessionTitleMapping = {};
                           sortedByKeyMap.forEach((key, value) {
-                            if (key != "cart") {
+                            sessionId = key;
+                            if (value != null) {
                               final datalast = Map<String, dynamic>.from(value);
-                              print("SORTED MESSAGES ${datalast['message']}");
-                              print("Session Id ${widget.sessionId}");
-                              messageList.add(ChatBubble(
-                                text: datalast['message'],
-                                isUser: datalast['isUser'],
-                                imageUrl: datalast['mediaUrl'],
-                                logMessage: datalast['log'] ?? '',
-                              ));
+                              if (datalast != null) {
+                                bool titleValue = false;
+                                datalast.forEach((key, value) {
+                                  if (value['isUser'] &&
+                                      value['message'] != null &&
+                                      value['message'].isNotEmpty &&
+                                      !titleValue) {
+                                    title = value['message'];
+                                    titleValue = true;
+                                  }
+                                });
+                              }
+                              sessionTitleMapping[sessionId] = title;
                             }
                           });
-                          //messageList.reversed;
-                       /*   if (messageList.isNotEmpty &&
-                              !messageList[messageList.length - 1].isUser &&
-                              messageList.length > prevChatLength) {
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              showLoader.value = false;
-                            });
-                            tts.speak(messageList[messageList.length - 1].text);
-                          }
-                          prevChatLength = messageList.length;
-                          if (messageList.isNotEmpty &&
-                              messageList[messageList.length - 1].isUser) {
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              showLoader.value = true;
-                            });
-                          }*/
-
-                          return ListView.builder(
-                            reverse: true,
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            controller: scrollControllerListView,
-                            addAutomaticKeepAlives: true,
-                            itemBuilder: (context, index) {
-                              if (index < messageList.length) {
-                                return Padding(
-                                  padding: const EdgeInsets.all(4.0),
-                                  child: messageList[
-                                      messageList.length - 1 - index],
-                                );
-                              }
-                              return null;
-                            },
-                            itemCount: messageList.length,
+                          return Column(
+                            children: generateListTiles(sessionTitleMapping),
                           );
-                        }
-                        return const SizedBox();
-                      },
+                        },
+                      ),
                     ),
                   ),
                 ],
@@ -132,5 +131,48 @@ class _HistoryChatViewState extends State<HistoryChatView> {
         );
       },
     );
+  }
+
+  List<Widget> generateListTiles(Map<String, String> sessionTitleMapping) {
+    List<Widget> listTiles = [];
+    Map<String, String> data = sessionTitleMapping;
+    data.forEach((key, value) {
+      listTiles.add(
+        Padding(
+          padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10.0),
+           /*   boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.5),
+                  spreadRadius: 2,
+                  blurRadius: 5,
+                  offset: Offset(0, 3), // changes position of shadow
+                ),
+              ],*/
+            ),
+            child: ListTile(
+              title: Text(value),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChatWindow(
+                      sessionId: key,
+                      isFirstTime: true,
+                      isFromHistory: true,
+                      finishSession: (finishSession) {}, // Adjust accordingly
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+    });
+    return listTiles;
   }
 }

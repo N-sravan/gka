@@ -3,6 +3,8 @@ import 'dart:isolate';
 import 'dart:ui';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:gka/chat/repo/chat_repo.dart';
+import 'package:gka/chat/view/create_prompt_template.dart';
 import 'package:gka/home/repository/home_repo.dart';
 import 'package:gka/home/view/home_view.dart';
 import 'package:gka/home/view_model/home_view_model.dart';
@@ -43,8 +45,8 @@ import 'dart:developer' as developer;
 import 'dart:io' as platform;
 import 'chat_bubble.dart';
 import 'helpers/notification_helper.dart';
-import 'home/view/prompt_managemt_view.dart';
-import 'home/view/tool_inventory_view.dart';
+import 'chat/view/prompt_managemt_view.dart';
+import 'chat/view/tool_inventory_view.dart';
 import 'locator.dart';
 
 var initializationSettingsAndroid = const AndroidInitializationSettings(
@@ -127,7 +129,7 @@ void main() async {
           create: (_) => LoginViewModel(repo: locator<LoginRepository>()),
         ),
         ChangeNotifierProvider(
-          create: (_) => ChatViewModel(),
+          create: (_) => ChatViewModel(repo: locator<ChatRepository>()),
         ),
         ChangeNotifierProvider(
           create: (_) => SplashViewModel(),
@@ -771,6 +773,7 @@ class MyApp extends StatelessWidget {
           '/home': (context) => const HomeScreenWidget(),
           '/promptManagement': (context) => const PromptManagementView(),
           '/toolInventory': (context) => const ToolInventoryView(),
+          '/createPrompt': (context) => const CreatePromptView(),
         },
       ),
     );

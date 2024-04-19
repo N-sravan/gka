@@ -1,10 +1,9 @@
 import 'dart:convert';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/material.dart';
-import 'package:gka/home/model/available_models.dart';
-import 'package:gka/home/model/available_prompt_response_model.dart';
 import 'package:gka/login/model/token_model.dart';
 import 'package:http/http.dart' as http;
+import '../../chat/model/available_models.dart';
 import '../../utils/app_state.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 
@@ -13,8 +12,7 @@ abstract class HomeRepository {
   Future<int?> deleteToken(BuildContext context);
 
   Future<AvailabeModelResponse> fetchModels(BuildContext context);
-  Future<PromptResponseModel> fetchPrompts(BuildContext context);
-
+// Future<PromptResponseModel> fetchPrompts(BuildContext context);
 }
 
 /// Concrete class implementation for the login repository
@@ -47,18 +45,23 @@ class HomeRepositoryImpl extends HomeRepository {
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
     };
+
+    Map<String, String> params = {
+      "project_uuid": 'd19a5290-2e40-494a-83d2-98f4c845b1f1'
+    };
     String authUrl = constants.ngrok + constants.getAvailabeModelsEndpoint;
     Uri url = Uri.parse(authUrl);
-
-    var response = await http.get(url, headers: authHeaders);
+    String data = jsonEncode(params);
+    var response = await http.post(url, headers: authHeaders, body: data);
 
     Map<String, dynamic> responseMap = jsonDecode(response.body);
 
-    AvailabeModelResponse availabeModelResponse = AvailabeModelResponse.fromJson(responseMap);
+    AvailabeModelResponse availabeModelResponse =
+        AvailabeModelResponse.fromJson(responseMap);
     return availabeModelResponse;
   }
 
-  @override
+/* @override
   Future<PromptResponseModel> fetchPrompts(BuildContext context) async {
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
@@ -72,5 +75,5 @@ class HomeRepositoryImpl extends HomeRepository {
 
     PromptResponseModel promptResponseModel = PromptResponseModel.fromJson(responseMap);
     return promptResponseModel;
-  }
+  }*/
 }
