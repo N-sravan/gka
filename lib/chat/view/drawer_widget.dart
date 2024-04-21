@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:gka/chat/view/history_view.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/chat/view/prompt_managemt_view.dart';
-import 'package:gka/chat/view/tool_inventory_view.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_database/firebase_database.dart';
-
 import '../../../utils/common_constants.dart' as constants;
 import '../../chat_window.dart';
 import '../../utils/app_state.dart';
 import '../view_model/chat_view_model.dart';
+import 'history_view.dart';
 
 class DrawerWidget extends StatefulWidget {
   const DrawerWidget({Key? key}) : super(key: key);
@@ -108,7 +107,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => PromptManagementView(),
+                        builder: (context) => const PromptManagementView(),
                       ),
                     );
                   },
@@ -125,14 +124,15 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                     ],
                   ),
                   onTap: () {
-                    Navigator.pop(context); // Close the drawer
+                    Fluttertoast.showToast(msg: "Under Development");
+                    /*    Navigator.pop(context); // Close the drawer
                     // Navigate to tool inventory page
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => const ToolInventoryView(),
                       ),
-                    );
+                    );*/
                   },
                 ),
               ],
@@ -201,4 +201,3 @@ class _DrawerWidgetState extends State<DrawerWidget> {
     );
   }
 }
-

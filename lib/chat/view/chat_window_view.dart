@@ -74,7 +74,7 @@
 //                 mainAxisAlignment: MainAxisAlignment.center,
 //                 children: [
 //                   const Text(
-//                     'APWRIMS Bot',
+//                     'Kaleswaram Bot',
 //                     style: TextStyle(
 //                       fontSize: 17,
 //                       fontWeight: FontWeight.w500,

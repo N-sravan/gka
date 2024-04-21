@@ -82,8 +82,8 @@ class LoginViewModel extends LoadingViewModel {
               ),
             );*/
 
-            if (userContent != null && userContent.userDetailsJson != null) {
-              switch ('state') {
+            if (userContent != null && userContent.userDetailsJson != null && userContent.userDetailsJson!.data !=null) {
+              switch (userContent.userDetailsJson!.data!.locType) {
                 case 'mandal':
                   locUUID = userContent.userDetailsJson!.data!.location!
                       .state![0].district![0].mandal![0].mndalUUID;

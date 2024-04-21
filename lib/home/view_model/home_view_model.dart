@@ -164,7 +164,7 @@ class HomeViewModel extends LoadingViewModel {
       isFirstTime = true;
       notifyListeners();
       return uuid;*/
-      String url = constants.genAiUrl;
+      String url = constants.genAiBaseUrl + constants.createSessionEndpoint;
       String data = AppState.instance.userData;
       /* Content data = login.Content(
         project_uuid: '6f86292b-dd9a-4987-bb8f-c3940263b349',

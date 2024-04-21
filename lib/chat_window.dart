@@ -221,7 +221,7 @@ class _ChatWindowState extends State<ChatWindow> {
   Future<void> _onSpeechResult(SpeechRecognitionResult result) async {
     print("_onSpeechResult ${result.recognizedWords}");
     DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_TEST/${constants.apwrimsUUID}/44/${widget.sessionId}");
+        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.apwrimsUUID}/${AppState.instance.userId}/${widget.sessionId}");
 
     /*  AppState.instance.isExternalLLM
         ? llmType = 'external'
@@ -261,6 +261,7 @@ class _ChatWindowState extends State<ChatWindow> {
       "mediaUrl": '',
       'llm_type': llmType,
       'language': language,
+      'model_uuid' : AppState.instance.modelUUID
       // 'modelUUID': AppState.instance.modelUUID
     });
 
@@ -272,7 +273,7 @@ class _ChatWindowState extends State<ChatWindow> {
       SpeechRecognitionResult result) async {
     print("_onSpeechResultForAutoMode ${result.recognizedWords}");
     DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_TEST/${constants.apwrimsUUID}/${AppState.instance.userId}/${autoSessionId}");
+        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.apwrimsUUID}/${AppState.instance.userId}/${autoSessionId}");
 
     if (result.recognizedWords.toLowerCase() == "hello" && !isVoiceInitiated) {
       await _speechToText.stop();
@@ -295,6 +296,7 @@ class _ChatWindowState extends State<ChatWindow> {
 
   @override
   Widget build(BuildContext context) {
+    print("widget.isFromHistory:::${widget.isFromHistory}");
     return WillPopScope(
       onWillPop: () async {
         bool? result = await showSessionDialog();
@@ -309,25 +311,29 @@ class _ChatWindowState extends State<ChatWindow> {
       child: Scaffold(
         drawer: const DrawerWidget(),
         appBar: AppBar(
+          leading: (widget.isFromHistory != null && widget.isFromHistory!)
+              ? IconButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  icon: Icon(Icons.arrow_back),
+                )
+              : null,
           centerTitle: true,
           backgroundColor: Colors.white,
           elevation: 0,
           title: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text(
+              Text(
                 'APWRIMS Bot',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black,
-                ),
+                style: constants.black16W500,
               ),
               const Spacer(),
               Text(
                 _toggleValue ? 'On-demand Mode' : 'listening mode',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 10,
                   color: _toggleValue ? Colors.green : Colors.grey,
                 ),
               ),
@@ -368,7 +374,7 @@ class _ChatWindowState extends State<ChatWindow> {
                 icon: Icon(
                   _toggleValue ? Icons.toggle_on : Icons.toggle_off,
                   color: _toggleValue ? Colors.green : Colors.grey,
-                  size: 30,
+                  size: 25,
                 ),
               ),
             ],
@@ -378,130 +384,140 @@ class _ChatWindowState extends State<ChatWindow> {
           color: Colors.grey[100],
           child: Column(
             children: [
-              Expanded(
-                child: StreamBuilder(
-                  stream: FirebaseDatabase.instance
-                      .ref(
-                          "CHAT_BOT_TEST/${constants.apwrimsUUID}/44/${widget.sessionId}")
-                      .onValue,
-                  builder: (context, AsyncSnapshot snapshot) {
-                    if (snapshot.hasData && snapshot.data != null) {
-                      List<ChatBubble> messageList = [];
-                      var data =
-                          (snapshot.data! as DatabaseEvent).snapshot.value ??
-                              {};
-                      print("DATAFJLDLFHGLD $data");
-                      data = data as Map<dynamic, dynamic>;
-                      dataTimer?.cancel();
-                      loadingTimer?.cancel();
-                      var sortedByKeyMap = Map.fromEntries(data.entries.toList()
-                        ..sort((e1, e2) => e1.key.compareTo(e2.key)));
-                      sortedByKeyMap.forEach((key, value) {
-                        if (key != "cart") {
-                          final datalast = Map<String, dynamic>.from(value);
-                          print("SORTED MESSAGES ${datalast['message']}");
-                          print("Session ID ${widget.sessionId}");
-                          messageList.add(ChatBubble(
-                            text: datalast['message'] ?? '',
-                            isUser: datalast['isUser'],
-                            imageUrl: datalast['mediaUrl'],
-                            logMessage: datalast['log'] ?? '',
-                          ));
-                        }
-                      });
+              _toggleValue
+                  ? Expanded(
+                      child: StreamBuilder(
+                        stream: FirebaseDatabase.instance
+                            .ref(
+                                "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.apwrimsUUID}/${AppState.instance.userId}/${widget.sessionId}")
+                            .onValue,
+                        builder: (context, AsyncSnapshot snapshot) {
+                          if (snapshot.hasData && snapshot.data != null) {
+                            List<ChatBubble> messageList = [];
+                            var data = (snapshot.data! as DatabaseEvent)
+                                    .snapshot
+                                    .value ??
+                                {};
+                            print("DATAFJLDLFHGLD $data");
+                            data = data as Map<dynamic, dynamic>;
+                            dataTimer?.cancel();
+                            loadingTimer?.cancel();
+                            var sortedByKeyMap = Map.fromEntries(
+                                data.entries.toList()
+                                  ..sort((e1, e2) => e1.key.compareTo(e2.key)));
+                            sortedByKeyMap.forEach((key, value) {
+                              if (key != "cart") {
+                                final datalast =
+                                    Map<String, dynamic>.from(value);
+                                print("SORTED MESSAGES ${datalast['message']}");
+                                print("Session ID ${widget.sessionId}");
+                                messageList.add(ChatBubble(
+                                  text: datalast['message'] ?? '',
+                                  isUser: datalast['isUser'],
+                                  imageUrl: datalast['mediaUrl'],
+                                  logMessage: datalast['log'] ?? '',
+                                ));
+                              }
+                            });
 
-                      if (widget.isFromHistory != null &&
-                          widget.isFromHistory == true &&
-                          c == 0) {
-                        //messageList.reversed;
-                        if (messageList.isNotEmpty &&
-                            !messageList[messageList.length - 1].isUser &&
-                            messageList.length > prevChatLength) {
-                          c++;
-                          /*  WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (widget.isFromHistory != null &&
+                                widget.isFromHistory == true &&
+                                c == 0) {
+                              //messageList.reversed;
+                              if (messageList.isNotEmpty &&
+                                  !messageList[messageList.length - 1].isUser &&
+                                  messageList.length > prevChatLength) {
+                                c++;
+                                /*  WidgetsBinding.instance.addPostFrameCallback((_) {
                             showLoader.value = false;
                           });
                           tts.speak(messageList[messageList.length - 1].text);*/
-                        }
-                      } else {
-                        if (messageList.isNotEmpty &&
-                            !messageList[messageList.length - 1].isUser &&
-                            messageList.length > prevChatLength) {
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            showLoader.value = false;
-                          });
-                          tts.speak(messageList[messageList.length - 1].text);
-                        }
-                      }
-                      prevChatLength = messageList.length;
-                      if (messageList.isNotEmpty &&
-                          messageList[messageList.length - 1].isUser) {
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          showLoader.value = true;
-                        });
-
-                        AppState.instance.isTeluguSelected
-                            ? loadingTimer =
-                                Timer(const Duration(seconds: 4), () {
-                                int randomIndex = Random()
-                                    .nextInt(teluguLoaderMsgList.length);
-                                if (showLoader.value) {
-                                  tts.speak(teluguLoaderMsgList[randomIndex]);
-                                }
-                              })
-                            : loadingTimer =
-                                Timer(const Duration(seconds: 4), () {
-                                int randomIndex =
-                                    Random().nextInt(loaderMsgList.length);
-                                if (showLoader.value) {
-                                  tts.speak(loaderMsgList[randomIndex]);
-                                }
+                              }
+                            } else {
+                              if (messageList.isNotEmpty &&
+                                  !messageList[messageList.length - 1].isUser &&
+                                  messageList.length > prevChatLength) {
+                                WidgetsBinding.instance
+                                    .addPostFrameCallback((_) {
+                                  showLoader.value = false;
+                                });
+                                tts.speak(
+                                    messageList[messageList.length - 1].text);
+                              }
+                            }
+                            prevChatLength = messageList.length;
+                            if (messageList.isNotEmpty &&
+                                messageList[messageList.length - 1].isUser) {
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                showLoader.value = true;
                               });
 
-                        dataTimer =
-                            Timer(const Duration(seconds: 15), () async {
-                          print("timerCounter::$timerCounter");
-                          if (showLoader.value) {
-                            DatabaseReference ref = FirebaseDatabase.instance.ref(
-                                "CHAT_BOT_TEST/${constants.apwrimsUUID}/44/${widget.sessionId}");
-                            /* messageList.add(ChatBubble(
+                              AppState.instance.isTeluguSelected
+                                  ? loadingTimer =
+                                      Timer(const Duration(seconds: 4), () {
+                                      int randomIndex = Random()
+                                          .nextInt(teluguLoaderMsgList.length);
+                                      if (showLoader.value) {
+                                        tts.speak(
+                                            teluguLoaderMsgList[randomIndex]);
+                                      }
+                                    })
+                                  : loadingTimer =
+                                      Timer(const Duration(seconds: 4), () {
+                                      int randomIndex = Random()
+                                          .nextInt(loaderMsgList.length);
+                                      if (showLoader.value) {
+                                        tts.speak(loaderMsgList[randomIndex]);
+                                      }
+                                    });
+
+                              dataTimer =
+                                  Timer(const Duration(seconds: 15), () async {
+                                print("timerCounter::$timerCounter");
+                                if (showLoader.value) {
+                                  DatabaseReference ref =
+                                      FirebaseDatabase.instance.ref(
+                                          "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.apwrimsUUID}/${AppState.instance.userId}/${widget.sessionId}");
+                                  /* messageList.add(ChatBubble(
                               text: "Data Not Found",
                               isUser: false,
                               imageUrl: "",
                               logMessage: '',
                             ));*/
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              showLoader.value = false;
-                            });
-                            AppState.instance.isTeluguSelected
-                                ? tts.speak("సమాచారం దొరకట్లేదు")
-                                : tts.speak("Data Not found");
-                          }
-                        });
-                      }
+                                  WidgetsBinding.instance
+                                      .addPostFrameCallback((_) {
+                                    showLoader.value = false;
+                                  });
+                                  AppState.instance.isTeluguSelected
+                                      ? tts.speak("సమాచారం దొరకట్లేదు")
+                                      : tts.speak("Data Not found");
+                                }
+                              });
+                            }
 
-                      return ListView.builder(
-                        reverse: true,
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        controller: scrollControllerListView,
-                        addAutomaticKeepAlives: true,
-                        itemBuilder: (context, index) {
-                          if (index < messageList.length) {
-                            return Padding(
-                              padding: const EdgeInsets.all(4.0),
-                              child:
-                                  messageList[messageList.length - 1 - index],
+                            return ListView.builder(
+                              reverse: true,
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              controller: scrollControllerListView,
+                              addAutomaticKeepAlives: true,
+                              itemBuilder: (context, index) {
+                                if (index < messageList.length) {
+                                  return Padding(
+                                    padding: const EdgeInsets.all(4.0),
+                                    child: messageList[
+                                        messageList.length - 1 - index],
+                                  );
+                                }
+                                return null;
+                              },
+                              itemCount: messageList.length,
                             );
                           }
-                          return null;
+                          return const SizedBox();
                         },
-                        itemCount: messageList.length,
-                      );
-                    }
-                    return const SizedBox();
-                  },
-                ),
-              ),
+                      ),
+                    )
+                  : const SizedBox(),
               _toggleValue
                   ? Padding(
                       padding: const EdgeInsets.only(left: 80.0),
@@ -818,7 +834,7 @@ class _ChatWindowState extends State<ChatWindow> {
 
   Future<void> insertImageDataIntoDb(String? imageUrl, String text) async {
     DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_TEST/${constants.apwrimsUUID}/44/${widget.sessionId}");
+        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.apwrimsUUID}/${AppState.instance.userId}/${widget.sessionId}");
     await ref
         .push()
         .set({"isUser": true, "message": text, "mediaUrl": imageUrl});
@@ -829,7 +845,7 @@ class _ChatWindowState extends State<ChatWindow> {
 
   Future<void> insertDataIntoDb(String text) async {
     DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_TEST/${constants.apwrimsUUID}/44/${widget.sessionId}");
+        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.apwrimsUUID}/${AppState.instance.userId}/${widget.sessionId}");
     await ref.push().set({"isUser": true, "message": text});
     chatController.clear();
     capturedPhoto = null;

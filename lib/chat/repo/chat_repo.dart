@@ -39,7 +39,7 @@ class ChatRepositoryImpl extends ChatRepository {
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
     };
-    String authUrl = constants.deleteToken;
+    String authUrl = constants.genAiBaseUrl + constants.deleteTokenEndpoint;
     String requestBody = jsonEncode(params);
 
     http.Response response = await http.post(
@@ -61,12 +61,12 @@ class ChatRepositoryImpl extends ChatRepository {
     };
 
     Map<String, String> params = {
-      "project_uuid": 'd19a5290-2e40-494a-83d2-98f4c845b1f1',
+      "project_uuid": constants.apwrimsUUID,
       "user_uuid": AppState.instance.userId,
       "model_uuid": modelUUID
     };
 
-    String authUrl = constants.ngrok + constants.getAvailabePromptsEndpoint;
+    String authUrl = constants.genAiBaseUrl + constants.getAvailabePromptsEndpoint;
 
     String requestBody = jsonEncode(params);
 
@@ -94,7 +94,7 @@ class ChatRepositoryImpl extends ChatRepository {
       "user_uuid": AppState.instance.userId,
       "src_type": 'GET_API',
     };
-    String authUrl = constants.ngrok + constants.getToolsEndpoint;
+    String authUrl = constants.genAiBaseUrl + constants.getToolsEndpoint;
 
     String requestBody = jsonEncode(params);
 
@@ -125,7 +125,7 @@ class ChatRepositoryImpl extends ChatRepository {
       "user_uuid": AppState.instance.userId,
       "project_uuid": constants.apwrimsUUID
     };
-    String authUrl = constants.ngrok + constants.createPromptTemplateEndpoint;
+    String authUrl = constants.genAiBaseUrl + constants.createPromptTemplateEndpoint;
 
     String requestBody = jsonEncode(params);
 
@@ -155,7 +155,7 @@ class ChatRepositoryImpl extends ChatRepository {
       "user_uuid": AppState.instance.userId,
       "project_uuid": constants.apwrimsUUID
     };
-    String authUrl = constants.ngrok + constants.updatePromptTemplateEndpoint;
+    String authUrl = constants.genAiBaseUrl + constants.updatePromptTemplateEndpoint;
 
     String requestBody = jsonEncode(params);
 
@@ -178,9 +178,9 @@ class ChatRepositoryImpl extends ChatRepository {
     };
 
     Map<String, String> params = {
-      "project_uuid": 'd19a5290-2e40-494a-83d2-98f4c845b1f1'
+      "project_uuid": constants.apwrimsUUID,
     };
-    String authUrl = constants.ngrok + constants.getAvailabeModelsEndpoint;
+    String authUrl = constants.genAiBaseUrl + constants.getAvailabeModelsEndpoint;
     String data = jsonEncode(params);
     var response =
         await http.post(Uri.parse(authUrl), headers: authHeaders, body: data);

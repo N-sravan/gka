@@ -21,12 +21,12 @@ class HomeRepositoryImpl extends HomeRepository {
   Future<int?> deleteToken(BuildContext context) async {
     Map<String, dynamic> params = {
       "fcmToken": AppState.instance.fcmToken,
-      "project_uuid": "6f86292b-dd9a-4987-bb8f-c3940263b349"
+      "project_uuid": constants.apwrimsUUID
     };
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
     };
-    String authUrl = constants.deleteToken;
+    String authUrl =  constants.genAiBaseUrl + constants.deleteTokenEndpoint;
     String requestBody = jsonEncode(params);
 
     http.Response response = await http.post(
@@ -47,9 +47,9 @@ class HomeRepositoryImpl extends HomeRepository {
     };
 
     Map<String, String> params = {
-      "project_uuid": 'd19a5290-2e40-494a-83d2-98f4c845b1f1'
+      "project_uuid": constants.apwrimsUUID,
     };
-    String authUrl = constants.ngrok + constants.getAvailabeModelsEndpoint;
+    String authUrl = constants.genAiBaseUrl + constants.getAvailabeModelsEndpoint;
     Uri url = Uri.parse(authUrl);
     String data = jsonEncode(params);
     var response = await http.post(url, headers: authHeaders, body: data);
@@ -66,7 +66,7 @@ class HomeRepositoryImpl extends HomeRepository {
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
     };
-    String authUrl = constants.ngrok + constants.getAvailabePromptsEndpoint + '2a';
+    String authUrl = constants.genAiBaseUrl + constants.getAvailabePromptsEndpoint + '2a';
     Uri url = Uri.parse(authUrl);
 
     var response = await http.get(url, headers: authHeaders);

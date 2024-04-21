@@ -47,12 +47,12 @@ class LoginRepositoryImpl extends LoginRepository {
       "locationUuid": AppState.instance.locUUID,
       "locationType": AppState.instance.locType,
       "locationName": AppState.instance.locName,
-      "project_uuid": "6f86292b-dd9a-4987-bb8f-c3940263b349"
+      "project_uuid": constants.apwrimsUUID
     };
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
     };
-    String authUrl = constants.saveFcmToken;
+    String authUrl = constants.genAiBaseUrl + constants.saveFcmTokenEndPoint;
     String requestBody = jsonEncode(params);
 
     http.Response response = await http.post(

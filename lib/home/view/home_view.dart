@@ -49,10 +49,10 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
               return Future.value(false);
             },
             child: Scaffold(
-              drawer: const HomeDrawerWidget(),
               appBar: AppBar(
+                automaticallyImplyLeading: false,
                 centerTitle: true,
-                title: const Text('APWRIMS Bot'),
+                title: const Text('Kaleswaram Bot'),
                 actions: [
                   PopupMenuButton<String>(
                     itemBuilder: (BuildContext context) {
@@ -100,17 +100,17 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                         hint: const Text('Select'),
                         items: viewModel.selectionList
                             .map((String item) => DropdownMenuItem<String>(
-                                  value: item,
-                                  child: Text(
-                                    item,
-                                    style: const TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 14,
-                                      fontFamily: 'Poppins',
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                                  ),
-                                ))
+                          value: item,
+                          child: Text(
+                            item,
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 14,
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ))
                             .toList(),
                         value: viewModel.selectedValue.isNotEmpty == true
                             ? viewModel.selectedValue
@@ -203,17 +203,17 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                         hint: const Text('Select'),
                         items: viewModel.langList
                             .map((String item) => DropdownMenuItem<String>(
-                                  value: item,
-                                  child: Text(
-                                    item,
-                                    style: const TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 14,
-                                      fontFamily: 'Poppins',
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                                  ),
-                                ))
+                          value: item,
+                          child: Text(
+                            item,
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 14,
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ))
                             .toList(),
                         value: viewModel.selectedLang.isNotEmpty == true
                             ? viewModel.selectedLang
@@ -289,6 +289,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 20),
                     const Text(
                       'Select Model',
                       style: TextStyle(
@@ -305,17 +306,17 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                         hint: const Text('Select'),
                         items: viewModel.modelList!
                             .map((String item) => DropdownMenuItem<String>(
-                                  value: item,
-                                  child: Text(
-                                    item,
-                                    style: const TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 14,
-                                      fontFamily: 'Poppins',
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                                  ),
-                                ))
+                          value: item,
+                          child: Text(
+                            item,
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 14,
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ))
                             .toList(),
                         value: viewModel.selectedModel.isNotEmpty == true
                             ? viewModel.selectedModel
@@ -394,14 +395,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                         ),
                       ),
                     ),
-                    /* const SizedBox(height: 20),
-                    PaddedElevatedButton(
-                      buttonText: 'Show notification with plain actions',
-                      onPressed: () async {
-                        await _showNotificationWithActions();
-                      },
-                    ),*/
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 40),
                     ElevatedButton(
                       onPressed: () async {
                         if (viewModel.selectedValue.isNotEmpty &&
@@ -425,6 +419,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => ChatWindow(
+                                  isFromHistory: false,
                                   isFirstTime: viewModel.isFirstTime,
                                   finishSession: (bool finishSession) {
                                     if (finishSession) {
@@ -463,12 +458,12 @@ class PaddedElevatedButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
-        child: ElevatedButton(
-          onPressed: onPressed,
-          child: Text(buttonText),
-        ),
-      );
+    padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+    child: ElevatedButton(
+      onPressed: onPressed,
+      child: Text(buttonText),
+    ),
+  );
 }
 
 String? selectedNotificationPayload;
@@ -481,7 +476,7 @@ const String navigationActionId = 'id_3';
 
 Future<void> _showNotificationWithActions() async {
   const AndroidNotificationDetails androidNotificationDetails =
-      AndroidNotificationDetails(
+  AndroidNotificationDetails(
     'your channel id',
     'your channel name',
     channelDescription: 'your channel description',

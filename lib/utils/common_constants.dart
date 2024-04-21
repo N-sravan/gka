@@ -71,15 +71,16 @@ const String geoJsonSurveyPointsUrl =
 
 const String loginEndpoint =
     'https://apwrims.ap.gov.in/auth/login-user-details';
-const String saveFcmToken =
-    'https://genai.vassarlabs.com/fcm_tokens/save_token';
-const String deleteToken =
-    'https://genai.vassarlabs.com/fcm_tokens/delete_token';
-const String getAvailabeModelsEndpoint = '/get_available_models';
-const String getAvailabePromptsEndpoint = '/get_all_prompt_templates';
-const String getToolsEndpoint = '/tool_inventory/get_tools';
-const String updatePromptTemplateEndpoint = '/update_prompt_template';
-const String createPromptTemplateEndpoint = '/create_prompt_template';
+const String saveFcmTokenEndPoint =
+    'fcm_tokens/save_token';
+const String deleteTokenEndpoint =
+    'fcm_tokens/delete_token';
+const String getAvailabeModelsEndpoint = 'get_available_models';
+const String getAvailabePromptsEndpoint = 'get_all_prompt_templates';
+const String getToolsEndpoint = 'tool_inventory/get_tools';
+const String updatePromptTemplateEndpoint = 'update_prompt_template';
+const String createPromptTemplateEndpoint = 'create_prompt_template';
+const String createSessionEndpoint = 'session/create_session';
 const String logoutEndpoint =
     'auth/realms/agriwiserealm/protocol/openid-connect/logout';
 const String csrfEndPoint = 'um/generate-csrf-token';
@@ -91,7 +92,7 @@ const String indiaUUID = 'd6b37905-d2d3-4275-9317-d9b6f47cd783';
 const String keralaStateUUID = '62d3dc99-5bc3-4303-8be1-d4fa1f7deee5';
 // const String appUUID = '62feedb6-024d-4c3e-bd9e-5d4ee96a5d9d';
 const String appUUID = '1516fd33-c918-4ee6-92a1-445a02977a9b';
-const String apwrimsUUID = "d19a5290-2e40-494a-83d2-98f4c845b1f1";
+const String apwrimsUUID = "6f86292b-dd9a-4987-bb8f-c3940263b349";
 const String countryKey = 'COUNTRY';
 const String stateKey = 'STATE';
 const String districtKey = 'DISTRICT';
@@ -842,10 +843,7 @@ enum CropNameVerifyRadioOptions { agree, disagree }
 
 //Role Names
 const String aoRoleName = "Agricultural Officer";
-const String genAiUrl = "https://genai.vassarlabs.com/session/create_session";
-
-///apwrims
-const String ngrok = "https://d01f-196-12-47-4.ngrok-free.app";
+const String genAiBaseUrl = "https://genai.vassarlabs.com/aquamind/";
 
 ///gowater
 

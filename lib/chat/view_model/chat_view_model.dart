@@ -103,12 +103,12 @@ class ChatViewModel extends LoadingViewModel {
 
   Future<String?> createSession() async {
     try {
-           String uuid = const Uuid().v4();
+      /* String uuid = const Uuid().v4();
       sessionId = uuid;
       isFirstTime = true;
       notifyListeners();
-      return uuid;
-      String url = constants.genAiUrl;
+      return uuid;*/
+      String url = constants.genAiBaseUrl + constants.createSessionEndpoint;
       String data = AppState.instance.userData;
       /* Content data = login.Content(
         project_uuid: '6f86292b-dd9a-4987-bb8f-c3940263b349',
