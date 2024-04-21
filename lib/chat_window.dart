@@ -262,7 +262,6 @@ class _ChatWindowState extends State<ChatWindow> {
       'llm_type': llmType,
       'language': language,
       'model_uuid': AppState.instance.modelUUID
-      // 'modelUUID': AppState.instance.modelUUID
     });
 
     bool active = _speechToText.isListening;
@@ -444,13 +443,14 @@ class _ChatWindowState extends State<ChatWindow> {
                                 tts.speak(
                                     messageList[messageList.length - 1].text);
                               }
-                            }
-                            prevChatLength = messageList.length;
-                            if (messageList.isNotEmpty &&
-                                messageList[messageList.length - 1].isUser) {
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                showLoader.value = true;
-                              });
+                              prevChatLength = messageList.length;
+                              if (messageList.isNotEmpty &&
+                                  messageList[messageList.length - 1].isUser) {
+                                WidgetsBinding.instance
+                                    .addPostFrameCallback((_) {
+                                  showLoader.value = true;
+                                });
+                              }
 
                               AppState.instance.isTeluguSelected
                                   ? loadingTimer =
