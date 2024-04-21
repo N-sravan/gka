@@ -49,12 +49,20 @@ class AppState {
   late String role;
   late String farmerUUID;
   late String tappedFieldUUID;
-  late Meta userData;
+  late String userData;
   String triggeredWord = '';
+  late String fcmToken;
   bool hasFarmerData=false;
   bool isVoiceUpdateEnabled=false;
   bool isVillageSelected = true;
   bool isOriyaSelected = false;
+  bool isExternalLLM = false;
+  late String modelName;
+  late String modelUUID;
+  late String locUUID;
+  late String locType;
+  late String locName;
+  late String userId;
 
   //For Background Sync
   bool isSyncInProgress = false;

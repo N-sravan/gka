@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -197,7 +198,8 @@ class LoginViewModel extends LoadingViewModel {
                   userPermissionsResponse.response!.meta!.firstName!);
               Meta? data = userPermissionsResponse!.response!.meta;
               if (data != null) {
-                AppState.instance.userData = data!;
+                String encodedData = jsonEncode(data);
+                AppState.instance.userData = encodedData;
                 isLoading = false;
                 Navigator.push(
                   context,

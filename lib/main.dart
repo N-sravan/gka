@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:isolate';
 import 'dart:ui';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:gka/chat/repo/chat_repo.dart';
+import 'package:gka/home/repo/home_repo.dart';
 import 'package:gka/home/view_model/home_view_model.dart';
 import 'package:gka/utils/app_state.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
@@ -111,7 +113,7 @@ void main() async {
           create: (_) => LoginViewModel(repo: locator<LoginRepository>()),
         ),
         ChangeNotifierProvider(
-          create: (_) => ChatViewModel(),
+          create: (_) => ChatViewModel(repo: locator<ChatRepository>()),
         ),
         ChangeNotifierProvider(
           create: (_) => SplashViewModel(),
@@ -120,7 +122,7 @@ void main() async {
           create: (_) => PermissionsViewModel(),
         ),
         ChangeNotifierProvider(
-          create: (_) => HomeViewModel(),
+          create: (_) => HomeViewModel(repo: locator<HomeRepository>()),
         ),
       ],
       child: const MyApp(),
