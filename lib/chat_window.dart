@@ -261,7 +261,7 @@ class _ChatWindowState extends State<ChatWindow> {
       "mediaUrl": '',
       'llm_type': llmType,
       'language': language,
-      'model_uuid' : AppState.instance.modelUUID
+      'model_uuid': AppState.instance.modelUUID
       // 'modelUUID': AppState.instance.modelUUID
     });
 
