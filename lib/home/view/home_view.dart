@@ -9,6 +9,7 @@ import '../../chat/view/chat_view.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import '../../chat_window.dart';
+import 'package:gka/utils/common_constants.dart' as constants;
 import '../../login/model/login_api_response_model.dart' as response;
 
 class HomeScreenWidget extends StatefulWidget {
@@ -30,7 +31,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
     super.initState();
     viewModel = Provider.of<HomeViewModel>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await viewModel.getAvailableModels(context);
+      // await viewModel.getAvailableModels(context);
     });
   }
 
@@ -43,6 +44,9 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
   Widget build(BuildContext context) {
     return Consumer<HomeViewModel>(
       builder: (_, model, child) {
+        if (model.isLoading) {
+          return child ?? const SizedBox();
+        }
         return WillPopScope(
             onWillPop: () {
               return Future.value(false);
@@ -82,109 +86,6 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
-                      'Select LLM Type',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Container(
-                      width: MediaQuery.of(context).size.width * 0.7,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: DropdownButtonFormField2<String>(
-                        isExpanded: true,
-                        hint: const Text('Select'),
-                        items: viewModel.selectionList
-                            .map((String item) => DropdownMenuItem<String>(
-                          value: item,
-                          child: Text(
-                            item,
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 14,
-                              fontFamily: 'Poppins',
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ))
-                            .toList(),
-                        value: viewModel.selectedValue.isNotEmpty == true
-                            ? viewModel.selectedValue
-                            : null,
-                        onChanged: (String? value) async {
-                          if (value!.isNotEmpty) {
-                            viewModel.updateSelectedValue(value);
-                          }
-                        },
-                        buttonStyleData: ButtonStyleData(
-                          height: 50,
-                          padding: const EdgeInsets.only(left: 14, right: 14),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: const Color.fromRGBO(118, 118, 128, 0.12),
-                            boxShadow: const [],
-                          ),
-                          elevation: 0,
-                        ),
-                        iconStyleData: const IconStyleData(
-                          icon: Icon(
-                            Icons.keyboard_arrow_down_rounded,
-                          ),
-                          iconSize: 20,
-                          iconEnabledColor: Color(0xFF666B77),
-                          iconDisabledColor: Color(0xFF666B77),
-                        ),
-                        dropdownStyleData: DropdownStyleData(
-                          maxHeight: 200,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(14),
-                            color: Colors.grey.shade300,
-                            boxShadow: const [],
-                          ),
-                        ),
-                        menuItemStyleData: const MenuItemStyleData(
-                          height: 30,
-                          padding: EdgeInsets.only(left: 14, right: 14),
-                        ),
-                        decoration: const InputDecoration(
-                          filled: true,
-                          fillColor: Colors.transparent,
-                          hintText: 'Select',
-                          hintStyle: TextStyle(
-                            fontFamily: "Poppins",
-                            fontWeight: FontWeight.w400,
-                            fontSize: 14.0,
-                            color: Colors.grey,
-                          ),
-                          contentPadding: EdgeInsets.only(
-                              top: 2, left: 2, right: 2, bottom: 2),
-                          border: OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.black),
-                            borderRadius: BorderRadius.all(Radius.circular(10)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide.none,
-                            borderRadius: BorderRadius.all(Radius.circular(10)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide.none,
-                            borderRadius: BorderRadius.all(Radius.circular(10)),
-                          ),
-                          errorStyle: TextStyle(
-                            color: Colors.red,
-                          ),
-                          errorBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Colors.red,
-                            ),
-                            borderRadius: BorderRadius.all(Radius.circular(10)),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
                     const Text(
                       'Select Language',
                       style: TextStyle(
@@ -287,6 +188,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 20),
                     const Text(
                       'Select Model',
                       style: TextStyle(
@@ -392,25 +294,11 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                         ),
                       ),
                     ),
-                    /* const SizedBox(height: 20),
-                    PaddedElevatedButton(
-                      buttonText: 'Show notification with plain actions',
-                      onPressed: () async {
-                        await _showNotificationWithActions();
-                      },
-                    ),*/
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 40),
                     ElevatedButton(
                       onPressed: () async {
-                        if (viewModel.selectedValue.isNotEmpty &&
-                            viewModel.selectedLang.isNotEmpty &&
+                        if (viewModel.selectedLang.isNotEmpty ||
                             viewModel.selectedModel.isNotEmpty) {
-                          if (viewModel.selectedValue == 'External LLM') {
-                            AppState.instance.isExternalLLM = true;
-                          } else {
-                            AppState.instance.isExternalLLM = false;
-                          }
-
                           if (viewModel.selectedLang == 'Odia') {
                             AppState.instance.isOriyaSelected = true;
                           } else {
@@ -423,6 +311,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => ChatWindow(
+                                  isFromHistory: false,
                                   isFirstTime: viewModel.isFirstTime,
                                   finishSession: (bool finishSession) {
                                     if (finishSession) {
@@ -445,6 +334,18 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
               ),
             ));
       },
+      child: Scaffold(
+        appBar: AppBar(
+          elevation: constants.appBarElevation,
+          backgroundColor: Colors.black,
+        ),
+        body: Container(
+          width: MediaQuery.of(context).size.width,
+          height: MediaQuery.of(context).size.height,
+          color: Colors.white,
+          child: constants.indicator,
+        ),
+      ),
     );
   }
 }

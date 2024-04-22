@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:gka/chat/view/history_view.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/chat/view/prompt_management_view.dart';
 import 'package:gka/chat/view/tool_inventory_view.dart';
+
 import 'package:provider/provider.dart';
 import 'package:firebase_database/firebase_database.dart';
 
 import '../../../utils/common_constants.dart' as constants;
-import '../../chat_window.dart';
-import '../../utils/app_state.dart';
+
 import '../view_model/chat_view_model.dart';
+import 'chat_history_view.dart';
 
 class DrawerWidget extends StatefulWidget {
   const DrawerWidget({Key? key}) : super(key: key);
@@ -81,8 +82,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                     ],
                   ),
                   onTap: () {
-                    Navigator.pop(context); // Close the drawer
-                    // Navigate to view history page
+                    // Navigator.pop(context);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -103,8 +103,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                     ],
                   ),
                   onTap: () {
-                    Navigator.pop(context); // Close the drawer
-                    // Navigate to prompt management page
+                    // Navigator.pop(context);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -121,12 +120,12 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                         style: constants.appBarListTileTextStyle,
                       ),
                       const Spacer(),
-                      Icon(Icons.inventory), // Icon for "Tool Inventory"
+                      const Icon(Icons.inventory), // Icon for "Tool Inventory"
                     ],
                   ),
                   onTap: () {
-                    Navigator.pop(context); // Close the drawer
-                    // Navigate to tool inventory page
+                    // Fluttertoast.showToast(msg: "Under Development");
+                    // Navigator.pop(context); // Close the drawer
                     Navigator.push(
                       context,
                       MaterialPageRoute(

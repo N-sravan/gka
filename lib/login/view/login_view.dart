@@ -1,14 +1,14 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/home/view/home_view.dart';
-import 'package:gka/login/model/ap_data_model.dart' as apdata;
 import 'package:gka/permissions/view/permissions_view.dart';
 import 'package:gka/utils/app_state.dart';
 import 'package:provider/provider.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 import '../../utils/network_utils.dart';
+import '../model/login_api_response_model.dart' as response;
 import '../view_model/login_view_model.dart';
-import '../../login/model/department_user_permission_response.dart' as response;
 
 class LoginScreenWidget extends StatefulWidget {
   const LoginScreenWidget({super.key});
@@ -24,66 +24,14 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  response.Meta data = response.Meta(
-    userId: "b7a7ca67-6fd3-4f2e-97c6-b9b84fdbd7da",
-    username: "kerala_ao",
-    firstName: "Aswin",
-    lastName: "Kumar",
-    email: "keralaao@gmail.com",
-    mobileNo: "+919889786767",
-    userDetails: response.UserDetails(
-      data: response.Data(
-          locType: "Panchayat",
-          location: response.Location(country: [
-            response.Country(
-                countryName: "INDIA",
-                countryUUID: "d6b37905-d2d3-4275-9317-d9b6f47cd783",
-                state: [
-                  response.State(
-                      stateName: "KERALA",
-                      stateUUID: "62d3dc99-5bc3-4303-8be1-d4fa1f7deee5",
-                      district: [
-                        response.District(
-                            districtName: "Palakkad",
-                            districtUUID:
-                                "1270f554-20cc-43ee-803e-1532f00e047c",
-                            block: [
-                              response.Block(
-                                  blockName: "Sreekrishnapuram",
-                                  blockUUID:
-                                      "db64691f-a7de-4e88-b5af-ecbe4dc6d191",
-                                  panchayat: [
-                                    response.Panchayat(
-                                        panchayatName: "Karimpuzha",
-                                        panchayatUUID:
-                                            "0ec4c732-5db9-4a3e-896a-f7baf24b2966")
-                                  ])
-                            ])
-                      ])
-                ])
-          ])),
-      scope: null,
-    ),
-    createdTs: null,
-    updatedTs: null,
-    lastLoginTs: "2024-03-11T10:45:55.398+00:00",
-    status: true,
-    title: null,
-    customerId: "931e0a8e-54e9-49f4-87db-d6e1fe350432",
-    customerName: "keralacustomer",
-    customAttributes: null,
-    is_mobile_app: true,
-  );
-
   @override
   void initState() {
     super.initState();
     viewModel = Provider.of<LoginViewModel>(context, listen: false);
+    _usernameController.text = "samal";
+    _passwordController.text = "agriwise@123";
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      /// This will start tracking the current network status and give us
-      /// information on the current status of the internet connection
       networkUtils.startTrackingConnection();
-      // viewModel.checkPermissionsAndNavigate(context);
     });
     _passwordVisible = false;
   }
@@ -268,7 +216,7 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                   0.0,
                                   constants.mediumPadding),
                               child: CircularProgressIndicator(
-                                color: Colors.black,
+                                color: Colors.blue,
                               ),
                             )
                           : Padding(
@@ -281,39 +229,48 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                 width: MediaQuery.of(context).size.width,
                                 height: constants.buttonHeight,
                                 child: ElevatedButton(
-                                  onPressed: () async {
-                                    if (_formKey.currentState!.validate()) {
-                                      /// Data entered in the form is valid, continue to login
-                                      String userId = _usernameController.text;
-                                      String password =
-                                          _passwordController.text;
-                                      if (userId.isNotEmpty &&
-                                          password.isNotEmpty) {
-                                        await viewModel.authenticate(
-                                            userId, password, context);
-                                      }
+                                    onPressed: () async {
+                                      if (_formKey.currentState!.validate()) {
+                                        /// Data entered in the form is valid, continue to login
+                                        String userId =
+                                            _usernameController.text;
+                                        String password =
+                                            _passwordController.text;
+                                        if (userId.isNotEmpty &&
+                                            password.isNotEmpty) {
+                                          String? fcmToken =
+                                              await FirebaseMessaging.instance
+                                                  .getToken();
+                                          bool content =
+                                              await viewModel.authenticate(
+                                                  userId, password, context);
+                                          if (fcmToken != null &&
+                                              fcmToken.isNotEmpty &&
+                                              content) {
+                                            AppState.instance.fcmToken =
+                                                fcmToken;
 
-                                      /*     if (userId == 'kerala_ao' &&
-                                          password == 'agri123') {
-                                        AppState.instance.userData = data;
-                                        AppState.instance.userUUID =
-                                            data.userId!;
-                                        print(
-                                            "AppState.instance.userUUID:::${AppState.instance.userUUID}");
-                                        Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) =>
-                                                    const HomeScreenWidget()));
-                                      }*/
-                                    }
-                                  },
-                                  style: constants.buttonStyle,
-                                  child: Text(
-                                    constants.loginString,
-                                    style: constants.white16W500,
-                                  ),
-                                ),
+                                            bool? result = await viewModel
+                                                .sendFcmToken(context);
+                                            if (result != null &&
+                                                result == true) {
+                                              Navigator.pushNamed(
+                                                  context, '/home');
+                                              Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          const HomeScreenWidget()));
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    style: constants.buttonStyle,
+                                    child: Text(
+                                      constants.loginString,
+                                      style: constants.white16W500,
+                                    )),
                               ),
                             ),
                     ),

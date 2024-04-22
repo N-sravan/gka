@@ -37,20 +37,12 @@ class _ChatHistoryViewState extends State<ChatHistoryView> {
           },
           child: Scaffold(
             appBar: AppBar(
+              centerTitle: true,
               backgroundColor: Colors.white,
               elevation: 0,
-              title: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Chat History',
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black,
-                    ),
-                  ),
-                ],
+              title:  Text(
+                  'Chat History',
+                  style: constants.black16W500
               ),
             ),
             body: Container(
@@ -62,7 +54,7 @@ class _ChatHistoryViewState extends State<ChatHistoryView> {
                       child: StreamBuilder(
                         stream: FirebaseDatabase.instance
                             .ref(
-                            "CHAT_BOT_TEST/${constants.odishaUUID}/${AppState.instance.userId}")
+                            "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.odishaUUID}/${AppState.instance.userId}")
                             .onValue,
                         builder: (context, snapshot) {
                           if (snapshot.connectionState ==
@@ -139,7 +131,7 @@ class _ChatHistoryViewState extends State<ChatHistoryView> {
     data.forEach((key, value) {
       listTiles.add(
         Padding(
-          padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
           child: Container(
             decoration: BoxDecoration(
               color: Colors.white,

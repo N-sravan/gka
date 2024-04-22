@@ -27,7 +27,7 @@ class HomeViewModel extends LoadingViewModel {
   bool isFirstTime = true;
   String? sessionId;
   List<String> selectionList = ['Internal LLM', 'External LLM'];
-  List<String> langList = ['English', 'Telugu'];
+  List<String> langList = ['English', 'Odia'];
   List<String>? modelList = [];
   List<model.Response>? modelResponseList = [];
   Map<String,String> modelNameUuidMapping = {};
@@ -161,7 +161,7 @@ class HomeViewModel extends LoadingViewModel {
       isFirstTime = true;
       notifyListeners();
       return uuid;*/
-      String url = constants.genAiUrl;
+      String url = constants.genAiBaseUrl + constants.createSessionEndpoint;
       String data = AppState.instance.userData;
       /* Content data = login.Content(
         project_uuid: '6f86292b-dd9a-4987-bb8f-c3940263b349',
@@ -225,7 +225,7 @@ class HomeViewModel extends LoadingViewModel {
     if (await networkUtils.hasActiveInternet()) {
       isLoading = true;
       try {
-        PromptResponseModel promptResponseModel = await repo.fetchPrompts(context);
+        GetAllPromptsResponseModel promptResponseModel = await repo.fetchPrompts(context);
 
         if (promptResponseModel.statusCode == 200 && promptResponseModel.result == true) {
           if(promptResponseModel.response !=null && promptResponseModel.response?.length !=0) {

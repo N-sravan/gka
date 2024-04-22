@@ -5,8 +5,6 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:gka/chat/model/prompt_response.dart';
-import 'package:gka/chat/repo/chat_repo.dart';
 import 'package:gka/chat_bubble.dart';
 import 'package:gka/shared/loading_view_model.dart';
 import 'package:gka/text_to_speech.dart';
@@ -23,7 +21,10 @@ import '../../login/model/login_api_response_model.dart' as login;
 import '../../message_bubble.dart';
 import '../../utils/network_utils.dart';
 import '../../utils/util.dart';
-import '../model/available_prompt_response.dart';
+import '../model/get_prompts_response.dart';
+import '../model/get_tools_response_model.dart';
+import '../model/prompt_submission_response.dart';
+import '../repo/chat_repo.dart';
 
 
 class ChatViewModel extends LoadingViewModel {
@@ -45,6 +46,18 @@ class ChatViewModel extends LoadingViewModel {
   TextEditingController chatController = TextEditingController();
   TextEditingController promptController = TextEditingController();
   TextEditingController intentController = TextEditingController();
+  TextEditingController toolNameController = TextEditingController();
+  TextEditingController descriptionController = TextEditingController();
+  TextEditingController sourceTypeController = TextEditingController();
+  TextEditingController projectNameController = TextEditingController();
+  TextEditingController urlController = TextEditingController();
+  TextEditingController variableNameController = TextEditingController();
+  TextEditingController isMandatoryController = TextEditingController();
+  TextEditingController valueController = TextEditingController();
+  TextEditingController defaultValueController = TextEditingController();
+  TextEditingController filterIsMandatoryController = TextEditingController();
+  TextEditingController filterVariableNameController = TextEditingController();
+  TextEditingController filterValueController = TextEditingController();
   bool speechToTextOn = false;
   bool isVoiceInitiated = false;
   File? capturedPhoto;
@@ -82,8 +95,11 @@ class ChatViewModel extends LoadingViewModel {
   // ValueNotifier<bool> showLoader = ValueNotifier<bool>(false);
   bool speechEnabled = false;
   Map<String, String> promptTemplateIntentMapping = {};
+
+  Map<String, String> toolNameDescriptionMapping = {};
   Map<String, String> modelNameUuidMapping = {};
   List<String>? modelList = [];
+  List<String>? toolUUIDs = [];
 
   clearData() {
     promptTemplateIntentMapping.clear();
@@ -102,87 +118,22 @@ class ChatViewModel extends LoadingViewModel {
     notifyListeners();
   }
 
-  Future<String?> createSession() async {
-    try {
-      String uuid = const Uuid().v4();
-      sessionId = uuid;
-      isFirstTime = true;
-      notifyListeners();
-      return uuid;
-      String url = constants.genAiUrl;
-      String data = AppState.instance.userData;
-      /* Content data = login.Content(
-        project_uuid: '6f86292b-dd9a-4987-bb8f-c3940263b349',
-        username: "APWRIMS",
-        userId: '44',
-        firstName: 'APWRIMS',
-        userDetailsJson: UserDetailsJson(
-          data: login.Data(
-            locType: 'mandal',
-            location: login.Location(state: [
-              login.State(
-                  stateName: 'Andhra Pradesh',
-                  stateUUID: "6f86292b-dd9a-4987-bb8f-c3940263b349",
-                  district: [
-                    login.District(
-                        districtName: 'Srikakulam',
-                        districtUUID: '00bb53a0-a27e-46c4-9016-fe9545766cb9',
-                        mandal: [
-                          login.Mandal(
-                              mandalName: 'BURJA',
-                              mndalUUID: '1437f9bf-207a-4d7e-bd9d-0af79b6ef8db')
-                        ]),
-                  ]),
-            ]),
-          ),
-        ),
-      );*/
-      print("Request data before encode::$data");
-      String requestBody = jsonEncode(data);
-      http.Response response = await http.post(
-        Uri.parse(url),
-        body: data,
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-      );
-      if (response.statusCode == 200) {
-        print("sessionId:: ${jsonDecode(response.body)["session_id"]}");
-        sessionId = jsonDecode(response.body)["session_id"];
-        isFirstTime = false;
-        notifyListeners();
-        return sessionId;
-      } else {
-        Fluttertoast.showToast(msg: "Couldn't create Session");
-      }
-    } catch (error, stacktrace) {
-      Fluttertoast.showToast(msg: "Couldn't create Session");
-      print("Error Stacktrace $error $stacktrace");
-    }
-    return null;
-  }
-
-  void updateFirstTimeValue() {
-    isFirstTime = true;
-    notifyListeners();
-  }
-
   Future? getAvailablePrompts(BuildContext context, String modelUUID) async {
     /// Checking for active internet connection
     if (await networkUtils.hasActiveInternet()) {
       isLoading = true;
       try {
-        PromptResponseModel promptResponseModel =
+        GetAllPromptsResponseModel getAllPromptsResponseModel =
         await repo.fetchPrompts(context, modelUUID);
         Map<String, String> promptTemplates = {};
         promptTemplateIntentMapping.clear();
-        if (promptResponseModel.statusCode == 200 &&
-            promptResponseModel.result == true) {
-          if (promptResponseModel.response != null &&
-              promptResponseModel.response?.length != 0) {
-            for (int i = 0; i < promptResponseModel.response!.length; i++) {
-              promptTemplates[promptResponseModel.response![i]
-                  .promptTemplate!] = promptResponseModel.response![i].intent!;
+        if (getAllPromptsResponseModel.statusCode == 200 &&
+            getAllPromptsResponseModel.result == true) {
+          if (getAllPromptsResponseModel.response != null &&
+              getAllPromptsResponseModel.response?.length != 0) {
+            for (int i = 0; i < getAllPromptsResponseModel.response!.length; i++) {
+              promptTemplates[getAllPromptsResponseModel.response![i]
+                  .promptTemplate!] = getAllPromptsResponseModel.response![i].intent!;
             }
             isLoading = false;
             print("weweweww promptTemplateIntentMapping ${promptTemplates}");
@@ -223,20 +174,22 @@ class ChatViewModel extends LoadingViewModel {
     if (await networkUtils.hasActiveInternet()) {
       isLoading = true;
       try {
-        PromptResponseModel promptResponseModel =
+        ToolInventoryResponseModel toolInventoryResponseModel =
         await repo.fetchTools(context);
 
-        if (promptResponseModel.statusCode == 200 &&
-            promptResponseModel.result == true) {
-          if (promptResponseModel.response != null &&
-              promptResponseModel.response?.length != 0) {
-            for (int i = 0; i < promptResponseModel.response!.length; i++) {
-              promptTemplateIntentMapping[promptResponseModel.response![i]
-                  .promptTemplate!] = promptResponseModel.response![i].intent!;
+        if (toolInventoryResponseModel.statusCode == 200 &&
+            toolInventoryResponseModel.result == true) {
+          if (toolInventoryResponseModel.response != null &&
+              toolInventoryResponseModel.response!.isNotEmpty) {
+            for (int i = 0;
+            i < toolInventoryResponseModel.response!.length;
+            i++) {
+              toolNameDescriptionMapping[toolInventoryResponseModel.response![i]
+                  .name!] = toolInventoryResponseModel.response![i].desc!;
             }
             isLoading = false;
             print(
-                "weweweww promptTemplateIntentMapping ${promptTemplateIntentMapping}");
+                "weweweww toolNameDescriptionMapping $toolNameDescriptionMapping");
             notifyListeners();
           }
         } else {
@@ -271,8 +224,8 @@ class ChatViewModel extends LoadingViewModel {
     if (await networkUtils.hasActiveInternet()) {
       isLoading = true;
       try {
-        ResponseModal responseModal =
-        await repo.createPrompt(context, prompt, intent,selectedPromptModelUUID);
+        PromptSubmissionResponse responseModal = await repo.createPrompt(
+            context, prompt, intent, selectedPromptModelUUID);
         if (responseModal.statusCode == 200 && responseModal.result == true) {
           isLoading = false;
           notifyListeners();
@@ -309,9 +262,9 @@ class ChatViewModel extends LoadingViewModel {
     if (await networkUtils.hasActiveInternet()) {
       isLoading = true;
       try {
-        ResponseModal responseModal =
+        PromptSubmissionResponse promptSubmissionResponse =
         await repo.updatePrompt(context, prompt, intent);
-        if (responseModal.statusCode == 200 && responseModal.result == true) {
+        if (promptSubmissionResponse.statusCode == 200 && promptSubmissionResponse.result == true) {
           isLoading = false;
           notifyListeners();
           return true;
@@ -391,5 +344,75 @@ class ChatViewModel extends LoadingViewModel {
       ));
     }
     return null;
+  }
+
+  Future<bool> deleteTool(BuildContext context) async {
+    /// Checking for active internet connection
+    if (await networkUtils.hasActiveInternet()) {
+      isLoading = true;
+      try {
+        int? result = await repo.deleteTools(toolUUIDs!);
+        if (result != null && result == true) {
+          isLoading = false;
+          notifyListeners();
+          return true;
+        } else {
+          isLoading = false;
+          notifyListeners();
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Something went wrong,Please try later'),
+          ));
+        }
+      } catch (e) {
+        isLoading = false;
+        notifyListeners();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(constants.genericErrorMsg),
+        ));
+        Util.instance.logMessage('Chat Model', 'Error : $e');
+      }
+    } else {
+      isLoading = false;
+      notifyListeners();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(constants.noNetworkAvailability),
+      ));
+    }
+    return false;
+  }
+
+  Future<bool> createOrUpdateTool(BuildContext context) async {
+    /// Checking for active internet connection
+    if (await networkUtils.hasActiveInternet()) {
+      isLoading = true;
+      try {
+        int? result = await repo.createOrUpdateTool();
+        if (result != null && result == true) {
+          isLoading = false;
+          notifyListeners();
+          return true;
+        } else {
+          isLoading = false;
+          notifyListeners();
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Something went wrong,Please try later'),
+          ));
+        }
+      } catch (e) {
+        isLoading = false;
+        notifyListeners();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(constants.genericErrorMsg),
+        ));
+        Util.instance.logMessage('Chat Model', 'Error : $e');
+      }
+    } else {
+      isLoading = false;
+      notifyListeners();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(constants.noNetworkAvailability),
+      ));
+    }
+    return false;
   }
 }

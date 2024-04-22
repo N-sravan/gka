@@ -1,17 +1,24 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
+import 'dart:ui';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 import 'package:avatar_glow/avatar_glow.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:gka/chat/view/drawer_widget.dart';
 import 'package:gka/services/api_provider.dart';
 import 'package:gka/utils/app_state.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:transliteration/response/transliteration_response.dart';
 import 'package:transliteration/transliteration.dart';
-import 'package:uuid/parsing.dart';
+import 'dart:io' as platform;
 import 'package:uuid/uuid.dart';
-import 'package:uuid/v4.dart';
 import '../utils/common_constants.dart' as constants;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -29,15 +36,16 @@ import 'main.dart';
 import 'message_bubble.dart';
 import 'utils/network_utils.dart';
 
+Timer? periodicTimer;
+
 class ChatWindow extends StatefulWidget {
-  const ChatWindow(
-      {Key? key,
-      required this.isFirstTime,
-      required this.finishSession,
-      required this.sessionId,
-        this.isFromHistory,
-      })
-      : super(key: key);
+  const ChatWindow({
+    Key? key,
+    required this.isFirstTime,
+    required this.finishSession,
+    required this.sessionId,
+    this.isFromHistory,
+  }) : super(key: key);
 
   final bool isFirstTime;
   final Function(bool finishSession) finishSession;
@@ -51,21 +59,22 @@ class ChatWindow extends StatefulWidget {
 class _ChatWindowState extends State<ChatWindow> {
   var scrollControllerListView = ScrollController();
   int prevChatLength = 0;
+  int prevChatLengthHistory = 0;
+  int c = 0;
 
   // TextToSpeech tts = TextToSpeech();
-  FlutterTts tts = FlutterTts();
   int responseCount = 1;
   String sessionId = "";
   String queryString = "";
-  String language = "";
-  String llmType = '';
   TextEditingController chatController = TextEditingController();
   bool speechToTextOn = false;
   bool isVoiceInitiated = false;
   File? capturedPhoto;
   int timerCounter = 0;
-  int loaderCounter = 0;
   List<MessageBubble> chatMessages = [];
+  TextToSpeech textToSpeech = TextToSpeech();
+  FlutterTts tts = FlutterTts();
+
   List<String> loaderMsgList = [
     'Please wait',
     'we are checking',
@@ -75,34 +84,36 @@ class _ChatWindowState extends State<ChatWindow> {
     'Gathering the data',
     'Just a moment'
   ];
+
+  List<String> teluguLoaderMsgList = [
+    'దయచేసి వేచి ఉండండి',
+    'ఒక్క క్షణం వేచి ఉండండి'
+    // 'సమాచారం శోధిస్తున్నాము'
+  ];
   TextToSpeechService? textToSpeechService;
   MessageBubble? textToSpeechMessageBubble;
   String summaryData = "";
   bool displayUserText = false;
   bool isLoadingResponse = false;
-
-  bool _toggleValue = false;
+  bool _toggleValue = true;
   OverlayEntry? overlayEntry;
-  late Timer periodicTimer;
+  Timer? periodicTimer;
   Timer? dataTimer;
   Timer? loadingTimer;
-  String autoSessionId = '';
-  int c=0;
+  String llmType = '';
+  String language = '';
 
   @override
   void initState() {
     super.initState();
     _initSpeech();
-    // tts.setRate(1);
   }
 
   @override
   void dispose() {
     // Dispose of the timer when the widget is removed
-    // periodicTimer.cancel();
     dataTimer?.cancel();
     loadingTimer?.cancel();
-    showLoader.value = false;
     super.dispose();
   }
 
@@ -122,13 +133,9 @@ class _ChatWindowState extends State<ChatWindow> {
       },
     );
 
-    //print("Available voices ${await tts.getVoice()}");
+    // print("Available voices ${await textToSpeech.getVoiceByLang('ta-IN')}");
     print("Available languages ${await tts.getLanguages}");
-    AppState.instance.isOriyaSelected
-        ? await tts.setLanguage("or-IN")
-        : await tts.setLanguage("en-US");
-
-    AppState.instance.isOriyaSelected ? language = 'odia' : language = 'english';
+    await tts.setLanguage("en-US");
   }
 
   /// Each time to start a speech recognition session
@@ -139,12 +146,8 @@ class _ChatWindowState extends State<ChatWindow> {
     }
 
     String langId = '';
-    AppState.instance.isOriyaSelected ? langId = 'or-IN' : langId = 'en-US';
-    // 34 for hindi
-    // 55 for Spanish
-
-    // 23 for Ipad English
-    //var selectedLocale = locales[5];
+    // AppState.instance.isOriyaSelected ? langId = 'or-IN' : langId = 'en-US';
+    AppState.instance.isOriyaSelected ? langId = 'te-IN' : langId = 'en-US';
 
     //for android tab english locale at 5
     print("_onSpeechResult_startListening");
@@ -156,8 +159,8 @@ class _ChatWindowState extends State<ChatWindow> {
           localeId: langId,
           partialResults: false,
           onResult: _onSpeechResult,
-          pauseFor: const Duration(seconds: 3),
-          listenFor: const Duration(seconds: 20),
+          pauseFor: const Duration(seconds: 5),
+          listenFor: const Duration(seconds: 35),
           cancelOnError: true);
     } catch (e) {
       print('EXCEPTIONKJSKFJK An exception occurred: $e');
@@ -182,9 +185,9 @@ class _ChatWindowState extends State<ChatWindow> {
           onSoundLevelChange: onSoundLevelChange,
           /*localeId: selectedLocale.localeId,*/
           partialResults: false,
-          onResult: _onSpeechResultForAutoMode,
-          pauseFor: const Duration(seconds: 3),
-          listenFor: const Duration(seconds: 15),
+          // onResult: _onSpeechResultForAutoMode,
+          pauseFor: const Duration(seconds: 5),
+          listenFor: const Duration(seconds: 35),
           cancelOnError: true);
     } catch (e) {
       print('EXCEPTIONKJSKFJK An exception occurred: $e');
@@ -217,42 +220,56 @@ class _ChatWindowState extends State<ChatWindow> {
   /// the platform returns recognized words.
   Future<void> _onSpeechResult(SpeechRecognitionResult result) async {
     print("_onSpeechResult ${result.recognizedWords}");
-    await updateChatControllerForSpeech(result.recognizedWords);
     DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.odishaUUID}/${AppState.instance.userUUID}/${widget.sessionId}");
-    !_toggleValue ? llmType = "internal" : llmType = "external";
-    print("llmType::${llmType}");
+        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.odishaUUID}/${AppState.instance.userId}/${widget.sessionId}");
 
-    TransliterationResponse? response = await Transliteration.transliterate(
+    /*  AppState.instance.isExternalLLM
+        ? llmType = 'external'
+        : llmType = 'internal';
+    AppState.instance.isOriyaSelected
+        ? language = 'odia'
+        : language = 'english';
+
+    await ref.push().set({
+      "isUser": true,
+      "message": result.recognizedWords,
+      "mediaUrl": '',
+      'llm_type': llmType,
+      'language': language
+    });*/
+
+/*    TransliterationResponse? response = await Transliteration.transliterate(
         result.recognizedWords, Languages.ORIYA);
     final translatedText = response?.transliterationSuggestions[0].toString();
-    print("translated::$translatedText");
+    String? message = '';
+    print("translated::$translatedText");*/
+
     AppState.instance.isOriyaSelected
-        ? await ref.push().set({
-            "isUser": true,
-            "message": translatedText,
-            "mediaUrl": '',
-            "llm_type": llmType,
-            'language': 'odia'
-          })
-        : await ref.push().set({
-            "isUser": true,
-            "message": result.recognizedWords,
-            "mediaUrl": '',
-            "llm_type": llmType,
-            'language': 'english'
-          });
+        ? language = 'telugu'
+        : language = 'english';
+
+/*    AppState.instance.isOriyaSelected
+        ? message = translatedText
+        : message = result.recognizedWords;*/
+
+    print("session id::${sessionId}");
+    await ref.push().set({
+      "isUser": true,
+      "message": result.recognizedWords,
+      "mediaUrl": '',
+      'language': language,
+      'model_uuid': AppState.instance.modelUUID
+    });
 
     bool active = _speechToText.isListening;
     listeningActive.value = active;
   }
 
-  Future<void> _onSpeechResultForAutoMode(
+/*  Future<void> _onSpeechResultForAutoMode(
       SpeechRecognitionResult result) async {
     print("_onSpeechResultForAutoMode ${result.recognizedWords}");
-    print("_onSpeechResultForAutoMode autoSessionId ${autoSessionId}");
     DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.odishaUUID}/${AppState.instance.userUUID}/${autoSessionId}");
+        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.odishaUUID}/${AppState.instance.userId}/${autoSessionId}");
 
     if (result.recognizedWords.toLowerCase() == "hello" && !isVoiceInitiated) {
       await _speechToText.stop();
@@ -267,22 +284,22 @@ class _ChatWindowState extends State<ChatWindow> {
         isVoiceInitiated &&
         result.recognizedWords.toLowerCase() != 'hello') {
       await ref.push().set({"isUser": true, "message": result.recognizedWords});
-      await ref.push().set({"isUser": false, "message": "response"});
     }
-
     bool active = _speechToText.isListening;
+    tts.stop();
     listeningActive.value = active;
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {
+    print("widget.isFromHistory:::${widget.isFromHistory}");
     return WillPopScope(
       onWillPop: () async {
         bool? result = await showSessionDialog();
         if (result != null && result) {
           tts.stop();
-          _speechToText.stop();
-          // periodicTimer.cancel();
+          await _speechToText.stop();
+          periodicTimer?.cancel();
           Navigator.pop(context);
         }
         return false;
@@ -290,50 +307,71 @@ class _ChatWindowState extends State<ChatWindow> {
       child: Scaffold(
         drawer: const DrawerWidget(),
         appBar: AppBar(
+          leading: (widget.isFromHistory != null && widget.isFromHistory!)
+              ? IconButton(
+            onPressed: () async {
+              await tts.stop();
+              Navigator.pop(context);
+            },
+            icon: Icon(Icons.arrow_back),
+          )
+              : null,
           centerTitle: true,
           backgroundColor: Colors.white,
           elevation: 0,
           title: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text(
-                'GoWater Bot',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black,
-                ),
-              ),
-              const Spacer(), // Add spacing between title and toggle
               Text(
-                _toggleValue ? 'External LLM' : 'Internal LLM',
+                'Kaleswaram Bot',
+                style: constants.black16W500,
+              ),
+              const Spacer(),
+              Text(
+                _toggleValue ? 'On-demand Mode' : 'listening mode',
                 style: TextStyle(
-                  fontSize: 12,
-                  color: _toggleValue ? Colors.black : Colors.green,
+                  fontSize: 10,
+                  color: _toggleValue ? Colors.green : Colors.grey,
                 ),
               ),
-
+              // const Spacer(),
               IconButton(
                 onPressed: () async {
                   setState(() {
                     _toggleValue = !_toggleValue; // Toggle the value
                   });
                   print("wewewewewew _toggleValue::$_toggleValue");
-                  /* if (!_toggleValue) {
-                    autoSessionId= Uuid().v4();
-                    periodicTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
-                      await initializeSpeechToText(autoSessionId);
-                    });
-                  } else {
-                    await _speechToText.stop();
+                  if (!_toggleValue) {
+                    // If switching to Always listening mode
+                    // autoSessionId = const Uuid().v4();
                     await tts.stop();
-                    periodicTimer.cancel();
-                  }*/
+                    await initializeService();
+
+                    /*   periodicTimer = Timer.periodic(
+                      const Duration(seconds: 5),
+                      (timer) async {
+                        // await initializeSpeechToText(autoSessionId!);
+                        await initializeService();
+                      },
+                    );*/
+                  } else {
+                    listeningActive.value = false; // Stop speech recognition
+                    await tts.stop();
+                    final service = FlutterBackgroundService();
+                    var isRunning = await service.isRunning();
+                    if (isRunning) {
+                      service.invoke("stopService");
+                    }
+                    await _speechToText.stop(); // Stop speech recognition
+                    if (periodicTimer != null && periodicTimer!.isActive) {
+                      periodicTimer?.cancel();
+                    }
+                  }
                 },
                 icon: Icon(
-                  !_toggleValue ? Icons.toggle_on : Icons.toggle_off,
-                  color: !_toggleValue ? Colors.green : Colors.black,
-                  size: 30,
+                  _toggleValue ? Icons.toggle_on : Icons.toggle_off,
+                  color: _toggleValue ? Colors.green : Colors.grey,
+                  size: 25,
                 ),
               ),
             ],
@@ -343,37 +381,42 @@ class _ChatWindowState extends State<ChatWindow> {
           color: Colors.grey[100],
           child: Column(
             children: [
-              Expanded(
+              _toggleValue
+                  ? Expanded(
                 child: StreamBuilder(
                   stream: FirebaseDatabase.instance
                       .ref(
-                          "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.odishaUUID}/${AppState.instance.userUUID}/${widget.sessionId}")
+                      "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.odishaUUID}/${AppState.instance.userId}/${widget.sessionId}")
                       .onValue,
                   builder: (context, AsyncSnapshot snapshot) {
                     if (snapshot.hasData && snapshot.data != null) {
                       List<ChatBubble> messageList = [];
-                      var data =
-                          (snapshot.data! as DatabaseEvent).snapshot.value ??
-                              {};
+                      var data = (snapshot.data! as DatabaseEvent)
+                          .snapshot
+                          .value ??
+                          {};
                       print("DATAFJLDLFHGLD $data");
                       data = data as Map<dynamic, dynamic>;
                       dataTimer?.cancel();
                       loadingTimer?.cancel();
-                      var sortedByKeyMap = Map.fromEntries(data.entries.toList()
-                        ..sort((e1, e2) => e1.key.compareTo(e2.key)));
+                      var sortedByKeyMap = Map.fromEntries(
+                          data.entries.toList()
+                            ..sort((e1, e2) => e1.key.compareTo(e2.key)));
                       sortedByKeyMap.forEach((key, value) {
                         if (key != "cart") {
-                          final datalast = Map<String, dynamic>.from(value);
+                          final datalast =
+                          Map<String, dynamic>.from(value);
                           print("SORTED MESSAGES ${datalast['message']}");
-                          print("Session Id ${widget.sessionId}");
+                          print("Session ID ${widget.sessionId}");
                           messageList.add(ChatBubble(
-                            text: datalast['message'],
+                            text: datalast['message'] ?? '',
                             isUser: datalast['isUser'],
                             imageUrl: datalast['mediaUrl'],
                             logMessage: datalast['log'] ?? '',
                           ));
                         }
                       });
+
                       if (widget.isFromHistory != null &&
                           widget.isFromHistory == true &&
                           c == 0) {
@@ -391,42 +434,64 @@ class _ChatWindowState extends State<ChatWindow> {
                         if (messageList.isNotEmpty &&
                             !messageList[messageList.length - 1].isUser &&
                             messageList.length > prevChatLength) {
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                          WidgetsBinding.instance
+                              .addPostFrameCallback((_) {
                             showLoader.value = false;
                           });
-                          tts.speak(messageList[messageList.length - 1].text);
+                          tts.speak(
+                              messageList[messageList.length - 1].text);
                         }
-                      }
-                      prevChatLength = messageList.length;
-                      if (messageList.isNotEmpty &&
-                          messageList[messageList.length - 1].isUser) {
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          showLoader.value = true;
-                        });
+                        prevChatLength = messageList.length;
+                        if (messageList.isNotEmpty &&
+                            messageList[messageList.length - 1].isUser) {
+                          WidgetsBinding.instance
+                              .addPostFrameCallback((_) {
+                            showLoader.value = true;
+                          });
+                        }
 
-                        loadingTimer = Timer(const Duration(seconds: 4), () {
-                          int randomIndex =
-                              Random().nextInt(loaderMsgList.length);
-                          if (showLoader.value) {
-                            tts.speak(loaderMsgList[randomIndex]);
-                          }
-                        });
+                        AppState.instance.isOriyaSelected
+                            ? loadingTimer =
+                            Timer(const Duration(seconds: 4), () {
+                              int randomIndex = Random()
+                                  .nextInt(teluguLoaderMsgList.length);
+                              if (showLoader.value) {
+                                tts.speak(
+                                    teluguLoaderMsgList[randomIndex]);
+                              }
+                            })
+                            : loadingTimer =
+                            Timer(const Duration(seconds: 4), () {
+                              int randomIndex = Random()
+                                  .nextInt(loaderMsgList.length);
+                              if (showLoader.value) {
+                                tts.speak(loaderMsgList[randomIndex]);
+                              }
+                            });
 
-                        dataTimer = Timer(const Duration(seconds: 15), () {
-                          print("timerCounter::$timerCounter");
-                          if (showLoader.value) {
-                            /* messageList.add(ChatBubble(
+                        dataTimer =
+                            Timer(const Duration(seconds: 100), () async {
+                              print("timerCounter::$timerCounter");
+                              if (showLoader.value) {
+                                DatabaseReference ref =
+                                FirebaseDatabase.instance.ref(
+                                    "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.odishaUUID}/${AppState.instance.userId}/${widget.sessionId}");
+                                /* messageList.add(ChatBubble(
                               text: "Data Not Found",
-                              isUser: false,
+                              isUser: fal
+                              se,
                               imageUrl: "",
                               logMessage: '',
                             ));*/
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              showLoader.value = false;
+                                WidgetsBinding.instance
+                                    .addPostFrameCallback((_) {
+                                  showLoader.value = false;
+                                });
+                                AppState.instance.isOriyaSelected
+                                    ? tts.speak("సమాచారం దొరకట్లేదు")
+                                    : tts.speak("Data Not found");
+                              }
                             });
-                            tts.speak("Data Not found");
-                          }
-                        });
                       }
 
                       return ListView.builder(
@@ -438,8 +503,8 @@ class _ChatWindowState extends State<ChatWindow> {
                           if (index < messageList.length) {
                             return Padding(
                               padding: const EdgeInsets.all(4.0),
-                              child:
-                                  messageList[messageList.length - 1 - index],
+                              child: messageList[
+                              messageList.length - 1 - index],
                             );
                           }
                           return null;
@@ -450,8 +515,10 @@ class _ChatWindowState extends State<ChatWindow> {
                     return const SizedBox();
                   },
                 ),
-              ),
-              Padding(
+              )
+                  : const SizedBox(),
+              _toggleValue
+                  ? Padding(
                 padding: const EdgeInsets.only(left: 80.0),
                 child: Align(
                   alignment: AlignmentDirectional.centerStart,
@@ -469,8 +536,9 @@ class _ChatWindowState extends State<ChatWindow> {
                     },
                   ),
                 ),
-              ),
-              Padding(
+              )
+                  : const SizedBox(),
+              /*Padding(
                 padding: const EdgeInsets.only(bottom: 30.0),
                 child: Align(
                   alignment: Alignment.bottomCenter,
@@ -491,11 +559,37 @@ class _ChatWindowState extends State<ChatWindow> {
                     },
                   ), // your widget would go here
                 ),
-              ),
-             /* Padding(
-                padding: const EdgeInsets.all(20),
-                child: bottomBar(),
               ),*/
+              _toggleValue
+                  ? Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 30.0),
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: ValueListenableBuilder(
+                        valueListenable: listeningActive,
+                        builder: (context, value, _) {
+                          return AvatarGlow(
+                            animate: value,
+                            glowColor: Colors.purple,
+                            child: FloatingActionButton(
+                              onPressed:
+                              // If not yet listening for speech start, otherwise stop
+                              !value ? _startListening : _stopListening,
+                              tooltip: 'Listen',
+                              child:
+                              Icon(!value ? Icons.mic_off : Icons.mic),
+                            ),
+                          );
+                        },
+                      ), // your widget would go here
+                    ),
+                  ))
+                  : const Padding(
+                padding: EdgeInsets.all(20),
+                child: SizedBox(),
+              )
             ],
           ),
         ),
@@ -509,8 +603,9 @@ class _ChatWindowState extends State<ChatWindow> {
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
       child: Row(
         children: [
-          /*SpeechToTextWidget(updateSpeech: updateChatControllerForSpeech, localeId: "en-US"),*/
-          Padding(
+          SpeechToTextWidget(
+              updateSpeech: updateChatControllerForSpeech, localeId: "en-US"),
+          /*Padding(
             padding: const EdgeInsets.all(4.0),
             child: Align(
               alignment: Alignment.bottomCenter,
@@ -529,7 +624,7 @@ class _ChatWindowState extends State<ChatWindow> {
                 },
               ),
             ),
-          ),
+          ),*/
           CameraWidget(saveCapturedPhoto: saveCapturedPhoto),
           Expanded(
             child: Stack(
@@ -580,7 +675,7 @@ class _ChatWindowState extends State<ChatWindow> {
                               imageUrl = await submitImage(
                                   context, capturedPhoto!.path);
                             }
-                            await insertDataIntoDb(
+                            await insertImageDataIntoDb(
                                 imageUrl, chatController.text);
                           }
                         },
@@ -660,17 +755,6 @@ class _ChatWindowState extends State<ChatWindow> {
     }*/
   }
 
-  updateChatControllerWithPhotoName(String name) {
-    chatController.text = name;
-    setState(() {});
-  }
-
-  /* createQueryString() {
-    queryString = chatController.text;
-    chatController.clear();
-    setState(() {});
-  }*/
-
   addUserUploadedImageToChat() {
     MessageBubble messageBubble = MessageBubble(
       image: capturedPhoto,
@@ -683,76 +767,6 @@ class _ChatWindowState extends State<ChatWindow> {
     // chatController.clear();
     setState(() {});
   }
-
-  /*Future uploadImage() async {
-    MessageBubble messageBubble = MessageBubble(
-      user: false,
-      textToSpeechEnabled: false,
-      isResponseLoading: true,
-      isTextToSpeechRunning: false,
-    );
-    chatMessages.add(messageBubble);
-    setState(() {});
-    if (await networkUtils.hasActiveInternet()) {
-      try {
-        Map<String, String> requestMap = {
-          "session_id": sessionId,
-        };
-        if (capturedPhoto != null) {
-          File? compressedFile;
-          final bytes = capturedPhoto!.readAsBytesSync().lengthInBytes;
-          final kb = bytes / 1024;
-          final imageSize = kb / 1024;
-          if (imageSize > 1) {
-            compressedFile = await FlutterNativeImage.compressImage(
-              capturedPhoto!.path,
-              quality: 50,
-            );
-          } else {
-            compressedFile = capturedPhoto;
-          }
-          // dynamic response = await imageUpload(compressedFile!, requestMap);
-          String responseMessage = "Hello";
-          // if (response.containsKey("pest_name")) {
-          //   responseMessage = response["pest_name"];
-          // } else if (response.containsKey("query")) {
-          //   responseMessage = response["query"];
-          // }
-          MessageBubble messageBubble = chatMessages.last;
-          messageBubble.message = responseMessage;
-          messageBubble.isResponseLoading = false;
-          messageBubble.textToSpeechEnabled = true;
-          capturedPhoto = null;
-          textToSpeechMessageBubble = messageBubble;
-          setState(() {});
-          initAndPlayText();
-        }
-      } catch (e) {
-        developer.log(
-          'Upload Image',
-          name: 'GoWater Bot',
-          error: e.toString(),
-        );
-      }
-    } else {
-      Fluttertoast.showToast(
-          msg: 'Please check your network connection, no internet available');
-    }
-  }*/
-
-  /*initAndPlayText() async {
-    int? playStatus;
-    String language = "en-US";
-    TextToSpeechService.instance
-        .initTts(textToSpeechMessageBubble!.message!, language);
-    textToSpeechMessageBubble!.isTextToSpeechRunning = true;
-    setState(() {});
-    playStatus = await TextToSpeechService.instance.speak();
-    if (playStatus != null && playStatus == 1) {
-      textToSpeechMessageBubble!.isTextToSpeechRunning = false;
-      setState(() {});
-    }
-  }*/
 
   addUserMessageToChat(String message) {
     MessageBubble messageBubble = MessageBubble(
@@ -817,26 +831,132 @@ class _ChatWindowState extends State<ChatWindow> {
     );
   }
 
-  Future<void> insertDataIntoDb(String? imageUrl, String text) async {
+  Future<void> insertImageDataIntoDb(String? imageUrl, String text) async {
     DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.odishaUUID}/${AppState.instance.userUUID}/${widget.sessionId}");
-    !_toggleValue ? llmType = "internal" : llmType = "external";
-    await ref.push().set({
-      "isUser": true,
-      "message": text,
-      "mediaUrl": imageUrl,
-      "llm_type": llmType,
-      "language" : language
-    });
+        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.odishaUUID}/${AppState.instance.userId}/${widget.sessionId}");
+    await ref
+        .push()
+        .set({"isUser": true, "message": text, "mediaUrl": imageUrl});
     chatController.clear();
     capturedPhoto = null;
     setState(() {});
   }
 
+  Future<void> insertDataIntoDb(String text) async {
+    DatabaseReference ref = FirebaseDatabase.instance.ref(
+        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.odishaUUID}/${AppState.instance.userId}/${widget.sessionId}");
+    await ref.push().set({"isUser": true, "message": text});
+    chatController.clear();
+    capturedPhoto = null;
+    setState(() {});
+  }
+
+  Future<void> initializeService() async {
+    final service = FlutterBackgroundService();
+
+    /// OPTIONAL, using custom notification channel id
+    const AndroidNotificationChannel channel = AndroidNotificationChannel(
+      'my_foreground',
+      'MY FOREGROUND SERVICE',
+      description: 'This channel is used for important notifications.',
+      importance: Importance.low,
+    );
+
+    final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
+
+    if (platform.Platform.isAndroid || platform.Platform.isAndroid) {
+      await flutterLocalNotificationsPlugin.initialize(
+        const InitializationSettings(
+          iOS: DarwinInitializationSettings(),
+          android: AndroidInitializationSettings('ic_bg_service_small'),
+        ),
+      );
+    }
+
+    await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(channel);
+
+    await service.configure(
+      androidConfiguration: AndroidConfiguration(
+        // this will be executed when app is in foreground or background in separated isolate
+        onStart: onStart,
+        // auto start service
+        autoStart: true,
+        isForegroundMode: true,
+        notificationChannelId: 'my_foreground',
+        // initialNotificationTitle: 'AWESOME SERVICE',
+        // initialNotificationContent: 'Initializing',
+        foregroundServiceNotificationId: 888,
+      ),
+      iosConfiguration: IosConfiguration(
+        autoStart: true,
+        // onForeground: onStart,
+        onBackground: null,
+      ),
+    );
+  }
+
   Future<void> initializeSpeechToText(String sessionId) async {
     print(("startListeningToHello: starting listening"));
+    await Firebase.initializeApp(
+        options: const FirebaseOptions(
+          apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
+          appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
+          messagingSenderId: '1062998944432',
+          projectId: 'apwrims---chatbot',
+          storageBucket: 'apwrims---chatbot.appspot.com',
+          iosBundleId: 'com.vassar.apwrimschatbot',
+        ));
 
-    bool available = await speechToText.initialize(
+    bool available = await _speechToText.initialize(
+      onStatus: (status) async {
+        print('Status: $status');
+        /*  if (status == 'notListening') {
+        await startListeningBg();
+      }*/
+      },
+      onError: (error) async {
+        print('Error: $error');
+        // await startListeningBg();
+      },
+    );
+    print(
+        "wewewewewew AppState.instance.triggeredWord ::  ${AppState.instance.triggeredWord}");
+    print("wewewewewew session $sessionId");
+    if (available && AppState.instance.triggeredWord == "") {
+      // AppState.instance.triggeredWord = await startListenings(sessionId);
+    }
+
+    if (available && AppState.instance.triggeredWord.isNotEmpty) {
+      // await startListeningToYes(sessionId, AppState.instance.triggeredWord);
+    }
+
+/*  bool initialized = await speechToText.initialize(
+    onStatus: (status) async {
+      print('Status: $status');
+      print('sessionId: $sessionId');
+      if (status == 'notListening') {
+        //await speechToText.stop();
+        // await startListenings(sessionId);
+      }
+    },
+    onError: (error) async {
+      print('Error: $error');
+      //await speechToText.stop();
+      await startListenings(sessionId);
+    },
+  );
+
+  await startListenings(sessionId);*/
+  }
+
+/*Future<void> initializeSpeechToText(String sessionId) async {
+    print(("startListeningToHello: starting listening"));
+
+    bool available = await _speechToText.initialize(
       onStatus: (status) async {
         print('Status: $status');
       },
@@ -847,5 +967,315 @@ class _ChatWindowState extends State<ChatWindow> {
     if (available) {
       await _startListeningForAutoMode();
     }
+  }*/
+}
+
+@pragma('vm:entry-point')
+onStart(ServiceInstance service) async {
+  String autoSessionId = const Uuid().v4();
+  // Only available for flutter 3.0.0 and later
+  DartPluginRegistrant.ensureInitialized();
+
+  SharedPreferences preferences = await SharedPreferences.getInstance();
+  await preferences.setString("hello", "world");
+
+  String sessionId = const Uuid().v4();
+
+  /// OPTIONAL when use custom notification
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+  FlutterLocalNotificationsPlugin();
+
+  if (service is AndroidServiceInstance) {
+    service.on('setAsForeground').listen((event) {
+      service.setAsForegroundService();
+    });
+
+    service.on('setAsBackground').listen((event) {
+      service.setAsBackgroundService();
+    });
+  }
+
+  service.on('stopService').listen((event) {
+    service.stopSelf();
+  });
+
+  // bring to foreground
+  periodicTimer = Timer.periodic(const Duration(seconds: 10), (timer) async {
+    if (service is AndroidServiceInstance) {
+      if (await service.isForegroundService()) {
+        /// the notification id must be equals with AndroidConfiguration when you call configure() method.
+        /*      flutterLocalNotificationsPlugin.show(
+          888,
+          'COOL SERVICE',
+          'Awesome ${DateTime.now()}',
+          const NotificationDetails(
+            android: AndroidNotificationDetails(
+              'my_foreground',
+              'MY FOREGROUND SERVICE',
+              icon: 'ic_bg_service_small',
+              ongoing: true,
+            ),
+          ),
+        );*/
+
+        /* // if you don't using custom notification, uncomment this
+        service.setForegroundNotificationInfo(
+          title: "Agri Data",
+          content: "Updated at ${DateTime.now()}",
+        );*/
+      }
+    }
+
+    /// you can see this log in logcat
+    print('FLUTTER BACKGROUND SERVICE: ${DateTime.now()}');
+
+    // test using external plugin
+    final deviceInfo = DeviceInfoPlugin();
+    String? device;
+    if (platform.Platform.isAndroid) {
+      final androidInfo = await deviceInfo.androidInfo;
+      device = androidInfo.model;
+    }
+
+    if (platform.Platform.isIOS) {
+      final iosInfo = await deviceInfo.iosInfo;
+      device = iosInfo.model;
+    }
+
+    service.invoke(
+      'update',
+      {
+        "current_date": DateTime.now().toIso8601String(),
+        "device": device,
+      },
+    );
+    if (autoSessionId != null && autoSessionId!.isNotEmpty) {
+      await initializeSpeechToText(autoSessionId!);
+    } else {
+      Fluttertoast.showToast(msg: "Something went wrong, please try again");
+    }
+  });
+}
+
+Future<void> initializeSpeechToText(String sessionId) async {
+  print(("startListeningToHello: starting listening"));
+  await Firebase.initializeApp(
+      options: const FirebaseOptions(
+        apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
+        appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
+        messagingSenderId: '1062998944432',
+        projectId: 'apwrims---chatbot',
+        storageBucket: 'apwrims---chatbot.appspot.com',
+        iosBundleId: 'com.vassar.apwrimschatbot',
+      ));
+
+  bool available = await speechToText.initialize(
+    onStatus: (status) async {
+      print('Status: $status');
+      /*  if (status == 'notListening') {
+        await startListeningBg();
+      }*/
+    },
+    onError: (error) async {
+      print('Error: $error');
+      // await startListeningBg();
+    },
+  );
+  print(
+      "wewewewewew AppState.instance.triggeredWord ::  ${AppState.instance.triggeredWord}");
+  print("wewewewewew session $sessionId");
+  if (available && AppState.instance.triggeredWord == "") {
+    AppState.instance.triggeredWord = await startListenings(sessionId);
+  }
+
+  if (available && AppState.instance.triggeredWord.isNotEmpty) {
+    await startListeningToYes(sessionId, AppState.instance.triggeredWord);
   }
 }
+
+Future<void> startListeningToYes(String sessionId, String word) async {
+  print("startListeningToYes");
+  print("wewewewewew trigger word :: ${AppState.instance.triggeredWord}");
+  await speechToText.stop();
+  print("wewewewewew speechToText.isListening:: ${speechToText.isListening}");
+  DatabaseReference ref = FirebaseDatabase.instance.ref(
+      "CHAT_BOT_CHANGELOG/${constants.odishaUUID}/${AppState.instance.userId}/${sessionId}");
+  SpeechRecognitionResult result;
+
+  await speechToText.listen(
+      partialResults: false,
+      onResult: (data) async {
+        result = data;
+        print("wewewewewew 111111-input::${result.recognizedWords}");
+        if (result.recognizedWords.isNotEmpty &&
+            result.recognizedWords.toLowerCase() == "yes") {
+          print("wewewewewew 111111-yes::${result.recognizedWords}");
+          await speechToText.stop();
+          await ref.push().set({
+            "isUser": true,
+            "event_name": 'CONTINUOUS_LISTEN_MODE',
+            "trigger_word": '${AppState.instance.triggeredWord}'
+          });
+          print("111111-pushed");
+          /* await ref.push().set({
+            "isUser": false,
+            "event_name": 'CONTINUOUS_LISTEN_MODE',
+            "changelog": 'No Change in $AppState.instance.triggeredWord Data'
+          });*/
+          Future.delayed(const Duration(seconds: 2), () async {
+            print(
+                "wewewewewe AppState.instance.triggeredWord after completion::${AppState.instance.triggeredWord}");
+            await ref.orderByKey().limitToLast(1).once().then((event) async {
+              DataSnapshot snapshot = event.snapshot;
+              print("values::${snapshot.value}");
+              if (snapshot.value != null) {
+                dynamic values = snapshot.value;
+                values.forEach((key, value) async {
+                  if (!value['isUser']) {
+                    String responseMessage = value['changelog'] ?? '';
+                    AppState.instance.triggeredWord = "";
+                    await tts.speak(responseMessage);
+                  }
+                });
+              }
+            });
+          });
+        }
+      });
+  // await startListenings(sessionId);
+}
+
+
+
+/*Future<String> startListenings(String sessionId) async {
+  int i = 0;
+  DatabaseReference ref = FirebaseDatabase.instance
+      .ref("CHAT_BOT_CHANGELOG/${constants.odishaUUID}/${AppState.instance.userId}/${sessionId}");
+  SpeechRecognitionResult result;
+
+  await speechToText.listen(
+    partialResults: false,
+    onResult: (data) async {
+      result = data;
+      print("111111-input::${result.recognizedWords}");
+
+      if (result.recognizedWords.isNotEmpty &&
+          result.recognizedWords.toLowerCase().contains('rainfall')) {
+        await speechToText.stop();
+        i++;
+        AppState.instance.triggeredWord = "RAINFALL";
+        await tts.speak('Would you like to know the rainfall data');
+      }
+      if (result.recognizedWords.isNotEmpty &&
+          result.recognizedWords.toLowerCase().contains('reservoir')) {
+        await speechToText.stop();
+        i++;
+        AppState.instance.triggeredWord = "RESERVOIR";
+        await tts.speak('Would you like to know reservoir data');
+      }
+      if (result.recognizedWords.isNotEmpty &&
+          result.recognizedWords.toLowerCase().contains('groundwater')) {
+        await speechToText.stop();
+        i++;
+        AppState.instance.triggeredWord = "GROUNDWATER";
+        await tts.speak('Would you like to know groundwater data');
+      }
+      if (result.recognizedWords.isNotEmpty &&
+          result.recognizedWords.toLowerCase().contains('soil moisture')) {
+        await speechToText.stop();
+        i++;
+        AppState.instance.triggeredWord = "SOIL_MOISTURE";
+        await tts.speak('Would you like to know soil moisture data');
+      }
+
+      */ /* Future.delayed(const Duration(seconds: 10),() async {
+        await startListeningToYes(sessionId, AppState.instance.triggeredWord);
+      });*/ /*
+*/ /*
+      if (result.recognizedWords.toLowerCase() == 'yes') {
+        await ref.push().set({
+          "isUser": true,
+          "event_name": 'CONTINUOUS_LISTEN_MODE',
+          "trigger_word": AppState.instance.triggeredWord
+        });
+
+        await ref.push().set({
+          "isUser": false,
+          "event_name": 'CONTINUOUS_LISTEN_MODE',
+          "changelog": 'No Change in $AppState.instance.triggeredWord Data'
+        });
+        await ref.orderByKey().limitToLast(1).once().then((event) async {
+          DataSnapshot snapshot = event.snapshot;
+          print("values::${snapshot.value}");
+          if (snapshot.value != null) {
+            dynamic values = snapshot.value;
+            values.forEach((key, value) async {
+              if (value['isUser'] == false) {
+                String responseMessage = value['changelog'] ?? '';
+                await tts.speak(responseMessage);
+              }
+            });
+          }
+        });
+        // speechStatus.value = SpeechStatus.listening;
+        await speechToText.stop();
+        Future.delayed(const Duration(seconds: 5), () async {
+          await startListenings(sessionId);
+        });
+      }*/ /*
+    },
+  );
+  return AppState.instance.triggeredWord;
+}
+
+Future<void> startListeningToYes(String sessionId, String word) async {
+  print("startListeningToYes");
+  print("wewewewewew trigger word :: ${AppState.instance.triggeredWord}");
+  await speechToText.stop();
+  print("wewewewewew speechToText.isListening:: ${speechToText.isListening}");
+  DatabaseReference ref = FirebaseDatabase.instance
+      .ref("CHAT_BOT_CHANGELOG/${constants.odishaUUID}/${AppState.instance.userId}/${sessionId}");
+  SpeechRecognitionResult result;
+
+  await speechToText.listen(
+      partialResults: false,
+      onResult: (data) async {
+        result = data;
+        print("wewewewewew 111111-input::${result.recognizedWords}");
+        if (result.recognizedWords.isNotEmpty &&
+            result.recognizedWords.toLowerCase() == "yes") {
+          print("wewewewewew 111111-yes::${result.recognizedWords}");
+          await speechToText.stop();
+          await ref.push().set({
+            "isUser": true,
+            "event_name": 'CONTINUOUS_LISTEN_MODE',
+            "trigger_word": '${AppState.instance.triggeredWord}'
+          });
+          print("111111-pushed}");
+          */ /* await ref.push().set({
+            "isUser": false,
+            "event_name": 'CONTINUOUS_LISTEN_MODE',
+            "changelog": 'No Change in $AppState.instance.triggeredWord Data'
+          });*/ /*
+          Future.delayed(const Duration(seconds: 2), () async {
+            print(
+                "wewewewewe AppState.instance.triggeredWord after completion::${AppState.instance.triggeredWord}");
+            await ref.orderByKey().limitToLast(1).once().then((event) async {
+              DataSnapshot snapshot = event.snapshot;
+              print("values::${snapshot.value}");
+              if (snapshot.value != null) {
+                dynamic values = snapshot.value;
+                values.forEach((key, value) async {
+                  if (value['isUser'] == false) {
+                    String responseMessage = value['changelog'] ?? '';
+                    AppState.instance.triggeredWord = "";
+                    await tts.speak(responseMessage);
+                  }
+                });
+              }
+            });
+          });
+        }
+      });
+  // await startListenings(sessionId);
+}*/

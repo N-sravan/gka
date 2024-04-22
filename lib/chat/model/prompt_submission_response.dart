@@ -1,16 +1,16 @@
-class ResponseModal {
+class PromptSubmissionResponse {
   bool result;
   int statusCode;
   bool response;
 
-  ResponseModal({
+  PromptSubmissionResponse({
     required this.result,
     required this.statusCode,
     required this.response,
   });
 
-  factory ResponseModal.fromJson(Map<String, dynamic> json) {
-    return ResponseModal(
+  factory PromptSubmissionResponse.fromJson(Map<String, dynamic> json) {
+    return PromptSubmissionResponse(
       result: json['result'],
       statusCode: json['statusCode'],
       response: json['response'],
