@@ -26,7 +26,7 @@ class HomeRepositoryImpl extends HomeRepository {
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
     };
-    String authUrl =  constants.genAiBaseUrl + constants.deleteTokenEndpoint;
+    String authUrl = constants.genAiBaseUrl + constants.deleteTokenEndpoint;
     String requestBody = jsonEncode(params);
 
     http.Response response = await http.post(
@@ -49,7 +49,8 @@ class HomeRepositoryImpl extends HomeRepository {
     Map<String, String> params = {
       "project_uuid": constants.apwrimsUUID,
     };
-    String authUrl = constants.genAiBaseUrl + constants.getAvailabeModelsEndpoint;
+    String authUrl =
+        constants.genAiBaseUrl + constants.getAvailabeModelsEndpoint;
     Uri url = Uri.parse(authUrl);
     String data = jsonEncode(params);
     var response = await http.post(url, headers: authHeaders, body: data);
@@ -60,20 +61,4 @@ class HomeRepositoryImpl extends HomeRepository {
         AvailabeModelResponse.fromJson(responseMap);
     return availabeModelResponse;
   }
-
-/* @override
-  Future<PromptResponseModel> fetchPrompts(BuildContext context) async {
-    Map<String, String> authHeaders = {
-      constants.headerContentType: constants.headerJson
-    };
-    String authUrl = constants.genAiBaseUrl + constants.getAvailabePromptsEndpoint + '2a';
-    Uri url = Uri.parse(authUrl);
-
-    var response = await http.get(url, headers: authHeaders);
-
-    Map<String, dynamic> responseMap = jsonDecode(response.body);
-
-    PromptResponseModel promptResponseModel = PromptResponseModel.fromJson(responseMap);
-    return promptResponseModel;
-  }*/
 }

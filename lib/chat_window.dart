@@ -1058,10 +1058,116 @@ onStart(ServiceInstance service) async {
   });
 }
 
-/*Future<String> startListenings(String sessionId) async {
+Future<void> initializeSpeechToText(String sessionId) async {
+  print(("startListeningToHello: starting listening"));
+  await Firebase.initializeApp(
+      options: const FirebaseOptions(
+    apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
+    appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
+    messagingSenderId: '1062998944432',
+    projectId: 'apwrims---chatbot',
+    storageBucket: 'apwrims---chatbot.appspot.com',
+    iosBundleId: 'com.vassar.apwrimschatbot',
+  ));
+
+  bool available = await speechToText.initialize(
+    onStatus: (status) async {
+      print('Status: $status');
+      /*  if (status == 'notListening') {
+        await startListeningBg();
+      }*/
+    },
+    onError: (error) async {
+      print('Error: $error');
+      // await startListeningBg();
+    },
+  );
+  print(
+      "wewewewewew AppState.instance.triggeredWord ::  ${AppState.instance.triggeredWord}");
+  print("wewewewewew session $sessionId");
+  if (available && AppState.instance.triggeredWord == "") {
+    AppState.instance.triggeredWord = await startListenings(sessionId);
+  }
+
+  if (available && AppState.instance.triggeredWord.isNotEmpty) {
+    await startListeningToYes(sessionId, AppState.instance.triggeredWord);
+  }
+
+/*  bool initialized = await speechToText.initialize(
+    onStatus: (status) async {
+      print('Status: $status');
+      print('sessionId: $sessionId');
+      if (status == 'notListening') {
+        //await speechToText.stop();
+        // await startListenings(sessionId);
+      }
+    },
+    onError: (error) async {
+      print('Error: $error');
+      //await speechToText.stop();
+      await startListenings(sessionId);
+    },
+  );
+
+  await startListenings(sessionId);*/
+}
+
+Future<void> startListeningToYes(String sessionId, String word) async {
+  print("startListeningToYes");
+  print("wewewewewew trigger word :: ${AppState.instance.triggeredWord}");
+  await speechToText.stop();
+  print("wewewewewew speechToText.isListening:: ${speechToText.isListening}");
+  DatabaseReference ref = FirebaseDatabase.instance.ref(
+      "CHAT_BOT_CHANGELOG/${constants.apwrimsUUID}/${AppState.instance.userId}/${sessionId}");
+  SpeechRecognitionResult result;
+
+  await speechToText.listen(
+      partialResults: false,
+      onResult: (data) async {
+        result = data;
+        print("wewewewewew 111111-input::${result.recognizedWords}");
+        if (result.recognizedWords.isNotEmpty &&
+            result.recognizedWords.toLowerCase() == "yes") {
+          print("wewewewewew 111111-yes::${result.recognizedWords}");
+          await speechToText.stop();
+          await ref.push().set({
+            "isUser": true,
+            "event_name": 'CONTINUOUS_LISTEN_MODE',
+            "trigger_word": '${AppState.instance.triggeredWord}'
+          });
+          print("111111-pushed");
+          /* await ref.push().set({
+            "isUser": false,
+            "event_name": 'CONTINUOUS_LISTEN_MODE',
+            "changelog": 'No Change in $AppState.instance.triggeredWord Data'
+          });*/
+          Future.delayed(const Duration(seconds: 2), () async {
+            print(
+                "wewewewewe AppState.instance.triggeredWord after completion::${AppState.instance.triggeredWord}");
+            await ref.orderByKey().limitToLast(1).once().then((event) async {
+              DataSnapshot snapshot = event.snapshot;
+              print("values::${snapshot.value}");
+              if (snapshot.value != null) {
+                dynamic values = snapshot.value;
+                values.forEach((key, value) async {
+                  if (!value['isUser']) {
+                    String responseMessage = value['changelog'] ?? '';
+                    AppState.instance.triggeredWord = "";
+                    await tts.speak(responseMessage);
+                  }
+                });
+              }
+            });
+          });
+        }
+      });
+  // await startListenings(sessionId);
+}
+
+Future<String> startListenings(String sessionId) async {
   int i = 0;
   DatabaseReference ref = FirebaseDatabase.instance
-      .ref("CHAT_BOT_CHANGELOG/${constants.apwrimsUUID}/${AppState.instance.userId}/${sessionId}");
+      .ref("CHAT_BOT_CHANGELOG/${constants.apwrimsUUID}/44/${sessionId}");
   SpeechRecognitionResult result;
 
   await speechToText.listen(
@@ -1099,10 +1205,10 @@ onStart(ServiceInstance service) async {
         await tts.speak('Would you like to know soil moisture data');
       }
 
-      */ /* Future.delayed(const Duration(seconds: 10),() async {
+      /* Future.delayed(const Duration(seconds: 10),() async {
         await startListeningToYes(sessionId, AppState.instance.triggeredWord);
-      });*/ /*
-*/ /*
+      });*/
+/*
       if (result.recognizedWords.toLowerCase() == 'yes') {
         await ref.push().set({
           "isUser": true,
@@ -1133,60 +1239,10 @@ onStart(ServiceInstance service) async {
         Future.delayed(const Duration(seconds: 5), () async {
           await startListenings(sessionId);
         });
-      }*/ /*
+      }*/
     },
   );
   return AppState.instance.triggeredWord;
 }
 
-Future<void> startListeningToYes(String sessionId, String word) async {
-  print("startListeningToYes");
-  print("wewewewewew trigger word :: ${AppState.instance.triggeredWord}");
-  await speechToText.stop();
-  print("wewewewewew speechToText.isListening:: ${speechToText.isListening}");
-  DatabaseReference ref = FirebaseDatabase.instance
-      .ref("CHAT_BOT_CHANGELOG/${constants.apwrimsUUID}/${AppState.instance.userId}/${sessionId}");
-  SpeechRecognitionResult result;
 
-  await speechToText.listen(
-      partialResults: false,
-      onResult: (data) async {
-        result = data;
-        print("wewewewewew 111111-input::${result.recognizedWords}");
-        if (result.recognizedWords.isNotEmpty &&
-            result.recognizedWords.toLowerCase() == "yes") {
-          print("wewewewewew 111111-yes::${result.recognizedWords}");
-          await speechToText.stop();
-          await ref.push().set({
-            "isUser": true,
-            "event_name": 'CONTINUOUS_LISTEN_MODE',
-            "trigger_word": '${AppState.instance.triggeredWord}'
-          });
-          print("111111-pushed}");
-          */ /* await ref.push().set({
-            "isUser": false,
-            "event_name": 'CONTINUOUS_LISTEN_MODE',
-            "changelog": 'No Change in $AppState.instance.triggeredWord Data'
-          });*/ /*
-          Future.delayed(const Duration(seconds: 2), () async {
-            print(
-                "wewewewewe AppState.instance.triggeredWord after completion::${AppState.instance.triggeredWord}");
-            await ref.orderByKey().limitToLast(1).once().then((event) async {
-              DataSnapshot snapshot = event.snapshot;
-              print("values::${snapshot.value}");
-              if (snapshot.value != null) {
-                dynamic values = snapshot.value;
-                values.forEach((key, value) async {
-                  if (value['isUser'] == false) {
-                    String responseMessage = value['changelog'] ?? '';
-                    AppState.instance.triggeredWord = "";
-                    await tts.speak(responseMessage);
-                  }
-                });
-              }
-            });
-          });
-        }
-      });
-  // await startListenings(sessionId);
-}*/

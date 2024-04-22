@@ -82,7 +82,9 @@ class LoginViewModel extends LoadingViewModel {
               ),
             );*/
 
-            if (userContent != null && userContent.userDetailsJson != null && userContent.userDetailsJson!.data !=null) {
+            if (userContent != null &&
+                userContent.userDetailsJson != null &&
+                userContent.userDetailsJson!.data != null) {
               switch (userContent.userDetailsJson!.data!.locType) {
                 case 'mandal':
                   locUUID = userContent.userDetailsJson!.data!.location!
@@ -108,7 +110,7 @@ class LoginViewModel extends LoadingViewModel {
               AppState.instance.userData = encodedContent;
               AppState.instance.fcmToken = fcmToken!;
               AppState.instance.locType =
-              userContent.userDetailsJson!.data!.locType!;
+                  userContent.userDetailsJson!.data!.locType!;
               AppState.instance.locUUID = locUUID!;
               AppState.instance.locName = locName!;
               AppState.instance.userId = userContent.userId!;
@@ -128,8 +130,7 @@ class LoginViewModel extends LoadingViewModel {
             debugPrint("User Details fetched successfully");
             return userContent;
           }
-        }
-        else {
+        } else {
           /// Login is unsuccessful
           isLoading = false;
           notifyListeners();
@@ -200,8 +201,10 @@ class LoginViewModel extends LoadingViewModel {
         .writeSecureData(constants.preferencelocName, locName);
     await SecuredStorageUtil.instance
         .writeSecureData(constants.preferencelocUUID, locUUID);
-    await SecuredStorageUtil.instance.writeSecureData(constants.preferencelocType, locType);
-    await SecuredStorageUtil.instance.writeSecureData(constants.preferenceFcmToken, fcmToken);
+    await SecuredStorageUtil.instance
+        .writeSecureData(constants.preferencelocType, locType);
+    await SecuredStorageUtil.instance
+        .writeSecureData(constants.preferenceFcmToken, fcmToken);
     await SecuredStorageUtil.instance.writeSecureData(
         constants.preferenceLastLoginTime,
         DateTime.now().millisecondsSinceEpoch.toString());
@@ -235,8 +238,7 @@ class LoginViewModel extends LoadingViewModel {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text(constants.genericErrorMsg),
         ));
-        Util.instance
-            .logMessage('FCM TOKEN', 'Error while authenticating $e');
+        Util.instance.logMessage('FCM TOKEN', 'Error while authenticating $e');
       }
     } else {
       isLoading = false;
