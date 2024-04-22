@@ -239,7 +239,6 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                         // response.Content? content = await viewModel.authenticate(userId, password, context);
                                         if (userId.isNotEmpty &&
                                             password.isNotEmpty) {
-                                          // AppState.instance.userId = '44';
                                           String? fcmToken =
                                               await FirebaseMessaging.instance
                                                   .getToken();

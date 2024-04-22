@@ -343,11 +343,14 @@ class _ChatWindowState extends State<ChatWindow> {
                     _toggleValue = !_toggleValue; // Toggle the value
                   });
                   print("wewewewewew _toggleValue::$_toggleValue");
+                  print("wewewewewew AppState.instance.userId ::  ${AppState.instance.userId}");
                   if (!_toggleValue) {
                     // If switching to Always listening mode
                     // autoSessionId = const Uuid().v4();
                     await tts.stop();
-                    await initializeService();
+                    if(AppState.instance.userId.isNotEmpty) {
+                      await initializeService(AppState.instance.userId);
+                    }
 
                     /*   periodicTimer = Timer.periodic(
                       const Duration(seconds: 5),
@@ -852,7 +855,7 @@ class _ChatWindowState extends State<ChatWindow> {
     setState(() {});
   }
 
-  Future<void> initializeService() async {
+  Future<void> initializeService(String userId) async {
     final service = FlutterBackgroundService();
 
     /// OPTIONAL, using custom notification channel id
@@ -899,76 +902,6 @@ class _ChatWindowState extends State<ChatWindow> {
       ),
     );
   }
-
-  Future<void> initializeSpeechToText(String sessionId) async {
-    print(("startListeningToHello: starting listening"));
-    await Firebase.initializeApp(
-        options: const FirebaseOptions(
-      apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
-      appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
-      messagingSenderId: '1062998944432',
-      projectId: 'apwrims---chatbot',
-      storageBucket: 'apwrims---chatbot.appspot.com',
-      iosBundleId: 'com.vassar.apwrimschatbot',
-    ));
-
-    bool available = await _speechToText.initialize(
-      onStatus: (status) async {
-        print('Status: $status');
-        /*  if (status == 'notListening') {
-        await startListeningBg();
-      }*/
-      },
-      onError: (error) async {
-        print('Error: $error');
-        // await startListeningBg();
-      },
-    );
-    print(
-        "wewewewewew AppState.instance.triggeredWord ::  ${AppState.instance.triggeredWord}");
-    print("wewewewewew session $sessionId");
-    if (available && AppState.instance.triggeredWord == "") {
-      // AppState.instance.triggeredWord = await startListenings(sessionId);
-    }
-
-    if (available && AppState.instance.triggeredWord.isNotEmpty) {
-      // await startListeningToYes(sessionId, AppState.instance.triggeredWord);
-    }
-
-/*  bool initialized = await speechToText.initialize(
-    onStatus: (status) async {
-      print('Status: $status');
-      print('sessionId: $sessionId');
-      if (status == 'notListening') {
-        //await speechToText.stop();
-        // await startListenings(sessionId);
-      }
-    },
-    onError: (error) async {
-      print('Error: $error');
-      //await speechToText.stop();
-      await startListenings(sessionId);
-    },
-  );
-
-  await startListenings(sessionId);*/
-  }
-
-/*Future<void> initializeSpeechToText(String sessionId) async {
-    print(("startListeningToHello: starting listening"));
-
-    bool available = await _speechToText.initialize(
-      onStatus: (status) async {
-        print('Status: $status');
-      },
-      onError: (error) async {
-        print('Error: $error');
-      },
-    );
-    if (available) {
-      await _startListeningForAutoMode();
-    }
-  }*/
 }
 
 @pragma('vm:entry-point')
@@ -1082,8 +1015,7 @@ Future<void> initializeSpeechToText(String sessionId) async {
       // await startListeningBg();
     },
   );
-  print(
-      "wewewewewew AppState.instance.triggeredWord ::  ${AppState.instance.triggeredWord}");
+  print("wewewewewew AppState.instance.triggeredWord ::  ${AppState.instance.triggeredWord}");
   print("wewewewewew session $sessionId");
   if (available && AppState.instance.triggeredWord == "") {
     AppState.instance.triggeredWord = await startListenings(sessionId);
@@ -1118,7 +1050,7 @@ Future<void> startListeningToYes(String sessionId, String word) async {
   await speechToText.stop();
   print("wewewewewew speechToText.isListening:: ${speechToText.isListening}");
   DatabaseReference ref = FirebaseDatabase.instance.ref(
-      "CHAT_BOT_CHANGELOG/${constants.apwrimsUUID}/${AppState.instance.userId}/${sessionId}");
+      "CHAT_BOT_CHANGELOG/${constants.apwrimsUUID}/44/${sessionId}");
   SpeechRecognitionResult result;
 
   await speechToText.listen(

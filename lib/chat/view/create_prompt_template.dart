@@ -112,6 +112,18 @@ class _CreatePromptViewState extends State<CreatePromptView> {
           ),
         );
       },
+      child: Scaffold(
+        appBar: AppBar(
+          elevation: constants.appBarElevation,
+          backgroundColor: Colors.black,
+        ),
+        body: Container(
+          width: MediaQuery.of(context).size.width,
+          height: MediaQuery.of(context).size.height,
+          color: Colors.white,
+          child: constants.indicator,
+        ),
+      ),
     );
   }
 

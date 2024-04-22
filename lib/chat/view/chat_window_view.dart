@@ -74,7 +74,7 @@
 //                 mainAxisAlignment: MainAxisAlignment.center,
 //                 children: [
 //                   const Text(
-//                     'Kaleswaram Bot',
+//                     'GetAllPromptsResponseModeleswaram Bot',
 //                     style: TextStyle(
 //                       fontSize: 17,
 //                       fontWeight: FontWeight.w500,

@@ -80,7 +80,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                     ],
                   ),
                   onTap: () {
-                    Navigator.pop(context); // Close the drawer
+                    // Navigator.pop(context); // Close the drawer
                     // Navigate to view history page
                     Navigator.push(
                       context,
@@ -102,7 +102,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                     ],
                   ),
                   onTap: () {
-                    Navigator.pop(context); // Close the drawer
+                    // Navigator.pop(context); // Close the drawer
                     // Navigate to prompt management page
                     Navigator.push(
                       context,
