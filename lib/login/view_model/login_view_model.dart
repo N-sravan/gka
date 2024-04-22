@@ -65,7 +65,7 @@ class LoginViewModel extends LoadingViewModel {
                 break;
             }
             AppState.instance.userData = encodedContent;
-            AppState.instance.fcmToken = fcmToken!;
+            // AppState.instance.fcmToken = fcmToken!;
             AppState.instance.locType =
             userContent.userDetailsJson.data.locType!;
             AppState.instance.locUUID = locUUID!;
@@ -80,7 +80,8 @@ class LoginViewModel extends LoadingViewModel {
                 AppState.instance.locType,
                 AppState.instance.userData,
                 AppState.instance.locUUID,
-                AppState.instance.fcmToken);
+                // AppState.instance.fcmToken
+            );
             notifyListeners();
           }
           isLoading = false;
@@ -139,7 +140,7 @@ class LoginViewModel extends LoadingViewModel {
   /// Saving user logged in status, userId,token and refresh token
   /// Initialize userId and username to app state
   _setLoginSharedPreferences(String userName, String userId, String locName,
-      String locType, String userData, String locUUID, String fcmToken) async {
+      String locType, String userData, String locUUID) async {
     await SharedPreferenceUtil.instance.setPreferenceValue(
         constants.preferenceIsLoggedIn, true, constants.preferenceTypeBool);
     await SecuredStorageUtil.instance
@@ -151,7 +152,7 @@ class LoginViewModel extends LoadingViewModel {
     await SecuredStorageUtil.instance
         .writeSecureData(constants.preferencelocUUID, locUUID);
     await SecuredStorageUtil.instance.writeSecureData(constants.preferencelocType, locType);
-    await SecuredStorageUtil.instance.writeSecureData(constants.preferenceFcmToken, fcmToken);
+    // await SecuredStorageUtil.instance.writeSecureData(constants.preferenceFcmToken, fcmToken);
     await SecuredStorageUtil.instance.writeSecureData(
         constants.preferenceLastLoginTime,
         DateTime.now().millisecondsSinceEpoch.toString());

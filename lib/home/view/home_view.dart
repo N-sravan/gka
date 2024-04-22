@@ -31,7 +31,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
     super.initState();
     viewModel = Provider.of<HomeViewModel>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // await viewModel.getAvailableModels(context);
+      await viewModel.getAvailableModels(context);
     });
   }
 
@@ -53,8 +53,9 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
             },
             child: Scaffold(
               appBar: AppBar(
+                automaticallyImplyLeading: false,
                 centerTitle: true,
-                title: const Text('APWRIMS Bot'),
+                title: const Text('GoWater Bot'),
                 actions: [
                   PopupMenuButton<String>(
                     itemBuilder: (BuildContext context) {
@@ -70,12 +71,14 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                     },
                     onSelected: (String value) async {
                       if (value == 'logout') {
-                        bool? result = await viewModel.deleteToken(context);
+                        Navigator.pushReplacementNamed(context, '/login');
+
+                     /*   bool? result = await viewModel.deleteToken(context);
                         if (result != null && result) {
                           await viewModel.setLogoutSharedPreferences(context);
                           Fluttertoast.showToast(msg: "Logged out");
                           Navigator.pushReplacementNamed(context, '/login');
-                        }
+                        }*/
                       }
                     },
                   ),

@@ -53,7 +53,7 @@ class LoginRepositoryImpl extends LoginRepository {
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
     };
-    String authUrl = constants.genAiBaseUrl + constants.saveFcmTokenEndpoint;
+    String authUrl = constants.genAiBaseUrl+constants.saveFcmTokenEndpoint;
     String requestBody = jsonEncode(params);
 
     http.Response response = await http.post(

@@ -309,12 +309,12 @@ class _ChatWindowState extends State<ChatWindow> {
         appBar: AppBar(
           leading: (widget.isFromHistory != null && widget.isFromHistory!)
               ? IconButton(
-            onPressed: () async {
-              await tts.stop();
-              Navigator.pop(context);
-            },
-            icon: Icon(Icons.arrow_back),
-          )
+                  onPressed: () async {
+                    await tts.stop();
+                    Navigator.pop(context);
+                  },
+                  icon: Icon(Icons.arrow_back),
+                )
               : null,
           centerTitle: true,
           backgroundColor: Colors.white,
@@ -323,7 +323,7 @@ class _ChatWindowState extends State<ChatWindow> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'Kaleswaram Bot',
+                'GoWater Bot',
                 style: constants.black16W500,
               ),
               const Spacer(),
@@ -383,160 +383,160 @@ class _ChatWindowState extends State<ChatWindow> {
             children: [
               _toggleValue
                   ? Expanded(
-                child: StreamBuilder(
-                  stream: FirebaseDatabase.instance
-                      .ref(
-                      "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.odishaUUID}/${AppState.instance.userId}/${widget.sessionId}")
-                      .onValue,
-                  builder: (context, AsyncSnapshot snapshot) {
-                    if (snapshot.hasData && snapshot.data != null) {
-                      List<ChatBubble> messageList = [];
-                      var data = (snapshot.data! as DatabaseEvent)
-                          .snapshot
-                          .value ??
-                          {};
-                      print("DATAFJLDLFHGLD $data");
-                      data = data as Map<dynamic, dynamic>;
-                      dataTimer?.cancel();
-                      loadingTimer?.cancel();
-                      var sortedByKeyMap = Map.fromEntries(
-                          data.entries.toList()
-                            ..sort((e1, e2) => e1.key.compareTo(e2.key)));
-                      sortedByKeyMap.forEach((key, value) {
-                        if (key != "cart") {
-                          final datalast =
-                          Map<String, dynamic>.from(value);
-                          print("SORTED MESSAGES ${datalast['message']}");
-                          print("Session ID ${widget.sessionId}");
-                          messageList.add(ChatBubble(
-                            text: datalast['message'] ?? '',
-                            isUser: datalast['isUser'],
-                            imageUrl: datalast['mediaUrl'],
-                            logMessage: datalast['log'] ?? '',
-                          ));
-                        }
-                      });
-
-                      if (widget.isFromHistory != null &&
-                          widget.isFromHistory == true &&
-                          c == 0) {
-                        //messageList.reversed;
-                        if (messageList.isNotEmpty &&
-                            !messageList[messageList.length - 1].isUser &&
-                            messageList.length > prevChatLength) {
-                          c++;
-                          /*  WidgetsBinding.instance.addPostFrameCallback((_) {
-                            showLoader.value = false;
-                          });
-                          tts.speak(messageList[messageList.length - 1].text);*/
-                        }
-                      } else {
-                        if (messageList.isNotEmpty &&
-                            !messageList[messageList.length - 1].isUser &&
-                            messageList.length > prevChatLength) {
-                          WidgetsBinding.instance
-                              .addPostFrameCallback((_) {
-                            showLoader.value = false;
-                          });
-                          tts.speak(
-                              messageList[messageList.length - 1].text);
-                        }
-                        prevChatLength = messageList.length;
-                        if (messageList.isNotEmpty &&
-                            messageList[messageList.length - 1].isUser) {
-                          WidgetsBinding.instance
-                              .addPostFrameCallback((_) {
-                            showLoader.value = true;
-                          });
-                        }
-
-                        AppState.instance.isOriyaSelected
-                            ? loadingTimer =
-                            Timer(const Duration(seconds: 4), () {
-                              int randomIndex = Random()
-                                  .nextInt(teluguLoaderMsgList.length);
-                              if (showLoader.value) {
-                                tts.speak(
-                                    teluguLoaderMsgList[randomIndex]);
-                              }
-                            })
-                            : loadingTimer =
-                            Timer(const Duration(seconds: 4), () {
-                              int randomIndex = Random()
-                                  .nextInt(loaderMsgList.length);
-                              if (showLoader.value) {
-                                tts.speak(loaderMsgList[randomIndex]);
+                      child: StreamBuilder(
+                        stream: FirebaseDatabase.instance
+                            .ref(
+                                "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.odishaUUID}/${AppState.instance.userId}/${widget.sessionId}")
+                            .onValue,
+                        builder: (context, AsyncSnapshot snapshot) {
+                          if (snapshot.hasData && snapshot.data != null) {
+                            List<ChatBubble> messageList = [];
+                            var data = (snapshot.data! as DatabaseEvent)
+                                    .snapshot
+                                    .value ??
+                                {};
+                            print("DATAFJLDLFHGLD $data");
+                            data = data as Map<dynamic, dynamic>;
+                            dataTimer?.cancel();
+                            loadingTimer?.cancel();
+                            var sortedByKeyMap = Map.fromEntries(
+                                data.entries.toList()
+                                  ..sort((e1, e2) => e1.key.compareTo(e2.key)));
+                            sortedByKeyMap.forEach((key, value) {
+                              if (key != "cart") {
+                                final datalast =
+                                    Map<String, dynamic>.from(value);
+                                print("SORTED MESSAGES ${datalast['message']}");
+                                print("Session ID ${widget.sessionId}");
+                                messageList.add(ChatBubble(
+                                  text: datalast['message'] ?? '',
+                                  isUser: datalast['isUser'],
+                                  imageUrl: datalast['mediaUrl'],
+                                  logMessage: datalast['log'] ?? '',
+                                ));
                               }
                             });
 
-                        dataTimer =
-                            Timer(const Duration(seconds: 100), () async {
-                              print("timerCounter::$timerCounter");
-                              if (showLoader.value) {
-                                DatabaseReference ref =
-                                FirebaseDatabase.instance.ref(
-                                    "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.odishaUUID}/${AppState.instance.userId}/${widget.sessionId}");
-                                /* messageList.add(ChatBubble(
+                            if (widget.isFromHistory != null &&
+                                widget.isFromHistory == true &&
+                                c == 0) {
+                              //messageList.reversed;
+                              if (messageList.isNotEmpty &&
+                                  !messageList[messageList.length - 1].isUser &&
+                                  messageList.length > prevChatLength) {
+                                c++;
+                                /*  WidgetsBinding.instance.addPostFrameCallback((_) {
+                            showLoader.value = false;
+                          });
+                          tts.speak(messageList[messageList.length - 1].text);*/
+                              }
+                            } else {
+                              if (messageList.isNotEmpty &&
+                                  !messageList[messageList.length - 1].isUser &&
+                                  messageList.length > prevChatLength) {
+                                WidgetsBinding.instance
+                                    .addPostFrameCallback((_) {
+                                  showLoader.value = false;
+                                });
+                                tts.speak(
+                                    messageList[messageList.length - 1].text);
+                              }
+                              prevChatLength = messageList.length;
+                              if (messageList.isNotEmpty &&
+                                  messageList[messageList.length - 1].isUser) {
+                                WidgetsBinding.instance
+                                    .addPostFrameCallback((_) {
+                                  showLoader.value = true;
+                                });
+                              }
+
+                              AppState.instance.isOriyaSelected
+                                  ? loadingTimer =
+                                      Timer(const Duration(seconds: 4), () {
+                                      int randomIndex = Random()
+                                          .nextInt(teluguLoaderMsgList.length);
+                                      if (showLoader.value) {
+                                        tts.speak(
+                                            teluguLoaderMsgList[randomIndex]);
+                                      }
+                                    })
+                                  : loadingTimer =
+                                      Timer(const Duration(seconds: 4), () {
+                                      int randomIndex = Random()
+                                          .nextInt(loaderMsgList.length);
+                                      if (showLoader.value) {
+                                        tts.speak(loaderMsgList[randomIndex]);
+                                      }
+                                    });
+
+                              dataTimer =
+                                  Timer(const Duration(seconds: 100), () async {
+                                print("timerCounter::$timerCounter");
+                                if (showLoader.value) {
+                                  DatabaseReference ref =
+                                      FirebaseDatabase.instance.ref(
+                                          "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.odishaUUID}/${AppState.instance.userId}/${widget.sessionId}");
+                                  /* messageList.add(ChatBubble(
                               text: "Data Not Found",
                               isUser: fal
                               se,
                               imageUrl: "",
                               logMessage: '',
                             ));*/
-                                WidgetsBinding.instance
-                                    .addPostFrameCallback((_) {
-                                  showLoader.value = false;
-                                });
-                                AppState.instance.isOriyaSelected
-                                    ? tts.speak("సమాచారం దొరకట్లేదు")
-                                    : tts.speak("Data Not found");
-                              }
-                            });
-                      }
+                                  WidgetsBinding.instance
+                                      .addPostFrameCallback((_) {
+                                    showLoader.value = false;
+                                  });
+                                  AppState.instance.isOriyaSelected
+                                      ? tts.speak("సమాచారం దొరకట్లేదు")
+                                      : tts.speak("Data Not found");
+                                }
+                              });
+                            }
 
-                      return ListView.builder(
-                        reverse: true,
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        controller: scrollControllerListView,
-                        addAutomaticKeepAlives: true,
-                        itemBuilder: (context, index) {
-                          if (index < messageList.length) {
-                            return Padding(
-                              padding: const EdgeInsets.all(4.0),
-                              child: messageList[
-                              messageList.length - 1 - index],
+                            return ListView.builder(
+                              reverse: true,
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              controller: scrollControllerListView,
+                              addAutomaticKeepAlives: true,
+                              itemBuilder: (context, index) {
+                                if (index < messageList.length) {
+                                  return Padding(
+                                    padding: const EdgeInsets.all(4.0),
+                                    child: messageList[
+                                        messageList.length - 1 - index],
+                                  );
+                                }
+                                return null;
+                              },
+                              itemCount: messageList.length,
                             );
                           }
-                          return null;
+                          return const SizedBox();
                         },
-                        itemCount: messageList.length,
-                      );
-                    }
-                    return const SizedBox();
-                  },
-                ),
-              )
+                      ),
+                    )
                   : const SizedBox(),
               _toggleValue
                   ? Padding(
-                padding: const EdgeInsets.only(left: 80.0),
-                child: Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: ValueListenableBuilder(
-                    valueListenable: showLoader,
-                    builder: (context, value, _) {
-                      if (value) {
-                        return SizedBox(
-                            height: 100,
-                            width: 100,
-                            child: Image.asset(
-                                'assets/images/response_bubble.gif'));
-                      }
-                      return const SizedBox();
-                    },
-                  ),
-                ),
-              )
+                      padding: const EdgeInsets.only(left: 80.0),
+                      child: Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: ValueListenableBuilder(
+                          valueListenable: showLoader,
+                          builder: (context, value, _) {
+                            if (value) {
+                              return SizedBox(
+                                  height: 100,
+                                  width: 100,
+                                  child: Image.asset(
+                                      'assets/images/response_bubble.gif'));
+                            }
+                            return const SizedBox();
+                          },
+                        ),
+                      ),
+                    )
                   : const SizedBox(),
               /*Padding(
                 padding: const EdgeInsets.only(bottom: 30.0),
@@ -562,34 +562,34 @@ class _ChatWindowState extends State<ChatWindow> {
               ),*/
               _toggleValue
                   ? Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 30.0),
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: ValueListenableBuilder(
-                        valueListenable: listeningActive,
-                        builder: (context, value, _) {
-                          return AvatarGlow(
-                            animate: value,
-                            glowColor: Colors.purple,
-                            child: FloatingActionButton(
-                              onPressed:
-                              // If not yet listening for speech start, otherwise stop
-                              !value ? _startListening : _stopListening,
-                              tooltip: 'Listen',
-                              child:
-                              Icon(!value ? Icons.mic_off : Icons.mic),
-                            ),
-                          );
-                        },
-                      ), // your widget would go here
-                    ),
-                  ))
+                      padding: const EdgeInsets.all(20),
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 30.0),
+                        child: Align(
+                          alignment: Alignment.bottomCenter,
+                          child: ValueListenableBuilder(
+                            valueListenable: listeningActive,
+                            builder: (context, value, _) {
+                              return AvatarGlow(
+                                animate: value,
+                                glowColor: Colors.purple,
+                                child: FloatingActionButton(
+                                  onPressed:
+                                      // If not yet listening for speech start, otherwise stop
+                                      !value ? _startListening : _stopListening,
+                                  tooltip: 'Listen',
+                                  child:
+                                      Icon(!value ? Icons.mic_off : Icons.mic),
+                                ),
+                              );
+                            },
+                          ), // your widget would go here
+                        ),
+                      ))
                   : const Padding(
-                padding: EdgeInsets.all(20),
-                child: SizedBox(),
-              )
+                      padding: EdgeInsets.all(20),
+                      child: SizedBox(),
+                    )
             ],
           ),
         ),
@@ -863,7 +863,7 @@ class _ChatWindowState extends State<ChatWindow> {
     );
 
     final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-    FlutterLocalNotificationsPlugin();
+        FlutterLocalNotificationsPlugin();
 
     if (platform.Platform.isAndroid || platform.Platform.isAndroid) {
       await flutterLocalNotificationsPlugin.initialize(
@@ -876,7 +876,7 @@ class _ChatWindowState extends State<ChatWindow> {
 
     await flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>()
+            AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
 
     await service.configure(
@@ -903,13 +903,13 @@ class _ChatWindowState extends State<ChatWindow> {
     print(("startListeningToHello: starting listening"));
     await Firebase.initializeApp(
         options: const FirebaseOptions(
-          apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
-          appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
-          messagingSenderId: '1062998944432',
-          projectId: 'apwrims---chatbot',
-          storageBucket: 'apwrims---chatbot.appspot.com',
-          iosBundleId: 'com.vassar.apwrimschatbot',
-        ));
+      apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
+      appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
+      messagingSenderId: '1062998944432',
+      projectId: 'apwrims---chatbot',
+      storageBucket: 'apwrims---chatbot.appspot.com',
+      iosBundleId: 'com.vassar.apwrimschatbot',
+    ));
 
     bool available = await _speechToText.initialize(
       onStatus: (status) async {
@@ -983,7 +983,7 @@ onStart(ServiceInstance service) async {
 
   /// OPTIONAL when use custom notification
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-  FlutterLocalNotificationsPlugin();
+      FlutterLocalNotificationsPlugin();
 
   if (service is AndroidServiceInstance) {
     service.on('setAsForeground').listen((event) {
@@ -1061,13 +1061,13 @@ Future<void> initializeSpeechToText(String sessionId) async {
   print(("startListeningToHello: starting listening"));
   await Firebase.initializeApp(
       options: const FirebaseOptions(
-        apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
-        appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
-        messagingSenderId: '1062998944432',
-        projectId: 'apwrims---chatbot',
-        storageBucket: 'apwrims---chatbot.appspot.com',
-        iosBundleId: 'com.vassar.apwrimschatbot',
-      ));
+    apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
+    appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
+    messagingSenderId: '1062998944432',
+    projectId: 'apwrims---chatbot',
+    storageBucket: 'apwrims---chatbot.appspot.com',
+    iosBundleId: 'com.vassar.apwrimschatbot',
+  ));
 
   bool available = await speechToText.initialize(
     onStatus: (status) async {
@@ -1144,8 +1144,6 @@ Future<void> startListeningToYes(String sessionId, String word) async {
       });
   // await startListenings(sessionId);
 }
-
-
 
 /*Future<String> startListenings(String sessionId) async {
   int i = 0;

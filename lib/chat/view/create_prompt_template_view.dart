@@ -9,7 +9,7 @@ import 'package:provider/provider.dart';
 class CreatePromptView extends StatefulWidget {
   bool? isCreate;
 
-  CreatePromptView({Key? key, this.isCreate}) : super(key: key);
+  CreatePromptView({this.isCreate, Key? key}) : super(key: key);
 
   @override
   State<CreatePromptView> createState() => _CreatePromptViewState();
@@ -19,15 +19,21 @@ class _CreatePromptViewState extends State<CreatePromptView> {
   // Define TextEditingController for the text fields
 
   late ChatViewModel viewModel;
+  bool isCreatePrompt = false;
 
   @override
   void initState() {
     super.initState();
     viewModel = Provider.of<ChatViewModel>(context, listen: false);
+    if (widget.isCreate != null && widget.isCreate == true) {
+      isCreatePrompt = true;
+    }
   }
 
   @override
   void dispose() {
+    viewModel.promptController.clear();
+    viewModel.intentController.clear();
     super.dispose();
   }
 
@@ -40,8 +46,9 @@ class _CreatePromptViewState extends State<CreatePromptView> {
         }
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Create Prompt'),
-          ),
+              title: isCreatePrompt
+                  ? const Text('Create Prompt')
+                  : const Text('Update Prompt')),
           body: Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
@@ -58,16 +65,18 @@ class _CreatePromptViewState extends State<CreatePromptView> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                TextField(
-                  controller: viewModel.promptController,
-                  keyboardType: TextInputType.multiline,
-                  maxLines: null,
-                  // Allows for unlimited lines
-                  onChanged: (value) {
-                    setState(() {}); // Update the UI when text changes
-                  },
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
+                Expanded(
+                  child: TextField(
+                    controller: viewModel.promptController,
+                    keyboardType: TextInputType.multiline,
+                    maxLines: 5,
+                    // Allows for unlimited lines
+                    onChanged: (value) {
+                      setState(() {}); // Update the UI when text changes
+                    },
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -81,16 +90,19 @@ class _CreatePromptViewState extends State<CreatePromptView> {
                     ),
                   ),
                 ),
-                TextField(
-                  controller: viewModel.intentController,
-                  keyboardType: TextInputType.multiline,
-                  maxLines: null,
-                  // Allows for unlimited lines
-                  onChanged: (value) {
-                    setState(() {}); // Update the UI when text changes
-                  },
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
+                Expanded(
+                  child: TextField(
+                    enabled: widget.isCreate,
+                    controller: viewModel.intentController,
+                    keyboardType: TextInputType.multiline,
+                    maxLines: null,
+                    // Allows for unlimited lines
+                    onChanged: (value) {
+                      setState(() {}); // Update the UI when text changes
+                    },
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                    ),
                   ),
                 ),
                 const Spacer(),
@@ -100,6 +112,18 @@ class _CreatePromptViewState extends State<CreatePromptView> {
           ),
         );
       },
+      child: Scaffold(
+        appBar: AppBar(
+          elevation: constants.appBarElevation,
+          backgroundColor: Colors.black,
+        ),
+        body: Container(
+          width: MediaQuery.of(context).size.width,
+          height: MediaQuery.of(context).size.height,
+          color: Colors.white,
+          child: constants.indicator,
+        ),
+      ),
     );
   }
 
@@ -134,18 +158,32 @@ class _CreatePromptViewState extends State<CreatePromptView> {
               onPressed: () async {
                 if (viewModel.promptController.text.isNotEmpty &&
                     viewModel.intentController.text.isNotEmpty) {
-                  bool result = await viewModel.createPrompt(
-                      context, viewModel.promptController.text, viewModel.intentController.text);
+                  bool? result;
+                  if (isCreatePrompt) {
+                    result = await viewModel.createPrompt(
+                        context,
+                        viewModel.promptController.text,
+                        viewModel.intentController.text);
+                  } else {
+                    result = await viewModel.updatePrompt(
+                        context,
+                        viewModel.promptController.text,
+                        viewModel.intentController.text);
+                  }
                   if (result) {
                     viewModel.promptController.clear();
                     viewModel.intentController.clear();
-                    Navigator.of(context).pop();
+                    Navigator.pop(context);
                     await viewModel.getAvailablePrompts(
                         context, viewModel.selectedPromptModelUUID);
-                    Fluttertoast.showToast(msg: "Prompt added Successfully!");
+                    isCreatePrompt
+                        ? Fluttertoast.showToast(
+                        msg: "Prompt added Successfully!")
+                        : Fluttertoast.showToast(
+                        msg: "Prompt updated Successfully!");
                   }
                 } else {
-                  Fluttertoast.showToast(msg: "Please fill the form");
+                  Fluttertoast.showToast(msg: "Please enter the data");
                 }
               },
               color: Colors.blue,

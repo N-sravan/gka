@@ -28,7 +28,7 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
   void initState() {
     super.initState();
     viewModel = Provider.of<LoginViewModel>(context, listen: false);
-    _usernameController.text = "samal";
+    _usernameController.text = "sudhansu_samal";
     _passwordController.text = "agriwise@123";
     WidgetsBinding.instance.addPostFrameCallback((_) {
       networkUtils.startTrackingConnection();
@@ -238,13 +238,18 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                             _passwordController.text;
                                         if (userId.isNotEmpty &&
                                             password.isNotEmpty) {
-                                          String? fcmToken =
-                                              await FirebaseMessaging.instance
-                                                  .getToken();
+                                          // String? fcmToken = await FirebaseMessaging.instance.getToken();
                                           bool content =
                                               await viewModel.authenticate(
                                                   userId, password, context);
-                                          if (fcmToken != null &&
+                                          if (content) {
+                                            Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        const HomeScreenWidget()));
+                                          }
+                                          /*   if (fcmToken != null &&
                                               fcmToken.isNotEmpty &&
                                               content) {
                                             AppState.instance.fcmToken =
@@ -262,7 +267,7 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                                       builder: (context) =>
                                                           const HomeScreenWidget()));
                                             }
-                                          }
+                                          }*/
                                         }
                                       }
                                     },

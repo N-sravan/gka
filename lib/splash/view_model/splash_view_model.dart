@@ -57,7 +57,7 @@ class SplashViewModel extends LoadingViewModel {
 
     if (userId != null && userId.isNotEmpty && isLoggedIn) {
       AppState.instance.userData = userContent;
-      AppState.instance.fcmToken = fcmToken!;
+      // AppState.instance.fcmToken = fcmToken!;
       AppState.instance.locType = locType!;
       AppState.instance.locUUID = locUUID!;
       AppState.instance.locName = locName!;
