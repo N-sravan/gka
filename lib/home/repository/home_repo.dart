@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/material.dart';
-import 'package:gka/login/model/token_model.dart';
+import 'package:gka/shared/token_model.dart';
 import 'package:http/http.dart' as http;
-import '../../chat/model/available_models.dart';
+import '../../shared/available_models.dart';
 import '../../utils/app_state.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 

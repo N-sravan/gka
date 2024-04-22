@@ -5,7 +5,8 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:gka/chat/model/prompt_response.dart';
+import 'package:gka/chat/model/get_tools_response_model.dart';
+import 'package:gka/chat/model/prompt_submission_response.dart';
 import 'package:gka/chat/repo/chat_repo.dart';
 import 'package:gka/chat_bubble.dart';
 import 'package:gka/shared/loading_view_model.dart';
@@ -22,8 +23,8 @@ import '../../login/model/login_api_response_model.dart' as login;
 import '../../message_bubble.dart';
 import '../../utils/network_utils.dart';
 import '../../utils/util.dart';
-import '../model/available_models.dart' as model;
-import '../model/available_prompt_response_model.dart';
+import '../../shared/available_models.dart' as model;
+import '../model/get_prompts_response_model.dart';
 
 class ChatViewModel extends LoadingViewModel {
   ChatViewModel({
@@ -171,7 +172,7 @@ class ChatViewModel extends LoadingViewModel {
     if (await networkUtils.hasActiveInternet()) {
       isLoading = true;
       try {
-        PromptResponseModel promptResponseModel =
+        GetAllPromptsResponseModel promptResponseModel =
             await repo.fetchPrompts(context, modelUUID);
         Map<String, String> promptTemplates = {};
         promptTemplateIntentMapping.clear();
@@ -222,7 +223,7 @@ class ChatViewModel extends LoadingViewModel {
     if (await networkUtils.hasActiveInternet()) {
       isLoading = true;
       try {
-        PromptResponseModel promptResponseModel =
+        ToolInventoryResponseModel promptResponseModel =
             await repo.fetchTools(context);
 
         if (promptResponseModel.statusCode == 200 &&
@@ -230,8 +231,8 @@ class ChatViewModel extends LoadingViewModel {
           if (promptResponseModel.response != null &&
               promptResponseModel.response?.length != 0) {
             for (int i = 0; i < promptResponseModel.response!.length; i++) {
-              promptTemplateIntentMapping[promptResponseModel.response![i]
-                  .promptTemplate!] = promptResponseModel.response![i].intent!;
+              // promptTemplateIntentMapping[promptResponseModel.response![i]
+              //     .promptTemplate!] = promptResponseModel.response![i].intent!;
             }
             isLoading = false;
             print(
@@ -270,7 +271,7 @@ class ChatViewModel extends LoadingViewModel {
     if (await networkUtils.hasActiveInternet()) {
       isLoading = true;
       try {
-        ResponseModal responseModal =
+        PromptSubmissionResponse responseModal =
             await repo.createPrompt(context, prompt, intent,selectedPromptModelUUID);
         if (responseModal.statusCode == 200 && responseModal.result == true) {
           isLoading = false;
@@ -308,7 +309,7 @@ class ChatViewModel extends LoadingViewModel {
     if (await networkUtils.hasActiveInternet()) {
       isLoading = true;
       try {
-        ResponseModal responseModal =
+        PromptSubmissionResponse responseModal =
             await repo.updatePrompt(context, prompt, intent);
         if (responseModal.statusCode == 200 && responseModal.result == true) {
           isLoading = false;

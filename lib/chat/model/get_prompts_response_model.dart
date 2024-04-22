@@ -1,11 +1,11 @@
-class PromptResponseModel {
+class GetAllPromptsResponseModel {
   bool? result;
   int? statusCode;
   List<Response>? response;
 
-  PromptResponseModel({this.result, this.statusCode, this.response});
+  GetAllPromptsResponseModel({this.result, this.statusCode, this.response});
 
-  PromptResponseModel.fromJson(Map<String, dynamic> json) {
+  GetAllPromptsResponseModel.fromJson(Map<String, dynamic> json) {
     result = json['result'];
     statusCode = json['statusCode'];
     if (json['response'] != null) {
