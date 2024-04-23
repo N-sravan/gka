@@ -21,6 +21,7 @@ class HomeScreenWidget extends StatefulWidget {
 
 class _HomeScreenWidgetState extends State<HomeScreenWidget> {
   late HomeViewModel viewModel;
+  String title = '';
 
   @override
   void initState() {
@@ -30,6 +31,22 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
     ]);*/
     super.initState();
     viewModel = Provider.of<HomeViewModel>(context, listen: false);
+    switch (constants.projectId) {
+      case constants.odishaUUID:
+        title = 'GoWater Bot';
+        viewModel.langList.add('Odia');
+        break;
+      case constants.apwrimsUUID:
+        title = 'APWRIMS Bot';
+        viewModel.langList.clear();
+        viewModel.langList.add('Telugu');
+        break;
+      case constants.kaleswaramUUID:
+        title = 'Kaleswaram Bot';
+        viewModel.langList.add('Telugu');
+        break;
+    }
+
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await viewModel.getAvailableModels(context);
     });
@@ -38,6 +55,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
   @override
   void dispose() {
     super.dispose();
+    viewModel.clearData();
   }
 
   @override
@@ -55,7 +73,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
               appBar: AppBar(
                 automaticallyImplyLeading: false,
                 centerTitle: true,
-                title: const Text('GoWater Bot'),
+                title: Text(title),
                 actions: [
                   PopupMenuButton<String>(
                     itemBuilder: (BuildContext context) {
@@ -73,7 +91,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                       if (value == 'logout') {
                         Navigator.pushReplacementNamed(context, '/login');
 
-                     /*   bool? result = await viewModel.deleteToken(context);
+                        /*   bool? result = await viewModel.deleteToken(context);
                         if (result != null && result) {
                           await viewModel.setLogoutSharedPreferences(context);
                           Fluttertoast.showToast(msg: "Logged out");
@@ -105,17 +123,17 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                         hint: const Text('Select'),
                         items: viewModel.langList
                             .map((String item) => DropdownMenuItem<String>(
-                          value: item,
-                          child: Text(
-                            item,
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 14,
-                              fontFamily: 'Poppins',
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ))
+                                  value: item,
+                                  child: Text(
+                                    item,
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 14,
+                                      fontFamily: 'Poppins',
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                ))
                             .toList(),
                         value: viewModel.selectedLang.isNotEmpty == true
                             ? viewModel.selectedLang
@@ -208,17 +226,17 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                         hint: const Text('Select'),
                         items: viewModel.modelList!
                             .map((String item) => DropdownMenuItem<String>(
-                          value: item,
-                          child: Text(
-                            item,
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 14,
-                              fontFamily: 'Poppins',
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ))
+                                  value: item,
+                                  child: Text(
+                                    item,
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 14,
+                                      fontFamily: 'Poppins',
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                ))
                             .toList(),
                         value: viewModel.selectedModel.isNotEmpty == true
                             ? viewModel.selectedModel
@@ -302,11 +320,11 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                       onPressed: () async {
                         if (viewModel.selectedLang.isNotEmpty ||
                             viewModel.selectedModel.isNotEmpty) {
-                          if (viewModel.selectedLang == 'Odia') {
+                        /*  if (viewModel.selectedLang == 'Odia') {
                             AppState.instance.isOriyaSelected = true;
                           } else {
                             AppState.instance.isOriyaSelected = false;
-                          }
+                          }*/
 
                           String? sessionId = await viewModel.createSession();
                           if (viewModel.sessionId != null) {
@@ -365,12 +383,12 @@ class PaddedElevatedButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
-    child: ElevatedButton(
-      onPressed: onPressed,
-      child: Text(buttonText),
-    ),
-  );
+        padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+        child: ElevatedButton(
+          onPressed: onPressed,
+          child: Text(buttonText),
+        ),
+      );
 }
 
 String? selectedNotificationPayload;
@@ -383,7 +401,7 @@ const String navigationActionId = 'id_3';
 
 Future<void> _showNotificationWithActions() async {
   const AndroidNotificationDetails androidNotificationDetails =
-  AndroidNotificationDetails(
+      AndroidNotificationDetails(
     'your channel id',
     'your channel name',
     channelDescription: 'your channel description',

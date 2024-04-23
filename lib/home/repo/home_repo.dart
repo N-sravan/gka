@@ -22,7 +22,7 @@ class HomeRepositoryImpl extends HomeRepository {
   Future<int?> deleteToken(BuildContext context) async {
     Map<String, dynamic> params = {
       "fcmToken": AppState.instance.fcmToken,
-      "project_uuid": constants.odishaUUID
+      "project_uuid": constants.projectId
     };
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
@@ -48,7 +48,7 @@ class HomeRepositoryImpl extends HomeRepository {
     };
 
     Map<String, String> params = {
-      "project_uuid": constants.odishaUUID
+      "project_uuid": constants.projectId
     };
     String authUrl = constants.genAiBaseUrl + constants.getAvailabeModelsEndpoint;
     Uri url = Uri.parse(authUrl);

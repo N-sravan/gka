@@ -85,11 +85,8 @@ class _ChatWindowState extends State<ChatWindow> {
     'Just a moment'
   ];
 
-  List<String> teluguLoaderMsgList = [
-    'దయచేసి వేచి ఉండండి',
-    'ఒక్క క్షణం వేచి ఉండండి'
-    // 'సమాచారం శోధిస్తున్నాము'
-  ];
+  List<String> langLoaderMsgList = [];
+
   TextToSpeechService? textToSpeechService;
   MessageBubble? textToSpeechMessageBubble;
   String summaryData = "";
@@ -100,12 +97,59 @@ class _ChatWindowState extends State<ChatWindow> {
   Timer? periodicTimer;
   Timer? dataTimer;
   Timer? loadingTimer;
-  String llmType = '';
   String language = '';
+  String langId = '';
+  String title = '';
+  String dataNotFoundMsg = '';
 
   @override
   void initState() {
     super.initState();
+    switch (constants.projectId) {
+      case constants.odishaUUID:
+        title = 'GoWater Bot';
+        break;
+      case constants.apwrimsUUID:
+        title = 'APWRIMS Bot';
+        break;
+      case constants.kaleswaramUUID:
+        title = 'Kaleswaram Bot';
+        break;
+    }
+    switch (AppState.instance.language) {
+      case 'English':
+        dataNotFoundMsg = 'Data Not Found';
+        loaderMsgList = [
+          'Please wait',
+          'we are checking',
+          'Looking for the result',
+          'Hold on a moment',
+          'Searching for results',
+          'Gathering the data',
+          'Just a moment'
+        ];
+        langId = 'en-US';
+        language = 'english';
+        break;
+      case 'Telugu':
+        dataNotFoundMsg = 'సమాచారం దొరకట్లేదు';
+        loaderMsgList = ['దయచేసి వేచి ఉండండి', 'ఒక్క క్షణం వేచి ఉండండి'];
+        langId = 'te-IN';
+        language = 'telugu';
+        break;
+      case 'Odia':
+        dataNotFoundMsg = 'ତଥ୍ୟ ମିଳିଲା ନାହିଁ';
+        loaderMsgList = [
+          'ଦୟାକରି ଅପେକ୍ଷା କର',
+          'ଆମେ ଯାଞ୍ଚ କରୁଛୁ |',
+          'ଫଳାଫଳ ଖୋଜୁଛି |',
+          'କିଛି ସମୟ ଧରି ରଖ |',
+          'ଗୋଟିଏ କ୍ଷଣ'
+        ];
+        langId = 'or-IN';
+        language = 'odia';
+        break;
+    }
     _initSpeech();
   }
 
@@ -145,9 +189,7 @@ class _ChatWindowState extends State<ChatWindow> {
       print("LOCALESDSD $i   ${locales[i].name}");
     }
 
-    String langId = '';
-    // AppState.instance.isOriyaSelected ? langId = 'or-IN' : langId = 'en-US';
-    AppState.instance.isOriyaSelected ? langId = 'te-IN' : langId = 'en-US';
+    // AppState.instance.isOriyaSelected ? langId = 'te-IN' : langId = 'en-US';
 
     //for android tab english locale at 5
     print("_onSpeechResult_startListening");
@@ -221,41 +263,22 @@ class _ChatWindowState extends State<ChatWindow> {
   Future<void> _onSpeechResult(SpeechRecognitionResult result) async {
     print("_onSpeechResult ${result.recognizedWords}");
     DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.odishaUUID}/${AppState.instance.userId}/${widget.sessionId}");
+        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
 
-    /*  AppState.instance.isExternalLLM
-        ? llmType = 'external'
-        : llmType = 'internal';
-    AppState.instance.isOriyaSelected
-        ? language = 'odia'
-        : language = 'english';
-
-    await ref.push().set({
-      "isUser": true,
-      "message": result.recognizedWords,
-      "mediaUrl": '',
-      'llm_type': llmType,
-      'language': language
-    });*/
-
-/*    TransliterationResponse? response = await Transliteration.transliterate(
-        result.recognizedWords, Languages.ORIYA);
-    final translatedText = response?.transliterationSuggestions[0].toString();
     String? message = '';
-    print("translated::$translatedText");*/
-
-    AppState.instance.isOriyaSelected
-        ? language = 'telugu'
-        : language = 'english';
-
-/*    AppState.instance.isOriyaSelected
-        ? message = translatedText
-        : message = result.recognizedWords;*/
-
     print("session id::${sessionId}");
+    if (language == 'odia') {
+      TransliterationResponse? response = await Transliteration.transliterate(
+          result.recognizedWords, Languages.ORIYA);
+      final translatedText = response?.transliterationSuggestions[0].toString();
+      message = translatedText;
+      print("translated::$translatedText");
+    } else {
+      message = result.recognizedWords;
+    }
     await ref.push().set({
       "isUser": true,
-      "message": result.recognizedWords,
+      "message": message,
       "mediaUrl": '',
       'language': language,
       'model_uuid': AppState.instance.modelUUID
@@ -269,7 +292,7 @@ class _ChatWindowState extends State<ChatWindow> {
       SpeechRecognitionResult result) async {
     print("_onSpeechResultForAutoMode ${result.recognizedWords}");
     DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.odishaUUID}/${AppState.instance.userId}/${autoSessionId}");
+        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${autoSessionId}");
 
     if (result.recognizedWords.toLowerCase() == "hello" && !isVoiceInitiated) {
       await _speechToText.stop();
@@ -292,7 +315,6 @@ class _ChatWindowState extends State<ChatWindow> {
 
   @override
   Widget build(BuildContext context) {
-    print("widget.isFromHistory:::${widget.isFromHistory}");
     return WillPopScope(
       onWillPop: () async {
         bool? result = await showSessionDialog();
@@ -313,7 +335,7 @@ class _ChatWindowState extends State<ChatWindow> {
                     await tts.stop();
                     Navigator.pop(context);
                   },
-                  icon: Icon(Icons.arrow_back),
+                  icon: const Icon(Icons.arrow_back),
                 )
               : null,
           centerTitle: true,
@@ -323,7 +345,7 @@ class _ChatWindowState extends State<ChatWindow> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'GoWater Bot',
+                title,
                 style: constants.black16W500,
               ),
               const Spacer(),
@@ -386,7 +408,7 @@ class _ChatWindowState extends State<ChatWindow> {
                       child: StreamBuilder(
                         stream: FirebaseDatabase.instance
                             .ref(
-                                "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.odishaUUID}/${AppState.instance.userId}/${widget.sessionId}")
+                                "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}")
                             .onValue,
                         builder: (context, AsyncSnapshot snapshot) {
                           if (snapshot.hasData && snapshot.data != null) {
@@ -450,24 +472,14 @@ class _ChatWindowState extends State<ChatWindow> {
                                 });
                               }
 
-                              AppState.instance.isOriyaSelected
-                                  ? loadingTimer =
-                                      Timer(const Duration(seconds: 4), () {
-                                      int randomIndex = Random()
-                                          .nextInt(teluguLoaderMsgList.length);
-                                      if (showLoader.value) {
-                                        tts.speak(
-                                            teluguLoaderMsgList[randomIndex]);
-                                      }
-                                    })
-                                  : loadingTimer =
-                                      Timer(const Duration(seconds: 4), () {
-                                      int randomIndex = Random()
-                                          .nextInt(loaderMsgList.length);
-                                      if (showLoader.value) {
-                                        tts.speak(loaderMsgList[randomIndex]);
-                                      }
-                                    });
+                              loadingTimer =
+                                  Timer(const Duration(seconds: 4), () {
+                                int randomIndex =
+                                    Random().nextInt(loaderMsgList.length);
+                                if (showLoader.value) {
+                                  tts.speak(loaderMsgList[randomIndex]);
+                                }
+                              });
 
                               dataTimer =
                                   Timer(const Duration(seconds: 100), () async {
@@ -475,7 +487,7 @@ class _ChatWindowState extends State<ChatWindow> {
                                 if (showLoader.value) {
                                   DatabaseReference ref =
                                       FirebaseDatabase.instance.ref(
-                                          "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.odishaUUID}/${AppState.instance.userId}/${widget.sessionId}");
+                                          "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
                                   /* messageList.add(ChatBubble(
                               text: "Data Not Found",
                               isUser: fal
@@ -487,9 +499,7 @@ class _ChatWindowState extends State<ChatWindow> {
                                       .addPostFrameCallback((_) {
                                     showLoader.value = false;
                                   });
-                                  AppState.instance.isOriyaSelected
-                                      ? tts.speak("సమాచారం దొరకట్లేదు")
-                                      : tts.speak("Data Not found");
+                                  await tts.speak(dataNotFoundMsg);
                                 }
                               });
                             }
@@ -833,7 +843,7 @@ class _ChatWindowState extends State<ChatWindow> {
 
   Future<void> insertImageDataIntoDb(String? imageUrl, String text) async {
     DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.odishaUUID}/${AppState.instance.userId}/${widget.sessionId}");
+        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
     await ref
         .push()
         .set({"isUser": true, "message": text, "mediaUrl": imageUrl});
@@ -844,7 +854,7 @@ class _ChatWindowState extends State<ChatWindow> {
 
   Future<void> insertDataIntoDb(String text) async {
     DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.odishaUUID}/${AppState.instance.userId}/${widget.sessionId}");
+        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
     await ref.push().set({"isUser": true, "message": text});
     chatController.clear();
     capturedPhoto = null;
@@ -1099,7 +1109,7 @@ Future<void> startListeningToYes(String sessionId, String word) async {
   await speechToText.stop();
   print("wewewewewew speechToText.isListening:: ${speechToText.isListening}");
   DatabaseReference ref = FirebaseDatabase.instance.ref(
-      "CHAT_BOT_CHANGELOG/${constants.odishaUUID}/${AppState.instance.userId}/${sessionId}");
+      "CHAT_BOT_CHANGELOG/${constants.projectId}/${AppState.instance.userId}/${sessionId}");
   SpeechRecognitionResult result;
 
   await speechToText.listen(
@@ -1148,7 +1158,7 @@ Future<void> startListeningToYes(String sessionId, String word) async {
 /*Future<String> startListenings(String sessionId) async {
   int i = 0;
   DatabaseReference ref = FirebaseDatabase.instance
-      .ref("CHAT_BOT_CHANGELOG/${constants.odishaUUID}/${AppState.instance.userId}/${sessionId}");
+      .ref("CHAT_BOT_CHANGELOG/${constants.projectId}/${AppState.instance.userId}/${sessionId}");
   SpeechRecognitionResult result;
 
   await speechToText.listen(
@@ -1232,7 +1242,7 @@ Future<void> startListeningToYes(String sessionId, String word) async {
   await speechToText.stop();
   print("wewewewewew speechToText.isListening:: ${speechToText.isListening}");
   DatabaseReference ref = FirebaseDatabase.instance
-      .ref("CHAT_BOT_CHANGELOG/${constants.odishaUUID}/${AppState.instance.userId}/${sessionId}");
+      .ref("CHAT_BOT_CHANGELOG/${constants.projectId}/${AppState.instance.userId}/${sessionId}");
   SpeechRecognitionResult result;
 
   await speechToText.listen(

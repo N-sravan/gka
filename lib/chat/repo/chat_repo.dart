@@ -20,11 +20,9 @@ abstract class ChatRepository {
 
   Future<GetAllPromptsResponseModel> fetchPrompts(BuildContext context, String modelUUID);
 
-  Future<PromptSubmissionResponse> createPrompt(
-      BuildContext context, String prompt, String intent, String modelUUID);
+  Future<PromptSubmissionResponse> createPrompt(BuildContext context, String prompt, String intent, String modelUUID);
 
-  Future<PromptSubmissionResponse> updatePrompt(
-      BuildContext context, String prompt, String intent);
+  Future<PromptSubmissionResponse> updatePrompt(BuildContext context, String prompt, String intent);
 
   Future<ToolInventoryResponseModel> fetchTools(BuildContext context);
 
@@ -37,7 +35,7 @@ class ChatRepositoryImpl extends ChatRepository {
   Future<int?> deleteToken(BuildContext context) async {
     Map<String, dynamic> params = {
       "fcmToken": AppState.instance.fcmToken,
-      "project_uuid": constants.odishaUUID
+      "project_uuid": constants.projectId
     };
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
@@ -84,7 +82,7 @@ class ChatRepositoryImpl extends ChatRepository {
     };
 
     Map<String, String> params = {
-      "project_uuid": constants.odishaUUID,
+      "project_uuid": constants.projectId,
       "user_uuid": AppState.instance.userId,
       "model_uuid": modelUUID
     };
@@ -114,7 +112,7 @@ class ChatRepositoryImpl extends ChatRepository {
     };
 
     Map<String, String> params = {
-      "proj_uuid": constants.odishaUUID,
+      "proj_uuid": constants.projectId,
       "user_uuid": AppState.instance.userId,
       "src_type": 'GET_API',
     };
@@ -147,7 +145,7 @@ class ChatRepositoryImpl extends ChatRepository {
       "prompt_template": promptMessage,
       "intent": intent,
       "user_uuid": AppState.instance.userId,
-      "project_uuid": constants.odishaUUID
+      "project_uuid": constants.projectId
     };
     String authUrl =
         constants.genAiBaseUrl + constants.createPromptTemplateEndpoint;
@@ -177,7 +175,7 @@ class ChatRepositoryImpl extends ChatRepository {
       "prompt_template": promptMessage,
       "intent": intent,
       "user_uuid": AppState.instance.userId,
-      "project_uuid": constants.odishaUUID*/
+      "project_uuid": constants.projectId*/
     };
     String authUrl =
         constants.genAiBaseUrl + constants.createPromptTemplateEndpoint;
@@ -208,7 +206,7 @@ class ChatRepositoryImpl extends ChatRepository {
       "prompt_template": promptMessage,
       "intent": intent,
       "user_uuid": AppState.instance.userId,
-      "project_uuid": constants.odishaUUID
+      "project_uuid": constants.projectId
     };
     String authUrl =
         constants.genAiBaseUrl + constants.updatePromptTemplateEndpoint;
@@ -233,7 +231,7 @@ class ChatRepositoryImpl extends ChatRepository {
       constants.headerContentType: constants.headerJson
     };
 
-    Map<String, String> params = {"project_uuid": constants.odishaUUID};
+    Map<String, String> params = {"project_uuid": constants.projectId};
     String authUrl =
         constants.genAiBaseUrl + constants.getAvailabeModelsEndpoint;
     String data = jsonEncode(params);

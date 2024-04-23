@@ -186,7 +186,7 @@ Future<void> showNotification() async {
     iosBundleId: 'com.vassar.apwrimschatbot',
   ));
   DatabaseReference ref = FirebaseDatabase.instance
-      .ref("CHAT_BOT_ALERT/HOURLY_NOTIFICATION/${constants.odishaUUID}");
+      .ref("CHAT_BOT_ALERT/HOURLY_NOTIFICATION/${constants.projectId}");
   String responseMessage = '';
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -512,7 +512,7 @@ bool isSpeaking = false; // Variable to track TTS speaking status
 Future<String> startListenings(String sessionId) async {
   int i = 0;
   DatabaseReference ref = FirebaseDatabase.instance
-      .ref("CHAT_BOT_CHANGELOG/${constants.odishaUUID}/${sessionId}");
+      .ref("CHAT_BOT_CHANGELOG/${constants.projectId}/${sessionId}");
   SpeechRecognitionResult result;
 
   await speechToText.listen(
@@ -596,7 +596,7 @@ Future<void> startListeningToYes(String sessionId, String word) async {
   await speechToText.stop();
   print("wewewewewew speechToText.isListening:: ${speechToText.isListening}");
   DatabaseReference ref = FirebaseDatabase.instance
-      .ref("CHAT_BOT_CHANGELOG/${constants.odishaUUID}/${sessionId}");
+      .ref("CHAT_BOT_CHANGELOG/${constants.projectId}/${sessionId}");
   SpeechRecognitionResult result;
 
   await speechToText.listen(
@@ -676,7 +676,7 @@ Future<void> startListeningToYes(String sessionId, String word) async {
 
 Future<void> startListeningBg() async {
   DatabaseReference ref = FirebaseDatabase.instance
-      .ref("CHAT_BOT_ALERT/HOURLY_UPDATES/${constants.odishaUUID}");
+      .ref("CHAT_BOT_ALERT/HOURLY_UPDATES/${constants.projectId}");
   SpeechRecognitionResult result;
 
   await speechToText.listen(

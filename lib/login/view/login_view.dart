@@ -28,8 +28,20 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
   void initState() {
     super.initState();
     viewModel = Provider.of<LoginViewModel>(context, listen: false);
-    _usernameController.text = "sudhansu_samal";
-    _passwordController.text = "agriwise@123";
+    switch (constants.projectId) {
+      case constants.odishaUUID:
+        _usernameController.text = "sudhansu_samal";
+        _passwordController.text = "agriwise@123";
+        break;
+      case constants.apwrimsUUID:
+        _usernameController.text = "sklm_burja";
+        _passwordController.text = "test123";
+        break;
+      case constants.kaleswaramUUID:
+        _usernameController.text = "Sandeep";
+        _passwordController.text = "test123";
+        break;
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       networkUtils.startTrackingConnection();
     });
@@ -239,10 +251,18 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                         if (userId.isNotEmpty &&
                                             password.isNotEmpty) {
                                           // String? fcmToken = await FirebaseMessaging.instance.getToken();
-                                          bool content =
-                                              await viewModel.authenticate(
-                                                  userId, password, context);
-                                          if (content) {
+                                          bool? content;
+                                          if (constants.projectId ==
+                                              constants.apwrimsUUID) {
+                                            content = await viewModel
+                                                .authenticateForAp(
+                                                    userId, password, context);
+                                          } else {
+                                            content =
+                                                await viewModel.authenticate(
+                                                    userId, password, context);
+                                          }
+                                          if (content != null && content) {
                                             Navigator.push(
                                                 context,
                                                 MaterialPageRoute(

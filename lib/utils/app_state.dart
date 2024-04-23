@@ -55,7 +55,7 @@ class AppState {
   bool hasFarmerData=false;
   bool isVoiceUpdateEnabled=false;
   bool isVillageSelected = true;
-  bool isOriyaSelected = false;
+  // bool isOriyaSelected = false;
   bool isExternalLLM = false;
   late String modelName;
   late String modelUUID;
@@ -63,6 +63,7 @@ class AppState {
   late String locType;
   late String locName;
   late String userId;
+  late String language;
 
   //For Background Sync
   bool isSyncInProgress = false;

@@ -27,18 +27,24 @@ class HomeViewModel extends LoadingViewModel {
   bool isFirstTime = true;
   String? sessionId;
   List<String> selectionList = ['Internal LLM', 'External LLM'];
-  List<String> langList = ['English', 'Odia'];
+  List<String> langList = ['English'];
   List<String>? modelList = [];
   List<model.Response>? modelResponseList = [];
-  Map<String,String> modelNameUuidMapping = {};
-  Map<String,String> promptTemplateIntentMapping = {};
+  Map<String, String> modelNameUuidMapping = {};
+  Map<String, String> promptTemplateIntentMapping = {};
 
-  /*final StreamController<ReceivedNotification>
-      didReceiveLocalNotificationStream =
-      StreamController<ReceivedNotification>.broadcast();*/
-
-  final StreamController<String?> selectNotificationStream =
-  StreamController<String?>.broadcast();
+  void clearData() {
+    promptTemplateIntentMapping.clear();
+    modelNameUuidMapping.clear();
+    modelResponseList = [];
+    modelList = [];
+    selectionList = [];
+    selectedValue = '';
+    selectedLang = '';
+    selectedModel = '';
+    sessionId = '';
+    notifyListeners();
+  }
 
   void updateSelectedModel(String value) {
     selectedModel = value;
@@ -49,6 +55,7 @@ class HomeViewModel extends LoadingViewModel {
 
   void updateSelectedValue(String value) {
     selectedValue = value;
+    AppState.instance.language = selectedValue;
     notifyListeners();
   }
 
@@ -66,7 +73,7 @@ class HomeViewModel extends LoadingViewModel {
     AppState.instance.locUUID = '';
     AppState.instance.locName = '';
     AppState.instance.fcmToken = '';
-    AppState.instance.isOriyaSelected = false;
+    AppState.instance.language = '';
     notifyListeners();
   }
 
@@ -114,16 +121,23 @@ class HomeViewModel extends LoadingViewModel {
     if (await networkUtils.hasActiveInternet()) {
       isLoading = true;
       try {
-        model.AvailabeModelResponse availabeModelResponse = await repo.fetchModels(context);
+        model.AvailabeModelResponse availabeModelResponse =
+            await repo.fetchModels(context);
 
-        if (availabeModelResponse.statusCode == 200 && availabeModelResponse.result == true) {
-          if(availabeModelResponse.response !=null && availabeModelResponse.response?.length !=0) {
-            for(int i=0;i<availabeModelResponse.response!.length;i++){
-              modelNameUuidMapping.addAll({availabeModelResponse.response![i].modelName! : availabeModelResponse.response![i].modelUuid!});
+        if (availabeModelResponse.statusCode == 200 &&
+            availabeModelResponse.result == true) {
+          if (availabeModelResponse.response != null &&
+              availabeModelResponse.response?.length != 0) {
+            for (int i = 0; i < availabeModelResponse.response!.length; i++) {
+              modelNameUuidMapping.addAll({
+                availabeModelResponse.response![i].modelName!:
+                    availabeModelResponse.response![i].modelUuid!
+              });
               if (!modelList!
                   .contains(availabeModelResponse.response![i].modelName)) {
                 modelList!.add(availabeModelResponse.response![i].modelName!);
-              }            }
+              }
+            }
             isLoading = false;
             print("weweweww modelNameUuidMapping ${modelNameUuidMapping}");
             notifyListeners();
@@ -218,50 +232,4 @@ class HomeViewModel extends LoadingViewModel {
     isFirstTime = true;
     notifyListeners();
   }
-
-/*
-  Future? getAvailablePrompts(BuildContext context) async {
-    /// Checking for active internet connection
-    if (await networkUtils.hasActiveInternet()) {
-      isLoading = true;
-      try {
-        GetAllPromptsResponseModel promptResponseModel = await repo.fetchPrompts(context);
-
-        if (promptResponseModel.statusCode == 200 && promptResponseModel.result == true) {
-          if(promptResponseModel.response !=null && promptResponseModel.response?.length !=0) {
-            for(int i=0;i<promptResponseModel.response!.length;i++){
-              promptTemplateIntentMapping[promptResponseModel.response![i].promptTemplate!] = promptResponseModel.response![i].intent!;
-            }
-            isLoading = false;
-            print("weweweww promptTemplateIntentMapping ${promptTemplateIntentMapping}");
-            notifyListeners();
-          }
-        } else {
-          isLoading = false;
-          notifyListeners();
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Something went wrong,Please try later'),
-          ));
-        }
-      } catch (e) {
-        isLoading = false;
-        notifyListeners();
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(constants.genericErrorMsg),
-        ));
-        Util.instance
-            .logMessage('Login Model', 'Error while authenticating $e');
-      }
-    } else {
-      isLoading = false;
-      notifyListeners();
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text(constants.noNetworkAvailability),
-      ));
-    }
-    return null;
-  }
-*/
-
-
 }

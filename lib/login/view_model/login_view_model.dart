@@ -8,6 +8,7 @@ import 'package:jwt_decoder/jwt_decoder.dart';
 import '../../home/view/home_view.dart';
 import '../../services/api_provider.dart';
 import '../../utils/app_state.dart';
+import '../model/ap_login_response_model.dart' as apLogin;
 import '../model/department_user_permission_response.dart';
 import '../../shared/loading_view_model.dart';
 import '../../utils/network_utils.dart';
@@ -104,6 +105,135 @@ class LoginViewModel extends LoadingViewModel {
     }
     return false;
   }
+
+
+  Future<bool?> authenticateForAp(
+      String userName, String password, BuildContext context) async {
+    /// Checking for active internet connection
+    if (await networkUtils.hasActiveInternet()) {
+      late apLogin.ApLoginResult loginResult;
+      String? locUUID;
+      String? locName;
+
+      /// Generating token and sending to backend
+      String? fcmToken = await FirebaseMessaging.instance.getToken();
+
+      isLoading = true;
+      try {
+        /// Creating login request parameters
+        Map<String, String> params = {
+          constants.userName: userName,
+        };
+
+        /// Calling the login API
+        loginResult = await repo.authenticationForAp(params, context);
+        if (loginResult.result != null) {
+          if (loginResult.result?.status != null &&
+              loginResult.result?.status == 200) {
+            apLogin.Content? userContent = loginResult.result!.content;
+            String encodedContent = json.encode(userContent?.toJson());
+
+/*            login.Content? userContent = login.Content(
+              username: "APWRIMS",
+              userId: '44',
+              userDetailsJson: login.UserDetailsJson(
+                data: login.Data(
+                  locType: 'mandal',
+                  location: login.Location(state: [
+                    login.State(
+                        stateName: 'Andhra Pradesh',
+                        stateUUID: "6f86292b-dd9a-4987-bb8f-c3940263b349",
+                        district: [
+                          login.District(
+                              districtName: 'Srikakulam',
+                              districtUUID:
+                              '00bb53a0-a27e-46c4-9016-fe9545766cb9',
+                              mandal: [
+                                login.Mandal(
+                                    mandalName: 'BURJA',
+                                    mndalUUID:
+                                    '1437f9bf-207a-4d7e-bd9d-0af79b6ef8db')
+                              ]),
+                        ]),
+                  ]),
+                ),
+              ),
+            );*/
+
+            if (userContent != null &&
+                userContent.userDetailsJson != null &&
+                userContent.userDetailsJson!.data != null) {
+              switch (userContent.userDetailsJson!.data!.locType) {
+                case 'mandal':
+                  locUUID = userContent.userDetailsJson!.data!.location!
+                      .state![0].district![0].mandal![0].mndalUUID;
+                  locName = userContent.userDetailsJson!.data!.location!
+                      .state![0].district![0].mandal![0].mandalName;
+                  break;
+                case 'district':
+                  locUUID = userContent.userDetailsJson!.data!.location!
+                      .state![0].district![0].districtUUID;
+                  locName = userContent.userDetailsJson!.data!.location!
+                      .state![0].district![0].districtName;
+                  break;
+                case 'state':
+                  locUUID = userContent
+                      .userDetailsJson!.data!.location!.state![0].stateUUID;
+                  locName = userContent
+                      .userDetailsJson!.data!.location!.state![0].stateName;
+                  break;
+                default:
+                  break;
+              }
+              AppState.instance.userData = encodedContent;
+              // AppState.instance.fcmToken = fcmToken!;
+              AppState.instance.locType =
+              userContent.userDetailsJson!.data!.locType!;
+              AppState.instance.locUUID = locUUID!;
+              AppState.instance.locName = locName!;
+              AppState.instance.userId = userContent.userId!;
+              AppState.instance.userName = userContent.username!;
+
+              await _setLoginSharedPreferences(
+                  AppState.instance.userName,
+                  AppState.instance.userId,
+                  AppState.instance.locName,
+                  AppState.instance.locType,
+                  AppState.instance.userData,
+                  AppState.instance.locUUID,
+                  // AppState.instance.fcmToken
+              );
+              notifyListeners();
+            }
+            isLoading = false;
+            debugPrint("User Details fetched successfully");
+            return true;
+          }
+        } else {
+          /// Login is unsuccessful
+          isLoading = false;
+          notifyListeners();
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Something went wrong,Please try later'),
+          ));
+        }
+      } catch (e) {
+        isLoading = false;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(constants.genericErrorMsg),
+        ));
+        Util.instance
+            .logMessage('Login Model', 'Error while authenticating $e');
+      }
+    } else {
+      isLoading = false;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(constants.noNetworkAvailability),
+      ));
+    }
+    return false;
+  }
+
 
   /// Restricting user after 10 unsuccessful attempts
   /// If user reaches 10 attempts then they have to wait for 15 minutes

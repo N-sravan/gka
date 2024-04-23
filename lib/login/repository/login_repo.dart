@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/material.dart';
+import 'package:gka/login/model/ap_login_response_model.dart';
 import 'package:http/http.dart' as http;
 import '../../shared/token_response.dart';
 import '../../utils/app_state.dart';
@@ -10,6 +11,9 @@ import 'package:gka/utils/common_constants.dart' as constants;
 /// Abstract class for the login repository
 abstract class LoginRepository {
   Future<LoginResult> authenticate(
+      Map<String, String> params, BuildContext context);
+
+  Future<ApLoginResult> authenticationForAp(
       Map<String, String> params, BuildContext context);
 
   Future<int?> saveFcmToken(BuildContext context);
@@ -37,7 +41,26 @@ class LoginRepositoryImpl extends LoginRepository {
 
     LoginResult loginResult = LoginResult.fromJson(responseMap);
     return loginResult;
+  }
 
+  @override
+  Future<ApLoginResult> authenticationForAp(
+      Map<String, String> params, BuildContext context) async {
+    Map<String, String> authHeaders = {
+      constants.headerContentType: constants.headerJson
+    };
+    String authUrl = 'https://apwrims.ap.gov.in/auth/login-user-details';
+    String requestBody = jsonEncode(params);
+
+    http.Response response = await http.post(
+      Uri.parse(authUrl),
+      headers: authHeaders,
+      body: requestBody,
+    );
+    Map<String, dynamic> responseMap = jsonDecode(response.body);
+
+    ApLoginResult apLoginResult = ApLoginResult.fromJson(responseMap);
+    return apLoginResult;
   }
 
   @override
@@ -53,7 +76,7 @@ class LoginRepositoryImpl extends LoginRepository {
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
     };
-    String authUrl = constants.genAiBaseUrl+constants.saveFcmTokenEndpoint;
+    String authUrl = constants.genAiBaseUrl + constants.saveFcmTokenEndpoint;
     String requestBody = jsonEncode(params);
 
     http.Response response = await http.post(

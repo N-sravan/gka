@@ -65,7 +65,6 @@ const String baseUrl = 'https://keralakrishistack.vassarlabs.com/';
 // const String krishidsBaseUrl = 'http://acerkrishidss.vassarlabs.com/staging/api';
 // const String krishidsBaseUrl = 'https://agriwise.vassarlabs.com/staging/api';
 const String imageUploadUrl = 'https://agriwise.vassarlabs.com/agribot/bucket/insert_file';
-const String geoJsonSurveyPointsUrl ='http://acerkrishidss.vassarlabs.com/geoserver/krishidss/wms?service=WMS&version=1.1.0&request=GetMap&layers=krishidss%3Atemp_farm_meta_data&bbox=-180.0%2C-90.0%2C180.0%2C90.0&width=768&height=384&format=geojson&cql_filter=';
 /*const String krishidsBaseUrl =
     'http://agriwise.vassarlabs.com/api';*/    //-
 
@@ -86,23 +85,14 @@ const String createSessionEndpoint = 'session/create_session';
 
 
 //UUIDs & keys
-
 const String indiaUUID = 'd6b37905-d2d3-4275-9317-d9b6f47cd783';
-const String keralaStateUUID = '62d3dc99-5bc3-4303-8be1-d4fa1f7deee5';
-// const String appUUID = '62feedb6-024d-4c3e-bd9e-5d4ee96a5d9d';
-const String appUUID = '1516fd33-c918-4ee6-92a1-445a02977a9b';
 const String odishaUUID = 'd19a5290-2e40-494a-83d2-98f4c845b1f1';
-const String countryKey = 'COUNTRY';
-const String stateKey = 'STATE';
-const String districtKey = 'DISTRICT';
-const String blockKey = 'BLOCK';
-const String panchayatKey = 'PANCHAYAT';
-const String villageKey = 'VILLAGE';
-const String farmKey = 'FARM';
-const String pointKey = 'POINT';
+const String kaleswaramUUID = '927b67e9-a2aa-46e9-99bc-41cf8c502668';
+const String apwrimsUUID = '6f86292b-dd9a-4987-bb8f-c3940263b349';
 
-// Login API response keys
-const String loginResultKey = 'result';
+//check this before generating apk
+const String projectId = 'd19a5290-2e40-494a-83d2-98f4c845b1f1';
+
 
 // Paddings
 const double largePadding = 32;
@@ -542,20 +532,6 @@ ButtonStyle buttonStyle = ElevatedButton.styleFrom(
   elevation: formComponentsElevation,
 );
 
-/*IconStyleData dropDownIconStyle = const IconStyleData(
-  icon: Icon(
-    Icons.keyboard_arrow_down_rounded,
-  ),
-  iconSize: 20,
-  iconEnabledColor: hintTextColor,
-  iconDisabledColor: hintTextColor,
-);*/
-
-/*MenuItemStyleData dropDownMenuItemStyle = const MenuItemStyleData(
-  height: 30,
-  padding: EdgeInsets.only(left: 14, right: 14),
-);*/
-
 //Decoration
 ShapeDecoration shapeDecorationRadius8 = ShapeDecoration(
   color: lightBlack,
@@ -630,220 +606,28 @@ const String microPhonePermissionSubHeading =
     'audio';
 const String allowPermissions = 'ALLOW PERMISSIONS';
 const String permissionsErrorMsg = 'Please grant permissions before proceeding';
-const String emailString = 'Email Id';
+const String genericErrorMsg = 'Something went wrong, please try later';
+const String currentlyUnderDevMsg = 'Currently under development!';
+const String toManyLoginAttempts = 'Too many login attempts. Please wait for 15 minutes and try again';
+const String noNetworkAvailability = 'Please check your network connection, no internet available';
+const String loginto = 'Login';
 const String userNameString = 'Username';
-const String enterEmail = 'Enter Email';
+const String emptyUsernameErrorMsg = 'Username cannot be empty';
+const String submit = 'Submit';
+const String emptyPasswordErrorMsg = 'Password cannot be empty';
 const String enterUserName = 'Enter Username';
 const String passwordString = 'Password';
 const String enterPassword = 'Password';
 const String loginString = 'Login';
-const String getOtpString = 'Get OTP';
-const String verifyOtpString = 'Verify OTP';
-const String enterOtpString = 'Enter OTP';
-const String otpErrorMsg = 'Please enter valid OTP';
-const String mobileNoString = 'Mobile Number';
-const String notReceivedOtp = "Didn't receive OTP";
-const String resendOtpString = 'Resend';
-const String enterMobileNumber = 'Enter Mobile Number';
-const String forgotPasswordString = 'Forgot Password?';
-const String emptyEmailErrorMsg = 'Email cannot be empty';
-const String emptyUsernameErrorMsg = 'Username cannot be empty';
-const String invalidEmailErrorMsg = 'Invalid email';
-const String emptyPasswordErrorMsg = 'Password cannot be empty';
-const String emptyMobileNumberErrorMsg = 'Mobile number cannot be empty';
-const String invalidMobileNumberErrorMsg = 'Enter valid Mobile number';
-const String currentlyUnderDevMsg = 'Currently under development!';
-const String toManyLoginAttempts =
-    'Too many login attempts. Please wait for 15 minutes and try again';
-const String noNetworkAvailability = 'Please check your network connection, no internet available';
-const String farmerAccountDeletedSuccessfully = 'Your account has been deleted Successfully';
-const String genericErrorMsg = 'Something went wrong, please try later';
-const String otpExpiredMsg = 'OTP is expired';
-const String invalidOtpErrMsg = 'OTP is Invalid';
-const String responseErrorMsg = 'These farms are already updated';
-const String underDevelopment = 'Currently under development';
-const String plotRejectedMsg = 'This plot has been rejected';
-const String plotNotVerifiedMsg = 'This plot has not been verified yet';
-const String notVerifiedMsg = 'Not Verified';
-const String farmerRegApprovedMsg = 'Farmer Registration was Approved';
-const String farmerRegRejectedMsg = 'Farmer Registration was Rejected';
-const String fieldRegApprovedMsg = 'Atleast one field was Approved';
-const String fieldRegRejectedMsg = 'All the fields were Rejected';
-const String cropApprovedMsg = 'Atleast one crop was Approved';
-const String cropRejectedMsg = 'All the Crops were Rejected';
-const String markerValidation = 'Please drop atleast two markers on Farm boundary';
-const String aims = 'AIMS';
-const String ownerInformation = 'Farmer Registration';
-const String familyInformation = 'Family Information';
-const String bankInformation = 'Bank Information';
-const String fieldInformation = 'Add Field Information';
-const String cropInformation = 'Add Crop Information';
-const String cropMonitering = 'Crop Monitoring';
-const String app = 'App';
-const String selectRole = 'Please select your role';
-const String farmer = 'Farmer';
-const String serveyor = 'Surveyor';
-const String department = 'Department';
-const String otherVendor = 'Other Vendor';
-const String loginto = 'Login';
-const String account = 'Account';
-const String fieldId = 'Field ID';
-const String gisArea = 'GIS Area';
-const String notSurveyed = 'Not Surveyed';
-const String surveyed = 'Surveyed';
-const String accepted = 'Accepted';
-const String rejected = 'Rejected';
-const String reSubmitted = 'Resubmitted';
-const String cropInfo = 'Crop Info';
-const String ownerInfo = 'Owner Info';
-const String otherInfo = 'Other Info';
-String cropName = 'Crop Name';
-String farmType = 'Farming Type';
-const String verifyCrop = 'Verify Crop Sown';
-const String cropGroup = 'Crop Group';
-const String enter = 'Enter';
-const String addDetails = 'Add Details';
-const String ownerRegistration = "Farmer's Registration";
-const String bankDetails = 'Bank A/C Details';
-const String cropDetails = 'Plot details';
-const String plotDetails = 'Crop details';
-const String location = 'Location';
-const String plotListString = 'Plot List';
-const String plots = 'Plots';
-const String home = 'Home';
-const String market = 'Market';
-const String report = 'Report';
-const String helpDesk = 'Helpdesk';
-const String welcomeFarmer =  "Hi, Welcome Farmer";
-const String back =  "Back";
-const String addCrop =  "Add Crop";
-const String viewCropInfo =  "View Crop";
-const String addCropPhoto =  "Add Crop Photo";
-const String fieldHistory =  "Field History";
-const String viewScheme =  "View Scheme";
-const String reportCropLoss =  "Report Crop Loss";
-const String cropVariety = 'Crop Variety';
-const String enterCropName = 'Enter Correct Crop Name';
-const String cropVarietyError = 'Crop Variety cannot be empty';
-const String cropNameError = 'Crop Name cannot be empty';
-const String sowingDate = 'Sowing Date';
-const String sowingDateErrorMessage = 'Sowing Date cannot be empty';
-const String tentativeCropDurationErrorMsg =
-    'Tentative Crop Duration cannot be empty';
-const String tentativeCropDuration = 'Tentative Crop Duration';
-const String expectedHarvestedDateErrorMsg =
-    'Expected Harvested Date cannot be empty';
-const String expectedHarvestedDate = 'Expected Harvested Date';
-const String cropPhoto = 'Crop Photo';
-const String capturePhotoErrorMsg = 'Please capture picture';
-const String capturePhoto = 'Capture Photo';
-const String submit = 'Submit';
-const String continueText = 'Continue';
-const String register = 'Register';
-const String addBankDetails = 'Add Bank Details';
-const String area = 'Area(As per registration, Acre)';
-const String areaErrorMsg = 'Area cannot be empty';
-const String waterSourceErrorMsg = 'Water Source cannot be empty';
-const String cultivateBy = 'Cultivated By';
-const String select = 'Select';
-const String irrigationSource = 'Irrigation Source';
-const String landType = 'Land Type';
-const String expectedYield = 'Yield (kg/ha)';
-const String expectedYieldErrorMsg = 'Yield cannot be empty';
-const String locationErrorMsg = 'Please select location';
-const String selectLocation = 'Select Location';
-const String ownerName = 'Name';
-const String ownerMobNo = 'Owner Mobile Number';
-const String surveyNo = 'Survey Number';
-const String ownerFatherName = 'Owner Father Name';
-const String ownerNameErrMsg = 'Owner Name cannot be empty';
-const String ownerMobNoErrMsg = 'Owner Mobile Number cannot be empty';
-const String ownerFatherNameErrMsg = 'Owner Father Name cannot be empty';
-const String surveyNoErrMsg = 'Survey Number cannot be empty';
-const String subSurveyNoErrMsg = 'Sub Survey Number cannot be empty';
-const String emailIdErrMsg = 'Email ID cannot be empty';
-const String aadharNoErrMsg = 'Aadhar Number cannot be empty';
-const String panNoErrMsg = 'PAN Number cannot be empty';
-const String genderErrMsg = 'Gender cannot be empty';
-const String dobErrMsg = 'DOB cannot be empty';
-const String educationQualificationErrMsg = 'Education Qualification cannot be empty';
-const String pincodeErrMsg = 'Pincode cannot be empty';
-const String streetErrMsg = 'Street cannot be empty';
-const String houseNoErrMsg = 'House No cannot be empty';
-const String wardErrMsg = 'Ward Number cannot be empty';
-const String villageErrMsg = 'Village Name cannot be empty';
-const String bankErrMsg = 'Bank Name cannot be empty';
-const String branchNameErrMsg = 'Branch Name cannot be empty';
-const String accountNoErrMsg = 'Account Number cannot be empty';
-const String repeatAccNoErrMsg = 'Repeat account Number cannot be empty';
-const String repeatAccNoNotSameErrMsg = 'Repeat Account No and Account No must be same';
-const String ifscLengthErrMsg = 'IFSC code must be 11-16 digits';
-const String accountNoLengthErrMsg = 'Account number must be 11-16 digits';
-const String ifscErrMsg = 'IFSC code cannot be empty';
-const String noPointSurveyDataMsg = 'No Points have been Surveyed yet';
+
 
 const String clickFromCamera = 'Click from Camera';
 const String clickFromGallery = 'Click from Gallery';
 
 const String cancel = 'Cancel';
-const String confirm = 'CONFIRM';
-const String clear = 'CLEAR';
-const String mergeText = 'MERGE';
-const String splitText = 'SPLIT';
-const String insertText = 'INSERT';
-const String deleteText = 'DELETE';
-const String loaderText = 'Loading';
-const String updateFarmsMsg = 'Updating farms';
-const String lineStringText = 'LineString';
-const String search = 'Search';
-const String registeredSuccessfulMsg = 'Farmer registered Successfully!';
-const String fieldDataDeletionSuccessfulMsg = 'Field Data deleted Successfully!';
-const String mergeSuccessfulMsg = 'Merged Successfully!';
-const String splitSuccessfulMsg = 'Splitted Successfully!';
-const String submitSuccessfulMsg = 'Submitted Successfully!';
-const String surveyedFarmDeletionMsg = 'Surveyed farm cannot be deleted';
-const String farmerRegisteredCheck = 'Please Register the Farmer';
-const String plotInfoCheck = 'Please submit the Plot data';
-const String selectSurveyType = 'Please Select Survey Type';
-const String selectAnOption= 'Please select an option';
-const String tFarmerName = 'Tenant Farmer Name';
-const String tFarmerNameErrorMessage = 'Tenant Farmer Name cannot be empty';
-const String tMobileNo = 'Tenant Mobile Number';
-const String tMobileNoErrorMsg = 'Tenant Mobile Number cannot be empty';
-const String allocatedArea = 'Allocated Area(Acre)';
-const String allocatedAreaErrorMsg = 'Allocated Area cannot be empty';
-const String tenancyStartDate = 'Tenancy Start Date';
-const String tenancyStartDateErrorMsg = 'Tenancy Start Date cannot be empty';
-const String tenancyEndDate = 'Tenancy End Date';
-const String tenancyEndDateErrorMsg = 'Tenancy End Date cannot be empty';
-const String enterValidMobileNo = 'Please Enter Valid Mobile Number';
-const String enterValidEmailId = 'Please Enter Valid Email Address';
-const String enterValidAadharNo = 'Please Enter Valid Aadhar Number';
-const String enterValidPanNo = 'Please Enter Valid PAN Number';
-const String enterValidPincode= 'Please Enter Valid Pincode';
-const String imageCaptureErrorMessage = 'Did not capture image';
-const String maxImageCaptureMessage =
-    'Cannot capture any more photographs, limit reached';
-const String captureImage = 'Please Capture Images';
-const String districtErrorMsg = 'District Name cannot be empty';
-const String blockErrorMsg = 'Block Name cannot be empty';
-const String panchayatErrorMsg = 'Panchayat Name cannot be empty';
-const String splitToolTipMsg = 'Please drop markers across boundaries';
-const String locationPermissionMsg = 'Please grant Location permission to use this feature';
-
-const String mapType = 'Map Type';
 
 enum CropSownRadioOptions {village, field}
 enum NameSortRadioOptions {ascending, descending}
 enum CropNameVerifyRadioOptions {agree, disagree}
 
-//Role Names
-const String aoRoleName = "Agricultural Officer";
 const String genAiBaseUrl = "https://genai.vassarlabs.com/aquamind/";
-
-const int ownerCultivator = 1;
-const int ownerCultivatorCumTenant = 2;
-const int ownerNotCultivating = 3;
-const int landlessTenant = 4;
-const int wetland = 1;
-const int dryLand = 2;
