@@ -96,15 +96,15 @@ void main() async {
     DeviceOrientation.landscapeLeft,
   ]);*/
 
-  if(notificationStatus == PermissionStatus.granted) {
+  if (notificationStatus == PermissionStatus.granted) {
     print("wewewewewew notificationStatus:::${PermissionStatus.granted}");
-    /*Workmanager().initialize(callbackDispatcher);
+    Workmanager().initialize(callbackDispatcher);
     Workmanager().registerPeriodicTask(
       "speechTask",
       "speechTask",
       frequency: const Duration(minutes: 15),
       initialDelay: const Duration(minutes: 2),
-    );*/
+    );
   }
   runApp(
     MultiProvider(
@@ -157,16 +157,16 @@ callbackDispatcher() {
       receivePort.listen((total) async {
         print("wewewewewew started bg");
         await showNotification();
-          await tts.speak("Would you like to know the APWRIMS Data?");
-          print("wewewewewew before timer ${DateTime.now().second}");
-          Timer(const Duration(seconds: 3), () async {
-            try {
-              print("wewewewewew after timer ${DateTime.now().second}");
-              await initializeSpeechToTextBg();
-            } catch (e) {
-              print("Error occurred: $e");
-            }
-          });
+        await tts.speak("Would you like to know the Summary data?");
+        print("wewewewewew before timer ${DateTime.now().second}");
+        Timer(const Duration(seconds: 3), () async {
+          try {
+            print("wewewewewew after timer ${DateTime.now().second}");
+            await initializeSpeechToTextBg();
+          } catch (e) {
+            print("Error occurred: $e");
+          }
+        });
       });
     }
     return Future.delayed(const Duration(seconds: 20), () async {
@@ -254,18 +254,18 @@ Future<void> showNotification() async {
       dynamic values = snapshot.value;
       values.forEach((key, value) async {
         if (value['isUser'] == false) {
-          // responseMessage = value['message'].toString() ?? '';
-          responseMessage =
-              "In Andhra Pradesh, the current water year has seen a total rainfall of 4,197.08 TMC, with actual rainfall measuring 727.82 mm. The state hosts 108 reservoirs currently holding 270.60 TMC of water, complemented by a network of 38,441 minor irrigation tanks contributing 100.08 TMC. Groundwater levels have decreased slightly to 8.35 m from the previous month's 8.48 m. Soil moisture levels are promising, with 369.29 TMC of available moisture, distributed at 11.95% at 30 cm depth and 49.78% at 100 cm depth. The region demonstrates proactive water conservation efforts with 1,399,238 water conservation structures storing 1.80 TMC of water. Overall water availability stands at 741.77 TMC, sourced predominantly from reservoirs (741.77 TMC) with the remaining 471.17 TMC coming from other sources.";
+          responseMessage = value['message'].toString() ?? '';
         }
       });
     }
   });
   print("wewewewewew::$responseMessage");
 
-  await flutterLocalNotificationsPlugin.show(0, 'APWRIMS Summary',
-      responseMessage.toString().trim(), platformChannelSpecifics,
-      payload: 'shh');
+  if (responseMessage.isNotEmpty) {
+    await flutterLocalNotificationsPlugin.show(0, 'Summary',
+        responseMessage.toString().trim(), platformChannelSpecifics,
+        payload: 'shh');
+  }
 }
 
 void complexTask3(Map<String, dynamic> data) {
