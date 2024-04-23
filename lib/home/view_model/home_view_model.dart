@@ -55,12 +55,12 @@ class HomeViewModel extends LoadingViewModel {
 
   void updateSelectedValue(String value) {
     selectedValue = value;
-    AppState.instance.language = selectedValue;
     notifyListeners();
   }
 
   void updateSelectedLanguage(String value) {
     selectedLang = value;
+    AppState.instance.language = value;
     notifyListeners();
   }
 
@@ -175,6 +175,7 @@ class HomeViewModel extends LoadingViewModel {
       isFirstTime = true;
       notifyListeners();
       return uuid;*/
+      isLoading = true;
       String url = constants.genAiBaseUrl + constants.createSessionEndpoint;
       String data = AppState.instance.userData;
       /* Content data = login.Content(
@@ -217,6 +218,7 @@ class HomeViewModel extends LoadingViewModel {
         sessionId = jsonDecode(response.body)["session_id"];
         isFirstTime = false;
         notifyListeners();
+        isLoading = false;
         return sessionId;
       } else {
         Fluttertoast.showToast(msg: "Couldn't create Session");
@@ -225,6 +227,7 @@ class HomeViewModel extends LoadingViewModel {
       Fluttertoast.showToast(msg: "Couldn't create Session");
       print("Error Stacktrace $error $stacktrace");
     }
+    isLoading = false;
     return null;
   }
 

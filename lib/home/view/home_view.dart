@@ -38,7 +38,6 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
         break;
       case constants.apwrimsUUID:
         title = 'APWRIMS Bot';
-        viewModel.langList.clear();
         viewModel.langList.add('Telugu');
         break;
       case constants.kaleswaramUUID:
@@ -320,7 +319,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                       onPressed: () async {
                         if (viewModel.selectedLang.isNotEmpty ||
                             viewModel.selectedModel.isNotEmpty) {
-                        /*  if (viewModel.selectedLang == 'Odia') {
+                          /*  if (viewModel.selectedLang == 'Odia') {
                             AppState.instance.isOriyaSelected = true;
                           } else {
                             AppState.instance.isOriyaSelected = false;
@@ -348,7 +347,14 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                           Fluttertoast.showToast(msg: 'Please select');
                         }
                       },
-                      child: const Text('Start Session'),
+                      child: !model.isLoading
+                          ? const Text('Start Session')
+                          : Container(
+                              width: MediaQuery.of(context).size.width,
+                              height: MediaQuery.of(context).size.height,
+                              color: Colors.white,
+                              child: constants.indicator,
+                            ),
                     ),
                   ],
                 ),
@@ -369,101 +375,4 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
       ),
     );
   }
-}
-
-class PaddedElevatedButton extends StatelessWidget {
-  const PaddedElevatedButton({
-    required this.buttonText,
-    required this.onPressed,
-    Key? key,
-  }) : super(key: key);
-
-  final String buttonText;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
-        child: ElevatedButton(
-          onPressed: onPressed,
-          child: Text(buttonText),
-        ),
-      );
-}
-
-String? selectedNotificationPayload;
-
-/// A notification action which triggers a url launch event
-const String urlLaunchActionId = 'id_1';
-
-/// A notification action which triggers a App navigation event
-const String navigationActionId = 'id_3';
-
-Future<void> _showNotificationWithActions() async {
-  const AndroidNotificationDetails androidNotificationDetails =
-      AndroidNotificationDetails(
-    'your channel id',
-    'your channel name',
-    channelDescription: 'your channel description',
-    importance: Importance.max,
-    priority: Priority.high,
-    ticker: 'ticker',
-    actions: <AndroidNotificationAction>[
-      AndroidNotificationAction(
-        urlLaunchActionId,
-        'Action 1',
-        icon: DrawableResourceAndroidBitmap('food'),
-        contextual: true,
-      ),
-      AndroidNotificationAction(
-        'id_2',
-        'Action 2',
-        titleColor: Color.fromARGB(255, 255, 0, 0),
-        icon: DrawableResourceAndroidBitmap('secondary_icon'),
-      ),
-      AndroidNotificationAction(
-        navigationActionId,
-        'Action 3',
-        icon: DrawableResourceAndroidBitmap('secondary_icon'),
-        showsUserInterface: true,
-        // By default, Android plugin will dismiss the notification when the
-        // user tapped on a action (this mimics the behavior on iOS).
-        cancelNotification: false,
-      ),
-    ],
-  );
-
-  // const DarwinNotificationDetails iosNotificationDetails =
-  // DarwinNotificationDetails(
-  //   categoryIdentifier: darwinNotificationCategoryPlain,
-  // );
-  //
-  // const DarwinNotificationDetails macOSNotificationDetails =
-  // DarwinNotificationDetails(
-  //   categoryIdentifier: darwinNotificationCategoryPlain,
-  // );
-
-  // const LinuxNotificationDetails linuxNotificationDetails =
-  // LinuxNotificationDetails(
-  //   actions: <LinuxNotificationAction>[
-  //     LinuxNotificationAction(
-  //       key: urlLaunchActionId,
-  //       label: 'Action 1',
-  //     ),
-  //     LinuxNotificationAction(
-  //       key: navigationActionId,
-  //       label: 'Action 2',
-  //     ),
-  //   ],
-  // );
-  //
-  // const NotificationDetails notificationDetails = NotificationDetails(
-  //   android: androidNotificationDetails,
-  //   iOS: iosNotificationDetails,
-  //   macOS: macOSNotificationDetails,
-  //   linux: linuxNotificationDetails,
-  // );
-  // await flutterLocalNotificationsPlugin.show(
-  //     id++, 'plain title', 'plain body', notificationDetails,
-  //     payload: 'item z');
 }
