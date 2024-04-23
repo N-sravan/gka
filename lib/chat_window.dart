@@ -343,12 +343,13 @@ class _ChatWindowState extends State<ChatWindow> {
                     _toggleValue = !_toggleValue; // Toggle the value
                   });
                   print("wewewewewew _toggleValue::$_toggleValue");
-                  print("wewewewewew AppState.instance.userId ::  ${AppState.instance.userId}");
+                  print(
+                      "wewewewewew AppState.instance.userId ::  ${AppState.instance.userId}");
                   if (!_toggleValue) {
                     // If switching to Always listening mode
                     // autoSessionId = const Uuid().v4();
                     await tts.stop();
-                    if(AppState.instance.userId.isNotEmpty) {
+                    if (AppState.instance.userId.isNotEmpty) {
                       await initializeService(AppState.instance.userId);
                     }
 
@@ -475,7 +476,7 @@ class _ChatWindowState extends State<ChatWindow> {
                                     });
 
                               dataTimer =
-                                  Timer(const Duration(seconds: 15), () async {
+                                  Timer(const Duration(seconds: 100), () async {
                                 print("timerCounter::$timerCounter");
                                 if (showLoader.value) {
                                   DatabaseReference ref =
@@ -1015,7 +1016,8 @@ Future<void> initializeSpeechToText(String sessionId) async {
       // await startListeningBg();
     },
   );
-  print("wewewewewew AppState.instance.triggeredWord ::  ${AppState.instance.triggeredWord}");
+  print(
+      "wewewewewew AppState.instance.triggeredWord ::  ${AppState.instance.triggeredWord}");
   print("wewewewewew session $sessionId");
   if (available && AppState.instance.triggeredWord == "") {
     AppState.instance.triggeredWord = await startListenings(sessionId);
@@ -1049,8 +1051,8 @@ Future<void> startListeningToYes(String sessionId, String word) async {
   print("wewewewewew trigger word :: ${AppState.instance.triggeredWord}");
   await speechToText.stop();
   print("wewewewewew speechToText.isListening:: ${speechToText.isListening}");
-  DatabaseReference ref = FirebaseDatabase.instance.ref(
-      "CHAT_BOT_CHANGELOG/${constants.apwrimsUUID}/44/${sessionId}");
+  DatabaseReference ref = FirebaseDatabase.instance
+      .ref("CHAT_BOT_CHANGELOG/${constants.apwrimsUUID}/44/${sessionId}");
   SpeechRecognitionResult result;
 
   await speechToText.listen(

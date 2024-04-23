@@ -2,7 +2,6 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:gka/home/view/home_drawer_widget.dart';
 import 'package:gka/home/view_model/home_view_model.dart';
 import 'package:gka/utils/app_state.dart';
 import 'package:provider/provider.dart';
@@ -53,7 +52,6 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
               return Future.value(false);
             },
             child: Scaffold(
-              drawer: const HomeDrawerWidget(),
               appBar: AppBar(
                 centerTitle: true,
                 title: const Text('APWRIMS Bot'),
