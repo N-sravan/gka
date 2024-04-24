@@ -259,7 +259,6 @@ class _ChatWindowState extends State<ChatWindow> {
       "isUser": true,
       "message": result.recognizedWords,
       "mediaUrl": '',
-      'llm_type': llmType,
       'language': language,
       'model_uuid': AppState.instance.modelUUID
     });

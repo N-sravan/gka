@@ -102,17 +102,17 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                         hint: const Text('Select'),
                         items: viewModel.langList
                             .map((String item) => DropdownMenuItem<String>(
-                          value: item,
-                          child: Text(
-                            item,
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 14,
-                              fontFamily: 'Poppins',
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ))
+                                  value: item,
+                                  child: Text(
+                                    item,
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 14,
+                                      fontFamily: 'Poppins',
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                ))
                             .toList(),
                         value: viewModel.selectedLang.isNotEmpty == true
                             ? viewModel.selectedLang
@@ -205,17 +205,17 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                         hint: const Text('Select'),
                         items: viewModel.modelList!
                             .map((String item) => DropdownMenuItem<String>(
-                          value: item,
-                          child: Text(
-                            item,
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 14,
-                              fontFamily: 'Poppins',
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ))
+                                  value: item,
+                                  child: Text(
+                                    item,
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 14,
+                                      fontFamily: 'Poppins',
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                ))
                             .toList(),
                         value: viewModel.selectedModel.isNotEmpty == true
                             ? viewModel.selectedModel
@@ -327,7 +327,14 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                           Fluttertoast.showToast(msg: 'Please select');
                         }
                       },
-                      child: const Text('Start Session'),
+                      child: !model.isLoading
+                          ? const Text('Start Session')
+                          : Container(
+                              width: MediaQuery.of(context).size.width,
+                              height: MediaQuery.of(context).size.height,
+                              color: Colors.white,
+                              child: constants.indicator,
+                            ),
                     ),
                   ],
                 ),
@@ -362,12 +369,12 @@ class PaddedElevatedButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
-    child: ElevatedButton(
-      onPressed: onPressed,
-      child: Text(buttonText),
-    ),
-  );
+        padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+        child: ElevatedButton(
+          onPressed: onPressed,
+          child: Text(buttonText),
+        ),
+      );
 }
 
 String? selectedNotificationPayload;
@@ -380,7 +387,7 @@ const String navigationActionId = 'id_3';
 
 Future<void> _showNotificationWithActions() async {
   const AndroidNotificationDetails androidNotificationDetails =
-  AndroidNotificationDetails(
+      AndroidNotificationDetails(
     'your channel id',
     'your channel name',
     channelDescription: 'your channel description',
