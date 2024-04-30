@@ -104,7 +104,7 @@ class HomeViewModel extends LoadingViewModel {
           content: Text(constants.genericErrorMsg),
         ));
         Util.instance
-            .logMessage('Login Model', 'Error while authenticating $e');
+            .logMessage('Home View Model', 'Error :  $e');
       }
     } else {
       isLoading = false;
@@ -156,7 +156,7 @@ class HomeViewModel extends LoadingViewModel {
           content: Text(constants.genericErrorMsg),
         ));
         Util.instance
-            .logMessage('Login Model', 'Error while authenticating $e');
+            .logMessage('Home View Model', 'Error :  $e');
       }
     } else {
       isLoading = false;

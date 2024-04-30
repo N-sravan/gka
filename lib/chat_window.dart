@@ -56,7 +56,8 @@ class ChatWindow extends StatefulWidget {
   State<ChatWindow> createState() => _ChatWindowState();
 }
 
-class _ChatWindowState extends State<ChatWindow> {
+class _ChatWindowState extends State<ChatWindow>
+    with AutomaticKeepAliveClientMixin {
   var scrollControllerListView = ScrollController();
   int prevChatLength = 0;
   int prevChatLengthHistory = 0;
@@ -158,6 +159,7 @@ class _ChatWindowState extends State<ChatWindow> {
     // Dispose of the timer when the widget is removed
     dataTimer?.cancel();
     loadingTimer?.cancel();
+    tts.stop();
     super.dispose();
   }
 
@@ -262,11 +264,12 @@ class _ChatWindowState extends State<ChatWindow> {
   /// the platform returns recognized words.
   Future<void> _onSpeechResult(SpeechRecognitionResult result) async {
     print("_onSpeechResult ${result.recognizedWords}");
-    DatabaseReference ref = FirebaseDatabase.instance.ref(
+    updateChatControllerForSpeech(result.recognizedWords);
+  /*  DatabaseReference ref = FirebaseDatabase.instance.ref(
         "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
 
     String? message = '';
-    print("session id::${sessionId}");
+    print("session id::$sessionId");
     if (language == 'odia') {
       TransliterationResponse? response = await Transliteration.transliterate(
           result.recognizedWords, Languages.ORIYA);
@@ -282,7 +285,7 @@ class _ChatWindowState extends State<ChatWindow> {
       "mediaUrl": '',
       'language': language,
       'model_uuid': AppState.instance.modelUUID
-    });
+    });*/
 
     bool active = _speechToText.isListening;
     listeningActive.value = active;
@@ -442,15 +445,10 @@ class _ChatWindowState extends State<ChatWindow> {
                             if (widget.isFromHistory != null &&
                                 widget.isFromHistory == true &&
                                 c == 0) {
-                              //messageList.reversed;
                               if (messageList.isNotEmpty &&
                                   !messageList[messageList.length - 1].isUser &&
                                   messageList.length > prevChatLength) {
                                 c++;
-                                /*  WidgetsBinding.instance.addPostFrameCallback((_) {
-                            showLoader.value = false;
-                          });
-                          tts.speak(messageList[messageList.length - 1].text);*/
                               }
                             } else {
                               if (messageList.isNotEmpty &&
@@ -469,6 +467,7 @@ class _ChatWindowState extends State<ChatWindow> {
                                 WidgetsBinding.instance
                                     .addPostFrameCallback((_) {
                                   showLoader.value = true;
+                                  tts.stop();
                                 });
                               }
 
@@ -498,7 +497,8 @@ class _ChatWindowState extends State<ChatWindow> {
                                   WidgetsBinding.instance
                                       .addPostFrameCallback((_) {
                                     showLoader.value = false;
-                                    print("dataNotFoundMsg::${dataNotFoundMsg}");
+                                    print(
+                                        "dataNotFoundMsg::${dataNotFoundMsg}");
                                   });
                                   await tts.speak(dataNotFoundMsg);
                                 }
@@ -528,50 +528,33 @@ class _ChatWindowState extends State<ChatWindow> {
                       ),
                     )
                   : const SizedBox(),
-              _toggleValue
-                  ? Padding(
-                      padding: const EdgeInsets.only(left: 80.0),
-                      child: Align(
-                        alignment: AlignmentDirectional.centerStart,
-                        child: ValueListenableBuilder(
-                          valueListenable: showLoader,
-                          builder: (context, value, _) {
-                            if (value) {
-                              return SizedBox(
-                                  height: 100,
-                                  width: 100,
-                                  child: Image.asset(
-                                      'assets/images/response_bubble.gif'));
-                            }
-                            return const SizedBox();
-                          },
-                        ),
-                      ),
-                    )
-                  : const SizedBox(),
-              /*Padding(
-                padding: const EdgeInsets.only(bottom: 30.0),
+              Padding(
+                padding: const EdgeInsets.only(left: 80.0),
                 child: Align(
-                  alignment: Alignment.bottomCenter,
+                  alignment: AlignmentDirectional.centerStart,
                   child: ValueListenableBuilder(
-                    valueListenable: listeningActive,
+                    valueListenable: showLoader,
                     builder: (context, value, _) {
-                      return AvatarGlow(
-                        animate: value,
-                        glowColor: Colors.purple,
-                        child: FloatingActionButton(
-                          onPressed:
-                              // If not yet listening for speech start, otherwise stop
-                              !value ? _startListening : _stopListening,
-                          tooltip: 'Listen',
-                          child: Icon(!value ? Icons.mic_off : Icons.mic),
-                        ),
-                      );
+                      if (value) {
+                        return SizedBox(
+                            height: 100,
+                            width: 100,
+                            child: Image.asset(
+                                'assets/images/response_bubble.gif'));
+                      }
+                      return const SizedBox();
                     },
-                  ), // your widget would go here
+                  ),
                 ),
-              ),*/
-              _toggleValue
+              ),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: bottomBar(),
+              )
+            ],
+          ),
+
+          /* _toggleValue
                   ? Padding(
                       padding: const EdgeInsets.all(20),
                       child: Padding(
@@ -600,9 +583,7 @@ class _ChatWindowState extends State<ChatWindow> {
                   : const Padding(
                       padding: EdgeInsets.all(20),
                       child: SizedBox(),
-                    )
-            ],
-          ),
+                    )*/
         ),
       ),
     );
@@ -610,13 +591,12 @@ class _ChatWindowState extends State<ChatWindow> {
 
   Widget bottomBar() {
     return Container(
-      width: MediaQuery.of(context).size.width,
+      // width: MediaQuery.of(context).size.width,
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
       child: Row(
         children: [
-          SpeechToTextWidget(
-              updateSpeech: updateChatControllerForSpeech, localeId: "en-US"),
-          /*Padding(
+          // SpeechToTextWidget(updateSpeech: updateChatControllerForSpeech, localeId: "en-US"),
+          Padding(
             padding: const EdgeInsets.all(4.0),
             child: Align(
               alignment: Alignment.bottomCenter,
@@ -635,7 +615,7 @@ class _ChatWindowState extends State<ChatWindow> {
                 },
               ),
             ),
-          ),*/
+          ),
           CameraWidget(saveCapturedPhoto: saveCapturedPhoto),
           Expanded(
             child: Stack(
@@ -845,9 +825,13 @@ class _ChatWindowState extends State<ChatWindow> {
   Future<void> insertImageDataIntoDb(String? imageUrl, String text) async {
     DatabaseReference ref = FirebaseDatabase.instance.ref(
         "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
-    await ref
-        .push()
-        .set({"isUser": true, "message": text, "mediaUrl": imageUrl});
+    await ref.push().set({
+      "isUser": true,
+      "message": text,
+      "mediaUrl": imageUrl,
+      "language": language,
+      "model_uuid": AppState.instance.modelUUID,
+    });
     chatController.clear();
     capturedPhoto = null;
     setState(() {});
@@ -963,6 +947,9 @@ class _ChatWindowState extends State<ChatWindow> {
 
   await startListenings(sessionId);*/
   }
+
+  @override
+  bool get wantKeepAlive => true;
 
 /*Future<void> initializeSpeechToText(String sessionId) async {
     print(("startListeningToHello: starting listening"));

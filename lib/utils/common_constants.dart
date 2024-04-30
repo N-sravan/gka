@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-
 // Shared Preferences
 const String preferenceTypeString = 'string';
 const String preferenceTypeStringList = 'stringList';
@@ -28,8 +27,8 @@ const String preferenceUserData = 'userData';
 const String preferenceToken = 'token';
 const String preferenceFcmToken = 'fcmToken';
 const String preferencelocName = 'locName';
-const String preferencelocUUID= 'locUUID';
-const String preferencelocType= 'locType';
+const String preferencelocUUID = 'locUUID';
+const String preferencelocType = 'locType';
 const String preferenceRefreshToken = 'refreshToken';
 const String preferenceCsrfToken = 'csrfToken';
 const String preferenceUserRole = 'userRole';
@@ -38,7 +37,6 @@ const String preferenceUserStateUUID = 'stateUUID';
 const String preferenceUserDistrict = 'userDistrict';
 const String preferenceUserDistrictUUID = 'districtUUID';
 const String hiveEncryptionKey = 'hiveKey';
-
 
 // HeaderKeys
 const String accept = 'Accept';
@@ -64,11 +62,13 @@ const String baseUrl = 'https://keralakrishistack.vassarlabs.com/';
 // const String baseUrl = 'https://agriwise.vassarlabs.com/';
 // const String krishidsBaseUrl = 'http://acerkrishidss.vassarlabs.com/staging/api';
 // const String krishidsBaseUrl = 'https://agriwise.vassarlabs.com/staging/api';
-const String imageUploadUrl = 'https://agriwise.vassarlabs.com/agribot/bucket/insert_file';
+const String imageUploadUrl =
+    'https://agriwise.vassarlabs.com/agribot/bucket/insert_file';
 /*const String krishidsBaseUrl =
-    'http://agriwise.vassarlabs.com/api';*/    //-
+    'http://agriwise.vassarlabs.com/api';*/ //-
 
-const String loginEndpoint = 'https://gowater-staging.vassarlabs.com/um/api/getUserDetailsForChatbot/';
+const String loginEndpoint =
+    'https://gowater-staging.vassarlabs.com/um/api/getUserDetailsForChatbot/';
 const String saveFcmTokenEndpoint = 'fcm_tokens/save_token';
 const String deleteTokenEndpoint = 'fcm_tokens/delete_token';
 const String getAvailabeModelsEndpoint = 'get_available_models';
@@ -82,8 +82,6 @@ const String updatePromptTemplateEndpoint = 'update_prompt_template';
 const String createPromptTemplateEndpoint = 'create_prompt_template';
 const String createSessionEndpoint = 'session/create_session';
 
-
-
 //UUIDs & keys
 const String indiaUUID = 'd6b37905-d2d3-4275-9317-d9b6f47cd783';
 const String odishaUUID = 'd19a5290-2e40-494a-83d2-98f4c845b1f1';
@@ -91,8 +89,7 @@ const String kaleswaramUUID = '927b67e9-a2aa-46e9-99bc-41cf8c502668';
 const String apwrimsUUID = '6f86292b-dd9a-4987-bb8f-c3940263b349';
 
 //check this before generating apk
-const String projectId = '927b67e9-a2aa-46e9-99bc-41cf8c502668';
-
+const String projectId = '6f86292b-dd9a-4987-bb8f-c3940263b349';
 
 // Paddings
 const double largePadding = 32;
@@ -103,7 +100,7 @@ const double xSmallPadding = 4;
 // Dimensions
 const double splashIconHeight = 150;
 const double splashIconWidth = 120;
-const double departmentIconTop=134;
+const double departmentIconTop = 134;
 const double buttonHeight = 46;
 const double minButtonHeight = 32;
 const double mediumButtonHeight = 38;
@@ -140,8 +137,8 @@ const int imageDeletionRetryCount = 2;
 const Color primaryColor = Color.fromRGBO(248, 248, 250, 1);
 const Color secondaryColor = Color.fromRGBO(118, 118, 128, 0.12);
 const Color primaryBgColor = Color(0xffF8F8FA);
-const Color containerColor=Color.fromRGBO(118, 118, 128, 0.12);
-const Color labelColor=Color.fromRGBO(255, 255, 255, 1);
+const Color containerColor = Color.fromRGBO(118, 118, 128, 0.12);
+const Color labelColor = Color.fromRGBO(255, 255, 255, 1);
 const Color mapIconsHighlightColor = Color(0xFF7FD749);
 const Color mapIconsDefaultColor = Color(0xFF1D1F24);
 // const Color buttonColor = Color(0xFF6C9E64);
@@ -169,11 +166,9 @@ const Color blackColor = Colors.black;
 const Color disabledColor = Color(0xFFA4A8B0);
 const Color buttonDisabledColor = Color(0x39E0FCEB);
 const Color lightWhite = Color(0xFFB3B6BD);
-const Color darkBlue =  Color.fromRGBO(6, 32, 64, 1);
-const Color inputFieldColor =Color.fromRGBO(118, 118, 128, 0.12);
+const Color darkBlue = Color.fromRGBO(6, 32, 64, 1);
+const Color inputFieldColor = Color.fromRGBO(118, 118, 128, 0.12);
 const Color tableValueColor = Color(0xFF515466);
-
-
 
 // Crop Colors
 const Color paddyColor = Color(0xFF4BA164);
@@ -208,14 +203,12 @@ TextStyle green32W600 = const TextStyle(
   fontWeight: FontWeight.w600,
 );
 
-
 /*TextStyle green14W500 = const TextStyle(
   color: Color(0XFF4BA164),
   fontSize: 14,
   fontFamily: 'Roboto',
   fontWeight: FontWeight.w500,
 );*/
-
 
 TextStyle greenCB16W500 = const TextStyle(
   color: Color(0xFF4BA164),
@@ -280,12 +273,11 @@ TextStyle grey12W400 = const TextStyle(
   color: Colors.grey,
 );
 
-TextStyle gray24W500= const TextStyle(
+TextStyle gray24W500 = const TextStyle(
     fontFamily: 'Roboto',
     fontWeight: FontWeight.w500,
     fontSize: 24.0,
-    color: Color.fromRGBO(29, 31, 36, 1)
-);
+    color: Color.fromRGBO(29, 31, 36, 1));
 
 TextStyle black14W400 = const TextStyle(
   color: Colors.black,
@@ -363,7 +355,6 @@ TextStyle darkblue20W600 = const TextStyle(
   fontFamily: 'Roboto',
   fontWeight: FontWeight.w600,
 );
-
 
 TextStyle darkGrey20W400 = const TextStyle(
   color: darkGrey,
@@ -608,8 +599,10 @@ const String allowPermissions = 'ALLOW PERMISSIONS';
 const String permissionsErrorMsg = 'Please grant permissions before proceeding';
 const String genericErrorMsg = 'Something went wrong, please try later';
 const String currentlyUnderDevMsg = 'Currently under development!';
-const String toManyLoginAttempts = 'Too many login attempts. Please wait for 15 minutes and try again';
-const String noNetworkAvailability = 'Please check your network connection, no internet available';
+const String toManyLoginAttempts =
+    'Too many login attempts. Please wait for 15 minutes and try again';
+const String noNetworkAvailability =
+    'Please check your network connection, no internet available';
 const String loginto = 'Login';
 const String userNameString = 'Username';
 const String emptyUsernameErrorMsg = 'Username cannot be empty';
@@ -620,14 +613,15 @@ const String passwordString = 'Password';
 const String enterPassword = 'Password';
 const String loginString = 'Login';
 
-
 const String clickFromCamera = 'Click from Camera';
 const String clickFromGallery = 'Click from Gallery';
 
 const String cancel = 'Cancel';
 
-enum CropSownRadioOptions {village, field}
-enum NameSortRadioOptions {ascending, descending}
-enum CropNameVerifyRadioOptions {agree, disagree}
+enum CropSownRadioOptions { village, field }
+
+enum NameSortRadioOptions { ascending, descending }
+
+enum CropNameVerifyRadioOptions { agree, disagree }
 
 const String genAiBaseUrl = "https://genai.vassarlabs.com/aquamind/";

@@ -47,10 +47,9 @@ class HomeRepositoryImpl extends HomeRepository {
       constants.headerContentType: constants.headerJson
     };
 
-    Map<String, String> params = {
-      "project_uuid": constants.projectId
-    };
-    String authUrl = constants.genAiBaseUrl + constants.getAvailabeModelsEndpoint;
+    Map<String, String> params = {"project_uuid": constants.projectId};
+    String authUrl =
+        constants.genAiBaseUrl + constants.getAvailabeModelsEndpoint;
     Uri url = Uri.parse(authUrl);
     String data = jsonEncode(params);
     var response = await http.post(url, headers: authHeaders, body: data);
@@ -58,7 +57,7 @@ class HomeRepositoryImpl extends HomeRepository {
     Map<String, dynamic> responseMap = jsonDecode(response.body);
 
     AvailabeModelResponse availabeModelResponse =
-    AvailabeModelResponse.fromJson(responseMap);
+        AvailabeModelResponse.fromJson(responseMap);
     return availabeModelResponse;
   }
 
