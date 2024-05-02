@@ -90,7 +90,7 @@ class UserResponse {
       customerId: json['customerId'],
       customerName: json['customerName'],
       customAttributes: json['customAttributes'],
-      project_uuid: constants.odishaUUID,
+      project_uuid: constants.projectId.toString(),
     );
   }
 
@@ -140,7 +140,6 @@ class UserDetails {
   }
 }
 
-
 class UserDataDetails {
   UserDataLocation location;
   String locType;
@@ -175,7 +174,7 @@ class UserDataLocation {
   factory UserDataLocation.fromJson(Map<String, dynamic> json) {
     var stateList = json['state'] as List;
     List<UserDataState> states =
-    stateList.map((state) => UserDataState.fromJson(state)).toList();
+        stateList.map((state) => UserDataState.fromJson(state)).toList();
     return UserDataLocation(state: states);
   }
 

@@ -7,7 +7,7 @@ import 'package:gka/chat/view_model/chat_view_model.dart';
 import 'package:provider/provider.dart';
 
 class CreatePromptView extends StatefulWidget {
-  bool? isCreate;
+  final bool? isCreate;
 
   CreatePromptView({this.isCreate, Key? key}) : super(key: key);
 

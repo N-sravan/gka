@@ -8,7 +8,7 @@ import '../../chat_bubble.dart';
 import '../../chat_window.dart';
 
 class ChatHistoryView extends StatefulWidget {
-  String? sessionId;
+  final String? sessionId;
 
   ChatHistoryView({Key? key, this.sessionId}) : super(key: key);
 

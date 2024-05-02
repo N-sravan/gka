@@ -89,16 +89,18 @@ class _ChatBubbleState extends State<ChatBubble> {
                 ),
               ),
             ),
-            !widget.isUser ? GestureDetector(
-              onTap: showInformation,
-              child: const Padding(
-                padding: EdgeInsets.only(left: 8.0),
-                child: Icon(
-                  Icons.info,
-                  color: Colors.grey,
-                ),
-              ),
-            ) : const SizedBox(),
+            !widget.isUser
+                ? GestureDetector(
+                    onTap: showInformation,
+                    child: const Padding(
+                      padding: EdgeInsets.only(left: 8.0),
+                      child: Icon(
+                        Icons.info,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  )
+                : const SizedBox(),
             if (widget.isUser)
               const Padding(
                 padding: EdgeInsets.only(left: 16.0),
@@ -124,7 +126,7 @@ class _ChatBubbleState extends State<ChatBubble> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Info'),
-        content: Text(widget.logMessage),
+        content: SingleChildScrollView(child: Text(widget.logMessage)),
         actions: [
           TextButton(
             onPressed: () {

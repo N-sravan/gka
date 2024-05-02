@@ -156,7 +156,6 @@ class _ChatWindowState extends State<ChatWindow>
 
   @override
   void dispose() {
-    // Dispose of the timer when the widget is removed
     dataTimer?.cancel();
     loadingTimer?.cancel();
     tts.stop();
@@ -260,13 +259,11 @@ class _ChatWindowState extends State<ChatWindow>
     setState(() {});
   }
 
-  /// This is the callback that the SpeechToText plugin calls when
-  /// the platform returns recognized words.
   Future<void> _onSpeechResult(SpeechRecognitionResult result) async {
     print("_onSpeechResult ${result.recognizedWords}");
     updateChatControllerForSpeech(result.recognizedWords);
-  /*  DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
+    /*  DatabaseReference ref = FirebaseDatabase.instance.ref(
+        "CHAT_BOT_TEST/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
 
     String? message = '';
     print("session id::$sessionId");
@@ -295,7 +292,7 @@ class _ChatWindowState extends State<ChatWindow>
       SpeechRecognitionResult result) async {
     print("_onSpeechResultForAutoMode ${result.recognizedWords}");
     DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${autoSessionId}");
+        "CHAT_BOT_TEST/${constants.projectId}/${AppState.instance.userId}/${autoSessionId}");
 
     if (result.recognizedWords.toLowerCase() == "hello" && !isVoiceInitiated) {
       await _speechToText.stop();
@@ -318,6 +315,7 @@ class _ChatWindowState extends State<ChatWindow>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return WillPopScope(
       onWillPop: () async {
         bool? result = await showSessionDialog();
@@ -411,7 +409,7 @@ class _ChatWindowState extends State<ChatWindow>
                       child: StreamBuilder(
                         stream: FirebaseDatabase.instance
                             .ref(
-                                "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}")
+                                "CHAT_BOT_TEST/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}")
                             .onValue,
                         builder: (context, AsyncSnapshot snapshot) {
                           if (snapshot.hasData && snapshot.data != null) {
@@ -486,7 +484,7 @@ class _ChatWindowState extends State<ChatWindow>
                                 if (showLoader.value) {
                                   DatabaseReference ref =
                                       FirebaseDatabase.instance.ref(
-                                          "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
+                                          "CHAT_BOT_TEST/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
                                   /* messageList.add(ChatBubble(
                               text: "Data Not Found",
                               isUser: fal
@@ -551,10 +549,8 @@ class _ChatWindowState extends State<ChatWindow>
                 padding: const EdgeInsets.all(20),
                 child: bottomBar(),
               )
-            ],
-          ),
 
-          /* _toggleValue
+              /* _toggleValue
                   ? Padding(
                       padding: const EdgeInsets.all(20),
                       child: Padding(
@@ -584,6 +580,9 @@ class _ChatWindowState extends State<ChatWindow>
                       padding: EdgeInsets.all(20),
                       child: SizedBox(),
                     )*/
+            ],
+          ),
+
         ),
       ),
     );
@@ -824,7 +823,7 @@ class _ChatWindowState extends State<ChatWindow>
 
   Future<void> insertImageDataIntoDb(String? imageUrl, String text) async {
     DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
+        "CHAT_BOT_TEST/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
     await ref.push().set({
       "isUser": true,
       "message": text,
@@ -839,7 +838,7 @@ class _ChatWindowState extends State<ChatWindow>
 
   Future<void> insertDataIntoDb(String text) async {
     DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
+        "CHAT_BOT_TEST/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
     await ref.push().set({"isUser": true, "message": text});
     chatController.clear();
     capturedPhoto = null;

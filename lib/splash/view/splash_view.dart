@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../../../utils/common_constants.dart' as constants;
 import '../../utils/network_utils.dart';
 import '../view_model/splash_view_model.dart';
