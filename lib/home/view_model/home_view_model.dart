@@ -5,12 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/shared/loading_view_model.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
+import 'package:uuid/uuid.dart';
 import '../../utils/app_state.dart';
 import '../../utils/network_utils.dart';
 import '../../utils/secure_storage_util.dart';
 import '../../utils/util.dart';
 import 'package:http/http.dart' as http;
-
 import '../model/available_models.dart' as model;
 import '../repo/home_repo.dart';
 
@@ -24,10 +24,12 @@ class HomeViewModel extends LoadingViewModel {
   String selectedValue = '';
   String selectedLang = '';
   String selectedModel = '';
+  String selectedMode = 'default';
   bool isFirstTime = true;
   String? sessionId;
   List<String> selectionList = ['Internal LLM', 'External LLM'];
   List<String> langList = ['English'];
+  List<String> flagList = ['default', 'langchain', 'autogen', 'database'];
   List<String>? modelList = [];
   List<model.Response>? modelResponseList = [];
   Map<String, String> modelNameUuidMapping = {};
@@ -38,7 +40,6 @@ class HomeViewModel extends LoadingViewModel {
     modelNameUuidMapping.clear();
     modelResponseList = [];
     modelList = [];
-    selectionList = [];
     selectedValue = '';
     selectedLang = '';
     selectedModel = '';
@@ -50,6 +51,12 @@ class HomeViewModel extends LoadingViewModel {
     selectedModel = value;
     AppState.instance.modelName = value;
     AppState.instance.modelUUID = modelNameUuidMapping[value]!;
+    notifyListeners();
+  }
+
+  void updateSelectedFlag(String value) {
+    selectedMode = value;
+    AppState.instance.mode = value;
     notifyListeners();
   }
 
@@ -103,8 +110,7 @@ class HomeViewModel extends LoadingViewModel {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text(constants.genericErrorMsg),
         ));
-        Util.instance
-            .logMessage('Home View Model', 'Error :  $e');
+        Util.instance.logMessage('Home View Model', 'Error :  $e');
       }
     } else {
       isLoading = false;
@@ -155,8 +161,7 @@ class HomeViewModel extends LoadingViewModel {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text(constants.genericErrorMsg),
         ));
-        Util.instance
-            .logMessage('Home View Model', 'Error :  $e');
+        Util.instance.logMessage('Home View Model', 'Error :  $e');
       }
     } else {
       isLoading = false;
@@ -170,11 +175,11 @@ class HomeViewModel extends LoadingViewModel {
 
   Future<String?> createSession() async {
     try {
-      /*     String uuid = const Uuid().v4();
+      String uuid = const Uuid().v4();
       sessionId = uuid;
       isFirstTime = true;
       notifyListeners();
-      return uuid;*/
+      return uuid;
       isLoading = true;
       String url = constants.ngrok + constants.createSessionEndpoint;
       String data = AppState.instance.userData;

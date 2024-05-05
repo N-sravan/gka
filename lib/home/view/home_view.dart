@@ -314,6 +314,109 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Select Flag',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      width: MediaQuery.of(context).size.width * 0.7,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: DropdownButtonFormField2<String>(
+                        isExpanded: true,
+                        hint: const Text('Select'),
+                        items: viewModel.flagList!
+                            .map((String item) => DropdownMenuItem<String>(
+                          value: item,
+                          child: Text(
+                            item,
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 14,
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ))
+                            .toList(),
+                        value: viewModel.selectedMode.isNotEmpty == true
+                            ? viewModel.selectedMode
+                            : null,
+                        onChanged: (String? value) async {
+                          if (value!.isNotEmpty) {
+                            viewModel.updateSelectedFlag(value);
+                          }
+                        },
+                        buttonStyleData: ButtonStyleData(
+                          height: 50,
+                          padding: const EdgeInsets.only(left: 14, right: 14),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: const Color.fromRGBO(118, 118, 128, 0.12),
+                            boxShadow: const [],
+                          ),
+                          elevation: 0,
+                        ),
+                        iconStyleData: const IconStyleData(
+                          icon: Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                          ),
+                          iconSize: 20,
+                          iconEnabledColor: Color(0xFF666B77),
+                          iconDisabledColor: Color(0xFF666B77),
+                        ),
+                        dropdownStyleData: DropdownStyleData(
+                          maxHeight: 200,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(14),
+                            color: Colors.grey.shade300,
+                            boxShadow: const [],
+                          ),
+                        ),
+                        menuItemStyleData: const MenuItemStyleData(
+                          height: 30,
+                          padding: EdgeInsets.only(left: 14, right: 14),
+                        ),
+                        decoration: const InputDecoration(
+                          filled: true,
+                          fillColor: Colors.transparent,
+                          hintText: 'Select',
+                          hintStyle: TextStyle(
+                            fontFamily: "Poppins",
+                            fontWeight: FontWeight.w400,
+                            fontSize: 14.0,
+                            color: Colors.grey,
+                          ),
+                          contentPadding: EdgeInsets.only(
+                              top: 2, left: 2, right: 2, bottom: 2),
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.black),
+                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide.none,
+                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide.none,
+                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                          ),
+                          errorStyle: TextStyle(
+                            color: Colors.red,
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Colors.red,
+                            ),
+                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                          ),
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 40),
                     ElevatedButton(
                       onPressed: () async {

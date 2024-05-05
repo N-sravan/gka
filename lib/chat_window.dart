@@ -430,11 +430,15 @@ class _ChatWindowState extends State<ChatWindow>
                                 final datalast =
                                     Map<String, dynamic>.from(value);
                                 print("SORTED MESSAGES ${datalast['message']}");
-                                print("Session ID ${widget.sessionId}");
+                                print("Session ID :::${widget.sessionId}");
+                                print("Mode ${AppState.instance.mode}");
+                                dynamic message = datalast['message'];
+                                print("message::$message");
                                 messageList.add(ChatBubble(
                                   text: datalast['message'] ?? '',
                                   isUser: datalast['isUser'],
                                   imageUrl: datalast['mediaUrl'],
+                                  tableUrl: datalast['tableUrl'] ?? '',
                                   logMessage: datalast['log'] ?? '',
                                 ));
                               }
@@ -549,7 +553,6 @@ class _ChatWindowState extends State<ChatWindow>
                 padding: const EdgeInsets.all(20),
                 child: bottomBar(),
               )
-
               /* _toggleValue
                   ? Padding(
                       padding: const EdgeInsets.all(20),
@@ -582,7 +585,6 @@ class _ChatWindowState extends State<ChatWindow>
                     )*/
             ],
           ),
-
         ),
       ),
     );
@@ -665,7 +667,7 @@ class _ChatWindowState extends State<ChatWindow>
                               imageUrl = await submitImage(
                                   context, capturedPhoto!.path);
                             }
-                            await insertImageDataIntoDb(
+                            await insertDataIntoDb(
                                 imageUrl, chatController.text);
                           }
                         },
@@ -821,7 +823,7 @@ class _ChatWindowState extends State<ChatWindow>
     );
   }
 
-  Future<void> insertImageDataIntoDb(String? imageUrl, String text) async {
+  Future<void> insertDataIntoDb(String? imageUrl, String text) async {
     DatabaseReference ref = FirebaseDatabase.instance.ref(
         "CHAT_BOT_TEST/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
     await ref.push().set({
@@ -830,16 +832,16 @@ class _ChatWindowState extends State<ChatWindow>
       "mediaUrl": imageUrl,
       "language": language,
       "model_uuid": AppState.instance.modelUUID,
+      "mode": AppState.instance.mode
     });
-    chatController.clear();
-    capturedPhoto = null;
-    setState(() {});
-  }
 
-  Future<void> insertDataIntoDb(String text) async {
-    DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_TEST/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
-    await ref.push().set({"isUser": true, "message": text});
+    await ref.push().set({
+      "isUser": false,
+      "message": 'test data',
+      "mediaUrl": 'https://agriwise.vassarlabs.com/home/vassarlabs/agribot/uploads/9fdcf55c-423d-4c51-8582-c0875efd6674.png',
+      "language": language,
+      "tableUrl": 'https://agriwise.vassarlabs.com/home/vassarlabs/agribot/uploads/0a2265bb-db17-4ac9-9e51-0e9eb78eb058.png'
+    });
     chatController.clear();
     capturedPhoto = null;
     setState(() {});

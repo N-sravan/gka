@@ -64,6 +64,7 @@ class AppState {
   late String locName;
   late String userId;
   late String language;
+  late String mode;
 
   //For Background Sync
   bool isSyncInProgress = false;

@@ -98,13 +98,13 @@ void main() async {
 
   if (notificationStatus == PermissionStatus.granted) {
     print("wewewewewew notificationStatus:::${PermissionStatus.granted}");
-    Workmanager().initialize(callbackDispatcher);
+    /*Workmanager().initialize(callbackDispatcher);
     Workmanager().registerPeriodicTask(
       "speechTask",
       "speechTask",
       frequency: const Duration(minutes: 15),
       initialDelay: const Duration(minutes: 2),
-    );
+    );*/
   }
   runApp(
     MultiProvider(
