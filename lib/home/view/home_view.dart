@@ -316,7 +316,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                     ),
                     const SizedBox(height: 20),
                     const Text(
-                      'Select Flag',
+                      'Select Mode',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,

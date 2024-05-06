@@ -89,7 +89,7 @@ const String kaleswaramUUID = '927b67e9-a2aa-46e9-99bc-41cf8c502668';
 const String apwrimsUUID = '6f86292b-dd9a-4987-bb8f-c3940263b349';
 
 //check this before generating apk
-const String projectId = '6f86292b-dd9a-4987-bb8f-c3940263b349';
+const String projectId = kaleswaramUUID;
 
 // Paddings
 const double largePadding = 32;

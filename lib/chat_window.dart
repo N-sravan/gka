@@ -437,8 +437,8 @@ class _ChatWindowState extends State<ChatWindow>
                                 messageList.add(ChatBubble(
                                   text: datalast['message'] ?? '',
                                   isUser: datalast['isUser'],
-                                  imageUrl: datalast['mediaUrl'],
-                                  tableUrl: datalast['tableUrl'] ?? '',
+                                  imageUrl: datalast['mediaUrl'] ?? '',
+                                  tabularData: datalast['tabularData'],
                                   logMessage: datalast['log'] ?? '',
                                 ));
                               }
@@ -549,10 +549,10 @@ class _ChatWindowState extends State<ChatWindow>
                   ),
                 ),
               ),
-              Padding(
+              _toggleValue ? Padding(
                 padding: const EdgeInsets.all(20),
                 child: bottomBar(),
-              )
+              ): const SizedBox(),
               /* _toggleValue
                   ? Padding(
                       padding: const EdgeInsets.all(20),
@@ -824,24 +824,56 @@ class _ChatWindowState extends State<ChatWindow>
   }
 
   Future<void> insertDataIntoDb(String? imageUrl, String text) async {
+    print("userId::${AppState.instance.userId}");
+    print("projectId::${constants.projectId}");
     DatabaseReference ref = FirebaseDatabase.instance.ref(
         "CHAT_BOT_TEST/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
+
     await ref.push().set({
       "isUser": true,
       "message": text,
-      "mediaUrl": imageUrl,
+      "mediaUrl": '',
       "language": language,
       "model_uuid": AppState.instance.modelUUID,
       "mode": AppState.instance.mode
     });
 
+/*
     await ref.push().set({
       "isUser": false,
-      "message": 'test data',
-      "mediaUrl": 'https://agriwise.vassarlabs.com/home/vassarlabs/agribot/uploads/9fdcf55c-423d-4c51-8582-c0875efd6674.png',
+      "message":
+          'The reservoir storages on 1st June 2022 ranged from 0.2 to 55.47',
+      "mediaUrl":
+          'https://uniapp-test.s3.amazonaws.com/aquamind/plotly_figure.png',
       "language": language,
-      "tableUrl": 'https://agriwise.vassarlabs.com/home/vassarlabs/agribot/uploads/0a2265bb-db17-4ac9-9e51-0e9eb78eb058.png'
+      "tabularData": [
+        [
+          "location_uuid",
+          "storage",
+        ],
+        [
+          "d10f7b05-437c-4d9a-a6c4-2518e2af146f",
+          2.54,
+        ],
+        ["cc7d3ffc-7560-11e8-adc0-fa7ae01bbebc", 55.47],
+        ["d3d6c7f6-4657-4db1-9cdc-5916e303aafc", 3.0],
+        ["a7466c95-06f2-4758-ad6e-2e2f22aa1e32", 14.23],
+        ["48b8ed68-c12c-48e4-9786-5ad1f840b1f2", 5.07],
+        ["c349a4e3-c46c-4f16-b538-6bd232956dd8", 4.18],
+        ["0158fd37-38f0-4c98-bc48-041ed91e1faf", 9.73],
+        ["ef9351ed-9cf3-427d-80c0-c577b155018e", 20.32],
+        ["45321840-5bc0-4b6e-95f2-94b6b30c2f1d", 6.38],
+        ["23425b07-d6bc-4c9f-914d-184598b719ae", 4.48],
+        ["5c787016-e53c-11ea-bd79-d3fa4f4c8f6c", 0.4],
+        ["a9941f72-00c7-4dd7-b5e6-6c591be8aab9", 6.06],
+        ["28cd84da-d9b1-11eb-b8bc-0242ac130003", 0.2],
+        ["5459d9e6-7564-11e8-adc0-fa7ae01bbebc", 7.85],
+        ["86d88206-7563-11e8-adc0-fa7ae01bbebc", 20.07],
+        ["50e8fe61-c76f-44b5-a2b0-ac2a0c7d70ce", 1.74],
+        ["1efe0cb7-b25c-4935-9ff2-a08a81fef0e2", 7.43]
+      ]
     });
+*/
     chatController.clear();
     capturedPhoto = null;
     setState(() {});

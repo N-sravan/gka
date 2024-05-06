@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class ChatBubble extends StatefulWidget {
@@ -8,14 +7,14 @@ class ChatBubble extends StatefulWidget {
     required this.isUser,
     required this.logMessage,
     this.imageUrl,
-    this.tableUrl,
+    this.tabularData, // Add tabularData
   }) : super(key: key);
 
   final String text;
   final bool isUser;
   final String? imageUrl;
-  final String? tableUrl;
-  final String logMessage; // Vani picture
+  final List<dynamic>? tabularData; // Define tabularData
+  final String logMessage;
 
   @override
   State<ChatBubble> createState() => _ChatBubbleState();
@@ -24,11 +23,12 @@ class ChatBubble extends StatefulWidget {
 class _ChatBubbleState extends State<ChatBubble> {
   @override
   Widget build(BuildContext context) {
+    print("widget.imageUrl!:::${widget.imageUrl!}");
     return Padding(
       padding: EdgeInsets.fromLTRB(
         widget.isUser ? 64.0 : 16.0,
         4,
-        widget.isUser ? 16.0 : 64.0,
+        widget.isUser ? 16.0 : 2.0,
         4,
       ),
       child: Align(
@@ -48,24 +48,6 @@ class _ChatBubbleState extends State<ChatBubble> {
                       backgroundImage: AssetImage('assets/images/vani.png')),
                 ),
               ),
-            /*widget.isUser
-                ? widget.imageUrl != null && widget.imageUrl!.isNotEmpty
-                    ? Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
-                        child: SizedBox(
-                          width: 48,
-                          height: 48,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(12.0),
-                            child: Image.network(
-                              widget.imageUrl!,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                      )
-                    : const SizedBox()
-                : const SizedBox(),*/
             Flexible(
               child: DecoratedBox(
                 decoration: BoxDecoration(
@@ -111,20 +93,22 @@ class _ChatBubbleState extends State<ChatBubble> {
                                 padding: const EdgeInsets.only(bottom: 4.0),
                                 child: Image.network(
                                   widget.imageUrl!,
-                                  width: 100,
-                                  height: 100,
+                                  // width: MediaQuery.of(context).size.width * 0.8,
+                                  // height: MediaQuery.of(context).size.height * 0.8,
+                                  fit: BoxFit.contain,
                                 ),
                               ),
                             ),
                           ],
                         ),
-                      if (widget.tableUrl != null &&
-                          widget.tableUrl!.isNotEmpty)
+                      if (widget.tabularData != null &&
+                          widget.tabularData!
+                              .isNotEmpty)
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Padding(
-                              padding: EdgeInsets.only(bottom: 4.0),
+                              padding: EdgeInsets.only(bottom: 8.0),
                               child: Text(
                                 'Tabular Data',
                                 style: TextStyle(
@@ -133,22 +117,45 @@ class _ChatBubbleState extends State<ChatBubble> {
                                 ),
                               ),
                             ),
-                            GestureDetector(
-                              onTap: () {
-                                // Show image from tableUrl
-                                showImage(widget.tableUrl!);
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.only(bottom: 4.0),
-                                child: Image.network(
-                                  widget.tableUrl!,
-                                  width: 100,
-                                  height: 100,
+                            Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: DataTable(
+                                  columnSpacing: 12,
+                                  dataRowHeight: 40,
+                                  columns: generateColumns(widget.tabularData![0]),
+                                  rows: List.generate(
+                                    widget.tabularData!.length - 1,
+                                    (index) => DataRow(
+                                      cells: List.generate(
+                                        widget.tabularData![index + 1].length,
+                                        (cellIndex) => DataCell(
+                                          SizedBox(
+                                            width: MediaQuery.of(context)
+                                                    .size
+                                                    .width *
+                                                0.8,
+                                            child: Text(widget
+                                                .tabularData![index + 1]
+                                                    [cellIndex]
+                                                .toString()),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
+                            )
                           ],
                         ),
+                      const SizedBox(
+                        height: 10,
+                      ),
                       Text(
                         widget.text,
                         style: TextStyle(
@@ -218,6 +225,19 @@ class _ChatBubbleState extends State<ChatBubble> {
           width: MediaQuery.of(context).size.width * 0.8,
           height: MediaQuery.of(context).size.height * 0.8,
           fit: BoxFit.contain,
+        ),
+      ),
+    );
+  }
+
+  List<DataColumn> generateColumns(List<dynamic> row) {
+    return List.generate(
+      row.length,
+      (index) => DataColumn(
+        label: SizedBox(
+          width: MediaQuery.of(context).size.width * (index + 1) / row.length,
+          // Distribute width evenly for each column
+          child: Text(row[index].toString()),
         ),
       ),
     );

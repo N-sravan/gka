@@ -177,6 +177,7 @@ class HomeViewModel extends LoadingViewModel {
     try {
       String uuid = const Uuid().v4();
       sessionId = uuid;
+      print("sessionId::${sessionId}");
       isFirstTime = true;
       notifyListeners();
       return uuid;
