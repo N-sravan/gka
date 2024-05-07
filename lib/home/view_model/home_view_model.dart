@@ -29,7 +29,7 @@ class HomeViewModel extends LoadingViewModel {
   String? sessionId;
   List<String> selectionList = ['Internal LLM', 'External LLM'];
   List<String> langList = ['English'];
-  List<String> flagList = ['default', 'langchain', 'autogen', 'database'];
+  List<String> modeList = ['default', 'langchain', 'autogen', 'database'];
   List<String>? modelList = [];
   List<model.Response>? modelResponseList = [];
   Map<String, String> modelNameUuidMapping = {};

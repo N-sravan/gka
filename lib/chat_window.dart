@@ -20,7 +20,6 @@ import 'package:transliteration/transliteration.dart';
 import 'dart:io' as platform;
 import 'package:uuid/uuid.dart';
 import '../utils/common_constants.dart' as constants;
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/chat_bubble.dart';
@@ -263,7 +262,7 @@ class _ChatWindowState extends State<ChatWindow>
     print("_onSpeechResult ${result.recognizedWords}");
     updateChatControllerForSpeech(result.recognizedWords);
     /*  DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_TEST/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
+        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
 
     String? message = '';
     print("session id::$sessionId");
@@ -292,7 +291,7 @@ class _ChatWindowState extends State<ChatWindow>
       SpeechRecognitionResult result) async {
     print("_onSpeechResultForAutoMode ${result.recognizedWords}");
     DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_TEST/${constants.projectId}/${AppState.instance.userId}/${autoSessionId}");
+        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${autoSessionId}");
 
     if (result.recognizedWords.toLowerCase() == "hello" && !isVoiceInitiated) {
       await _speechToText.stop();
@@ -407,17 +406,13 @@ class _ChatWindowState extends State<ChatWindow>
               _toggleValue
                   ? Expanded(
                       child: StreamBuilder(
-                        stream: FirebaseDatabase.instance
-                            .ref(
-                                "CHAT_BOT_TEST/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}")
-                            .onValue,
+                        stream: FirebaseDatabase.instance.ref("CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}").onValue,
                         builder: (context, AsyncSnapshot snapshot) {
                           if (snapshot.hasData && snapshot.data != null) {
                             List<ChatBubble> messageList = [];
                             var data = (snapshot.data! as DatabaseEvent)
                                     .snapshot
-                                    .value ??
-                                {};
+                                    .value ?? {};
                             print("DATAFJLDLFHGLD $data");
                             data = data as Map<dynamic, dynamic>;
                             dataTimer?.cancel();
@@ -488,19 +483,11 @@ class _ChatWindowState extends State<ChatWindow>
                                 if (showLoader.value) {
                                   DatabaseReference ref =
                                       FirebaseDatabase.instance.ref(
-                                          "CHAT_BOT_TEST/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
-                                  /* messageList.add(ChatBubble(
-                              text: "Data Not Found",
-                              isUser: fal
-                              se,
-                              imageUrl: "",
-                              logMessage: '',
-                            ));*/
+                                          "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
                                   WidgetsBinding.instance
                                       .addPostFrameCallback((_) {
                                     showLoader.value = false;
-                                    print(
-                                        "dataNotFoundMsg::${dataNotFoundMsg}");
+                                    print("dataNotFoundMsg::$dataNotFoundMsg");
                                   });
                                   await tts.speak(dataNotFoundMsg);
                                 }
@@ -549,10 +536,12 @@ class _ChatWindowState extends State<ChatWindow>
                   ),
                 ),
               ),
-              _toggleValue ? Padding(
-                padding: const EdgeInsets.all(20),
-                child: bottomBar(),
-              ): const SizedBox(),
+              _toggleValue
+                  ? Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: bottomBar(),
+                    )
+                  : const SizedBox(),
               /* _toggleValue
                   ? Padding(
                       padding: const EdgeInsets.all(20),
@@ -736,7 +725,7 @@ class _ChatWindowState extends State<ChatWindow>
 
   updateChatControllerForSpeech(String text) {
     chatController.text = text;
-    setState(() {});
+    // setState(() {});
   }
 
   saveCapturedPhoto(XFile photo) {
@@ -827,7 +816,7 @@ class _ChatWindowState extends State<ChatWindow>
     print("userId::${AppState.instance.userId}");
     print("projectId::${constants.projectId}");
     DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_TEST/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
+        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
 
     await ref.push().set({
       "isUser": true,

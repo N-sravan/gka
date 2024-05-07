@@ -115,7 +115,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                     ),
                     const SizedBox(height: 10),
                     Container(
-                      width: MediaQuery.of(context).size.width * 0.7,
+                      width: MediaQuery.of(context).size.width * 0.75,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: DropdownButtonFormField2<String>(
                         isExpanded: true,
@@ -218,7 +218,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                     ),
                     const SizedBox(height: 10),
                     Container(
-                      width: MediaQuery.of(context).size.width * 0.7,
+                      width: MediaQuery.of(context).size.width * 0.75,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: DropdownButtonFormField2<String>(
                         isExpanded: true,
@@ -324,12 +324,12 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                     ),
                     const SizedBox(height: 10),
                     Container(
-                      width: MediaQuery.of(context).size.width * 0.7,
+                      width: MediaQuery.of(context).size.width * 0.75,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: DropdownButtonFormField2<String>(
                         isExpanded: true,
                         hint: const Text('Select'),
-                        items: viewModel.flagList!
+                        items: viewModel.modeList!
                             .map((String item) => DropdownMenuItem<String>(
                           value: item,
                           child: Text(
@@ -370,7 +370,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                           iconDisabledColor: Color(0xFF666B77),
                         ),
                         dropdownStyleData: DropdownStyleData(
-                          maxHeight: 200,
+                          maxHeight: 300,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(14),
                             color: Colors.grey.shade300,

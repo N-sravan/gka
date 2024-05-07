@@ -22,8 +22,18 @@ class ChatBubble extends StatefulWidget {
 
 class _ChatBubbleState extends State<ChatBubble> {
   @override
+  void initState() {
+    super.initState();
+    print('Image URL :: ${widget.imageUrl}');
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    print("widget.imageUrl!:::${widget.imageUrl!}");
     return Padding(
       padding: EdgeInsets.fromLTRB(
         widget.isUser ? 64.0 : 16.0,
@@ -102,8 +112,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                           ],
                         ),
                       if (widget.tabularData != null &&
-                          widget.tabularData!
-                              .isNotEmpty)
+                          widget.tabularData!.isNotEmpty)
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -127,7 +136,8 @@ class _ChatBubbleState extends State<ChatBubble> {
                                 child: DataTable(
                                   columnSpacing: 12,
                                   dataRowHeight: 40,
-                                  columns: generateColumns(widget.tabularData![0]),
+                                  columns:
+                                      generateColumns(widget.tabularData![0]),
                                   rows: List.generate(
                                     widget.tabularData!.length - 1,
                                     (index) => DataRow(
