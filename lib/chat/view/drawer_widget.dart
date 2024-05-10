@@ -10,6 +10,7 @@ import '../../../utils/common_constants.dart' as constants;
 
 import '../view_model/chat_view_model.dart';
 import 'chat_history_view.dart';
+import 'notifications_view.dart';
 
 class DrawerWidget extends StatefulWidget {
   const DrawerWidget({Key? key}) : super(key: key);
@@ -69,6 +70,27 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                       ),
                     ),
                   ),
+                ),
+                ListTile(
+                  title: Row(
+                    children: [
+                      Text(
+                        "Notifications",
+                        style: constants.appBarListTileTextStyle,
+                      ),
+                      const Spacer(),
+                      const Icon(Icons.notifications), // Icon for "View History"
+                    ],
+                  ),
+                  onTap: () {
+                    // Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => NotificationsView(),
+                      ),
+                    );
+                  },
                 ),
                 ListTile(
                   title: Row(

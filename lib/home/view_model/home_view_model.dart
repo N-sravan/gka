@@ -39,7 +39,8 @@ class HomeViewModel extends LoadingViewModel {
     promptTemplateIntentMapping.clear();
     modelNameUuidMapping.clear();
     modelResponseList = [];
-    modelList = [];
+    modelList?.clear();
+    langList.clear();
     selectedValue = '';
     selectedLang = '';
     selectedModel = '';
@@ -175,14 +176,14 @@ class HomeViewModel extends LoadingViewModel {
 
   Future<String?> createSession() async {
     try {
-      String uuid = const Uuid().v4();
+   /*   String uuid = const Uuid().v4();
       sessionId = uuid;
       print("sessionId::${sessionId}");
       isFirstTime = true;
       notifyListeners();
-      return uuid;
+      return uuid;*/
       isLoading = true;
-      String url = constants.ngrok + constants.createSessionEndpoint;
+      String url = constants.genAiBaseUrl + constants.createSessionEndpoint;
       String data = AppState.instance.userData;
       /* Content data = login.Content(
         project_uuid: '6f86292b-dd9a-4987-bb8f-c3940263b349',
@@ -211,7 +212,6 @@ class HomeViewModel extends LoadingViewModel {
         ),
       );*/
       print("Request data before encode::$data");
-      String requestBody = jsonEncode(data);
       http.Response response = await http.post(
         Uri.parse(url),
         body: data,

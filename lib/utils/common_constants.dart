@@ -89,7 +89,7 @@ const String kaleswaramUUID = '927b67e9-a2aa-46e9-99bc-41cf8c502668';
 const String apwrimsUUID = '6f86292b-dd9a-4987-bb8f-c3940263b349';
 
 //check this before generating apk
-const String projectId = kaleswaramUUID;
+const String projectId = apwrimsUUID;
 
 // Paddings
 const double largePadding = 32;
@@ -145,7 +145,6 @@ const Color mapIconsDefaultColor = Color(0xFF1D1F24);
 const Color buttonColor = Color(0xFF6C9E64);
 const Color textColorGreen = Color(0xFF28A745);
 const Color lightBlack = Color(0xFF1C1E24);
-
 const Color darkGrey = Color(0xFF858993);
 const Color lightGrey = Color(0xFFC3C5CB);
 const Color grey = Color(0xFF666B77);
@@ -625,4 +624,4 @@ enum NameSortRadioOptions { ascending, descending }
 enum CropNameVerifyRadioOptions { agree, disagree }
 
 const String genAiBaseUrl = "https://genai.vassarlabs.com/aquamind/";
-const String ngrok = "https://bbe1-196-12-47-4.ngrok-free.app/";
+// const String ngrok = "https://bbe1-196-12-47-4.ngrok-free.app/";

@@ -92,19 +92,19 @@ void main() async {
 
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: []);
 /*  SystemChrome.setPreferredOrientations([
-    DeviceOrientation.landscapeRight, // Set landscape orientation
+    DeviceOrientation.landscapeRight,
     DeviceOrientation.landscapeLeft,
   ]);*/
 
   if (notificationStatus == PermissionStatus.granted) {
     print("wewewewewew notificationStatus:::${PermissionStatus.granted}");
-    /*Workmanager().initialize(callbackDispatcher);
+    Workmanager().initialize(callbackDispatcher);
     Workmanager().registerPeriodicTask(
       "speechTask",
       "speechTask",
       frequency: const Duration(minutes: 15),
       initialDelay: const Duration(minutes: 2),
-    );*/
+    );
   }
   runApp(
     MultiProvider(
@@ -157,7 +157,7 @@ callbackDispatcher() {
       receivePort.listen((total) async {
         print("wewewewewew started bg");
         await showNotification();
-        await tts.speak("Would you like to know the Summary data?");
+        await tts.speak("Would you like to know the Summary data");
         print("wewewewewew before timer ${DateTime.now().second}");
         Timer(const Duration(seconds: 3), () async {
           try {
@@ -185,8 +185,7 @@ Future<void> showNotification() async {
     storageBucket: 'apwrims---chatbot.appspot.com',
     iosBundleId: 'com.vassar.apwrimschatbot',
   ));
-  DatabaseReference ref = FirebaseDatabase.instance
-      .ref("CHAT_BOT_ALERT/HOURLY_NOTIFICATION/${constants.projectId}");
+  DatabaseReference ref = FirebaseDatabase.instance.ref("CHAT_BOT_ALERT/HOURLY_NOTIFICATION/${constants.projectId}");
   String responseMessage = '';
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -254,7 +253,7 @@ Future<void> showNotification() async {
       dynamic values = snapshot.value;
       values.forEach((key, value) async {
         if (value['isUser'] == false) {
-          responseMessage = value['message'].toString() ?? '';
+          responseMessage = value['message'].toString();
         }
       });
     }
@@ -313,7 +312,6 @@ Future<void> initializeService() async {
     androidConfiguration: AndroidConfiguration(
       // this will be executed when app is in foreground or background in separated isolate
       onStart: onStart,
-      // auto start service
       autoStart: true,
       isForegroundMode: true,
       notificationChannelId: 'my_foreground',

@@ -9,6 +9,7 @@ import 'package:gka/chat_bubble.dart';
 import 'package:gka/shared/loading_view_model.dart';
 import 'package:gka/text_to_speech.dart';
 import 'package:gka/utils/app_state.dart';
+import 'package:intl/intl.dart';
 import 'dart:developer' as developer;
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -25,7 +26,6 @@ import '../model/get_prompts_response.dart';
 import '../model/get_tools_response_model.dart';
 import '../model/prompt_submission_response.dart';
 import '../repo/chat_repo.dart';
-
 
 class ChatViewModel extends LoadingViewModel {
   ChatViewModel({
@@ -98,8 +98,10 @@ class ChatViewModel extends LoadingViewModel {
 
   Map<String, String> toolNameDescriptionMapping = {};
   Map<String, String> modelNameUuidMapping = {};
+  Map<int, String> messageTimestampMapping = {};
   List<String>? modelList = [];
   List<String>? toolUUIDs = [];
+  DateFormat formatter = DateFormat("dd-MM-yyyy");
 
   clearData() {
     promptTemplateIntentMapping.clear();
@@ -124,16 +126,19 @@ class ChatViewModel extends LoadingViewModel {
       isLoading = true;
       try {
         GetAllPromptsResponseModel getAllPromptsResponseModel =
-        await repo.fetchPrompts(context, modelUUID);
+            await repo.fetchPrompts(context, modelUUID);
         Map<String, String> promptTemplates = {};
         promptTemplateIntentMapping.clear();
         if (getAllPromptsResponseModel.statusCode == 200 &&
             getAllPromptsResponseModel.result == true) {
           if (getAllPromptsResponseModel.response != null &&
               getAllPromptsResponseModel.response?.length != 0) {
-            for (int i = 0; i < getAllPromptsResponseModel.response!.length; i++) {
-              promptTemplates[getAllPromptsResponseModel.response![i]
-                  .promptTemplate!] = getAllPromptsResponseModel.response![i].intent!;
+            for (int i = 0;
+                i < getAllPromptsResponseModel.response!.length;
+                i++) {
+              promptTemplates[
+                      getAllPromptsResponseModel.response![i].promptTemplate!] =
+                  getAllPromptsResponseModel.response![i].intent!;
             }
             isLoading = false;
             print("weweweww promptTemplateIntentMapping ${promptTemplates}");
@@ -175,15 +180,15 @@ class ChatViewModel extends LoadingViewModel {
       isLoading = true;
       try {
         ToolInventoryResponseModel toolInventoryResponseModel =
-        await repo.fetchTools(context);
+            await repo.fetchTools(context);
 
         if (toolInventoryResponseModel.statusCode == 200 &&
             toolInventoryResponseModel.result == true) {
           if (toolInventoryResponseModel.response != null &&
               toolInventoryResponseModel.response!.isNotEmpty) {
             for (int i = 0;
-            i < toolInventoryResponseModel.response!.length;
-            i++) {
+                i < toolInventoryResponseModel.response!.length;
+                i++) {
               toolNameDescriptionMapping[toolInventoryResponseModel.response![i]
                   .name!] = toolInventoryResponseModel.response![i].desc!;
             }
@@ -263,8 +268,9 @@ class ChatViewModel extends LoadingViewModel {
       isLoading = true;
       try {
         PromptSubmissionResponse promptSubmissionResponse =
-        await repo.updatePrompt(context, prompt, intent);
-        if (promptSubmissionResponse.statusCode == 200 && promptSubmissionResponse.result == true) {
+            await repo.updatePrompt(context, prompt, intent);
+        if (promptSubmissionResponse.statusCode == 200 &&
+            promptSubmissionResponse.result == true) {
           isLoading = false;
           notifyListeners();
           return true;
@@ -300,7 +306,7 @@ class ChatViewModel extends LoadingViewModel {
       isLoading = true;
       try {
         model.AvailabeModelResponse availabeModelResponse =
-        await repo.fetchModels(context);
+            await repo.fetchModels(context);
 
         if (availabeModelResponse.statusCode == 200 &&
             availabeModelResponse.result == true) {
@@ -309,7 +315,7 @@ class ChatViewModel extends LoadingViewModel {
             for (int i = 0; i < availabeModelResponse.response!.length; i++) {
               modelNameUuidMapping.addAll({
                 availabeModelResponse.response![i].modelName!:
-                availabeModelResponse.response![i].modelUuid!
+                    availabeModelResponse.response![i].modelUuid!
               });
               if (!modelList!
                   .contains(availabeModelResponse.response![i].modelName)) {
@@ -414,5 +420,30 @@ class ChatViewModel extends LoadingViewModel {
       ));
     }
     return false;
+  }
+
+  fetchNotificationData() async {
+    isLoading = true;
+    DatabaseReference ref = FirebaseDatabase.instance
+        .ref("CHAT_BOT_ALERT/HOURLY_NOTIFICATION/${constants.projectId}");
+    int c=0;
+
+    await ref.orderByKey().limitToLast(5).once().then((event) async {
+      DataSnapshot snapshot = event.snapshot;
+      if (snapshot.value != null) {
+        dynamic values = snapshot.value;
+        values.forEach((key, value) async {
+          String responseMessage = '';
+          if (value['isUser'] == false) {
+            responseMessage = value['message'].toString();
+          }
+          if (responseMessage.isNotEmpty) {
+            // String time = formatter.format(DateTime.now());
+            messageTimestampMapping[c++] = responseMessage;
+          }
+        });
+      }
+    });
+    isLoading = false;
   }
 }

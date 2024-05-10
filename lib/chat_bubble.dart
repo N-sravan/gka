@@ -7,7 +7,7 @@ class ChatBubble extends StatefulWidget {
     required this.isUser,
     required this.logMessage,
     this.imageUrl,
-    this.tabularData, // Add tabularData
+    this.tabularData,
   }) : super(key: key);
 
   final String text;
@@ -24,7 +24,6 @@ class _ChatBubbleState extends State<ChatBubble> {
   @override
   void initState() {
     super.initState();
-    print('Image URL :: ${widget.imageUrl}');
   }
 
   @override
@@ -96,16 +95,33 @@ class _ChatBubbleState extends State<ChatBubble> {
                             ),
                             GestureDetector(
                               onTap: () {
-                                // Show image from imageUrl
                                 showImage(widget.imageUrl!);
                               },
                               child: Padding(
                                 padding: const EdgeInsets.only(bottom: 4.0),
                                 child: Image.network(
                                   widget.imageUrl!,
-                                  // width: MediaQuery.of(context).size.width * 0.8,
-                                  // height: MediaQuery.of(context).size.height * 0.8,
                                   fit: BoxFit.contain,
+                                  loadingBuilder: (BuildContext context,
+                                      Widget child,
+                                      ImageChunkEvent? loadingProgress) {
+                                    if (loadingProgress == null) {
+                                      return child;
+                                    } else {
+                                      return Center(
+                                        child: CircularProgressIndicator(
+                                          value: loadingProgress
+                                                      .expectedTotalBytes !=
+                                                  null
+                                              ? loadingProgress
+                                                      .cumulativeBytesLoaded /
+                                                  loadingProgress
+                                                      .expectedTotalBytes!
+                                              : null,
+                                        ),
+                                      );
+                                    }
+                                  },
                                 ),
                               ),
                             ),
@@ -166,7 +182,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                       const SizedBox(
                         height: 10,
                       ),
-                      Text(
+                      SelectableText(
                         widget.text,
                         style: TextStyle(
                           color: widget.isUser ? Colors.white : Colors.black87,

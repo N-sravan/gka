@@ -406,13 +406,17 @@ class _ChatWindowState extends State<ChatWindow>
               _toggleValue
                   ? Expanded(
                       child: StreamBuilder(
-                        stream: FirebaseDatabase.instance.ref("CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}").onValue,
+                        stream: FirebaseDatabase.instance
+                            .ref(
+                                "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}")
+                            .onValue,
                         builder: (context, AsyncSnapshot snapshot) {
                           if (snapshot.hasData && snapshot.data != null) {
                             List<ChatBubble> messageList = [];
                             var data = (snapshot.data! as DatabaseEvent)
                                     .snapshot
-                                    .value ?? {};
+                                    .value ??
+                                {};
                             print("DATAFJLDLFHGLD $data");
                             data = data as Map<dynamic, dynamic>;
                             dataTimer?.cancel();
@@ -429,6 +433,7 @@ class _ChatWindowState extends State<ChatWindow>
                                 print("Mode ${AppState.instance.mode}");
                                 dynamic message = datalast['message'];
                                 print("message::$message");
+                                print("imageUrl from chatwindow::${datalast['mediaUrl']}");
                                 messageList.add(ChatBubble(
                                   text: datalast['message'] ?? '',
                                   isUser: datalast['isUser'],
