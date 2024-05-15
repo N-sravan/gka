@@ -89,7 +89,7 @@ const String kaleswaramUUID = '927b67e9-a2aa-46e9-99bc-41cf8c502668';
 const String apwrimsUUID = '6f86292b-dd9a-4987-bb8f-c3940263b349';
 
 //check this before generating apk
-const String projectId = apwrimsUUID;
+const String projectId = odishaUUID;
 
 // Paddings
 const double largePadding = 32;
@@ -624,4 +624,4 @@ enum NameSortRadioOptions { ascending, descending }
 enum CropNameVerifyRadioOptions { agree, disagree }
 
 const String genAiBaseUrl = "https://genai.vassarlabs.com/aquamind/";
-const String ngrok = "https://4bc7-196-12-47-4.ngrok-free.app/";
+// const String ngrok = "https://4bc7-196-12-47-4.ngrok-free.app/";

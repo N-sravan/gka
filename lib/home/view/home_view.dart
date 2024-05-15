@@ -35,18 +35,20 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
       case constants.odishaUUID:
         viewModel.langList.clear();
         title = 'GoWater Bot';
-        viewModel.langList.add('Odia');
         viewModel.langList.add('English');
+        viewModel.langList.add('Odia');
         break;
       case constants.apwrimsUUID:
         title = 'APWRIMS Bot';
-        viewModel.langList.add('Telugu');
+        viewModel.langList.clear();
         viewModel.langList.add('English');
+        viewModel.langList.add('Telugu');
         break;
       case constants.kaleswaramUUID:
         title = 'Kaleswaram Bot';
-        viewModel.langList.add('Telugu');
+        viewModel.langList.clear();
         viewModel.langList.add('English');
+        viewModel.langList.add('Telugu');
         break;
     }
 

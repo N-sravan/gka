@@ -145,7 +145,8 @@ Future<bool> requestPermissions() async {
   }
 }
 
-callbackDispatcher() {
+@pragma('vm:entry-point')
+void callbackDispatcher() {
   Workmanager().executeTask((
     task,
     inputData,
