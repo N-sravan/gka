@@ -8,7 +8,6 @@ import 'package:flutter_background_service_android/flutter_background_service_an
 import 'package:avatar_glow/avatar_glow.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:gka/chat/view/drawer_widget.dart';
@@ -252,7 +251,6 @@ class _ChatWindowState extends State<ChatWindow>
   /// and the SpeechToText plugin supports setting timeouts on the
   /// listen method.
   void _stopListening() async {
-    await _speechToText.stop();
     bool active = _speechToText.isListening;
     listeningActive.value = active;
     setState(() {});
@@ -262,7 +260,7 @@ class _ChatWindowState extends State<ChatWindow>
     print("_onSpeechResult ${result.recognizedWords}");
     updateChatControllerForSpeech(result.recognizedWords);
     /*  DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
+        "CHAT_BOT_TEST/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
 
     String? message = '';
     print("session id::$sessionId");
@@ -291,7 +289,7 @@ class _ChatWindowState extends State<ChatWindow>
       SpeechRecognitionResult result) async {
     print("_onSpeechResultForAutoMode ${result.recognizedWords}");
     DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${autoSessionId}");
+        "CHAT_BOT_TEST/${constants.projectId}/${AppState.instance.userId}/${autoSessionId}");
 
     if (result.recognizedWords.toLowerCase() == "hello" && !isVoiceInitiated) {
       await _speechToText.stop();
@@ -408,7 +406,7 @@ class _ChatWindowState extends State<ChatWindow>
                       child: StreamBuilder(
                         stream: FirebaseDatabase.instance
                             .ref(
-                                "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}")
+                                "CHAT_BOT_TEST/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}")
                             .onValue,
                         builder: (context, AsyncSnapshot snapshot) {
                           if (snapshot.hasData && snapshot.data != null) {
@@ -433,7 +431,8 @@ class _ChatWindowState extends State<ChatWindow>
                                 print("Mode ${AppState.instance.mode}");
                                 dynamic message = datalast['message'];
                                 print("message::$message");
-                                print("imageUrl from chatwindow::${datalast['mediaUrl']}");
+                                print(
+                                    "imageUrl from chatwindow::${datalast['mediaUrl']}");
                                 messageList.add(ChatBubble(
                                   text: datalast['message'] ?? '',
                                   isUser: datalast['isUser'],
@@ -488,7 +487,7 @@ class _ChatWindowState extends State<ChatWindow>
                                 if (showLoader.value) {
                                   DatabaseReference ref =
                                       FirebaseDatabase.instance.ref(
-                                          "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
+                                          "CHAT_BOT_TEST/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
                                   WidgetsBinding.instance
                                       .addPostFrameCallback((_) {
                                     showLoader.value = false;
@@ -821,7 +820,7 @@ class _ChatWindowState extends State<ChatWindow>
     print("userId::${AppState.instance.userId}");
     print("projectId::${constants.projectId}");
     DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
+        "CHAT_BOT_TEST/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
 
     await ref.push().set({
       "isUser": true,

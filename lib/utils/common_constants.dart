@@ -624,4 +624,4 @@ enum NameSortRadioOptions { ascending, descending }
 enum CropNameVerifyRadioOptions { agree, disagree }
 
 const String genAiBaseUrl = "https://genai.vassarlabs.com/aquamind/";
-// const String ngrok = "https://bbe1-196-12-47-4.ngrok-free.app/";
+const String ngrok = "https://4bc7-196-12-47-4.ngrok-free.app/";

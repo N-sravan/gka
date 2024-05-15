@@ -33,16 +33,20 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
     viewModel = Provider.of<HomeViewModel>(context, listen: false);
     switch (constants.projectId) {
       case constants.odishaUUID:
+        viewModel.langList.clear();
         title = 'GoWater Bot';
         viewModel.langList.add('Odia');
+        viewModel.langList.add('English');
         break;
       case constants.apwrimsUUID:
         title = 'APWRIMS Bot';
         viewModel.langList.add('Telugu');
+        viewModel.langList.add('English');
         break;
       case constants.kaleswaramUUID:
         title = 'Kaleswaram Bot';
         viewModel.langList.add('Telugu');
+        viewModel.langList.add('English');
         break;
     }
 

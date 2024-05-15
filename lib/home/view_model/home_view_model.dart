@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/shared/loading_view_model.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
-import 'package:uuid/uuid.dart';
 import '../../utils/app_state.dart';
 import '../../utils/network_utils.dart';
 import '../../utils/secure_storage_util.dart';
@@ -28,7 +27,7 @@ class HomeViewModel extends LoadingViewModel {
   bool isFirstTime = true;
   String? sessionId;
   List<String> selectionList = ['Internal LLM', 'External LLM'];
-  List<String> langList = ['English'];
+  List<String> langList = [];
   List<String> modeList = ['default', 'langchain', 'autogen', 'database'];
   List<String>? modelList = [];
   List<model.Response>? modelResponseList = [];
@@ -40,7 +39,7 @@ class HomeViewModel extends LoadingViewModel {
     modelNameUuidMapping.clear();
     modelResponseList = [];
     modelList?.clear();
-    langList.clear();
+    // langList.clear();
     selectedValue = '';
     selectedLang = '';
     selectedModel = '';
@@ -176,14 +175,14 @@ class HomeViewModel extends LoadingViewModel {
 
   Future<String?> createSession() async {
     try {
-   /*   String uuid = const Uuid().v4();
+      /*   String uuid = const Uuid().v4();
       sessionId = uuid;
       print("sessionId::${sessionId}");
       isFirstTime = true;
       notifyListeners();
       return uuid;*/
       isLoading = true;
-      String url = constants.genAiBaseUrl + constants.createSessionEndpoint;
+      String url = constants.ngrok + constants.createSessionEndpoint;
       String data = AppState.instance.userData;
       /* Content data = login.Content(
         project_uuid: '6f86292b-dd9a-4987-bb8f-c3940263b349',
