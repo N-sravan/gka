@@ -30,7 +30,9 @@ class LoginRepositoryImpl extends LoginRepository {
       constants.headerContentType: constants.headerJson
     };
     String? userName = params[constants.userName];
-    String authUrl = constants.loginEndpoint + userName!;
+    String endPoint = '';
+    constants.projectId == constants.tnwrimsUUID ? endPoint = constants.loginEndpointForTN : endPoint = constants.loginEndpoint;
+    String authUrl = endPoint + userName!;
     String requestBody = jsonEncode(params);
 
     Uri url = Uri.parse(authUrl);

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
+import 'package:intl/intl.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_background_service_android/flutter_background_service_android.dart';
@@ -100,6 +101,7 @@ class _ChatWindowState extends State<ChatWindow>
   String langId = '';
   String title = '';
   String dataNotFoundMsg = '';
+  late DatabaseReference ref;
 
   @override
   void initState() {
@@ -113,6 +115,9 @@ class _ChatWindowState extends State<ChatWindow>
         break;
       case constants.kaleswaramUUID:
         title = 'Kaleswaram Bot';
+        break;
+      case constants.tnwrimsUUID:
+        title = 'TNWRIMS Bot';
         break;
     }
     switch (AppState.instance.language) {
@@ -260,7 +265,7 @@ class _ChatWindowState extends State<ChatWindow>
     print("_onSpeechResult ${result.recognizedWords}");
     updateChatControllerForSpeech(result.recognizedWords);
     /*  DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
+        "${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
 
     String? message = '';
     print("session id::$sessionId");
@@ -289,7 +294,7 @@ class _ChatWindowState extends State<ChatWindow>
       SpeechRecognitionResult result) async {
     print("_onSpeechResultForAutoMode ${result.recognizedWords}");
     DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${autoSessionId}");
+        "${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${autoSessionId}");
 
     if (result.recognizedWords.toLowerCase() == "hello" && !isVoiceInitiated) {
       await _speechToText.stop();
@@ -406,7 +411,7 @@ class _ChatWindowState extends State<ChatWindow>
                       child: StreamBuilder(
                         stream: FirebaseDatabase.instance
                             .ref(
-                                "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}")
+                                "${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}")
                             .onValue,
                         builder: (context, AsyncSnapshot snapshot) {
                           if (snapshot.hasData && snapshot.data != null) {
@@ -422,15 +427,23 @@ class _ChatWindowState extends State<ChatWindow>
                             var sortedByKeyMap = Map.fromEntries(
                                 data.entries.toList()
                                   ..sort((e1, e2) => e1.key.compareTo(e2.key)));
-                            sortedByKeyMap.forEach((key, value) {
+                            sortedByKeyMap.forEach((key, value) async {
                               if (key != "cart") {
                                 final datalast =
                                     Map<String, dynamic>.from(value);
                                 print("SORTED MESSAGES ${datalast['message']}");
-                                print("Session ID :::${widget.sessionId}");
-                                print("Mode ${AppState.instance.mode}");
                                 dynamic message = datalast['message'];
-                                print("message::$message");
+                                dynamic user = datalast['isUser'];
+                                /* final serverTime = await ref.parent!.child('.info/serverTime').get();
+                                final timestamp = serverTime.value;
+                                print("wewewew timestamp firebase servertime::${timestamp}");*/
+                                if (user) {
+                                  print("wewewew messaging Id for isUser true ::${key}");
+                                } else {
+                                  print(
+                                      "wewewew messaging Id for isUser false ::${key}");
+                                }
+                                print("keyspace::${constants.keyspace}");
                                 print(
                                     "imageUrl from chatwindow::${datalast['mediaUrl']}");
                                 messageList.add(ChatBubble(
@@ -487,7 +500,7 @@ class _ChatWindowState extends State<ChatWindow>
                                 if (showLoader.value) {
                                   DatabaseReference ref =
                                       FirebaseDatabase.instance.ref(
-                                          "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
+                                          "${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
                                   WidgetsBinding.instance
                                       .addPostFrameCallback((_) {
                                     showLoader.value = false;
@@ -820,9 +833,14 @@ class _ChatWindowState extends State<ChatWindow>
     print("userId::${AppState.instance.userId}");
     print("projectId::${constants.projectId}");
     DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "CHAT_BOT_ONDEMAND_QUERY_DATA/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
+        "${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
 
-    await ref.push().set({
+    String timeStamp = DateTime.now().millisecondsSinceEpoch.toString();
+
+    DateTime now = DateTime.now();
+    String formattedDate = DateFormat('kk:mm:ss \n EEE d MMM').format(now);
+    print("wewewew DateTime before push:: $formattedDate");
+    await ref.child(timeStamp).set({
       "isUser": true,
       "message": text,
       "mediaUrl": '',
@@ -831,42 +849,11 @@ class _ChatWindowState extends State<ChatWindow>
       "mode": AppState.instance.mode
     });
 
-/*
-    await ref.push().set({
-      "isUser": false,
-      "message":
-          'The reservoir storages on 1st June 2022 ranged from 0.2 to 55.47',
-      "mediaUrl":
-          'https://uniapp-test.s3.amazonaws.com/aquamind/plotly_figure.png',
-      "language": language,
-      "tabularData": [
-        [
-          "location_uuid",
-          "storage",
-        ],
-        [
-          "d10f7b05-437c-4d9a-a6c4-2518e2af146f",
-          2.54,
-        ],
-        ["cc7d3ffc-7560-11e8-adc0-fa7ae01bbebc", 55.47],
-        ["d3d6c7f6-4657-4db1-9cdc-5916e303aafc", 3.0],
-        ["a7466c95-06f2-4758-ad6e-2e2f22aa1e32", 14.23],
-        ["48b8ed68-c12c-48e4-9786-5ad1f840b1f2", 5.07],
-        ["c349a4e3-c46c-4f16-b538-6bd232956dd8", 4.18],
-        ["0158fd37-38f0-4c98-bc48-041ed91e1faf", 9.73],
-        ["ef9351ed-9cf3-427d-80c0-c577b155018e", 20.32],
-        ["45321840-5bc0-4b6e-95f2-94b6b30c2f1d", 6.38],
-        ["23425b07-d6bc-4c9f-914d-184598b719ae", 4.48],
-        ["5c787016-e53c-11ea-bd79-d3fa4f4c8f6c", 0.4],
-        ["a9941f72-00c7-4dd7-b5e6-6c591be8aab9", 6.06],
-        ["28cd84da-d9b1-11eb-b8bc-0242ac130003", 0.2],
-        ["5459d9e6-7564-11e8-adc0-fa7ae01bbebc", 7.85],
-        ["86d88206-7563-11e8-adc0-fa7ae01bbebc", 20.07],
-        ["50e8fe61-c76f-44b5-a2b0-ac2a0c7d70ce", 1.74],
-        ["1efe0cb7-b25c-4935-9ff2-a08a81fef0e2", 7.43]
-      ]
-    });
-*/
+    DateTime nowTime = DateTime.now();
+    String formattedDateTime =
+        DateFormat('kk:mm:ss \n EEE d MMM').format(nowTime);
+    print("wewewew DateTime after push:: $formattedDateTime");
+
     chatController.clear();
     capturedPhoto = null;
     setState(() {});

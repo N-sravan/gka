@@ -186,7 +186,8 @@ Future<void> showNotification() async {
     storageBucket: 'apwrims---chatbot.appspot.com',
     iosBundleId: 'com.vassar.apwrimschatbot',
   ));
-  DatabaseReference ref = FirebaseDatabase.instance.ref("CHAT_BOT_ALERT/HOURLY_NOTIFICATION/${constants.projectId}");
+  DatabaseReference ref = FirebaseDatabase.instance
+      .ref("CHAT_BOT_ALERT/HOURLY_NOTIFICATION/${constants.projectId}");
   String responseMessage = '';
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -717,7 +718,7 @@ Future<void> speak(String text) async {
 
 /*Future<void> startListenings(String sessionId) async {
   DatabaseReference ref =
-      FirebaseDatabase.instance.ref("CHAT_BOT_ONDEMAND_QUERY_DATA/$sessionId");
+      FirebaseDatabase.instance.ref("CHAT_BOT_TEST/$sessionId");
   SpeechRecognitionResult result;
 
   await speechToText.listen(

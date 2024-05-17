@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/shared/loading_view_model.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
+import 'package:uuid/uuid.dart';
 import '../../utils/app_state.dart';
 import '../../utils/network_utils.dart';
 import '../../utils/secure_storage_util.dart';
@@ -175,7 +176,7 @@ class HomeViewModel extends LoadingViewModel {
 
   Future<String?> createSession() async {
     try {
-      /*   String uuid = const Uuid().v4();
+      /*  String uuid = const Uuid().v4();
       sessionId = uuid;
       print("sessionId::${sessionId}");
       isFirstTime = true;

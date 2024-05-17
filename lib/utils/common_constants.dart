@@ -67,8 +67,8 @@ const String imageUploadUrl =
 /*const String krishidsBaseUrl =
     'http://agriwise.vassarlabs.com/api';*/ //-
 
-const String loginEndpoint =
-    'https://gowater-staging.vassarlabs.com/um/api/getUserDetailsForChatbot/';
+const String loginEndpoint = 'https://gowater-staging.vassarlabs.com/um/api/getUserDetailsForChatbot/';
+const String loginEndpointForTN = 'https://tnwrims.vassarlabs.com/um/api/getUserDetailsForChatbot/';
 const String saveFcmTokenEndpoint = 'fcm_tokens/save_token';
 const String deleteTokenEndpoint = 'fcm_tokens/delete_token';
 const String getAvailabeModelsEndpoint = 'get_available_models';
@@ -87,6 +87,7 @@ const String indiaUUID = 'd6b37905-d2d3-4275-9317-d9b6f47cd783';
 const String odishaUUID = 'd19a5290-2e40-494a-83d2-98f4c845b1f1';
 const String kaleswaramUUID = '927b67e9-a2aa-46e9-99bc-41cf8c502668';
 const String apwrimsUUID = '6f86292b-dd9a-4987-bb8f-c3940263b349';
+const String tnwrimsUUID = 'e98cd5b7-6556-4c0f-a778-3429e1c14a6b';
 
 //check this before generating apk
 const String projectId = odishaUUID;
@@ -611,10 +612,12 @@ const String enterUserName = 'Enter Username';
 const String passwordString = 'Password';
 const String enterPassword = 'Password';
 const String loginString = 'Login';
+const String prodKeySpace = 'CHAT_BOT_ONDEMAND_QUERY_DATA';
+const String testKeySpace = 'CHAT_BOT_TEST';
+const String keyspace = prodKeySpace;
 
 const String clickFromCamera = 'Click from Camera';
 const String clickFromGallery = 'Click from Gallery';
-
 const String cancel = 'Cancel';
 
 enum CropSownRadioOptions { village, field }
@@ -624,4 +627,4 @@ enum NameSortRadioOptions { ascending, descending }
 enum CropNameVerifyRadioOptions { agree, disagree }
 
 const String genAiBaseUrl = "https://genai.vassarlabs.com/aquamind/";
-// const String ngrok = "https://4bc7-196-12-47-4.ngrok-free.app/";
+// const String ngrok = "https://5b6e-196-12-47-4.ngrok-free.app/";

@@ -1,11 +1,8 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/home/view_model/home_view_model.dart';
-import 'package:gka/utils/app_state.dart';
 import 'package:provider/provider.dart';
-import '../../chat/view/chat_view.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import '../../chat_window.dart';
@@ -49,6 +46,12 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
         viewModel.langList.clear();
         viewModel.langList.add('English');
         viewModel.langList.add('Telugu');
+        break;
+      case constants.tnwrimsUUID:
+        title = 'TNWRIMS Bot';
+        viewModel.langList.clear();
+        viewModel.langList.add('English');
+        viewModel.langList.add('Tamil');
         break;
     }
 

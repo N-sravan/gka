@@ -50,8 +50,7 @@ class LoginViewModel extends LoadingViewModel {
 
         /// Calling the login API
         loginResult = await repo.authenticate(params, context);
-        if (loginResult.result  &&
-            loginResult.statusCode == 200) {
+        if (loginResult.result && loginResult.statusCode == 200) {
           login.UserResponse userContent = loginResult.response;
           String encodedContent = json.encode(userContent.toJson());
           if (userContent != null && userContent.userDetailsJson != null) {
@@ -62,26 +61,38 @@ class LoginViewModel extends LoadingViewModel {
                 locName = userContent
                     .userDetailsJson.data.location!.state![0].stateName;
                 break;
+              case 'district':
+                locUUID = userContent.userDetailsJson.data.location!.state![0]
+                    .district![0].districtUUID;
+                locName = userContent.userDetailsJson.data.location!.state![0]
+                    .district![0].districtName;
+                break;
+              case 'mandal':
+                locUUID = userContent.userDetailsJson.data.location!.state![0]
+                    .district![0].mandal![0].mndalUUID;
+                locName = userContent.userDetailsJson.data.location!.state![0]
+                    .district![0].mandal![0].mandalName;
+                break;
               default:
                 break;
             }
             AppState.instance.userData = encodedContent;
             // AppState.instance.fcmToken = fcmToken!;
             AppState.instance.locType =
-            userContent.userDetailsJson.data.locType!;
+                userContent.userDetailsJson.data.locType!;
             AppState.instance.locUUID = locUUID!;
             AppState.instance.locName = locName!;
             AppState.instance.userId = userContent.userId;
             AppState.instance.userName = userContent.username;
 
             await _setLoginSharedPreferences(
-                AppState.instance.userName,
-                AppState.instance.userId,
-                AppState.instance.locName,
-                AppState.instance.locType,
-                AppState.instance.userData,
-                AppState.instance.locUUID,
-                // AppState.instance.fcmToken
+              AppState.instance.userName,
+              AppState.instance.userId,
+              AppState.instance.locName,
+              AppState.instance.locType,
+              AppState.instance.userData,
+              AppState.instance.locUUID,
+              // AppState.instance.fcmToken
             );
             notifyListeners();
           }
@@ -89,7 +100,7 @@ class LoginViewModel extends LoadingViewModel {
           debugPrint("User Details fetched successfully");
           return true;
         }
-            } catch (e) {
+      } catch (e) {
         isLoading = false;
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text(constants.genericErrorMsg),
@@ -105,7 +116,6 @@ class LoginViewModel extends LoadingViewModel {
     }
     return false;
   }
-
 
   Future<bool?> authenticateForAp(
       String userName, String password, BuildContext context) async {
@@ -188,20 +198,20 @@ class LoginViewModel extends LoadingViewModel {
               AppState.instance.userData = encodedContent;
               // AppState.instance.fcmToken = fcmToken!;
               AppState.instance.locType =
-              userContent.userDetailsJson!.data!.locType!;
+                  userContent.userDetailsJson!.data!.locType!;
               AppState.instance.locUUID = locUUID!;
               AppState.instance.locName = locName!;
               AppState.instance.userId = userContent.userId!;
               AppState.instance.userName = userContent.username!;
 
               await _setLoginSharedPreferences(
-                  AppState.instance.userName,
-                  AppState.instance.userId,
-                  AppState.instance.locName,
-                  AppState.instance.locType,
-                  AppState.instance.userData,
-                  AppState.instance.locUUID,
-                  // AppState.instance.fcmToken
+                AppState.instance.userName,
+                AppState.instance.userId,
+                AppState.instance.locName,
+                AppState.instance.locType,
+                AppState.instance.userData,
+                AppState.instance.locUUID,
+                // AppState.instance.fcmToken
               );
               notifyListeners();
             }
@@ -233,7 +243,6 @@ class LoginViewModel extends LoadingViewModel {
     }
     return false;
   }
-
 
   /// Restricting user after 10 unsuccessful attempts
   /// If user reaches 10 attempts then they have to wait for 15 minutes
@@ -281,7 +290,8 @@ class LoginViewModel extends LoadingViewModel {
         .writeSecureData(constants.preferencelocName, locName);
     await SecuredStorageUtil.instance
         .writeSecureData(constants.preferencelocUUID, locUUID);
-    await SecuredStorageUtil.instance.writeSecureData(constants.preferencelocType, locType);
+    await SecuredStorageUtil.instance
+        .writeSecureData(constants.preferencelocType, locType);
     // await SecuredStorageUtil.instance.writeSecureData(constants.preferenceFcmToken, fcmToken);
     await SecuredStorageUtil.instance.writeSecureData(
         constants.preferenceLastLoginTime,
@@ -316,8 +326,7 @@ class LoginViewModel extends LoadingViewModel {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text(constants.genericErrorMsg),
         ));
-        Util.instance
-            .logMessage('FCM TOKEN', 'Error while authenticating $e');
+        Util.instance.logMessage('FCM TOKEN', 'Error while authenticating $e');
       }
     } else {
       isLoading = false;

@@ -186,18 +186,23 @@ class UserDataLocation {
 }
 
 class UserDataState {
-  String stateName;
-  String stateUUID;
+  String? stateName;
+  String? stateUUID;
+  List<UserDataDistrict>? district;
 
   UserDataState({
     required this.stateName,
     required this.stateUUID,
+    this.district,
   });
 
   factory UserDataState.fromJson(Map<String, dynamic> json) {
     return UserDataState(
       stateName: json['stateName'],
       stateUUID: json['stateUUID'],
+      district: json['district'] != null
+          ? List<UserDataDistrict>.from(json['district'].map((x) => UserDataDistrict.fromJson(x)))
+          : null,
     );
   }
 
@@ -205,6 +210,61 @@ class UserDataState {
     return {
       'stateName': stateName,
       'stateUUID': stateUUID,
+      'district': district?.map((x) => x.toJson()).toList(),
+    };
+  }
+}
+
+class UserDataDistrict {
+  String districtName;
+  String districtUUID;
+  List<UserDataMandal>? mandal;
+
+  UserDataDistrict({
+    required this.districtName,
+    required this.districtUUID,
+    this.mandal,
+  });
+
+  factory UserDataDistrict.fromJson(Map<String, dynamic> json) {
+    return UserDataDistrict(
+      districtName: json['districtName'],
+      districtUUID: json['districtUUID'],
+      mandal: json['mandal'] != null
+          ? List<UserDataMandal>.from(json['mandal'].map((x) => UserDataMandal.fromJson(x)))
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'districtName': districtName,
+      'districtUUID': districtUUID,
+      'mandal': mandal?.map((x) => x.toJson()).toList(),
+    };
+  }
+}
+
+class UserDataMandal {
+  String mandalName;
+  String mndalUUID;
+
+  UserDataMandal({
+    required this.mandalName,
+    required this.mndalUUID,
+  });
+
+  factory UserDataMandal.fromJson(Map<String, dynamic> json) {
+    return UserDataMandal(
+      mandalName: json['mandalName'],
+      mndalUUID: json['mndalUUID'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'mandalName': mandalName,
+      'mndalUUID': mndalUUID,
     };
   }
 }
