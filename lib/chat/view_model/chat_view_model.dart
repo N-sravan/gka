@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:gka/chat/model/get_documents_response.dart';
 import 'package:gka/chat_bubble.dart';
 import 'package:gka/shared/loading_view_model.dart';
 import 'package:gka/text_to_speech.dart';
@@ -20,6 +22,7 @@ import 'package:uuid/uuid.dart';
 import '../../home/model/available_models.dart' as model;
 import '../../login/model/login_api_response_model.dart' as login;
 import '../../message_bubble.dart';
+import '../../services/api_provider.dart';
 import '../../utils/network_utils.dart';
 import '../../utils/util.dart';
 import '../model/get_prompts_response.dart';
@@ -43,6 +46,8 @@ class ChatViewModel extends LoadingViewModel {
   int responseCount = 1;
   String queryString = "";
   String llmType = '';
+  File? selectedFile;
+  bool isUploading = false;
   TextEditingController chatController = TextEditingController();
   TextEditingController promptController = TextEditingController();
   TextEditingController intentController = TextEditingController();
@@ -95,6 +100,7 @@ class ChatViewModel extends LoadingViewModel {
   // ValueNotifier<bool> showLoader = ValueNotifier<bool>(false);
   bool speechEnabled = false;
   Map<String, String> promptTemplateIntentMapping = {};
+  Map<String, String> documentIdMapping = {};
 
   Map<String, String> toolNameDescriptionMapping = {};
   Map<String, String> modelNameUuidMapping = {};
@@ -105,6 +111,9 @@ class ChatViewModel extends LoadingViewModel {
 
   clearData() {
     promptTemplateIntentMapping.clear();
+    // documentIdMapping.clear();
+    selectedFile = null;
+    isUploading = false;
   }
 
   void updateSelectedModel(String value) {
@@ -163,6 +172,57 @@ class ChatViewModel extends LoadingViewModel {
         ));
         Util.instance
             .logMessage('Login Model', 'Error while authenticating $e');
+      }
+    } else {
+      isLoading = false;
+      notifyListeners();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(constants.noNetworkAvailability),
+      ));
+    }
+    return null;
+  }
+
+  Future? getDocuments(BuildContext context) async {
+    if (await networkUtils.hasActiveInternet()) {
+      isLoading = true;
+      try {
+        GetDocumentsResponseModel getDocumentsResponseModel =
+            await repo.fetchDocuments(context);
+        Map<String, String> documentsMapping = {};
+        documentIdMapping.clear();
+        if (getDocumentsResponseModel.statusCode == 200) {
+          if (getDocumentsResponseModel.response != null &&
+              getDocumentsResponseModel.response?.length != 0) {
+            for (int i = 0;
+                i < getDocumentsResponseModel.response!.length;
+                i++) {
+              documentsMapping[getDocumentsResponseModel.response![i].id!] =
+                  getDocumentsResponseModel.response![i].content!;
+            }
+            print("weweweww documentIdMapping $documentIdMapping");
+            documentIdMapping = documentsMapping;
+            isLoading = false;
+            notifyListeners();
+          } else {
+            isLoading = false;
+            notifyListeners();
+          }
+        } else {
+          isLoading = false;
+          notifyListeners();
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Something went wrong,Please try later'),
+          ));
+        }
+      } catch (e) {
+        isLoading = false;
+        notifyListeners();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(constants.genericErrorMsg),
+        ));
+        Util.instance
+            .logMessage('Chat View Model', 'Error while authenticating $e');
       }
     } else {
       isLoading = false;
@@ -387,6 +447,42 @@ class ChatViewModel extends LoadingViewModel {
     return false;
   }
 
+  Future<bool> deleteDocument(BuildContext context, String chunkId) async {
+    /// Checking for active internet connection
+    if (await networkUtils.hasActiveInternet()) {
+      isLoading = true;
+      try {
+        bool? result = await repo.deleteDocument(context,chunkId);
+        if (result != null && result == true) {
+          await getDocuments(context);
+          isLoading = false;
+          notifyListeners();
+          return true;
+        } else {
+          isLoading = false;
+          notifyListeners();
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Something went wrong,Please try later'),
+          ));
+        }
+      } catch (e) {
+        isLoading = false;
+        notifyListeners();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(constants.genericErrorMsg),
+        ));
+        Util.instance.logMessage('Chat View Model', 'Error : $e');
+      }
+    } else {
+      isLoading = false;
+      notifyListeners();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(constants.noNetworkAvailability),
+      ));
+    }
+    return false;
+  }
+
   Future<bool> createOrUpdateTool(BuildContext context) async {
     /// Checking for active internet connection
     if (await networkUtils.hasActiveInternet()) {
@@ -426,7 +522,7 @@ class ChatViewModel extends LoadingViewModel {
     isLoading = true;
     DatabaseReference ref = FirebaseDatabase.instance
         .ref("CHAT_BOT_ALERT/HOURLY_NOTIFICATION/${constants.projectId}");
-    int c=0;
+    int c = 0;
 
     await ref.orderByKey().limitToLast(5).once().then((event) async {
       DataSnapshot snapshot = event.snapshot;
@@ -445,5 +541,63 @@ class ChatViewModel extends LoadingViewModel {
       }
     });
     isLoading = false;
+  }
+
+  Future<void> pickFile() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
+    if (result != null) {
+      selectedFile = File(result.files.single.path!);
+      isUploading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> uploadFile(BuildContext context) async {
+    if (selectedFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No file selected')),
+      );
+      return false;
+    } else {
+      isUploading = true;
+      notifyListeners();
+      bool? value = await uploadDocument(context, selectedFile!.path);
+      isUploading = false;
+      notifyListeners();
+      if (value != null && value) {
+        Fluttertoast.showToast(msg: "Document uploaded successfully!");
+        notifyListeners();
+        return true;
+      } else {
+        Fluttertoast.showToast(msg: "Couldn\'t upload the document!");
+        return false;
+      }
+    }
+  }
+
+  Future<bool?> uploadDocument(BuildContext context, String path) async {
+    if (await networkUtils.hasActiveInternet()) {
+      try {
+        Map<String, String> params = {
+          "project_uuid": constants.projectId,
+          "user_uuid": AppState.instance.mode == 'user' ? AppState.instance.userId : 'null',
+          "metadata": "{}"
+        };
+        bool result =
+            await ApiProvider.instance.uploadMedia(params, path, 'file');
+        if (result != null && result) {
+          return true;
+        }
+      } catch (e) {
+        Fluttertoast.showToast(
+            msg: constants.genericErrorMsg, toastLength: Toast.LENGTH_LONG);
+      }
+    } else {
+      Navigator.pop(context);
+      Fluttertoast.showToast(
+          msg: constants.noNetworkAvailability, toastLength: Toast.LENGTH_LONG);
+    }
+    notifyListeners();
+    return false;
   }
 }

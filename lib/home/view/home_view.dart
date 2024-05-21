@@ -36,7 +36,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
         viewModel.langList.add('Odia');
         break;
       case constants.apwrimsUUID:
-        title = 'APWRIMS Bot';
+        title = 'AquaMIND Assistant';
         viewModel.langList.clear();
         viewModel.langList.add('English');
         viewModel.langList.add('Telugu');
@@ -98,7 +98,6 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                     onSelected: (String value) async {
                       if (value == 'logout') {
                         Navigator.pushReplacementNamed(context, '/login');
-
                         /*   bool? result = await viewModel.deleteToken(context);
                         if (result != null && result) {
                           await viewModel.setLogoutSharedPreferences(context);
@@ -129,8 +128,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                       child: DropdownButtonFormField2<String>(
                         isExpanded: true,
                         hint: const Text('Select'),
-                        items: viewModel.langList
-                            .map((String item) => DropdownMenuItem<String>(
+                        items: viewModel.langList.map((String item) => DropdownMenuItem<String>(
                                   value: item,
                                   child: Text(
                                     item,
@@ -252,9 +250,6 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                         onChanged: (String? value) async {
                           if (value!.isNotEmpty) {
                             viewModel.updateSelectedModel(value);
-                            // setState(() {
-                            //   selectedValue = value;
-                            // });
                           }
                         },
                         buttonStyleData: ButtonStyleData(
@@ -340,17 +335,17 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                         hint: const Text('Select'),
                         items: viewModel.modeList!
                             .map((String item) => DropdownMenuItem<String>(
-                          value: item,
-                          child: Text(
-                            item,
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 14,
-                              fontFamily: 'Poppins',
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ))
+                                  value: item,
+                                  child: Text(
+                                    item,
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 14,
+                                      fontFamily: 'Poppins',
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                ))
                             .toList(),
                         value: viewModel.selectedMode.isNotEmpty == true
                             ? viewModel.selectedMode

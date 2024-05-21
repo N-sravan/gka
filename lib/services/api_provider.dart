@@ -37,8 +37,8 @@ class ApiProvider {
     return userPermissionsResult;
   }
 
-  Future<String?> submitImage(data,imagePath) async {
-    String submissionUrl = constants.imageUploadUrl;
+  Future<dynamic?> uploadMedia(data,path,mediaType) async {
+    String submissionUrl = constants.ngrok + constants.fileUploadEndPoint;
     Map<String, String> headersMap = {
       'Content-Type': constants.headerJson,
       "endpoints": constants.headerMultipart
@@ -46,12 +46,12 @@ class ApiProvider {
 
     var request = http.MultipartRequest('POST', Uri.parse(submissionUrl));
     File compressedFile;
-    final bytes = File(imagePath).readAsBytesSync().lengthInBytes;
+    final bytes = File(path).readAsBytesSync().lengthInBytes;
     final kb = bytes / 1024;
     final imageSize = kb / 1024;
     if(imageSize > 1) {
       compressedFile = await FlutterNativeImage.compressImage(
-          imagePath,
+          path,
           quality: 50
       );
       var stream = http.ByteStream(compressedFile.openRead());
@@ -60,11 +60,11 @@ class ApiProvider {
         'file', // Field name in the API endpoint
         stream,
         length,
-        filename: imagePath.split('/').last,
+        filename: path.split('/').last,
       );
       request.files.add(multipartFile);
     } else {
-      File imageFile = File(imagePath);
+      File imageFile = File(path);
       var stream = http.ByteStream(imageFile.openRead());
       var length = await imageFile.length();
       var multipartFile = http.MultipartFile(
@@ -80,14 +80,17 @@ class ApiProvider {
     var response = await request.send();
     var responseString = await response.stream.bytesToString();
     dynamic finalRes = json.decode(responseString);
-    if(finalRes["message"] == "File uploaded successfully") {
-      print("IMAGE SUBMISSION SUCCESS");
-      return finalRes["url"];
+    if(mediaType == 'file'){
+      if(finalRes["statusCode"] == 200) {
+        print("FILE SUBMISSION SUCCESS");
+        return true;
+      }
+    }else{
+      if(finalRes["message"] == "File uploaded successfully") {
+        print("IMAGE SUBMISSION SUCCESS");
+        return finalRes["url"];
+      }
     }
-    else {
-      // Fluttertoast.showToast(
-      //     msg: constants.genericErrorMsg, toastLength: Toast.LENGTH_LONG);
-      return null;
-    }
+    return null;
   }
 }

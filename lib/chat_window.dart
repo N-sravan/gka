@@ -111,7 +111,7 @@ class _ChatWindowState extends State<ChatWindow>
         title = 'GoWater Bot';
         break;
       case constants.apwrimsUUID:
-        title = 'APWRIMS Bot';
+        title = 'AquaMIND Assistant';
         break;
       case constants.kaleswaramUUID:
         title = 'Kaleswaram Bot';
@@ -345,7 +345,7 @@ class _ChatWindowState extends State<ChatWindow>
           backgroundColor: Colors.white,
           elevation: 0,
           title: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Text(
                 title,
@@ -353,7 +353,7 @@ class _ChatWindowState extends State<ChatWindow>
               ),
               const Spacer(),
               Text(
-                _toggleValue ? 'On-demand Mode' : 'listening mode',
+                _toggleValue ? 'On-demand' : 'listening mode',
                 style: TextStyle(
                   fontSize: 10,
                   color: _toggleValue ? Colors.green : Colors.grey,
@@ -434,18 +434,8 @@ class _ChatWindowState extends State<ChatWindow>
                                 print("SORTED MESSAGES ${datalast['message']}");
                                 dynamic message = datalast['message'];
                                 dynamic user = datalast['isUser'];
-                                /* final serverTime = await ref.parent!.child('.info/serverTime').get();
-                                final timestamp = serverTime.value;
-                                print("wewewew timestamp firebase servertime::${timestamp}");*/
-                                if (user) {
-                                  print("wewewew messaging Id for isUser true ::${key}");
-                                } else {
-                                  print(
-                                      "wewewew messaging Id for isUser false ::${key}");
-                                }
                                 print("keyspace::${constants.keyspace}");
-                                print(
-                                    "imageUrl from chatwindow::${datalast['mediaUrl']}");
+                                print("imageUrl from chatwindow::${datalast['mediaUrl']}");
                                 messageList.add(ChatBubble(
                                   text: datalast['message'] ?? '',
                                   isUser: datalast['isUser'],
@@ -670,7 +660,7 @@ class _ChatWindowState extends State<ChatWindow>
                           } else {
                             String? imageUrl = '';
                             if (capturedPhoto != null) {
-                              imageUrl = await submitImage(
+                              imageUrl = await uploadMedia(
                                   context, capturedPhoto!.path);
                             }
                             await insertDataIntoDb(
@@ -778,12 +768,12 @@ class _ChatWindowState extends State<ChatWindow>
     setState(() {});
   }
 
-  Future<String?> submitImage(BuildContext context, String imagePath) async {
+  Future<String?> uploadMedia(BuildContext context, String imagePath) async {
     if (await networkUtils.hasActiveInternet()) {
       try {
         Map<String, String> params = {};
         params = {"bucket_name": "crop_bucket"};
-        String? url = await ApiProvider.instance.submitImage(params, imagePath);
+        String? url = await ApiProvider.instance.uploadMedia(params, imagePath, 'image');
         if (url != null && url.isNotEmpty) {
           return url;
         }
@@ -847,6 +837,13 @@ class _ChatWindowState extends State<ChatWindow>
       "language": language,
       "model_uuid": AppState.instance.modelUUID,
       "mode": AppState.instance.mode
+    });
+
+    String dataTest = 'The reservoir data for Somasila is as follows:\n\n- Location: Somasila Reservoir\n- Start Date: Monday, 20 May 2024\n- End Date: Monday, 20 May 2024\n- District: Sri Potti Sriramulu Nellore\n- Design Total Capacity: 78.00 T.M.C\n- Design Full Reservoir Level: 100.58 feet\n- Design Dead Storage: 7.57 T.M.C\n- Design Dead Storage Level: 82.30 feet\n- Basin: PENNAR\n- Current Total Storage: 40.26 T.M.C\n- Current Percentage of Total Storage: 51.61%\n- Current Total Inflow: 178.00 Cusecs\n- Current Total Outflow: 4993.00 Cusecs\n- Current Total Level: 94.23 feet\n- Evaporation Losses: 213.00\n\nPlease note that this data is as of the given date';
+
+    await ref.child(timeStamp).set({
+      "isUser": false,
+      "message": dataTest,
     });
 
     DateTime nowTime = DateTime.now();

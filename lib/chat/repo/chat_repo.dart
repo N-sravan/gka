@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/material.dart';
+import 'package:gka/chat/model/get_documents_response.dart';
 import 'package:http/http.dart' as http;
 import '../../home/model/available_models.dart';
 import '../../shared/token_response.dart';
@@ -18,15 +19,22 @@ abstract class ChatRepository {
 
   Future<int?> createOrUpdateTool();
 
-  Future<GetAllPromptsResponseModel> fetchPrompts(BuildContext context, String modelUUID);
+  Future<GetAllPromptsResponseModel> fetchPrompts(
+      BuildContext context, String modelUUID);
 
-  Future<PromptSubmissionResponse> createPrompt(BuildContext context, String prompt, String intent, String modelUUID);
+  Future<PromptSubmissionResponse> createPrompt(
+      BuildContext context, String prompt, String intent, String modelUUID);
 
-  Future<PromptSubmissionResponse> updatePrompt(BuildContext context, String prompt, String intent);
+  Future<PromptSubmissionResponse> updatePrompt(
+      BuildContext context, String prompt, String intent);
 
   Future<ToolInventoryResponseModel> fetchTools(BuildContext context);
 
   Future<AvailabeModelResponse> fetchModels(BuildContext context);
+
+  Future<GetDocumentsResponseModel> fetchDocuments(BuildContext context);
+
+  Future<bool> deleteDocument(BuildContext context, String chunkId);
 }
 
 /// Concrete class implementation for the login repository
@@ -101,7 +109,7 @@ class ChatRepositoryImpl extends ChatRepository {
     Map<String, dynamic> responseMap = jsonDecode(response.body);
 
     GetAllPromptsResponseModel getAllPromptsResponseModel =
-    GetAllPromptsResponseModel.fromJson(responseMap);
+        GetAllPromptsResponseModel.fromJson(responseMap);
     return getAllPromptsResponseModel;
   }
 
@@ -129,13 +137,13 @@ class ChatRepositoryImpl extends ChatRepository {
     Map<String, dynamic> responseMap = jsonDecode(response.body);
 
     ToolInventoryResponseModel toolInventoryResponseModel =
-    ToolInventoryResponseModel.fromJson(responseMap);
+        ToolInventoryResponseModel.fromJson(responseMap);
     return toolInventoryResponseModel;
   }
 
   @override
-  Future<PromptSubmissionResponse> createPrompt(BuildContext context, String promptMessage,
-      String intent, String modelUUID) async {
+  Future<PromptSubmissionResponse> createPrompt(BuildContext context,
+      String promptMessage, String intent, String modelUUID) async {
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
     };
@@ -160,7 +168,8 @@ class ChatRepositoryImpl extends ChatRepository {
 
     Map<String, dynamic> responseMap = jsonDecode(response.body);
 
-    PromptSubmissionResponse promptSubmissionResponse = PromptSubmissionResponse.fromJson(responseMap);
+    PromptSubmissionResponse promptSubmissionResponse =
+        PromptSubmissionResponse.fromJson(responseMap);
     return promptSubmissionResponse;
   }
 
@@ -190,7 +199,8 @@ class ChatRepositoryImpl extends ChatRepository {
 
     Map<String, dynamic> responseMap = jsonDecode(response.body);
 
-    PromptSubmissionResponse promptSubmissionResponse = PromptSubmissionResponse.fromJson(responseMap);
+    PromptSubmissionResponse promptSubmissionResponse =
+        PromptSubmissionResponse.fromJson(responseMap);
     return 1;
   }
 
@@ -221,7 +231,8 @@ class ChatRepositoryImpl extends ChatRepository {
 
     Map<String, dynamic> responseMap = jsonDecode(response.body);
 
-    PromptSubmissionResponse promptSubmissionResponse = PromptSubmissionResponse.fromJson(responseMap);
+    PromptSubmissionResponse promptSubmissionResponse =
+        PromptSubmissionResponse.fromJson(responseMap);
     return promptSubmissionResponse;
   }
 
@@ -236,12 +247,61 @@ class ChatRepositoryImpl extends ChatRepository {
         constants.genAiBaseUrl + constants.getAvailabeModelsEndpoint;
     String data = jsonEncode(params);
     var response =
-    await http.post(Uri.parse(authUrl), headers: authHeaders, body: data);
+        await http.post(Uri.parse(authUrl), headers: authHeaders, body: data);
 
     Map<String, dynamic> responseMap = jsonDecode(response.body);
 
     AvailabeModelResponse availabeModelResponse =
-    AvailabeModelResponse.fromJson(responseMap);
+        AvailabeModelResponse.fromJson(responseMap);
     return availabeModelResponse;
+  }
+
+  @override
+  Future<GetDocumentsResponseModel> fetchDocuments(BuildContext context) async {
+    Map<String, String> authHeaders = {
+      constants.headerContentType: constants.headerJson
+    };
+
+    Map<String, dynamic> params = {
+      "project_uuid": constants.projectId,
+      "user_uuid": AppState.instance.mode == 'user' ? AppState.instance.userId : 'null',
+      "metadata": {},
+      "threshold": 0
+    };
+    String authUrl = constants.ngrok + constants.getFilesEndPoint;
+    String data = jsonEncode(params);
+    var response =
+        await http.post(Uri.parse(authUrl), headers: authHeaders, body: data);
+
+    Map<String, dynamic> responseMap = jsonDecode(response.body);
+
+    GetDocumentsResponseModel getDocumentsResponseModel =
+        GetDocumentsResponseModel.fromJson(responseMap);
+    return getDocumentsResponseModel;
+  }
+
+  @override
+  Future<bool> deleteDocument(BuildContext context, String chunkId) async {
+    Map<String, dynamic> params = {
+      "project_uuid": constants.projectId,
+      "chunk_id": chunkId
+    };
+    Map<String, String> authHeaders = {
+      constants.headerContentType: constants.headerJson
+    };
+    String authUrl = constants.ngrok + constants.deleteFileEndPoint;
+    String requestBody = jsonEncode(params);
+
+    http.Response response = await http.post(
+      Uri.parse(authUrl),
+      headers: authHeaders,
+      body: requestBody,
+    );
+    Map<String, dynamic> responseMap = jsonDecode(response.body);
+
+    if (responseMap['statusCode'] == 200) {
+      return true;
+    }
+    return false;
   }
 }

@@ -1,16 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/chat/view/prompt_management_view.dart';
 import 'package:gka/chat/view/tool_inventory_view.dart';
-
-import 'package:provider/provider.dart';
-import 'package:firebase_database/firebase_database.dart';
-
+import 'package:gka/utils/app_state.dart';
 import '../../../utils/common_constants.dart' as constants;
-
-import '../view_model/chat_view_model.dart';
 import 'chat_history_view.dart';
-import 'notifications_view.dart';
+import 'documents_view.dart';
 
 class DrawerWidget extends StatefulWidget {
   const DrawerWidget({Key? key}) : super(key: key);
@@ -20,10 +14,21 @@ class DrawerWidget extends StatefulWidget {
 }
 
 class _DrawerWidgetState extends State<DrawerWidget> {
+  late String mode;
+  late bool isDisplay;
+
   // late ChatViewModel viewModel;
 
   @override
   void initState() {
+    mode = AppState.instance.mode;
+    if (mode.isNotEmpty) {
+      if (mode == 'user' || mode == 'unstructured') {
+        isDisplay = true;
+      } else {
+        isDisplay = false;
+      }
+    }
     // viewModel = Provider.of<ChatViewModel>(context, listen: false);
     super.initState();
   }
@@ -71,7 +76,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                     ),
                   ),
                 ),
-                ListTile(
+                /*ListTile(
                   title: Row(
                     children: [
                       Text(
@@ -91,7 +96,31 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                       ),
                     );
                   },
-                ),
+                ),*/
+                isDisplay
+                    ? ListTile(
+                        title: Row(
+                          children: [
+                            Text(
+                              "Documents",
+                              style: constants.appBarListTileTextStyle,
+                            ),
+                            const Spacer(),
+                            const Icon(
+                                Icons.upload_file),
+                          ],
+                        ),
+                        onTap: () {
+                          // Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const DocumentsView(),
+                            ),
+                          );
+                        },
+                      )
+                    : const SizedBox(),
                 ListTile(
                   title: Row(
                     children: [
@@ -121,7 +150,8 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                         style: constants.appBarListTileTextStyle,
                       ),
                       const Spacer(),
-                      const Icon(Icons.manage_accounts), // Icon for "Prompt Management"
+                      const Icon(Icons.manage_accounts),
+                      // Icon for "Prompt Management"
                     ],
                   ),
                   onTap: () {

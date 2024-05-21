@@ -62,8 +62,10 @@ const String baseUrl = 'https://keralakrishistack.vassarlabs.com/';
 // const String baseUrl = 'https://agriwise.vassarlabs.com/';
 // const String krishidsBaseUrl = 'http://acerkrishidss.vassarlabs.com/staging/api';
 // const String krishidsBaseUrl = 'https://agriwise.vassarlabs.com/staging/api';
-const String imageUploadUrl =
-    'https://agriwise.vassarlabs.com/agribot/bucket/insert_file';
+const String imageUploadUrl = 'https://agriwise.vassarlabs.com/agribot/bucket/insert_file';
+const String fileUploadEndPoint = 'rag/save_rag_data_from_upload';
+const String getFilesEndPoint = 'rag/get_rag_data';
+const String deleteFileEndPoint = 'rag/delete_rag_data';
 /*const String krishidsBaseUrl =
     'http://agriwise.vassarlabs.com/api';*/ //-
 
@@ -73,8 +75,7 @@ const String saveFcmTokenEndpoint = 'fcm_tokens/save_token';
 const String deleteTokenEndpoint = 'fcm_tokens/delete_token';
 const String getAvailabeModelsEndpoint = 'get_available_models';
 const String getAvailabePromptsEndpoint = 'get_all_prompt_templates';
-const String logoutEndpoint =
-    'auth/realms/agriwiserealm/protocol/openid-connect/logout';
+const String logoutEndpoint = 'auth/realms/agriwiserealm/protocol/openid-connect/logout';
 const String csrfEndPoint = 'um/generate-csrf-token';
 const String userPermissionsEndPoint = 'um/user-permissions/';
 const String getToolsEndpoint = 'tool_inventory/get_tools';
@@ -88,9 +89,12 @@ const String odishaUUID = 'd19a5290-2e40-494a-83d2-98f4c845b1f1';
 const String kaleswaramUUID = '927b67e9-a2aa-46e9-99bc-41cf8c502668';
 const String apwrimsUUID = '6f86292b-dd9a-4987-bb8f-c3940263b349';
 const String tnwrimsUUID = 'e98cd5b7-6556-4c0f-a778-3429e1c14a6b';
+const String prodKeySpace = 'CHAT_BOT_ONDEMAND_QUERY_DATA';
+const String testKeySpace = 'CHAT_BOT_TEST';
 
 //check this before generating apk
-const String projectId = odishaUUID;
+const String projectId = apwrimsUUID;
+const String keyspace = testKeySpace;
 
 // Paddings
 const double largePadding = 32;
@@ -612,9 +616,7 @@ const String enterUserName = 'Enter Username';
 const String passwordString = 'Password';
 const String enterPassword = 'Password';
 const String loginString = 'Login';
-const String prodKeySpace = 'CHAT_BOT_ONDEMAND_QUERY_DATA';
-const String testKeySpace = 'CHAT_BOT_TEST';
-const String keyspace = prodKeySpace;
+
 
 const String clickFromCamera = 'Click from Camera';
 const String clickFromGallery = 'Click from Gallery';
@@ -627,4 +629,4 @@ enum NameSortRadioOptions { ascending, descending }
 enum CropNameVerifyRadioOptions { agree, disagree }
 
 const String genAiBaseUrl = "https://genai.vassarlabs.com/aquamind/";
-// const String ngrok = "https://5b6e-196-12-47-4.ngrok-free.app/";
+const String ngrok = "https://8660-196-12-47-4.ngrok-free.app/";
