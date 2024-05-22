@@ -268,7 +268,7 @@ class ChatRepositoryImpl extends ChatRepository {
       "metadata": {},
       "threshold": 0
     };
-    String authUrl = constants.ngrok + constants.getFilesEndPoint;
+    String authUrl = constants.genAiBaseUrl + constants.getFilesEndPoint;
     String data = jsonEncode(params);
     var response =
         await http.post(Uri.parse(authUrl), headers: authHeaders, body: data);
@@ -289,7 +289,7 @@ class ChatRepositoryImpl extends ChatRepository {
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
     };
-    String authUrl = constants.ngrok + constants.deleteFileEndPoint;
+    String authUrl = constants.genAiBaseUrl + constants.deleteFileEndPoint;
     String requestBody = jsonEncode(params);
 
     http.Response response = await http.post(

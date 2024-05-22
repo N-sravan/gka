@@ -38,7 +38,7 @@ class ApiProvider {
   }
 
   Future<dynamic?> uploadMedia(data,path,mediaType) async {
-    String submissionUrl = constants.ngrok + constants.fileUploadEndPoint;
+    String submissionUrl = constants.genAiBaseUrl + constants.fileUploadEndPoint;
     Map<String, String> headersMap = {
       'Content-Type': constants.headerJson,
       "endpoints": constants.headerMultipart
