@@ -7,13 +7,15 @@ class ChatBubble extends StatefulWidget {
     required this.isUser,
     required this.logMessage,
     this.imageUrl,
-    this.tabularData,
+    this.tableColumnData,
+    this.tableRowData,
   }) : super(key: key);
 
   final String text;
   final bool isUser;
   final String? imageUrl;
-  final List<dynamic>? tabularData; // Define tabularData
+  final List<dynamic>? tableColumnData;
+  final List<dynamic>? tableRowData;
   final String logMessage;
 
   @override
@@ -127,8 +129,9 @@ class _ChatBubbleState extends State<ChatBubble> {
                             ),
                           ],
                         ),
-                      if (widget.tabularData != null &&
-                          widget.tabularData!.isNotEmpty)
+                      if (widget.tableColumnData != null &&
+                          widget.tableColumnData!.isNotEmpty &&
+                          widget.tableRowData!.isNotEmpty)
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -150,25 +153,18 @@ class _ChatBubbleState extends State<ChatBubble> {
                               child: SingleChildScrollView(
                                 scrollDirection: Axis.horizontal,
                                 child: DataTable(
-                                  columnSpacing: 12,
+                                  // columnSpacing: 2,
                                   dataRowHeight: 40,
-                                  columns:
-                                      generateColumns(widget.tabularData![0]),
+                                  columns: generateColumns(widget.tableColumnData!),
                                   rows: List.generate(
-                                    widget.tabularData!.length - 1,
+                                    widget.tableRowData!.length,
                                     (index) => DataRow(
                                       cells: List.generate(
-                                        widget.tabularData![index + 1].length,
+                                        widget.tableRowData![index]!.length,
                                         (cellIndex) => DataCell(
                                           SizedBox(
-                                            width: MediaQuery.of(context)
-                                                    .size
-                                                    .width *
-                                                0.8,
-                                            child: Text(widget
-                                                .tabularData![index + 1]
-                                                    [cellIndex]
-                                                .toString()),
+                                            width: MediaQuery.of(context).size.width * 0.8,
+                                            child: Text(widget.tableRowData![index][cellIndex].toString()),
                                           ),
                                         ),
                                       ),

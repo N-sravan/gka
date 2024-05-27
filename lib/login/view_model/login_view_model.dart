@@ -2,14 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
-import 'package:jwt_decoder/jwt_decoder.dart';
-import '../../home/view/home_view.dart';
-import '../../services/api_provider.dart';
 import '../../utils/app_state.dart';
 import '../model/ap_login_response_model.dart' as apLogin;
-import '../model/department_user_permission_response.dart';
 import '../../shared/loading_view_model.dart';
 import '../../utils/network_utils.dart';
 import '../../utils/secure_storage_util.dart';
@@ -30,8 +25,7 @@ class LoginViewModel extends LoadingViewModel {
   final otpKey = GlobalKey();
   final formKey = GlobalKey<FormState>();
 
-  Future<bool> authenticate(
-      String userName, String password, BuildContext context) async {
+  Future<bool> authenticate(String userName, String password, BuildContext context) async {
     /// Checking for active internet connection
     if (await networkUtils.hasActiveInternet()) {
       late login.LoginResult loginResult;
@@ -127,6 +121,7 @@ class LoginViewModel extends LoadingViewModel {
 
       /// Generating token and sending to backend
       String? fcmToken = await FirebaseMessaging.instance.getToken();
+      print("fcmToken::$fcmToken");
 
       isLoading = true;
       try {

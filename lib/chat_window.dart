@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
@@ -432,15 +433,17 @@ class _ChatWindowState extends State<ChatWindow>
                                 final datalast =
                                     Map<String, dynamic>.from(value);
                                 print("SORTED MESSAGES ${datalast['message']}");
-                                dynamic message = datalast['message'];
-                                dynamic user = datalast['isUser'];
-                                print("keyspace::${constants.keyspace}");
-                                print("imageUrl from chatwindow::${datalast['mediaUrl']}");
                                 messageList.add(ChatBubble(
                                   text: datalast['message'] ?? '',
                                   isUser: datalast['isUser'],
                                   imageUrl: datalast['mediaUrl'] ?? '',
-                                  tabularData: datalast['tabularData'],
+                                  tableColumnData:
+                                      datalast['table_data_columns'],
+                                  tableRowData:
+                                      datalast['table_data_values'] != null
+                                          ? jsonDecode(
+                                              datalast['table_data_values'])
+                                          : null,
                                   logMessage: datalast['log'] ?? '',
                                 ));
                               }
@@ -773,7 +776,8 @@ class _ChatWindowState extends State<ChatWindow>
       try {
         Map<String, String> params = {};
         params = {"bucket_name": "crop_bucket"};
-        String? url = await ApiProvider.instance.uploadMedia(params, imagePath, 'image');
+        String? url =
+            await ApiProvider.instance.uploadMedia(params, imagePath, 'image');
         if (url != null && url.isNotEmpty) {
           return url;
         }
@@ -837,13 +841,6 @@ class _ChatWindowState extends State<ChatWindow>
       "language": language,
       "model_uuid": AppState.instance.modelUUID,
       "mode": AppState.instance.mode
-    });
-
-    String dataTest = 'The reservoir data for Somasila is as follows:\n\n- Location: Somasila Reservoir\n- Start Date: Monday, 20 May 2024\n- End Date: Monday, 20 May 2024\n- District: Sri Potti Sriramulu Nellore\n- Design Total Capacity: 78.00 T.M.C\n- Design Full Reservoir Level: 100.58 feet\n- Design Dead Storage: 7.57 T.M.C\n- Design Dead Storage Level: 82.30 feet\n- Basin: PENNAR\n- Current Total Storage: 40.26 T.M.C\n- Current Percentage of Total Storage: 51.61%\n- Current Total Inflow: 178.00 Cusecs\n- Current Total Outflow: 4993.00 Cusecs\n- Current Total Level: 94.23 feet\n- Evaporation Losses: 213.00\n\nPlease note that this data is as of the given date';
-
-    await ref.child(timeStamp).set({
-      "isUser": false,
-      "message": dataTest,
     });
 
     DateTime nowTime = DateTime.now();

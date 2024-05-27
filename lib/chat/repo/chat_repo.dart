@@ -13,20 +13,18 @@ import '../model/prompt_submission_response.dart';
 
 /// Abstract class for the login repository
 abstract class ChatRepository {
+
   Future<int?> deleteToken(BuildContext context);
 
   Future<int?> deleteTools(List<String> toolUUIDs);
 
   Future<int?> createOrUpdateTool();
 
-  Future<GetAllPromptsResponseModel> fetchPrompts(
-      BuildContext context, String modelUUID);
+  Future<GetAllPromptsResponseModel> fetchPrompts(BuildContext context, String modelUUID);
 
-  Future<PromptSubmissionResponse> createPrompt(
-      BuildContext context, String prompt, String intent, String modelUUID);
+  Future<PromptSubmissionResponse> createPrompt(BuildContext context, String prompt, String intent, String modelUUID);
 
-  Future<PromptSubmissionResponse> updatePrompt(
-      BuildContext context, String prompt, String intent);
+  Future<PromptSubmissionResponse> updatePrompt(BuildContext context, String prompt, String intent);
 
   Future<ToolInventoryResponseModel> fetchTools(BuildContext context);
 
@@ -35,6 +33,7 @@ abstract class ChatRepository {
   Future<GetDocumentsResponseModel> fetchDocuments(BuildContext context);
 
   Future<bool> deleteDocument(BuildContext context, String chunkId);
+
 }
 
 /// Concrete class implementation for the login repository
@@ -264,14 +263,14 @@ class ChatRepositoryImpl extends ChatRepository {
 
     Map<String, dynamic> params = {
       "project_uuid": constants.projectId,
-      "user_uuid": AppState.instance.mode == 'user' ? AppState.instance.userId : 'null',
+      "user_uuid":
+          AppState.instance.mode == 'user' ? AppState.instance.userId : 'null',
       "metadata": {},
       "threshold": 0
     };
     String authUrl = constants.genAiBaseUrl + constants.getFilesEndPoint;
     String data = jsonEncode(params);
-    var response =
-        await http.post(Uri.parse(authUrl), headers: authHeaders, body: data);
+    var response = await http.post(Uri.parse(authUrl), headers: authHeaders, body: data);
 
     Map<String, dynamic> responseMap = jsonDecode(response.body);
 

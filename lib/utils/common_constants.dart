@@ -93,8 +93,8 @@ const String prodKeySpace = 'CHAT_BOT_ONDEMAND_QUERY_DATA';
 const String testKeySpace = 'CHAT_BOT_TEST';
 
 //check this before generating apk
-const String projectId = apwrimsUUID;
-const String keyspace = testKeySpace;
+const String projectId = kaleswaramUUID;
+const String keyspace = prodKeySpace;
 
 // Paddings
 const double largePadding = 32;

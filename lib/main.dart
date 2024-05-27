@@ -2,12 +2,14 @@ import 'dart:async';
 import 'dart:isolate';
 import 'dart:ui';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:gka/chat/repo/chat_repo.dart';
 import 'package:gka/home/repo/home_repo.dart';
 import 'package:gka/home/view_model/home_view_model.dart';
 import 'package:gka/utils/app_state.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 import 'package:gka/utils/shared_preference_util.dart';
+import 'package:gka/utils/util.dart';
 import 'package:http/http.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
@@ -40,6 +42,7 @@ import '../../login/model/department_user_permission_response.dart' as response;
 import 'dart:developer' as developer;
 import 'dart:io' as platform;
 import 'chat_bubble.dart';
+import 'helpers/notification_helper.dart';
 import 'locator.dart';
 
 var initializationSettingsAndroid = const AndroidInitializationSettings(
@@ -87,6 +90,8 @@ void main() async {
     storageBucket: 'apwrims---chatbot.appspot.com',
     iosBundleId: 'com.vassar.apwrimschatbot',
   ));
+
+  NotificationHelper.initializeNotification(myBackgroundMessageHandler);
 
   setupLocator();
 
@@ -675,8 +680,7 @@ Future<void> startListeningToYes(String sessionId, String word) async {
       }*/
 
 Future<void> startListeningBg() async {
-  DatabaseReference ref = FirebaseDatabase.instance
-      .ref("CHAT_BOT_ALERT/HOURLY_UPDATES/${constants.projectId}");
+  DatabaseReference ref = FirebaseDatabase.instance.ref("CHAT_BOT_ALERT/HOURLY_UPDATES/${constants.projectId}");
   SpeechRecognitionResult result;
 
   await speechToText.listen(
@@ -833,7 +837,7 @@ Future<String> listenForSessionId() async {
           customAttributes: null,
         );
         sessionId = (await createSession(data))!;
-        print("sessionId::${sessionId}");
+        print("sessionId::$sessionId");
         if (sessionId.isNotEmpty) {
           await tts.speak('Session is Created');
           completer.complete(sessionId);
@@ -911,4 +915,13 @@ class MyApp extends StatelessWidget {
       ),
     );
   }
+}
+
+
+/// Handling firebase notifications
+Future<dynamic> myBackgroundMessageHandler(RemoteMessage message) async {
+  Util.instance.logMessage(
+      'on Background: ',
+      '${message.notification?.title}/'
+          '${message.notification?.body}/${message.notification?.titleLocKey}');
 }
