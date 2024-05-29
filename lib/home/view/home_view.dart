@@ -36,7 +36,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
         viewModel.langList.add('Odia');
         break;
       case constants.apwrimsUUID:
-        title = 'AquaMIND Assistant';
+        title = 'APWRIMS Bot';
         viewModel.langList.clear();
         viewModel.langList.add('English');
         viewModel.langList.add('Telugu');
@@ -55,9 +55,9 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
         break;
     }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
+    /*WidgetsBinding.instance.addPostFrameCallback((_) async {
       await viewModel.getAvailableModels(context);
-    });
+    });*/
   }
 
   @override
@@ -215,7 +215,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
+                  /*  const SizedBox(height: 20),
                     const Text(
                       'Select Model',
                       style: TextStyle(
@@ -317,7 +317,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                           ),
                         ),
                       ),
-                    ),
+                    ),*/
                     const SizedBox(height: 20),
                     const Text(
                       'Select Mode',
@@ -352,7 +352,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                             : null,
                         onChanged: (String? value) async {
                           if (value!.isNotEmpty) {
-                            viewModel.updateSelectedFlag(value);
+                            viewModel.updateSelectedMode(value);
                           }
                         },
                         buttonStyleData: ButtonStyleData(

@@ -1,4 +1,3 @@
-
 import 'package:event_bus/event_bus.dart';
 
 import '../login/model/department_user_permission_response.dart';
@@ -34,15 +33,15 @@ class AppState {
   late String tappedPointUUID;
   late String latitude;
   late String longitude;
-  Map<String,String> countryUUIDMapping = {};
-  Map<String,String> stateUUIDMapping = {};
-  Map<String,String> districtUUIDMapping = {};
-  Map<String,String> blockUUIDMapping = {};
-  Map<String,String> panchayatUUIDMapping = {};
-  Map<String,String> villageUUIDMapping = {};
-  Map<String,String> cropUUIDColorMapping = {};
-  Map<String,String> cropUUIDNameMapping = {};
-  Map<String,dynamic> plotUUIDAndStatusMap = {};
+  Map<String, String> countryUUIDMapping = {};
+  Map<String, String> stateUUIDMapping = {};
+  Map<String, String> districtUUIDMapping = {};
+  Map<String, String> blockUUIDMapping = {};
+  Map<String, String> panchayatUUIDMapping = {};
+  Map<String, String> villageUUIDMapping = {};
+  Map<String, String> cropUUIDColorMapping = {};
+  Map<String, String> cropUUIDNameMapping = {};
+  Map<String, dynamic> plotUUIDAndStatusMap = {};
   late String? hiveEncryptionKey;
   late bool? isFarmSurvey;
   late bool? isPlotForm;
@@ -52,21 +51,18 @@ class AppState {
   late String userData;
   String triggeredWord = '';
   late String fcmToken;
-  bool hasFarmerData=false;
-  bool isVoiceUpdateEnabled=false;
+  bool hasFarmerData = false;
+  bool isVoiceUpdateEnabled = false;
   bool isVillageSelected = true;
+
   // bool isOriyaSelected = false;
   bool isExternalLLM = false;
-  late String modelName;
-  late String modelUUID;
+  String modelName = "chatgpt-3.5";
+  String modelUUID = "43c31fae-3469-4c87-a73d-8648e9c78663";
   late String locUUID;
   late String locType;
   late String locName;
   late String userId;
   late String language;
-  String mode = "default";
-
-  //For Background Sync
-  bool isSyncInProgress = false;
-  EventBus eventBus = EventBus();
+  late String mode;
 }

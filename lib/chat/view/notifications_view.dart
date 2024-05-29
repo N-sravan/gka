@@ -87,7 +87,7 @@ class _NotificationsViewState extends State<NotificationsView> {
     );
   }
 
-  List<Widget> generateListTiles(Map<int, String> data) {
+  List<Widget> generateListTiles(Map<String, String> data) {
     List<Widget> listTiles = [];
     data.forEach((key, value) {
       listTiles.add(

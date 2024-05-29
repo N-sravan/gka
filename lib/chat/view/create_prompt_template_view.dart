@@ -9,7 +9,7 @@ import 'package:provider/provider.dart';
 class CreatePromptView extends StatefulWidget {
   final bool? isCreate;
 
-  CreatePromptView({this.isCreate, Key? key}) : super(key: key);
+  const CreatePromptView({this.isCreate, Key? key}) : super(key: key);
 
   @override
   State<CreatePromptView> createState() => _CreatePromptViewState();

@@ -17,7 +17,7 @@ class PromptManagementView extends StatefulWidget {
 class _PromptManagementViewState extends State<PromptManagementView> {
   String? _selectedPromptTemplate;
   String? _selectedPromptKey;
-  TextEditingController _promptTextController = TextEditingController();
+  final TextEditingController _promptTextController = TextEditingController();
 
   late ChatViewModel viewModel;
 

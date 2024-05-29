@@ -153,9 +153,10 @@ class _ChatBubbleState extends State<ChatBubble> {
                               child: SingleChildScrollView(
                                 scrollDirection: Axis.horizontal,
                                 child: DataTable(
-                                  // columnSpacing: 2,
+                                  // columnSpacing: 12,
                                   dataRowHeight: 40,
-                                  columns: generateColumns(widget.tableColumnData!),
+                                  columns:
+                                      generateColumns(widget.tableColumnData!),
                                   rows: List.generate(
                                     widget.tableRowData!.length,
                                     (index) => DataRow(
@@ -163,8 +164,13 @@ class _ChatBubbleState extends State<ChatBubble> {
                                         widget.tableRowData![index]!.length,
                                         (cellIndex) => DataCell(
                                           SizedBox(
-                                            width: MediaQuery.of(context).size.width * 0.8,
-                                            child: Text(widget.tableRowData![index][cellIndex].toString()),
+                                            width: MediaQuery.of(context)
+                                                    .size
+                                                    .width *
+                                                0.8,
+                                            child: Text(widget
+                                                .tableRowData![index][cellIndex]
+                                                .toString()),
                                           ),
                                         ),
                                       ),

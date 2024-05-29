@@ -112,7 +112,7 @@ class _ChatWindowState extends State<ChatWindow>
         title = 'GoWater Bot';
         break;
       case constants.apwrimsUUID:
-        title = 'AquaMIND Assistant';
+        title = 'APWRIMS Bot';
         break;
       case constants.kaleswaramUUID:
         title = 'Kaleswaram Bot';
@@ -438,11 +438,11 @@ class _ChatWindowState extends State<ChatWindow>
                                   isUser: datalast['isUser'],
                                   imageUrl: datalast['mediaUrl'] ?? '',
                                   tableColumnData:
-                                      datalast['table_data_columns'],
+                                      datalast['sql_df_columns'],
                                   tableRowData:
-                                      datalast['table_data_values'] != null
+                                      datalast['sql_df_values'] != null
                                           ? jsonDecode(
-                                              datalast['table_data_values'])
+                                              datalast['sql_df_values'])
                                           : null,
                                   logMessage: datalast['log'] ?? '',
                                 ));
@@ -487,8 +487,7 @@ class _ChatWindowState extends State<ChatWindow>
                                 }
                               });
 
-                              dataTimer =
-                                  Timer(const Duration(seconds: 100), () async {
+                              dataTimer = Timer(const Duration(seconds: 100), () async {
                                 print("timerCounter::$timerCounter");
                                 if (showLoader.value) {
                                   DatabaseReference ref =
@@ -826,8 +825,7 @@ class _ChatWindowState extends State<ChatWindow>
   Future<void> insertDataIntoDb(String? imageUrl, String text) async {
     print("userId::${AppState.instance.userId}");
     print("projectId::${constants.projectId}");
-    DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
+    DatabaseReference ref = FirebaseDatabase.instance.ref("${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
 
     String timeStamp = DateTime.now().millisecondsSinceEpoch.toString();
 

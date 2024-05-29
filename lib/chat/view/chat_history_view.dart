@@ -40,10 +40,7 @@ class _ChatHistoryViewState extends State<ChatHistoryView> {
               centerTitle: true,
               backgroundColor: Colors.white,
               elevation: 0,
-              title:  Text(
-                  'Chat History',
-                  style: constants.black16W500
-              ),
+              title: Text('Chat History', style: constants.black16W500),
             ),
             body: Container(
               color: Colors.grey[100],
@@ -52,35 +49,29 @@ class _ChatHistoryViewState extends State<ChatHistoryView> {
                   Expanded(
                     child: SingleChildScrollView(
                       child: StreamBuilder(
-                        stream: FirebaseDatabase.instance
-                            .ref(
-                            "CHAT_BOT_TEST/${constants.projectId}/${AppState.instance.userId}")
-                            .onValue,
+                        stream: FirebaseDatabase.instance.ref("${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/").onValue,
                         builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
                             return const Padding(
                               padding: EdgeInsets.all(120.0),
                               child: Center(
                                   child: CircularProgressIndicator(
-                                    strokeWidth: 5,
-                                    color: Colors.black,
-                                  )),
+                                strokeWidth: 5,
+                                color: Colors.black,
+                              )),
                             );
                           }
                           if (snapshot.hasError) {
                             return Text('Error: ${snapshot.error}');
                           }
                           if (snapshot.hasData && snapshot.data == null) {
-                            return Padding(
-                                padding: const EdgeInsets.all(8.0),
+                            return const Padding(
+                                padding: EdgeInsets.all(8.0),
                                 child: Center(
                                   child: Text('No Past History'),
                                 ));
                           }
-                          var data =
-                              (snapshot.data! as DatabaseEvent).snapshot.value ??
-                                  {};
+                          var data = (snapshot.data!).snapshot.value ?? {};
                           print("DATAFJLDLFHGLD $data");
                           data = data as Map<dynamic, dynamic>;
 
@@ -148,6 +139,7 @@ class _ChatHistoryViewState extends State<ChatHistoryView> {
             child: ListTile(
               title: Text(value),
               onTap: () {
+                print("key session id from chat history::$key");
                 Navigator.push(
                   context,
                   MaterialPageRoute(

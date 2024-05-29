@@ -104,7 +104,7 @@ class ChatViewModel extends LoadingViewModel {
 
   Map<String, String> toolNameDescriptionMapping = {};
   Map<String, String> modelNameUuidMapping = {};
-  Map<int, String> messageTimestampMapping = {};
+  Map<String, String> messageTimestampMapping = {};
   List<String>? modelList = [];
   List<String>? toolUUIDs = [];
   DateFormat formatter = DateFormat("dd-MM-yyyy");
@@ -527,12 +527,22 @@ class ChatViewModel extends LoadingViewModel {
         dynamic values = snapshot.value;
         values.forEach((key, value) async {
           String responseMessage = '';
+          int timeStamp = 0;
           if (value['isUser'] == false) {
             responseMessage = value['message'].toString();
+            timeStamp = value['timestamp'];
           }
           if (responseMessage.isNotEmpty) {
-            // String time = formatter.format(DateTime.now());
-            messageTimestampMapping[c++] = responseMessage;
+            // Convert the timestamp to a DateTime object
+            DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(timeStamp);
+
+            // Print the DateTime object
+            print("Date and Time: $dateTime");
+
+            // Format the DateTime object to a readable format
+            String formattedDate = formatDateTime(dateTime);
+            print("Formatted Date and Time: $formattedDate");
+            messageTimestampMapping[formattedDate] = responseMessage;
           }
         });
       }
@@ -598,5 +608,18 @@ class ChatViewModel extends LoadingViewModel {
     }
     notifyListeners();
     return false;
+  }
+
+  String formatDateTime(DateTime dateTime) {
+    // Define the desired format
+    String day = dateTime.day.toString().padLeft(2, '0');
+    String month = dateTime.month.toString().padLeft(2, '0');
+    String year = dateTime.year.toString();
+    String hour = dateTime.hour.toString().padLeft(2, '0');
+    String minute = dateTime.minute.toString().padLeft(2, '0');
+    String second = dateTime.second.toString().padLeft(2, '0');
+
+    // Create the formatted string
+    return "$day-$month-$year $hour:$minute:$second";
   }
 }

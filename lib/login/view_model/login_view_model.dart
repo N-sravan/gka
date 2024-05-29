@@ -34,6 +34,7 @@ class LoginViewModel extends LoadingViewModel {
 
       /// Generating token and sending to backend
       String? fcmToken = await FirebaseMessaging.instance.getToken();
+      print("fcmToken::$fcmToken");
 
       isLoading = true;
       try {
@@ -192,8 +193,7 @@ class LoginViewModel extends LoadingViewModel {
               }
               AppState.instance.userData = encodedContent;
               // AppState.instance.fcmToken = fcmToken!;
-              AppState.instance.locType =
-                  userContent.userDetailsJson!.data!.locType!;
+              AppState.instance.locType = userContent.userDetailsJson!.data!.locType!;
               AppState.instance.locUUID = locUUID!;
               AppState.instance.locName = locName!;
               AppState.instance.userId = userContent.userId!;

@@ -24,12 +24,14 @@ class HomeViewModel extends LoadingViewModel {
   String selectedValue = '';
   String selectedLang = '';
   String selectedModel = '';
-  String selectedMode = 'default';
+  String selectedMode = '';
   bool isFirstTime = true;
   String? sessionId;
   List<String> selectionList = ['Internal LLM', 'External LLM'];
   List<String> langList = [];
-  List<String> modeList = ['default', 'langchain', 'autogen', 'database' ,'unstructured' , 'user'];
+  // List<String> modeList = ['default', 'langchain', 'autogen', 'database' ,'unstructured' , 'user'];
+  List<String> modeList = ['Data Interaction Chat', 'Dashboard', 'Hybrid Database'];
+  Map<String, String> modeNameMapping ={'Data Interaction Chat' : 'data_interaction_chat','Dashboard':'dashboard','Hybrid Database' : 'hybrid_database'};
   List<String>? modelList = [];
   List<model.Response>? modelResponseList = [];
   Map<String, String> modelNameUuidMapping = {};
@@ -55,9 +57,9 @@ class HomeViewModel extends LoadingViewModel {
     notifyListeners();
   }
 
-  void updateSelectedFlag(String value) {
+  void updateSelectedMode(String value) {
     selectedMode = value;
-    AppState.instance.mode = value;
+    AppState.instance.mode = modeNameMapping[value]!;
     notifyListeners();
   }
 

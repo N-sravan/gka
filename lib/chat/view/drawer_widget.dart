@@ -5,6 +5,7 @@ import 'package:gka/utils/app_state.dart';
 import '../../../utils/common_constants.dart' as constants;
 import 'chat_history_view.dart';
 import 'documents_view.dart';
+import 'notifications_view.dart';
 
 class DrawerWidget extends StatefulWidget {
   const DrawerWidget({Key? key}) : super(key: key);
@@ -23,7 +24,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
   void initState() {
     mode = AppState.instance.mode;
     if (mode.isNotEmpty) {
-      if (mode == 'user' || mode == 'unstructured') {
+      if (mode == 'data_interaction_chat') {
         isDisplay = true;
       } else {
         isDisplay = false;
@@ -76,7 +77,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                     ),
                   ),
                 ),
-                /*ListTile(
+                ListTile(
                   title: Row(
                     children: [
                       Text(
@@ -92,11 +93,11 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => NotificationsView(),
+                        builder: (context) => const NotificationsView(),
                       ),
                     );
                   },
-                ),*/
+                ),
                 isDisplay
                     ? ListTile(
                         title: Row(
@@ -106,8 +107,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                               style: constants.appBarListTileTextStyle,
                             ),
                             const Spacer(),
-                            const Icon(
-                                Icons.upload_file),
+                            const Icon(Icons.upload_file),
                           ],
                         ),
                         onTap: () {
