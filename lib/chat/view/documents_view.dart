@@ -141,8 +141,7 @@ class _DocumentsViewState extends State<DocumentsView> {
                                         size: 20,
                                       ),
                                     ),
-                                    title:
-                                        Text('${value?.substring(0, 200)}...'),
+                                    title: Text(getFirstLines(value, 5)),
                                     onTap: () {
                                       showDialog(
                                           context: context,
@@ -150,8 +149,7 @@ class _DocumentsViewState extends State<DocumentsView> {
                                             return AlertDialog(
                                               title: const Text('Content'),
                                               content: SingleChildScrollView(
-                                                child: Text(
-                                                    getFirstLines(value, 5)),
+                                                child: Text(value!),
                                               ),
                                               actions: <Widget>[
                                                 TextButton(

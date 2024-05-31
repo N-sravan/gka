@@ -63,7 +63,7 @@ const String baseUrl = 'https://keralakrishistack.vassarlabs.com/';
 // const String krishidsBaseUrl = 'http://acerkrishidss.vassarlabs.com/staging/api';
 // const String krishidsBaseUrl = 'https://agriwise.vassarlabs.com/staging/api';
 const String imageUploadUrl = 'https://agriwise.vassarlabs.com/agribot/bucket/insert_file';
-const String fileUploadEndPoint = 'rag/save_rag_data_from_upload';
+const String fileUploadEndPoint = 'vector/save_vector_data_from_upload';
 const String getFilesEndPoint = 'rag/get_rag_data';
 const String deleteFileEndPoint = 'rag/delete_rag_data';
 /*const String krishidsBaseUrl =
@@ -93,7 +93,7 @@ const String prodKeySpace = 'CHAT_BOT_ONDEMAND_QUERY_DATA';
 const String testKeySpace = 'CHAT_BOT_TEST';
 
 //check this before generating apk
-const String projectId = kaleswaramUUID;
+const String projectId = apwrimsUUID;
 const String keyspace = prodKeySpace;
 
 // Paddings
@@ -628,5 +628,6 @@ enum NameSortRadioOptions { ascending, descending }
 
 enum CropNameVerifyRadioOptions { agree, disagree }
 
-const String genAiBaseUrl = "https://genai.vassarlabs.com/aquamind/";
-// const String ngrok = "https://8660-196-12-47-4.ngrok-free.app/";
+// const String genAiBaseUrl = "https://genai.vassarlabs.com/aquamind/";
+const String genAiBaseUrl = "https://nawrims.vassarlabs.com/genai/";
+// const String ngrok = "https://d27d-196-12-47-4.ngrok-free.app/";
