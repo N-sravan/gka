@@ -433,7 +433,7 @@ class _ChatWindowState extends State<ChatWindow>
                                 messageList.add(ChatBubble(
                                   text: datalast['message'] ?? '',
                                   isUser: datalast['isUser'],
-                                  imageUrl: datalast['mediaUrl'] ?? '',
+                                  imageUrl: datalast['image_url'] ?? '',
                                   tableColumnData:
                                       datalast['sql_df_columns'],
                                   tableRowData:
@@ -441,7 +441,7 @@ class _ChatWindowState extends State<ChatWindow>
                                           ? jsonDecode(
                                               datalast['sql_df_values'])
                                           : null,
-                                  logMessage: datalast['log'] ?? '',
+                                  logMessage: datalast['sql_query'] ?? '',
                                 ));
                               }
                             });

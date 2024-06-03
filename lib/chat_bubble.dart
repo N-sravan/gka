@@ -164,10 +164,6 @@ class _ChatBubbleState extends State<ChatBubble> {
                                         widget.tableRowData![index]!.length,
                                         (cellIndex) => DataCell(
                                           SizedBox(
-                                            width: MediaQuery.of(context)
-                                                    .size
-                                                    .width *
-                                                0.8,
                                             child: Text(widget
                                                 .tableRowData![index][cellIndex]
                                                 .toString()),
@@ -185,7 +181,9 @@ class _ChatBubbleState extends State<ChatBubble> {
                         height: 10,
                       ),
                       SelectableText(
-                        widget.text,
+                        widget.text.isNotEmpty
+                            ? widget.text
+                            : widget.logMessage,
                         style: TextStyle(
                           color: widget.isUser ? Colors.white : Colors.black87,
                         ),
@@ -263,7 +261,6 @@ class _ChatBubbleState extends State<ChatBubble> {
       row.length,
       (index) => DataColumn(
         label: SizedBox(
-          width: MediaQuery.of(context).size.width * (index + 1) / row.length,
           // Distribute width evenly for each column
           child: Text(row[index].toString()),
         ),

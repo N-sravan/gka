@@ -630,4 +630,4 @@ enum CropNameVerifyRadioOptions { agree, disagree }
 
 // const String genAiBaseUrl = "https://genai.vassarlabs.com/aquamind/";
 const String genAiBaseUrl = "https://nawrims.vassarlabs.com/genai/";
-// const String ngrok = "https://d27d-196-12-47-4.ngrok-free.app/";
+// const String ngrok = "https://3a8f-196-12-47-4.ngrok-free.app/";

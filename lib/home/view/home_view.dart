@@ -55,8 +55,8 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
         break;
     }
 
-    /*WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await viewModel.getAvailableModels(context);
+   /* WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // await viewModel.deleteData();
     });*/
   }
 
@@ -128,7 +128,8 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                       child: DropdownButtonFormField2<String>(
                         isExpanded: true,
                         hint: const Text('Select'),
-                        items: viewModel.langList.map((String item) => DropdownMenuItem<String>(
+                        items: viewModel.langList
+                            .map((String item) => DropdownMenuItem<String>(
                                   value: item,
                                   child: Text(
                                     item,
@@ -215,7 +216,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                         ),
                       ),
                     ),
-                  /*  const SizedBox(height: 20),
+                    /*  const SizedBox(height: 20),
                     const Text(
                       'Select Model',
                       style: TextStyle(

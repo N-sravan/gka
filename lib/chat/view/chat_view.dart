@@ -2,7 +2,6 @@
 // import 'package:gka/chat/view_model/chat_view_model.dart';
 // import 'package:gka/login/model/department_user_permission_response.dart'
 //     as response;
-// import 'package:gka/login/model/ap_data_model.dart' as apdata;
 // import 'package:provider/provider.dart';
 // import '../../chat_window.dart';
 //

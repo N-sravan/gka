@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -242,5 +243,26 @@ class HomeViewModel extends LoadingViewModel {
   void updateFirstTimeValue() {
     isFirstTime = true;
     notifyListeners();
+  }
+
+   deleteData() async {
+    DatabaseReference ref = FirebaseDatabase.instance.ref("CHAT_BOT_ONDEMAND_QUERY_DATA/6f86292b-dd9a-4987-bb8f-c3940263b349/44/");
+    try {
+      DatabaseEvent event = await ref.once();
+      DataSnapshot snapshot = event.snapshot;
+
+      if (snapshot.exists) {
+        for (var childSnapshot in snapshot.children) {
+          await ref.child(childSnapshot.key!).remove();
+        }
+        print('All child nodes deleted successfully.');
+      } else {
+        print('No data found at the given path.');
+      }
+    } catch (e) {
+      print('Failed to delete data: $e');
+    }
+    // await ref.remove();
+    print("deleted 888");
   }
 }
