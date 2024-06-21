@@ -15,6 +15,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:gka/chat/view/drawer_widget.dart';
 import 'package:gka/services/api_provider.dart';
 import 'package:gka/utils/app_state.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io' as platform;
 import 'package:uuid/uuid.dart';
@@ -117,6 +118,9 @@ class _ChatWindowState extends State<ChatWindow>
       case constants.tnwrimsUUID:
         title = 'TNWRIMS Bot';
         break;
+      case constants.keralaUUID:
+        title = 'AgriBot';
+        break;
     }
     switch (AppState.instance.language) {
       case 'English':
@@ -151,6 +155,18 @@ class _ChatWindowState extends State<ChatWindow>
         langId = 'or-IN';
         language = 'odia';
         break;
+      case 'Hindi':
+        dataNotFoundMsg = 'जानकारी नहीं मिली';
+        loaderMsgList = [
+          'कृपया प्रतीक्षा करें',
+          'परिणाम खोज रहे हैं',
+          'बस एक क्षण',
+          'परिणामों की खोज कर रहे हैं',
+          'एक क्षण रुकिए'
+        ];
+        langId = 'hi-IN';
+        language = 'hindi';
+        break;
     }
     _initSpeech();
   }
@@ -181,7 +197,7 @@ class _ChatWindowState extends State<ChatWindow>
 
     // print("Available voices ${await textToSpeech.getVoiceByLang('ta-IN')}");
     print("Available languages ${await tts.getLanguages}");
-    await tts.setLanguage("en-US");
+    await tts.setLanguage(langId);
   }
 
   /// Each time to start a speech recognition session
@@ -369,7 +385,6 @@ class _ChatWindowState extends State<ChatWindow>
                     // autoSessionId = const Uuid().v4();
                     await tts.stop();
                     await initializeService();
-
                     /*   periodicTimer = Timer.periodic(
                       const Duration(seconds: 5),
                       (timer) async {
@@ -420,6 +435,7 @@ class _ChatWindowState extends State<ChatWindow>
                                 {};
                             print("DATAFJLDLFHGLD $data");
                             data = data as Map<dynamic, dynamic>;
+                            Map<String, String> dataTsMapping = {};
                             dataTimer?.cancel();
                             loadingTimer?.cancel();
                             var sortedByKeyMap = Map.fromEntries(
@@ -430,18 +446,56 @@ class _ChatWindowState extends State<ChatWindow>
                                 final datalast =
                                     Map<String, dynamic>.from(value);
                                 print("SORTED MESSAGES ${datalast['message']}");
+                                bool errorLog = false;
+                                if (datalast['isUser'] == false &&
+                                    datalast['error_log'] != null) {
+                                  errorLog = true;
+                                }
+                                if (datalast['isUser']) {
+                                  dataTsMapping.clear();
+                                } else {
+                                  if (datalast['sql_query'] != null &&
+                                      !datalast['isUser']) {
+                                    dataTsMapping['sql_ts'] = key;
+                                  }
+                                  if (datalast['image_url'] != null &&
+                                      !datalast['isUser']) {
+                                    dataTsMapping['image_ts'] = key;
+                                  }
+                                  if (datalast['message'] != null &&
+                                      !datalast['isUser']) {
+                                    dataTsMapping['summary_ts'] = key;
+                                  }
+                                  if (datalast['sql_df_columns'] != null &&
+                                      datalast['sql_df_values'] != null &&
+                                      !datalast['isUser']) {
+                                    dataTsMapping['table_ts'] = key;
+                                  }
+                                  if (datalast['error_log'] != null &&
+                                      !datalast['isUser']) {
+                                    dataTsMapping['error_ts'] = key;
+                                  }
+                                }
+                                print("sessionId:${widget.sessionId}");
+                                print("log:${datalast['sql_query']}");
+                                print("mappping:$dataTsMapping");
                                 messageList.add(ChatBubble(
-                                  text: datalast['message'] ?? '',
+                                  text: datalast['message'] ??
+                                      datalast['sql_query'] ??
+                                      '',
                                   isUser: datalast['isUser'],
                                   imageUrl: datalast['image_url'] ?? '',
-                                  tableColumnData:
-                                      datalast['sql_df_columns'],
-                                  tableRowData:
-                                      datalast['sql_df_values'] != null
-                                          ? jsonDecode(
-                                              datalast['sql_df_values'])
-                                          : null,
-                                  logMessage: datalast['sql_query'] ?? '',
+                                  tableColumnData: datalast['sql_df_columns'],
+                                  tableRowData: datalast['sql_df_values'] !=
+                                          null
+                                      ? jsonDecode(datalast['sql_df_values'])
+                                      : null,
+                                  logMessage: AppState.instance.mode ==
+                                          'hybrid_database'
+                                      ? datalast['sql_query'] ?? ''
+                                      : datalast['log'] ?? '',
+                                  hasErrorLog: errorLog,
+                                  timestampMapping: dataTsMapping,
                                 ));
                               }
                             });
@@ -484,16 +538,24 @@ class _ChatWindowState extends State<ChatWindow>
                                 }
                               });
 
-                              dataTimer = Timer(const Duration(seconds: 100), () async {
+                              dataTimer =
+                                  Timer(const Duration(seconds: 100), () async {
                                 print("timerCounter::$timerCounter");
                                 if (showLoader.value) {
                                   DatabaseReference ref =
                                       FirebaseDatabase.instance.ref(
                                           "${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
                                   WidgetsBinding.instance
-                                      .addPostFrameCallback((_) {
+                                      .addPostFrameCallback((_) async {
                                     showLoader.value = false;
+                                    String timeStamp = DateTime.now()
+                                        .millisecondsSinceEpoch
+                                        .toString();
                                     print("dataNotFoundMsg::$dataNotFoundMsg");
+                                    await ref.child(timeStamp).set({
+                                      "isUser": false,
+                                      "message": "Data Not Found!",
+                                    });
                                   });
                                   await tts.speak(dataNotFoundMsg);
                                 }
@@ -531,11 +593,8 @@ class _ChatWindowState extends State<ChatWindow>
                     valueListenable: showLoader,
                     builder: (context, value, _) {
                       if (value) {
-                        return SizedBox(
-                            height: 100,
-                            width: 100,
-                            child: Image.asset(
-                                'assets/images/response_bubble.gif'));
+                        return LoadingAnimationWidget.waveDots(
+                            color: Colors.green, size: 40);
                       }
                       return const SizedBox();
                     },
@@ -644,88 +703,46 @@ class _ChatWindowState extends State<ChatWindow>
                         borderRadius: BorderRadius.circular(20),
                       ),
                       contentPadding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
-                      suffixIcon: IconButton(
-                        icon: const Icon(
-                          Icons.send,
-                          color: Color(0xFF4BA164),
-                        ),
-                        onPressed: () async {
-                          addUserUploadedImageToChat();
-                          addUserMessageToChat(chatController.text);
-                          print("capturedPhoto::$capturedPhoto");
-                          if (chatController.text.isEmpty) {
-                            Fluttertoast.showToast(
-                                msg: "Please enter your question.");
-                          } else {
-                            String? imageUrl = '';
-                            if (capturedPhoto != null) {
-                              imageUrl = await uploadMedia(
-                                  context, capturedPhoto!.path);
-                            }
-                            await insertDataIntoDb(
-                                imageUrl, chatController.text);
-                          }
-                        },
-                      ),
+                      suffixIcon: _sendButton(),
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          /*Expanded(
-            child: Stack(
-              children: [
-                if (capturedPhoto != null)
-                  Positioned(
-                    left: 0,
-                    child: Container(
-                      width: 50,
-                      height: 50,
-                      child: Image.file(capturedPhoto!, fit: BoxFit.cover),
-                    ),
-                  ),
-                Container(
-                  margin: EdgeInsets.only(left: capturedPhoto != null ? 60 : 0),
-                  child: TextFormField(
-                    controller: chatController,
-                    maxLines: 10,
-                    minLines: 1,
-                    textCapitalization: TextCapitalization.sentences,
-                    onChanged: (value) {
-                      if (capturedPhoto != null) {}
-                    },
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                        borderSide: const BorderSide(
-                          color: Color(0xFF4BA164),
-                          width: 2,
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      contentPadding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
-                      suffixIcon: IconButton(
-                        icon: const Icon(
-                          Icons.send,
-                          color: Color(0xFF4BA164),
-                        ),
-                        onPressed: () async {
-                          print("capturedPhoto::${capturedPhoto}");
-
-                          if(chatController.text.isEmpty){
-                            Fluttertoast.showToast(msg: "Please enter your question.");
-                          }
-                          chatController.clear();
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),*/
         ],
       ),
+    );
+  }
+
+  _sendButton() {
+    return ValueListenableBuilder(
+      valueListenable: showLoader,
+      builder: (context, value, _) {
+        return IconButton(
+            icon: Icon(
+              Icons.send,
+              color: showLoader.value ? Colors.grey : Colors.green,
+            ),
+            onPressed: showLoader.value
+                ? null
+                : () async {
+                    addUserUploadedImageToChat();
+                    addUserMessageToChat(chatController.text);
+                    print("capturedPhoto::$capturedPhoto");
+                    if (chatController.text.isEmpty) {
+                      Fluttertoast.showToast(
+                          msg: "Please enter your question.");
+                    } else {
+                      String? imageUrl = '';
+                      if (capturedPhoto != null) {
+                        imageUrl =
+                            await uploadMedia(context, capturedPhoto!.path);
+                      }
+                      await insertDataIntoDb(imageUrl, chatController.text);
+                    }
+                  });
+      },
     );
   }
 
@@ -820,9 +837,8 @@ class _ChatWindowState extends State<ChatWindow>
   }
 
   Future<void> insertDataIntoDb(String? imageUrl, String text) async {
-    print("userId::${AppState.instance.userId}");
-    print("projectId::${constants.projectId}");
-    DatabaseReference ref = FirebaseDatabase.instance.ref("${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
+    DatabaseReference ref = FirebaseDatabase.instance.ref(
+        "${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
 
     String timeStamp = DateTime.now().millisecondsSinceEpoch.toString();
 
@@ -832,7 +848,7 @@ class _ChatWindowState extends State<ChatWindow>
     await ref.child(timeStamp).set({
       "isUser": true,
       "message": text,
-      "mediaUrl": '',
+      "image_url": imageUrl ?? '',
       "language": language,
       "model_uuid": AppState.instance.modelUUID,
       "mode": AppState.instance.mode

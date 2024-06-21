@@ -30,9 +30,18 @@ class HomeViewModel extends LoadingViewModel {
   String? sessionId;
   List<String> selectionList = ['Internal LLM', 'External LLM'];
   List<String> langList = [];
+
   // List<String> modeList = ['default', 'langchain', 'autogen', 'database' ,'unstructured' , 'user'];
-  List<String> modeList = ['Data Interaction Chat', 'Dashboard', 'Hybrid Database'];
-  Map<String, String> modeNameMapping ={'Data Interaction Chat' : 'data_interaction_chat','Dashboard':'dashboard','Hybrid Database' : 'hybrid_database'};
+  List<String> modeList = [
+    'Data Interaction Chat',
+    'Dashboard',
+    'Hybrid Database'
+  ];
+  Map<String, String> modeNameMapping = {
+    'Data Interaction Chat': 'data_interaction_chat',
+    'Dashboard': 'dashboard',
+    'Hybrid Database': 'hybrid_database'
+  };
   List<String>? modelList = [];
   List<model.Response>? modelResponseList = [];
   Map<String, String> modelNameUuidMapping = {};
@@ -188,6 +197,7 @@ class HomeViewModel extends LoadingViewModel {
       isLoading = true;
       String url = constants.genAiBaseUrl + constants.createSessionEndpoint;
       String data = AppState.instance.userData;
+      print("data::${data}");
       /* Content data = login.Content(
         project_uuid: '6f86292b-dd9a-4987-bb8f-c3940263b349',
         username: "APWRIMS",
@@ -245,8 +255,9 @@ class HomeViewModel extends LoadingViewModel {
     notifyListeners();
   }
 
-   deleteData() async {
-    DatabaseReference ref = FirebaseDatabase.instance.ref("CHAT_BOT_ONDEMAND_QUERY_DATA/6f86292b-dd9a-4987-bb8f-c3940263b349/44/");
+  deleteData() async {
+    DatabaseReference ref = FirebaseDatabase.instance.ref(
+        "CHAT_BOT_ONDEMAND_QUERY_DATA/6f86292b-dd9a-4987-bb8f-c3940263b349/44/");
     try {
       DatabaseEvent event = await ref.once();
       DataSnapshot snapshot = event.snapshot;

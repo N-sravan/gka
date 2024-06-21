@@ -45,6 +45,10 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
         _usernameController.text = "Pradeep";
         _passwordController.text = "test123";
         break;
+      case constants.keralaUUID:
+        _usernameController.text = "394008";
+        _passwordController.text = "agriwise@123";
+        break;
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       networkUtils.startTrackingConnection();
@@ -261,6 +265,20 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                             content = await viewModel
                                                 .authenticateForAp(
                                                     userId, password, context);
+                                          } else if (constants.projectId ==
+                                              constants.keralaUUID) {
+                                            bool result =
+                                                await viewModel.authenticateForKerala(
+                                                    userId, password, context);
+                                            if(result){
+                                              Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                      builder: (context) =>
+                                                      const HomeScreenWidget()));
+                                              print("authenticaion success");
+                                            }
+
                                           } else {
                                             content =
                                                 await viewModel.authenticate(

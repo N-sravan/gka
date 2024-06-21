@@ -265,7 +265,7 @@ class ChatRepositoryImpl extends ChatRepository {
 
     Map<String, dynamic> params = {
       "project_uuid": constants.projectId,
-      // "user_uuid": '',
+      "user_uuid": AppState.instance.userId,
       "metadata": {},
       "threshold": 0
     };

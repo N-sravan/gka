@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 class CartItem {
   List<String> includes;
   String name;

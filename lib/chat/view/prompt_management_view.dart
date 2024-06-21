@@ -89,17 +89,17 @@ class _PromptManagementViewState extends State<PromptManagementView> {
                     hint: const Text('Select'),
                     items: viewModel.modelList!
                         .map((String item) => DropdownMenuItem<String>(
-                      value: item,
-                      child: Text(
-                        item,
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontSize: 14,
-                          fontFamily: 'Poppins',
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ))
+                              value: item,
+                              child: Text(
+                                item,
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 14,
+                                  fontFamily: 'Poppins',
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ))
                         .toList(),
                     value: viewModel.selectedPromptModel.isNotEmpty == true
                         ? viewModel.selectedPromptModel
@@ -152,7 +152,7 @@ class _PromptManagementViewState extends State<PromptManagementView> {
                         color: Colors.grey,
                       ),
                       contentPadding:
-                      EdgeInsets.only(top: 2, left: 2, right: 2, bottom: 2),
+                          EdgeInsets.only(top: 2, left: 2, right: 2, bottom: 2),
                       border: OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.black),
                         borderRadius: BorderRadius.all(Radius.circular(10)),
@@ -178,18 +178,23 @@ class _PromptManagementViewState extends State<PromptManagementView> {
                   ),
                 ),
                 ListTile(
-                  title: const Text('Create a Prompt',style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.normal,
-                  ),),
-                  trailing: const Icon(Icons.add,),
+                  title: const Text(
+                    'Create a Prompt',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.normal,
+                    ),
+                  ),
+                  trailing: const Icon(
+                    Icons.add,
+                  ),
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                           builder: (context) => CreatePromptView(
-                            isCreate: true,
-                          )),
+                                isCreate: true,
+                              )),
                     ); /* showDialog(
                       context: context,
                       builder: (BuildContext context) {
@@ -233,121 +238,124 @@ class _PromptManagementViewState extends State<PromptManagementView> {
                 ),
                 viewModel.promptTemplateIntentMapping.isNotEmpty
                     ? Expanded(
-                  child: !model.isLoading
-                      ? Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: ListView.builder(
-                      itemCount: viewModel
-                          .promptTemplateIntentMapping.length,
-                      itemBuilder: (context, index) {
-                        final key = viewModel
-                            .promptTemplateIntentMapping.keys
-                            .elementAt(index);
-                        final value = viewModel
-                            .promptTemplateIntentMapping[key];
-                        return Card(
-                          margin: const EdgeInsets.symmetric(
-                              vertical: 8.0, horizontal: 16.0),
-                          child: ListTile(
-                            trailing: IconButton(
-                              onPressed: () {
-                                showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return AlertDialog(
-                                        title: const Text(
-                                            'Delete Prompt'),
-                                        content: const Text(
-                                          'Do you want to delete this prompt?',
-                                        ),
-                                        actions: <Widget>[
-                                          TextButton(
-                                            child: const Text('No'),
-                                            onPressed: () {
-                                              Navigator.of(context)
-                                                  .pop();
-                                            },
-                                          ),
-                                          TextButton(
-                                            child: const Text('Yes'),
-                                            onPressed: () async {
-                                              // Implement delete logic here
-                                              Navigator.of(context)
-                                                  .pop();
-                                            },
-                                          ),
-                                        ],
-                                      );
-                                    });
-                              },
-                              icon: const Icon(
-                                Icons.delete,
-                                size: 20,
-                              ),
-                            ),
-                            title: Text('Prompt: $key'),
-                            subtitle: Text('Intent: $value'),
-                            onTap: () {
-                              setState(() {
-                                _selectedPromptKey = key;
-                                viewModel.intentController.text =
-                                value!;
-                                viewModel.promptController.text = key;
-                              });
-
-                              showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return AlertDialog(
-                                      title:
-                                      const Text('Update Prompt'),
-                                      content: const Text(
-                                        'Do you want to update this prompt?',
-                                      ),
-                                      actions: <Widget>[
-                                        TextButton(
-                                          child: const Text('No'),
+                        child: !model.isLoading
+                            ? Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: ListView.builder(
+                                  itemCount: viewModel
+                                      .promptTemplateIntentMapping.length,
+                                  itemBuilder: (context, index) {
+                                    final key = viewModel
+                                        .promptTemplateIntentMapping.keys
+                                        .elementAt(index);
+                                    final value = viewModel
+                                        .promptTemplateIntentMapping[key];
+                                    return Card(
+                                      margin: const EdgeInsets.symmetric(
+                                          vertical: 8.0, horizontal: 16.0),
+                                      child: ListTile(
+                                        trailing: IconButton(
                                           onPressed: () {
-                                            Navigator.of(context)
-                                                .pop();
+                                            showDialog(
+                                                context: context,
+                                                builder:
+                                                    (BuildContext context) {
+                                                  return AlertDialog(
+                                                    title: const Text(
+                                                        'Delete Prompt'),
+                                                    content: const Text(
+                                                      'Do you want to delete this prompt?',
+                                                    ),
+                                                    actions: <Widget>[
+                                                      TextButton(
+                                                        child: const Text('No'),
+                                                        onPressed: () {
+                                                          Navigator.of(context)
+                                                              .pop();
+                                                        },
+                                                      ),
+                                                      TextButton(
+                                                        child:
+                                                            const Text('Yes'),
+                                                        onPressed: () async {
+                                                          // Implement delete logic here
+                                                          Navigator.of(context)
+                                                              .pop();
+                                                        },
+                                                      ),
+                                                    ],
+                                                  );
+                                                });
                                           },
+                                          icon: const Icon(
+                                            Icons.delete,
+                                            size: 20,
+                                          ),
                                         ),
-                                        TextButton(
-                                          child: const Text('Yes'),
-                                          onPressed: () async {
-                                            Navigator.of(context)
-                                                .pop();
-                                            Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      CreatePromptView(
-                                                          isCreate:
-                                                          false),
-                                                ));
-                                          },
-                                        ),
-                                      ],
+                                        title: Text('Prompt: $key'),
+                                        subtitle: Text('Intent: $value'),
+                                        onTap: () {
+                                          setState(() {
+                                            _selectedPromptKey = key;
+                                            viewModel.intentController.text =
+                                                value!;
+                                            viewModel.promptController.text =
+                                                key;
+                                          });
+
+                                          showDialog(
+                                              context: context,
+                                              builder: (BuildContext context) {
+                                                return AlertDialog(
+                                                  title: const Text(
+                                                      'Update Prompt'),
+                                                  content: const Text(
+                                                    'Do you want to update this prompt?',
+                                                  ),
+                                                  actions: <Widget>[
+                                                    TextButton(
+                                                      child: const Text('No'),
+                                                      onPressed: () {
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      },
+                                                    ),
+                                                    TextButton(
+                                                      child: const Text('Yes'),
+                                                      onPressed: () async {
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                        Navigator.push(
+                                                            context,
+                                                            MaterialPageRoute(
+                                                              builder: (context) =>
+                                                                  const CreatePromptView(
+                                                                      isCreate:
+                                                                          false),
+                                                            ));
+                                                      },
+                                                    ),
+                                                  ],
+                                                );
+                                              });
+                                        },
+                                      ),
                                     );
-                                  });
-                            },
-                          ),
-                        );
-                      },
-                    ),
-                  )
-                      : Container(
-                    width: MediaQuery.of(context).size.width,
-                    height: MediaQuery.of(context).size.height,
-                    color: Colors.white,
-                    child: constants.indicator,
-                  ),
-                )
+                                  },
+                                ),
+                              )
+                            : Container(
+                                width: MediaQuery.of(context).size.width,
+                                height: MediaQuery.of(context).size.height,
+                                color: Colors.white,
+                                child: constants.indicator,
+                              ),
+                      )
                     : const Expanded(
-                  child: Center(
-                    child: Text('No Prompts found'),
-                  ),
-                ),
+                        child: Center(
+                          child: Text('No Prompts found'),
+                        ),
+                      ),
               ],
             ),
           ),

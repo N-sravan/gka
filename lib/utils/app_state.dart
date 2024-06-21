@@ -27,12 +27,6 @@ class AppState {
   late String panchayatUUID;
   late String userVillage;
   late String villageUUID;
-  late String surveyYear;
-  late String surveySeason;
-  late String tappedFarmUUID;
-  late String tappedPointUUID;
-  late String latitude;
-  late String longitude;
   Map<String, String> countryUUIDMapping = {};
   Map<String, String> stateUUIDMapping = {};
   Map<String, String> districtUUIDMapping = {};
@@ -43,19 +37,11 @@ class AppState {
   Map<String, String> cropUUIDNameMapping = {};
   Map<String, dynamic> plotUUIDAndStatusMap = {};
   late String? hiveEncryptionKey;
-  late bool? isFarmSurvey;
-  late bool? isPlotForm;
-  late String role;
-  late String farmerUUID;
-  late String tappedFieldUUID;
   late String userData;
   String triggeredWord = '';
   late String fcmToken;
   bool hasFarmerData = false;
   bool isVoiceUpdateEnabled = false;
-  bool isVillageSelected = true;
-
-  // bool isOriyaSelected = false;
   bool isExternalLLM = false;
   String modelName = "chatgpt-3.5";
   String modelUUID = "43c31fae-3469-4c87-a73d-8648e9c78663";

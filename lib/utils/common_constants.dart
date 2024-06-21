@@ -51,14 +51,14 @@ const String userName = 'username';
 const String password = 'password';
 const String clientId = 'client_id';
 const String grantType = 'grant_type';
-const String agriwiseClient = 'agriwiseclient';
+const String agriwiseClient = 'keralakrishistack';
 const String headerRefeshToken = 'refresh_token';
 
 // Icons
 const String appIcon = 'assets/images/flutter_logo.png';
 
 // URLs
-const String baseUrl = 'https://keralakrishistack.vassarlabs.com/';
+const String baseUrl = 'https://keralakrishihub.vassarlabs.com/';
 // const String baseUrl = 'https://agriwise.vassarlabs.com/';
 // const String krishidsBaseUrl = 'http://acerkrishidss.vassarlabs.com/staging/api';
 // const String krishidsBaseUrl = 'https://agriwise.vassarlabs.com/staging/api';
@@ -89,6 +89,7 @@ const String odishaUUID = 'd19a5290-2e40-494a-83d2-98f4c845b1f1';
 const String kaleswaramUUID = '927b67e9-a2aa-46e9-99bc-41cf8c502668';
 const String apwrimsUUID = '6f86292b-dd9a-4987-bb8f-c3940263b349';
 const String tnwrimsUUID = 'e98cd5b7-6556-4c0f-a778-3429e1c14a6b';
+const String keralaUUID = '62d3dc99-5bc3-4303-8be1-d4fa1f7deee5';
 const String prodKeySpace = 'CHAT_BOT_ONDEMAND_QUERY_DATA';
 const String testKeySpace = 'CHAT_BOT_TEST';
 
@@ -630,4 +631,4 @@ enum CropNameVerifyRadioOptions { agree, disagree }
 
 // const String genAiBaseUrl = "https://genai.vassarlabs.com/aquamind/";
 const String genAiBaseUrl = "https://nawrims.vassarlabs.com/genai/";
-// const String ngrok = "https://3a8f-196-12-47-4.ngrok-free.app/";
+const String ngrok = "https://63ab-196-12-47-4.ngrok-free.app/";

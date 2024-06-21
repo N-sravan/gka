@@ -253,7 +253,8 @@ class ChatViewModel extends LoadingViewModel {
                   .name!] = toolInventoryResponseModel.response![i].desc!;
             }
             isLoading = false;
-            print("weweweww toolNameDescriptionMapping $toolNameDescriptionMapping");
+            print(
+                "weweweww toolNameDescriptionMapping $toolNameDescriptionMapping");
             notifyListeners();
           }
         } else {
@@ -269,7 +270,8 @@ class ChatViewModel extends LoadingViewModel {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text(constants.genericErrorMsg),
         ));
-        Util.instance.logMessage('Login Model', 'Error while authenticating $e');
+        Util.instance
+            .logMessage('Login Model', 'Error while authenticating $e');
       }
     } else {
       isLoading = false;
@@ -287,7 +289,8 @@ class ChatViewModel extends LoadingViewModel {
     if (await networkUtils.hasActiveInternet()) {
       isLoading = true;
       try {
-        PromptSubmissionResponse responseModal = await repo.createPrompt(context, prompt, intent, selectedPromptModelUUID);
+        PromptSubmissionResponse responseModal = await repo.createPrompt(
+            context, prompt, intent, selectedPromptModelUUID);
         if (responseModal.statusCode == 200 && responseModal.result == true) {
           isLoading = false;
           notifyListeners();
@@ -587,9 +590,7 @@ class ChatViewModel extends LoadingViewModel {
       try {
         Map<String, String> params = {
           "project_uuid": constants.projectId,
-          "user_uuid": AppState.instance.mode == 'user'
-              ? AppState.instance.userId
-              : 'null',
+          "user_uuid": AppState.instance.userId,
           "metadata": "{}"
         };
         bool result =

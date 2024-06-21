@@ -1,7 +1,5 @@
-import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:gka/utils/app_state.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 import 'package:gka/chat/view_model/chat_view_model.dart';
 import 'package:provider/provider.dart';
@@ -17,7 +15,6 @@ class CreatePromptView extends StatefulWidget {
 
 class _CreatePromptViewState extends State<CreatePromptView> {
   // Define TextEditingController for the text fields
-
   late ChatViewModel viewModel;
   bool isCreatePrompt = false;
 
@@ -72,7 +69,7 @@ class _CreatePromptViewState extends State<CreatePromptView> {
                     maxLines: 5,
                     // Allows for unlimited lines
                     onChanged: (value) {
-                      setState(() {}); // Update the UI when text changes
+                      setState(() {});
                     },
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
@@ -96,9 +93,8 @@ class _CreatePromptViewState extends State<CreatePromptView> {
                     controller: viewModel.intentController,
                     keyboardType: TextInputType.multiline,
                     maxLines: null,
-                    // Allows for unlimited lines
                     onChanged: (value) {
-                      setState(() {}); // Update the UI when text changes
+                      setState(() {});
                     },
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
@@ -178,9 +174,9 @@ class _CreatePromptViewState extends State<CreatePromptView> {
                         context, viewModel.selectedPromptModelUUID);
                     isCreatePrompt
                         ? Fluttertoast.showToast(
-                        msg: "Prompt added Successfully!")
+                            msg: "Prompt added Successfully!")
                         : Fluttertoast.showToast(
-                        msg: "Prompt updated Successfully!");
+                            msg: "Prompt updated Successfully!");
                   }
                 } else {
                   Fluttertoast.showToast(msg: "Please enter the data");

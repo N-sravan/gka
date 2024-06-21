@@ -121,7 +121,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                         },
                       )
                     : const SizedBox(),
-                /*ListTile(
+                ListTile(
                   title: Row(
                     children: [
                       Text(
@@ -141,7 +141,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                       ),
                     );
                   },
-                ),*/
+                ),
                 ListTile(
                   title: Row(
                     children: [

@@ -4,8 +4,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_native_image/flutter_native_image.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
-import '../login/model/user_permission_response_model.dart';
-import 'api_service_provider.dart';
 import '../utils/app_state.dart';
 import '../utils/common_constants.dart' as constants;
 import '../login/model/department_user_permission_response.dart';
@@ -17,43 +15,27 @@ class ApiProvider {
 
   static ApiProvider get instance => _instance ??= ApiProvider._();
 
-  @override
-  Future<DepartmentUserPermissionsResponse> fetchUserPermissionsForSurveyorLogin(
-      BuildContext context) async {
-    Map<String, String> authHeaders = {
-      constants.headerContentType: constants.headerJson,
-      'Authorization': 'Bearer ${AppState.instance.token}',
-      'Csrf-Token': AppState.instance.csrfToken
-    };
-    String authUrl =
-        "${constants.baseUrl}${constants.userPermissionsEndPoint}${AppState.instance.userUUID}";
-    http.Response response = await http.get(
-      Uri.parse(authUrl),
-      headers: authHeaders,
-    );
-    Map<String, dynamic> responseMap = jsonDecode(response.body);
-    DepartmentUserPermissionsResponse userPermissionsResult =
-    DepartmentUserPermissionsResponse.fromJson(responseMap);
-    return userPermissionsResult;
-  }
-
-  Future<dynamic?> uploadMedia(data,path,mediaType) async {
-    String submissionUrl = constants.genAiBaseUrl + constants.fileUploadEndPoint;
+  Future<dynamic?> uploadMedia(data, path, mediaType) async {
+    String submissionUrl = '';
+    if (mediaType == 'file') {
+      submissionUrl = constants.genAiBaseUrl + constants.fileUploadEndPoint;
+    } else {
+      submissionUrl = constants.imageUploadUrl;
+    }
     Map<String, String> headersMap = {
       'Content-Type': constants.headerJson,
       "endpoints": constants.headerMultipart
     };
 
+    print("SUBMISSION URL::${submissionUrl}");
     var request = http.MultipartRequest('POST', Uri.parse(submissionUrl));
     File compressedFile;
     final bytes = File(path).readAsBytesSync().lengthInBytes;
     final kb = bytes / 1024;
     final imageSize = kb / 1024;
-    if(imageSize > 1) {
-      compressedFile = await FlutterNativeImage.compressImage(
-          path,
-          quality: 50
-      );
+    if (imageSize > 1) {
+      compressedFile =
+          await FlutterNativeImage.compressImage(path, quality: 50);
       var stream = http.ByteStream(compressedFile.openRead());
       var length = await compressedFile.length();
       var multipartFile = http.MultipartFile(
@@ -80,17 +62,37 @@ class ApiProvider {
     var response = await request.send();
     var responseString = await response.stream.bytesToString();
     dynamic finalRes = json.decode(responseString);
-    if(mediaType == 'file'){
-      if(finalRes["statusCode"] == 200) {
+    if (mediaType == 'file') {
+      if (finalRes["statusCode"] == 200) {
         print("FILE SUBMISSION SUCCESS");
         return true;
       }
-    }else{
-      if(finalRes["message"] == "File uploaded successfully") {
+    } else {
+      if (finalRes["message"] == "File uploaded successfully") {
         print("IMAGE SUBMISSION SUCCESS");
         return finalRes["url"];
       }
     }
     return null;
+  }
+
+  @override
+  Future<DepartmentUserPermissionsResponse>
+      fetchUserPermissionsForDepartmentLogin(BuildContext context) async {
+    Map<String, String> authHeaders = {
+      constants.headerContentType: constants.headerJson,
+      'Authorization': 'Bearer ${AppState.instance.token}',
+      'Csrf-Token': AppState.instance.csrfToken
+    };
+    String authUrl =
+        "${constants.baseUrl}${constants.userPermissionsEndPoint}${AppState.instance.userId}";
+    http.Response response = await http.get(
+      Uri.parse(authUrl),
+      headers: authHeaders,
+    );
+    Map<String, dynamic> responseMap = jsonDecode(response.body);
+    DepartmentUserPermissionsResponse userPermissionsResult =
+        DepartmentUserPermissionsResponse.fromJson(responseMap);
+    return userPermissionsResult;
   }
 }

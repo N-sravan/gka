@@ -53,9 +53,14 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
         viewModel.langList.add('English');
         viewModel.langList.add('Tamil');
         break;
+      case constants.keralaUUID:
+        title = 'AgriBot';
+        viewModel.langList.clear();
+        viewModel.langList.add('English');
+        viewModel.langList.add('Hindi');
+        break;
     }
-
-   /* WidgetsBinding.instance.addPostFrameCallback((_) async {
+    /* WidgetsBinding.instance.addPostFrameCallback((_) async {
       // await viewModel.deleteData();
     });*/
   }
@@ -432,7 +437,6 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                           } else {
                             AppState.instance.isOriyaSelected = false;
                           }*/
-
                           String? sessionId = await viewModel.createSession();
                           if (viewModel.sessionId != null) {
                             Navigator.push(

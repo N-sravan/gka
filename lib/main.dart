@@ -244,16 +244,6 @@ Future<void> showNotification() async {
     htmlFormatSummaryText: true,
   );*/
 
-  AndroidNotificationDetails androidPlatformChannelSpecifics =
-      const AndroidNotificationDetails(
-          'high_importance_channel', 'High Importance Notifications',
-          importance: Importance.max,
-          priority: Priority.high,
-          ongoing: true,
-          styleInformation: BigTextStyleInformation(''));
-  NotificationDetails platformChannelSpecifics =
-      NotificationDetails(android: androidPlatformChannelSpecifics);
-
   await ref.orderByKey().limitToLast(1).once().then((event) async {
     DataSnapshot snapshot = event.snapshot;
     if (snapshot.value != null) {
@@ -266,11 +256,52 @@ Future<void> showNotification() async {
     }
   });
   print("wewewewewew::$responseMessage");
-
   if (responseMessage.isNotEmpty) {
-    await flutterLocalNotificationsPlugin.show(0, 'Summary',
-        responseMessage.toString().trim(), platformChannelSpecifics,
-        payload: 'shh');
+    // Format responseMessage to add indentation for lines
+    var lines = responseMessage.split('\n');
+    var formattedMessage = lines.map((line) {
+      const int maxLength = 40;
+      const String indent = '  ';
+      String formattedLine = '';
+      int currentLength = 0;
+
+      line.split(' ').forEach((word) {
+        if (currentLength + word.length + 1 > maxLength) {
+          formattedLine += '\n$indent$word ';
+          currentLength = indent.length + word.length + 1;
+        } else {
+          formattedLine += '$word ';
+          currentLength += word.length + 1;
+        }
+      });
+
+      return formattedLine.trim();
+    }).join('\n');
+
+    AndroidNotificationDetails androidPlatformChannelSpecifics =
+    AndroidNotificationDetails(
+      'high_importance_channel',
+      'High Importance Notifications',
+      importance: Importance.max,
+      priority: Priority.high,
+      ongoing: true,
+      styleInformation: BigTextStyleInformation(
+        formattedMessage,
+        contentTitle: 'Summary',
+        summaryText: 'Important Details',
+      ),
+    );
+
+    NotificationDetails platformChannelSpecifics =
+    NotificationDetails(android: androidPlatformChannelSpecifics);
+
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      'Summary',
+      formattedMessage.trim(),
+      platformChannelSpecifics,
+      payload: 'shh',
+    );
   }
 }
 
@@ -680,7 +711,8 @@ Future<void> startListeningToYes(String sessionId, String word) async {
       }*/
 
 Future<void> startListeningBg() async {
-  DatabaseReference ref = FirebaseDatabase.instance.ref("CHAT_BOT_ALERT/HOURLY_UPDATES/${constants.projectId}");
+  DatabaseReference ref = FirebaseDatabase.instance
+      .ref("CHAT_BOT_ALERT/HOURLY_UPDATES/${constants.projectId}");
   SpeechRecognitionResult result;
 
   await speechToText.listen(
@@ -916,7 +948,6 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
 
 /// Handling firebase notifications
 Future<dynamic> myBackgroundMessageHandler(RemoteMessage message) async {

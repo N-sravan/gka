@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/material.dart';
 import 'package:gka/login/model/ap_login_response_model.dart';
+import 'package:gka/login/model/kerala_login_response_model.dart';
 import 'package:http/http.dart' as http;
 import '../../shared/token_response.dart';
 import '../../utils/app_state.dart';
@@ -13,17 +14,38 @@ abstract class LoginRepository {
   Future<LoginResult> authenticate(
       Map<String, String> params, BuildContext context);
 
-  Future<ApLoginResult> authenticationForAp(
-      Map<String, String> params, BuildContext context);
+  Future<ApLoginResult> authenticationForAp(Map<String, String> params, BuildContext context);
+
+  Future<KeralaLoginResult> authenticationForKerala(Map<String, String> params, BuildContext context);
+
+  Future fetchCsrfToken(BuildContext context);
 
   Future<int?> saveFcmToken(BuildContext context);
 
-  Future fetchCsrfToken(BuildContext context);
 }
 
 /// Concrete class implementation for the login repository
 class LoginRepositoryImpl extends LoginRepository {
   @override
+
+  @override
+  Future<KeralaLoginResult> authenticationForKerala(
+      Map<String, String> params, BuildContext context) async {
+    Map<String, String> authHeaders = {
+      constants.headerContentType: constants.headerContentTypeFormUrl
+    };
+    String authUrl = 'https://keralakrishihub.vassarlabs.com/auth/realms/kkhrealm/protocol/openid-connect/token';
+    http.Response response = await http.post(
+      Uri.parse(authUrl),
+      headers: authHeaders,
+      body: params,
+    );
+    Map<String, dynamic> responseMap = jsonDecode(response.body);
+
+    KeralaLoginResult loginResult = KeralaLoginResult.fromJson(responseMap);
+    loginResult.statusCode = response.statusCode;
+    return loginResult;
+  }
   Future<LoginResult> authenticate(
       Map<String, String> params, BuildContext context) async {
     Map<String, String> authHeaders = {

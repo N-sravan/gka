@@ -1,3 +1,5 @@
+import 'package:gka/utils/common_constants.dart' as constants;
+
 class DepartmentUserPermissionsResponse {
   bool? result;
   int? statusCode;
@@ -13,13 +15,16 @@ class DepartmentUserPermissionsResponse {
     this.response,
   });
 
-  factory DepartmentUserPermissionsResponse.fromJson(Map<String, dynamic> json) {
+  factory DepartmentUserPermissionsResponse.fromJson(
+      Map<String, dynamic> json) {
     return DepartmentUserPermissionsResponse(
       result: json['result'],
       statusCode: json['statusCode'],
       statusCodeDescription: json['statusCodeDescription'],
       message: json['message'],
-      response: json['response'] != null ? ApiResponseData.fromJson(json['response']) : null,
+      response: json['response'] != null
+          ? ApiResponseData.fromJson(json['response'])
+          : null,
     );
   }
 
@@ -46,7 +51,9 @@ class ApiResponseData {
   factory ApiResponseData.fromJson(Map<String, dynamic> json) {
     return ApiResponseData(
       meta: json['meta'] != null ? Meta.fromJson(json['meta']) : null,
-      permissions: json['permissions'] != null ? Permissions.fromJson(json['permissions']) : null,
+      permissions: json['permissions'] != null
+          ? Permissions.fromJson(json['permissions'])
+          : null,
     );
   }
 
@@ -99,24 +106,25 @@ class Meta {
 
   factory Meta.fromJson(Map<String, dynamic> json) {
     return Meta(
-      userId: json['userId'],
-      username: json['username'],
-      firstName: json['firstName'],
-      lastName: json['lastName'],
-      email: json['email'],
-      mobileNo: json['mobileNo'],
-      userDetails: json['userDetailsJson'] != null ? UserDetails.fromJson(json['userDetailsJson']) : null,
-      createdTs: json['createdTs'],
-      updatedTs: json['updatedTs'],
-      lastLoginTs: json['lastLoginTs'],
-      status: json['status'],
-      title: json['title'],
-      customerId: json['customerId'],
-      customerName: json['customerName'],
-      customAttributes: json['customAttributes'],
-      is_mobile_app: true,
-        project_uuid: 'd19a5290-2e40-494a-83d2-98f4c845b1f1'
-    );
+        userId: json['userId'],
+        username: json['username'],
+        firstName: json['firstName'],
+        lastName: json['lastName'],
+        email: json['email'],
+        mobileNo: json['mobileNo'],
+        userDetails: json['userDetailsJson'] != null
+            ? UserDetails.fromJson(json['userDetailsJson'])
+            : null,
+        createdTs: json['createdTs'],
+        updatedTs: json['updatedTs'],
+        lastLoginTs: json['lastLoginTs'],
+        status: json['status'],
+        title: json['title'],
+        customerId: json['customerId'],
+        customerName: json['customerName'],
+        customAttributes: json['customAttributes'],
+        is_mobile_app: true,
+        project_uuid: constants.projectId);
   }
 
   Map<String, dynamic> toJson() {
@@ -136,8 +144,8 @@ class Meta {
       'customerId': customerId,
       'customerName': customerName,
       'customAttributes': customAttributes,
-      'is_mobile_app' : true,
-      'project_uuid' : 'd19a5290-2e40-494a-83d2-98f4c845b1f1'
+      'is_mobile_app': true,
+      'project_uuid': constants.projectId
     };
   }
 }
@@ -178,7 +186,8 @@ class Data {
   factory Data.fromJson(Map<String, dynamic> json) {
     return Data(
       locType: json['locType'],
-      location: json['location'] != null ? Location.fromJson(json['location']) : null,
+      location:
+          json['location'] != null ? Location.fromJson(json['location']) : null,
     );
   }
 
@@ -199,7 +208,9 @@ class Location {
 
   factory Location.fromJson(Map<String, dynamic> json) {
     return Location(
-      country: json['country'] != null ? List<Country>.from(json['country'].map((x) => Country.fromJson(x))) : null,
+      country: json['country'] != null
+          ? List<Country>.from(json['country'].map((x) => Country.fromJson(x)))
+          : null,
     );
   }
 
@@ -225,7 +236,9 @@ class Country {
     return Country(
       countryName: json['countryName'],
       countryUUID: json['countryUUID'],
-      state: json['state'] != null ? List<State>.from(json['state'].map((x) => State.fromJson(x))) : null,
+      state: json['state'] != null
+          ? List<State>.from(json['state'].map((x) => State.fromJson(x)))
+          : null,
     );
   }
 
@@ -253,7 +266,10 @@ class State {
     return State(
       stateName: json['stateName'],
       stateUUID: json['stateUUID'],
-      district: json['district'] != null ? List<District>.from(json['district'].map((x) => District.fromJson(x))) : null,
+      district: json['district'] != null
+          ? List<District>.from(
+              json['district'].map((x) => District.fromJson(x)))
+          : null,
     );
   }
 
@@ -281,7 +297,9 @@ class District {
     return District(
       districtName: json['districtName'],
       districtUUID: json['districtUUID'],
-      block: json['block'] != null ? List<Block>.from(json['block'].map((x) => Block.fromJson(x))) : null,
+      block: json['block'] != null
+          ? List<Block>.from(json['block'].map((x) => Block.fromJson(x)))
+          : null,
     );
   }
 
@@ -309,7 +327,10 @@ class Block {
     return Block(
       blockName: json['blockName'],
       blockUUID: json['blockUUID'],
-      panchayat: json['panchayat'] != null ? List<Panchayat>.from(json['panchayat'].map((x) => Panchayat.fromJson(x))) : null,
+      panchayat: json['panchayat'] != null
+          ? List<Panchayat>.from(
+              json['panchayat'].map((x) => Panchayat.fromJson(x)))
+          : null,
     );
   }
 
@@ -376,11 +397,11 @@ class KRISHIDSS {
 
   KRISHIDSS(
       {this.applicationId,
-        this.applicationName,
-        this.roleId,
-        this.roleName,
-        this.userRoleScope,
-        this.resources});
+      this.applicationName,
+      this.roleId,
+      this.roleName,
+      this.userRoleScope,
+      this.resources});
 
   KRISHIDSS.fromJson(Map<String, dynamic> json) {
     applicationId = json['applicationId'];
@@ -454,7 +475,8 @@ class Resource {
     return Resource(
       resourceId: json['resourceId'],
       resourceName: json['resourceName'],
-      actions: json['actions'] != null ? List<String>.from(json['actions']) : null,
+      actions:
+          json['actions'] != null ? List<String>.from(json['actions']) : null,
       actionsInfo: json['actionsInfo'],
       resourceTypeName: json['resourceTypeName'],
     );
