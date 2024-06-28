@@ -382,174 +382,179 @@ class _ChatWindowState extends State<ChatWindow>
                 children: [
                   !AppState.instance.isListeningMode
                       ? Expanded(
-                    child: StreamBuilder(
-                      stream: FirebaseDatabase.instance
-                          .ref(
-                          "${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}")
-                          .onValue,
-                      builder: (context, AsyncSnapshot snapshot) {
-                        if (snapshot.hasData && snapshot.data != null) {
-                          List<ChatBubble> messageList = [];
-                          var data = (snapshot.data! as DatabaseEvent)
-                              .snapshot
-                              .value ??
-                              {};
-                          print("DATAFJLDLFHGLD $data");
-                          data = data as Map<dynamic, dynamic>;
-                          Map<String, String> dataTsMapping = {};
-                          dataTimer?.cancel();
-                          loadingTimer?.cancel();
-                          var sortedByKeyMap = Map.fromEntries(data.entries
-                              .toList()
-                            ..sort((e1, e2) => e1.key.compareTo(e2.key)));
-                          sortedByKeyMap.forEach((key, value) async {
-                            if (key != "cart") {
-                              final datalast =
-                              Map<String, dynamic>.from(value);
-                              print(
-                                  "SORTED MESSAGES ${datalast['message']}");
-                              bool errorLog = false;
-                              if (datalast['isUser'] == false &&
-                                  datalast['error_log'] != null) {
-                                errorLog = true;
-                              }
-                              if (datalast['isUser']) {
-                                dataTsMapping.clear();
-                              } else {
-                                if (datalast['sql_query'] != null &&
-                                    !datalast['isUser']) {
-                                  dataTsMapping['sql_ts'] = key;
-                                }
-                                if (datalast['image_url'] != null &&
-                                    !datalast['isUser']) {
-                                  dataTsMapping['image_ts'] = key;
-                                }
-                                if (datalast['message'] != null &&
-                                    !datalast['isUser']) {
-                                  dataTsMapping['summary_ts'] = key;
-                                }
-                                if (datalast['sql_df_columns'] != null &&
-                                    datalast['sql_df_values'] != null &&
-                                    !datalast['isUser']) {
-                                  dataTsMapping['table_ts'] = key;
-                                }
-                                if (datalast['error_log'] != null &&
-                                    !datalast['isUser']) {
-                                  dataTsMapping['error_ts'] = key;
-                                }
-                              }
-                              print("sessionId:${widget.sessionId}");
-                              print("log:${datalast['sql_query']}");
-                              print("mappping:$dataTsMapping");
-                              messageList.add(ChatBubble(
-                                text: datalast['message'] ??
-                                    datalast['sql_query'] ??
-                                    '',
-                                isUser: datalast['isUser'],
-                                imageUrl: datalast['image_url'] ?? '',
-                                tableColumnData: datalast['sql_df_columns'],
-                                tableRowData: datalast['sql_df_values'] !=
-                                    null
-                                    ? jsonDecode(datalast['sql_df_values'])
-                                    : null,
-                                logMessage: AppState.instance.mode ==
-                                    'hybrid_database'
-                                    ? datalast['sql_query'] ?? ''
-                                    : datalast['log'] ?? '',
-                                hasErrorLog: errorLog,
-                                timestampMapping: dataTsMapping,
-                              ));
-                            }
-                          });
-
-                          if (widget.isFromHistory != null &&
-                              widget.isFromHistory == true &&
-                              c == 0) {
-                            if (messageList.isNotEmpty &&
-                                !messageList[messageList.length - 1]
-                                    .isUser &&
-                                messageList.length > prevChatLength) {
-                              c++;
-                            }
-                          } else {
-                            if (messageList.isNotEmpty &&
-                                !messageList[messageList.length - 1]
-                                    .isUser &&
-                                messageList.length > prevChatLength) {
-                              WidgetsBinding.instance
-                                  .addPostFrameCallback((_) {
-                                showLoader.value = false;
-                              });
-                              tts.speak(
-                                  messageList[messageList.length - 1].text);
-                            }
-                            prevChatLength = messageList.length;
-                            if (messageList.isNotEmpty &&
-                                messageList[messageList.length - 1]
-                                    .isUser) {
-                              WidgetsBinding.instance
-                                  .addPostFrameCallback((_) {
-                                showLoader.value = true;
-                                tts.stop();
-                              });
-                            }
-
-                            loadingTimer =
-                                Timer(const Duration(seconds: 4), () {
-                                  int randomIndex =
-                                  Random().nextInt(loaderMsgList.length);
-                                  if (showLoader.value) {
-                                    tts.speak(loaderMsgList[randomIndex]);
+                          child: StreamBuilder(
+                            stream: FirebaseDatabase.instance
+                                .ref(
+                                    "${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}")
+                                .onValue,
+                            builder: (context, AsyncSnapshot snapshot) {
+                              if (snapshot.hasData && snapshot.data != null) {
+                                List<ChatBubble> messageList = [];
+                                var data = (snapshot.data! as DatabaseEvent)
+                                        .snapshot
+                                        .value ??
+                                    {};
+                                print("DATAFJLDLFHGLD $data");
+                                data = data as Map<dynamic, dynamic>;
+                                Map<String, String> dataTsMapping = {};
+                                dataTimer?.cancel();
+                                loadingTimer?.cancel();
+                                var sortedByKeyMap = Map.fromEntries(data
+                                    .entries
+                                    .toList()
+                                  ..sort((e1, e2) => e1.key.compareTo(e2.key)));
+                                sortedByKeyMap.forEach((key, value) async {
+                                  if (key != "cart") {
+                                    final datalast =
+                                        Map<String, dynamic>.from(value);
+                                    print(
+                                        "SORTED MESSAGES ${datalast['message']}");
+                                    bool errorLog = false;
+                                    if (datalast['isUser'] == false &&
+                                        datalast['error_log'] != null) {
+                                      errorLog = true;
+                                    }
+                                    if (datalast['isUser']) {
+                                      dataTsMapping.clear();
+                                    } else {
+                                      if (datalast['sql_query'] != null &&
+                                          !datalast['isUser']) {
+                                        dataTsMapping['sql_ts'] = key;
+                                      }
+                                      if (datalast['image_url'] != null &&
+                                          !datalast['isUser']) {
+                                        dataTsMapping['image_ts'] = key;
+                                      }
+                                      if (datalast['message'] != null &&
+                                          !datalast['isUser']) {
+                                        dataTsMapping['summary_ts'] = key;
+                                      }
+                                      if (datalast['sql_df_columns'] != null &&
+                                          datalast['sql_df_values'] != null &&
+                                          !datalast['isUser']) {
+                                        dataTsMapping['table_ts'] = key;
+                                      }
+                                      if (datalast['error_log'] != null &&
+                                          !datalast['isUser']) {
+                                        dataTsMapping['error_ts'] = key;
+                                      }
+                                    }
+                                    print("sessionId:${widget.sessionId}");
+                                    print("log:${datalast['sql_query']}");
+                                    print("mappping:$dataTsMapping");
+                                    messageList.add(ChatBubble(
+                                      text: datalast['message'] ??
+                                          datalast['sql_query'] ??
+                                          '',
+                                      isUser: datalast['isUser'],
+                                      imageUrl: datalast['image_url'] ?? '',
+                                      tableColumnData:
+                                          datalast['sql_df_columns'],
+                                      tableRowData:
+                                          datalast['sql_df_values'] != null
+                                              ? jsonDecode(
+                                                  datalast['sql_df_values'])
+                                              : null,
+                                      logMessage: AppState.instance.mode ==
+                                              'hybrid_database'
+                                          ? datalast['sql_query'] ?? ''
+                                          : datalast['log'] ?? '',
+                                      hasErrorLog: errorLog,
+                                      timestampMapping: dataTsMapping,
+                                    ));
                                   }
                                 });
 
-                            dataTimer = Timer(const Duration(seconds: 100),
-                                    () async {
-                                  print("timerCounter::$timerCounter");
-                                  if (showLoader.value) {
-                                    DatabaseReference ref =
-                                    FirebaseDatabase.instance.ref(
-                                        "${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
+                                if (widget.isFromHistory != null &&
+                                    widget.isFromHistory == true &&
+                                    c == 0) {
+                                  if (messageList.isNotEmpty &&
+                                      !messageList[messageList.length - 1]
+                                          .isUser &&
+                                      messageList.length > prevChatLength) {
+                                    c++;
+                                  }
+                                } else {
+                                  if (messageList.isNotEmpty &&
+                                      !messageList[messageList.length - 1]
+                                          .isUser &&
+                                      messageList.length > prevChatLength) {
                                     WidgetsBinding.instance
-                                        .addPostFrameCallback((_) async {
+                                        .addPostFrameCallback((_) {
                                       showLoader.value = false;
-                                      String timeStamp = DateTime.now()
-                                          .millisecondsSinceEpoch
-                                          .toString();
-                                      print(
-                                          "dataNotFoundMsg::$dataNotFoundMsg");
-                                      await ref.child(timeStamp).set({
-                                        "isUser": false,
-                                        "message": "Data Not Found!",
-                                      });
                                     });
-                                    await tts.speak(dataNotFoundMsg);
+                                    tts.speak(
+                                        messageList[messageList.length - 1]
+                                            .text);
                                   }
-                                });
-                          }
+                                  prevChatLength = messageList.length;
+                                  if (messageList.isNotEmpty &&
+                                      messageList[messageList.length - 1]
+                                          .isUser) {
+                                    WidgetsBinding.instance
+                                        .addPostFrameCallback((_) {
+                                      showLoader.value = true;
+                                      tts.stop();
+                                    });
+                                  }
 
-                          return ListView.builder(
-                            reverse: true,
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            controller: scrollControllerListView,
-                            addAutomaticKeepAlives: true,
-                            itemBuilder: (context, index) {
-                              if (index < messageList.length) {
-                                return Padding(
-                                  padding: const EdgeInsets.all(4.0),
-                                  child: messageList[
-                                  messageList.length - 1 - index],
+                                  loadingTimer =
+                                      Timer(const Duration(seconds: 4), () {
+                                    int randomIndex =
+                                        Random().nextInt(loaderMsgList.length);
+                                    if (showLoader.value) {
+                                      tts.speak(loaderMsgList[randomIndex]);
+                                    }
+                                  });
+
+                                  dataTimer = Timer(
+                                      const Duration(seconds: 100), () async {
+                                    print("timerCounter::$timerCounter");
+                                    if (showLoader.value) {
+                                      DatabaseReference ref =
+                                          FirebaseDatabase.instance.ref(
+                                              "${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
+                                      WidgetsBinding.instance
+                                          .addPostFrameCallback((_) async {
+                                        showLoader.value = false;
+                                        String timeStamp = DateTime.now()
+                                            .millisecondsSinceEpoch
+                                            .toString();
+                                        print(
+                                            "dataNotFoundMsg::$dataNotFoundMsg");
+                                        await ref.child(timeStamp).set({
+                                          "isUser": false,
+                                          "message": "Data Not Found!",
+                                        });
+                                      });
+                                      await tts.speak(dataNotFoundMsg);
+                                    }
+                                  });
+                                }
+
+                                return ListView.builder(
+                                  reverse: true,
+                                  physics:
+                                      const AlwaysScrollableScrollPhysics(),
+                                  controller: scrollControllerListView,
+                                  addAutomaticKeepAlives: true,
+                                  itemBuilder: (context, index) {
+                                    if (index < messageList.length) {
+                                      return Padding(
+                                        padding: const EdgeInsets.all(4.0),
+                                        child: messageList[
+                                            messageList.length - 1 - index],
+                                      );
+                                    }
+                                    return null;
+                                  },
+                                  itemCount: messageList.length,
                                 );
                               }
-                              return null;
+                              return const SizedBox();
                             },
-                            itemCount: messageList.length,
-                          );
-                        }
-                        return const SizedBox();
-                      },
-                    ),
-                  )
+                          ),
+                        )
                       : const SizedBox(),
                   Padding(
                     padding: const EdgeInsets.only(left: 80.0),
@@ -569,9 +574,9 @@ class _ChatWindowState extends State<ChatWindow>
                   ),
                   !AppState.instance.isListeningMode
                       ? Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: bottomBar(),
-                  )
+                          padding: const EdgeInsets.all(20),
+                          child: bottomBar(),
+                        )
                       : const SizedBox(),
                   /* _toggleValue
                     ? Padding(
@@ -612,7 +617,8 @@ class _ChatWindowState extends State<ChatWindow>
                   child: Text(
                     'FieldRishi',
                     style: TextStyle(
-                      color: Colors.grey.withOpacity(0.2), // Adjust opacity as needed
+                      color: Colors.grey.withOpacity(0.2),
+                      // Adjust opacity as needed
                       fontSize: 40.0,
                       fontWeight: FontWeight.bold,
                     ),
@@ -621,83 +627,10 @@ class _ChatWindowState extends State<ChatWindow>
               ),
             ),
           ],
-
         ),
       ),
     );
   }
-
-/*
-   Widget bottomBar() {
-    return Container(
-      // width: MediaQuery.of(context).size.width,
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-      child: Row(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(4.0),
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: ValueListenableBuilder(
-                valueListenable: listeningActive,
-                builder: (context, value, _) {
-                  return AvatarGlow(
-                    animate: value,
-                    glowColor: Colors.purple,
-                    child: FloatingActionButton(
-                      onPressed: !value ? _startListening : _stopListening,
-                      tooltip: 'Listen',
-                      child: Icon(!value ? Icons.mic_off : Icons.mic),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-          CameraWidget(saveCapturedPhoto: saveCapturedPhoto),
-          Expanded(
-            child: Stack(
-              children: [
-                if (capturedPhoto != null)
-                  Positioned(
-                    left: 0,
-                    child: SizedBox(
-                      width: 50,
-                      height: 50,
-                      child: Image.file(capturedPhoto!, fit: BoxFit.cover),
-                    ),
-                  ),
-                Container(
-                  margin: EdgeInsets.only(left: capturedPhoto != null ? 60 : 0),
-                  child: TextFormField(
-                    controller: chatController,
-                    maxLines: 10,
-                    minLines: 1,
-                    textCapitalization: TextCapitalization.sentences,
-                    onChanged: (value) {
-                      if (capturedPhoto != null) {}
-                    },
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                        borderSide: const BorderSide(
-                          color: Color(0xFF4BA164),
-                          width: 2,
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      contentPadding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
-                      suffixIcon: _sendButton(),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-*/
 
   Widget bottomBar() {
     return Container(
@@ -1038,22 +971,6 @@ class _ChatWindowState extends State<ChatWindow>
 
   @override
   bool get wantKeepAlive => true;
-
-/*Future<void> initializeSpeechToText(String sessionId) async {
-    print(("startListeningToHello: starting listening"));
-
-    bool available = await _speechToText.initialize(
-      onStatus: (status) async {
-        print('Status: $status');
-      },
-      onError: (error) async {
-        print('Error: $error');
-      },
-    );
-    if (available) {
-      await _startListeningForAutoMode();
-    }
-  }*/
 }
 
 @pragma('vm:entry-point')
@@ -1230,136 +1147,3 @@ Future<void> startListeningToYes(String sessionId, String word) async {
       });
   // await startListenings(sessionId);
 }
-
-/*Future<String> startListenings(String sessionId) async {
-  int i = 0;
-  DatabaseReference ref = FirebaseDatabase.instance
-      .ref("CHAT_BOT_CHANGELOG/${constants.projectId}/${AppState.instance.userId}/${sessionId}");
-  SpeechRecognitionResult result;
-
-  await speechToText.listen(
-    partialResults: false,
-    onResult: (data) async {
-      result = data;
-      print("111111-input::${result.recognizedWords}");
-
-      if (result.recognizedWords.isNotEmpty &&
-          result.recognizedWords.toLowerCase().contains('rainfall')) {
-        await speechToText.stop();
-        i++;
-        AppState.instance.triggeredWord = "RAINFALL";
-        await tts.speak('Would you like to know the rainfall data');
-      }
-      if (result.recognizedWords.isNotEmpty &&
-          result.recognizedWords.toLowerCase().contains('reservoir')) {
-        await speechToText.stop();
-        i++;
-        AppState.instance.triggeredWord = "RESERVOIR";
-        await tts.speak('Would you like to know reservoir data');
-      }
-      if (result.recognizedWords.isNotEmpty &&
-          result.recognizedWords.toLowerCase().contains('groundwater')) {
-        await speechToText.stop();
-        i++;
-        AppState.instance.triggeredWord = "GROUNDWATER";
-        await tts.speak('Would you like to know groundwater data');
-      }
-      if (result.recognizedWords.isNotEmpty &&
-          result.recognizedWords.toLowerCase().contains('soil moisture')) {
-        await speechToText.stop();
-        i++;
-        AppState.instance.triggeredWord = "SOIL_MOISTURE";
-        await tts.speak('Would you like to know soil moisture data');
-      }
-
-      */ /* Future.delayed(const Duration(seconds: 10),() async {
-        await startListeningToYes(sessionId, AppState.instance.triggeredWord);
-      });*/ /*
-*/ /*
-      if (result.recognizedWords.toLowerCase() == 'yes') {
-        await ref.push().set({
-          "isUser": true,
-          "event_name": 'CONTINUOUS_LISTEN_MODE',
-          "trigger_word": AppState.instance.triggeredWord
-        });
-
-        await ref.push().set({
-          "isUser": false,
-          "event_name": 'CONTINUOUS_LISTEN_MODE',
-          "changelog": 'No Change in $AppState.instance.triggeredWord Data'
-        });
-        await ref.orderByKey().limitToLast(1).once().then((event) async {
-          DataSnapshot snapshot = event.snapshot;
-          print("values::${snapshot.value}");
-          if (snapshot.value != null) {
-            dynamic values = snapshot.value;
-            values.forEach((key, value) async {
-              if (value['isUser'] == false) {
-                String responseMessage = value['changelog'] ?? '';
-                await tts.speak(responseMessage);
-              }
-            });
-          }
-        });
-        // speechStatus.value = SpeechStatus.listening;
-        await speechToText.stop();
-        Future.delayed(const Duration(seconds: 5), () async {
-          await startListenings(sessionId);
-        });
-      }*/ /*
-    },
-  );
-  return AppState.instance.triggeredWord;
-}
-
-Future<void> startListeningToYes(String sessionId, String word) async {
-  print("startListeningToYes");
-  print("wewewewewew trigger word :: ${AppState.instance.triggeredWord}");
-  await speechToText.stop();
-  print("wewewewewew speechToText.isListening:: ${speechToText.isListening}");
-  DatabaseReference ref = FirebaseDatabase.instance
-      .ref("CHAT_BOT_CHANGELOG/${constants.projectId}/${AppState.instance.userId}/${sessionId}");
-  SpeechRecognitionResult result;
-
-  await speechToText.listen(
-      partialResults: false,
-      onResult: (data) async {
-        result = data;
-        print("wewewewewew 111111-input::${result.recognizedWords}");
-        if (result.recognizedWords.isNotEmpty &&
-            result.recognizedWords.toLowerCase() == "yes") {
-          print("wewewewewew 111111-yes::${result.recognizedWords}");
-          await speechToText.stop();
-          await ref.push().set({
-            "isUser": true,
-            "event_name": 'CONTINUOUS_LISTEN_MODE',
-            "trigger_word": '${AppState.instance.triggeredWord}'
-          });
-          print("111111-pushed}");
-          */ /* await ref.push().set({
-            "isUser": false,
-            "event_name": 'CONTINUOUS_LISTEN_MODE',
-            "changelog": 'No Change in $AppState.instance.triggeredWord Data'
-          });*/ /*
-          Future.delayed(const Duration(seconds: 2), () async {
-            print(
-                "wewewewewe AppState.instance.triggeredWord after completion::${AppState.instance.triggeredWord}");
-            await ref.orderByKey().limitToLast(1).once().then((event) async {
-              DataSnapshot snapshot = event.snapshot;
-              print("values::${snapshot.value}");
-              if (snapshot.value != null) {
-                dynamic values = snapshot.value;
-                values.forEach((key, value) async {
-                  if (value['isUser'] == false) {
-                    String responseMessage = value['changelog'] ?? '';
-                    AppState.instance.triggeredWord = "";
-                    await tts.speak(responseMessage);
-                  }
-                });
-              }
-            });
-          });
-        }
-      });
-  // await startListenings(sessionId);
-}*/
