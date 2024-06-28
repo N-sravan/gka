@@ -43,7 +43,10 @@ import 'dart:developer' as developer;
 import 'dart:io' as platform;
 import 'chat_bubble.dart';
 import 'helpers/notification_helper.dart';
+import 'home/view/home_view.dart';
 import 'locator.dart';
+import 'login/view/farmer_login_view.dart';
+import 'login/view/role_selection_view.dart';
 
 var initializationSettingsAndroid = const AndroidInitializationSettings(
     '@mipmap/ic_launcher'); // <- default icon name is @mipmap/ic_launcher
@@ -102,14 +105,14 @@ void main() async {
   ]);*/
 
   if (notificationStatus == PermissionStatus.granted) {
-    print("wewewewewew notificationStatus:::${PermissionStatus.granted}");
+   /* print("wewewewewew notificationStatus:::${PermissionStatus.granted}");
     Workmanager().initialize(callbackDispatcher);
     Workmanager().registerPeriodicTask(
       "speechTask",
       "speechTask",
       frequency: const Duration(minutes: 15),
       initialDelay: const Duration(minutes: 2),
-    );
+    );*/
   }
   runApp(
     MultiProvider(
@@ -939,10 +942,34 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: 'ChatBot Weather',
         // home: const MyHomePage(title: 'ChatBot Weather'),
-        initialRoute: '/splash',
-        routes: {
+        initialRoute: constants.initialRoute,
+        /*routes: {
           '/splash': (context) => const SplashScreenWidget(),
           '/login': (context) => const LoginScreenWidget(),
+        },*/
+        routes: {
+          constants.initialRoute: (context) => const SplashScreenWidget(),
+          constants.roleRoute: (context) => const RoleSelectionWidget(),
+          // constants.loginRoute: (context) => const LoginScreenWidget(),
+          constants.homeRoute: (context) => const HomeScreenWidget(),
+
+        },
+        onGenerateRoute: (settings) {
+          final String? data = settings.arguments as String?;
+          if (settings.name == constants.loginRoute) {
+            return MaterialPageRoute(
+              builder: (context) => LoginScreenWidget(role: data ?? ''),
+            );
+          } else if (settings.name == constants.farmerLoginRoute) {
+            return MaterialPageRoute(
+              builder: (context) => FarmerLoginScreenWidget(role: data ?? ''),
+            );
+          } else if (settings.name == constants.departmentLoginRoute) {
+            return MaterialPageRoute(
+              builder: (context) => LoginScreenWidget(role: data ?? ''),
+            );
+          }
+          return null;
         },
       ),
     );

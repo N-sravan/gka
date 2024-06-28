@@ -1,14 +1,27 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:gka/chat/view/prompt_management_view.dart';
 import 'package:gka/chat/view/tool_inventory_view.dart';
 import 'package:gka/utils/app_state.dart';
 import '../../../utils/common_constants.dart' as constants;
+import '../../chat_window.dart';
+import '../../main.dart';
 import 'chat_history_view.dart';
 import 'documents_view.dart';
 import 'notifications_view.dart';
 
+
 class DrawerWidget extends StatefulWidget {
-  const DrawerWidget({Key? key}) : super(key: key);
+  const DrawerWidget({
+    Key? key,
+    required this.isFirstTime,
+    required this.sessionId,
+  }) : super(key: key);
+
+  final bool isFirstTime;
+  final String sessionId;
 
   @override
   State<DrawerWidget> createState() => _DrawerWidgetState();
@@ -17,6 +30,9 @@ class DrawerWidget extends StatefulWidget {
 class _DrawerWidgetState extends State<DrawerWidget> {
   late String mode;
   late bool isDisplay;
+
+  // bool AppState.instance.isListeningMode = false;
+  Timer? periodicTimer;
 
   // late ChatViewModel viewModel;
 
@@ -66,7 +82,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                             ),
                             Expanded(
                               child: Text(
-                                'Hello', // Changed "View History" to "Hello"
+                                'Hello ${AppState.instance.userName}',
                                 style: constants.appBarHeaderTextStyle,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -85,7 +101,8 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                         style: constants.appBarListTileTextStyle,
                       ),
                       const Spacer(),
-                      const Icon(Icons.notifications), // Icon for "View History"
+                      const Icon(Icons.notifications),
+                      // Icon for "View History"
                     ],
                   ),
                   onTap: () {
@@ -100,14 +117,13 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                 ),
                 isDisplay
                     ? ListTile(
+                        trailing: const Icon(Icons.upload_file),
                         title: Row(
                           children: [
                             Text(
                               "Documents",
                               style: constants.appBarListTileTextStyle,
                             ),
-                            const Spacer(),
-                            const Icon(Icons.upload_file),
                           ],
                         ),
                         onTap: () {
@@ -121,7 +137,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                         },
                       )
                     : const SizedBox(),
-                ListTile(
+                /*  ListTile(
                   title: Row(
                     children: [
                       Text(
@@ -141,17 +157,15 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                       ),
                     );
                   },
-                ),
+                ),*/
                 ListTile(
+                  trailing: const Icon(Icons.manage_accounts),
                   title: Row(
                     children: [
                       Text(
                         "Prompt Management",
                         style: constants.appBarListTileTextStyle,
                       ),
-                      const Spacer(),
-                      const Icon(Icons.manage_accounts),
-                      // Icon for "Prompt Management"
                     ],
                   ),
                   onTap: () {
@@ -159,20 +173,91 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => PromptManagementView(),
+                        builder: (context) => const PromptManagementView(),
                       ),
                     );
                   },
                 ),
                 ListTile(
+                  trailing: IconButton(
+                    onPressed: () async {
+                      setState(() {
+                        AppState.instance.isListeningMode =
+                            !AppState.instance.isListeningMode;
+                        print(
+                            "AppState.instance.isListeningMod::${AppState.instance.isListeningMode}");
+                        Navigator.pop(context);
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ChatWindow(
+                              isFromHistory: false,
+                              isFirstTime: widget.isFirstTime!,
+                              sessionId: widget.sessionId!,
+                            ),
+                          ),
+                        );
+                      });
+                      if (AppState.instance.isListeningMode) {
+                        // If switching to Always listening mode
+                        // autoSessionId = const Uuid().v4();
+                        await tts.stop();
+                        await initializeService();
+                      } else {
+                        listeningActive.value = false;
+                        await tts.stop();
+                        final service = FlutterBackgroundService();
+                        var isRunning = await service.isRunning();
+                        if (isRunning) {
+                          service.invoke("stopService");
+                        }
+                        // await _speechToText.stop(); // Stop speech recognition
+                        if (periodicTimer != null && periodicTimer!.isActive) {
+                          periodicTimer?.cancel();
+                          print("ondemand mode");
+                        }
+                      }
+                    },
+                    icon: Padding(
+                      padding: const EdgeInsets.only(left: 20.0),
+                      child: Icon(
+                        !AppState.instance.isListeningMode
+                            ? Icons.toggle_on
+                            : Icons.toggle_off,
+                        color: !AppState.instance.isListeningMode
+                            ? Colors.green
+                            : Colors.black,
+                        size: 30,
+                      ),
+                    ),
+                  ),
+                  title: Row(
+                    children: [
+                      Text(
+                        "Conversational Mode",
+                        style: constants.appBarListTileTextStyle,
+                      ),
+                      // const Spacer(),
+                    ],
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ToolInventoryView(),
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  trailing: const Icon(Icons.inventory),
                   title: Row(
                     children: [
                       Text(
                         "Tool Inventory",
                         style: constants.appBarListTileTextStyle,
-                      ),
-                      const Spacer(),
-                      const Icon(Icons.inventory), // Icon for "Tool Inventory"
+                      ), // Icon for "Tool Inventory"
                     ],
                   ),
                   onTap: () {

@@ -94,7 +94,7 @@ const String prodKeySpace = 'CHAT_BOT_ONDEMAND_QUERY_DATA';
 const String testKeySpace = 'CHAT_BOT_TEST';
 
 //check this before generating apk
-const String projectId = apwrimsUUID;
+const String projectId = keralaUUID;
 const String keyspace = prodKeySpace;
 
 // Paddings
@@ -122,6 +122,44 @@ const double closeIconDimension = 16;
 const double cameraIconDimension = 36;
 const double cameraPlaceholderImageHeight = 220;
 const double networkImageErrorPlaceholderWidth = 160;
+const double splashButtonHeight = 56;
+const double splashButtonRadius = 8;
+const double splashBottomSpace = 30;
+const double splashTextVerticalSpace = 10;
+const double splashTextPadding = 24;
+const double borderRadius12 = 12.0;
+const double verticalSpace20 = 20;
+const double verticalSpace35 = 35;
+const double verticalSpace10 = 10;
+const double verticalSpace16 = 16;
+const double verticalSpace5 = 5;
+const double borderRadius = 8.0;
+const double borderRadius6 = 6.0;
+const double borderRadius24 = 24.0;
+const double borderRadius14 = 14.0;
+const double newButtonHeight = 55;
+const double notificationIconHeight = 32;
+const double notificationIconWidth = 32;
+const double visualDensity = -4.0;
+const double imageHeight100 = 100;
+const double contentContainerWidth100 = 100.0;
+const double plantDoctorImagePreview = 230;
+const double plantDoctorImagePreviewWidth = 80;
+const double imageHeight40 = 40;
+const double imageHeight45 = 45;
+const double imageHeight48 = 48;
+const double imageHeight28 = 28;
+const double imageHeight128 = 128;
+const double imageWidth45 = 45;
+const double imageSize55 = 55;
+const double iconSize = 24;
+const double iconSize12 = 12;
+const double iconSize10 = 10;
+const double iconSize16 = 16;
+const double iconSizeLarge = 32;
+const double iconBorderRadius = 50;
+
+
 
 // Elevations
 const double appBarElevation = 4;
@@ -174,9 +212,13 @@ const Color lightWhite = Color(0xFFB3B6BD);
 const Color darkBlue = Color.fromRGBO(6, 32, 64, 1);
 const Color inputFieldColor = Color.fromRGBO(118, 118, 128, 0.12);
 const Color tableValueColor = Color(0xFF515466);
+const Color roleScreenBg = Color(0xffF6F6F6);
+const Color splashButtonBg = Color(0xff00A94E);
+const Color roleSelectedColor = Color(0xffEDFFE8);
+const Color selectedRoleColor = Color(0xffEDFFE8);
+const Color selectedRoleBorderColor = Color(0xff00B251);
+const Color defaultRoleBorderColor = Color(0xffDADADA);
 
-// Crop Colors
-const Color paddyColor = Color(0xFF4BA164);
 
 TextStyle normalBlackTextStyle = const TextStyle(
   fontSize: 16,
@@ -518,6 +560,91 @@ TextStyle darkRed12W200 = const TextStyle(
   fontWeight: FontWeight.w500,
 );
 
+TextStyle redMont14W600 = const TextStyle(
+  fontFamily: "Montserrat",
+  fontWeight: FontWeight.w600,
+  fontSize: 14.0,
+  color: Colors.red,
+);
+
+TextStyle whiteMont14W600 = const TextStyle(
+  fontFamily: "Montserrat",
+  fontWeight: FontWeight.w600,
+  fontSize: 14.0,
+  color: Colors.white,
+);
+
+TextStyle blackMont10 = const TextStyle(
+  fontFamily: "Montserrat",
+  fontSize: 10.0,
+  color: Colors.black,
+);
+
+TextStyle blackMont10W700 = const TextStyle(
+  fontFamily: "Montserrat",
+  fontWeight: FontWeight.w700,
+  fontSize: 10.0,
+  color: Colors.black,
+);
+
+TextStyle blackMont19W700 = const TextStyle(
+  fontFamily: "Montserrat",
+  fontWeight: FontWeight.w700,
+  fontSize: 19.0,
+  color: Colors.black,
+);
+
+TextStyle blackMont14W500 = const TextStyle(
+  fontFamily: "Montserrat",
+  fontWeight: FontWeight.w500,
+  fontSize: 14.0,
+  color: Colors.black,
+);
+
+TextStyle greenMont55WBold = const TextStyle(
+  fontFamily: "Montserrat",
+  fontWeight: FontWeight.bold,
+  fontSize: 55,
+  color: Color(0xff217821),
+);
+
+TextStyle greenMont16W700 = const TextStyle(
+  color: Color(0xff00B251),
+  fontSize: 16,
+  decoration: TextDecoration.underline,
+  decorationColor: Color(0xff00B251),
+  fontFamily: 'Montserrat',
+  fontWeight: FontWeight.w700,
+);
+
+TextStyle blackMont12W500 = const TextStyle(
+  fontFamily: "Montserrat",
+  fontWeight: FontWeight.w500,
+  fontSize: 12.0,
+  color: Color(0xff676B77),
+);
+
+TextStyle grayMont14W500 = const TextStyle(
+  fontFamily: "Montserrat",
+  fontWeight: FontWeight.w500,
+  fontSize: 14.0,
+  color: Color(0xff8391A1),
+);
+
+TextStyle blackMont24W700 = const TextStyle(
+  fontFamily: "Montserrat",
+  fontWeight: FontWeight.w700,
+  fontSize: 24.0,
+  color: Colors.black,
+);
+
+
+TextStyle generateOTPStyle = const TextStyle(
+    fontFamily: 'Montserrat',
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
+    color: Color(0xff00A94E));
+
 // Button Styles
 ButtonStyle buttonStyle = ElevatedButton.styleFrom(
   // backgroundColor: buttonColor,
@@ -526,6 +653,16 @@ ButtonStyle buttonStyle = ElevatedButton.styleFrom(
     borderRadius: BorderRadius.circular(8),
   ),
   elevation: formComponentsElevation,
+);
+
+ButtonStyle agriButtonStyle = ElevatedButton.styleFrom(
+  // fixedSize: Size(MediaQuery.of(context).size.height,
+  //     constants.splashButtonHeight),
+  shape: RoundedRectangleBorder(
+    borderRadius:
+    BorderRadius.circular(borderRadius),
+  ),
+  backgroundColor: splashButtonBg,
 );
 
 //Decoration
@@ -608,7 +745,6 @@ const String toManyLoginAttempts =
     'Too many login attempts. Please wait for 15 minutes and try again';
 const String noNetworkAvailability =
     'Please check your network connection, no internet available';
-const String loginto = 'Login';
 const String userNameString = 'Username';
 const String emptyUsernameErrorMsg = 'Username cannot be empty';
 const String submit = 'Submit';
@@ -617,6 +753,56 @@ const String enterUserName = 'Enter Username';
 const String passwordString = 'Password';
 const String enterPassword = 'Password';
 const String loginString = 'Login';
+const String farmer = 'Farmer';
+const String department = 'Department';
+const String register = 'Register';
+const String loginAs = 'Login As';
+const String dontHaveAccount = 'Don\'t have an account?';
+const String appTitle = 'FieldRishi';
+const String getOtpString = 'Get OTP';
+const String verifyOtpString = 'Verify OTP';
+const String enterOtpString = 'Enter OTP';
+const String otpErrorMsg = 'Please enter valid OTP';
+const String mobileNoString = 'Mobile Number';
+const String notReceivedOtp = "Didn't receive OTP";
+const String resendOtpString = 'Resend';
+const String enterMobileNumber = 'Enter Mobile Number';
+const String forgotPasswordString = 'Forgot Password?';
+const String emptyEmailErrorMsg = 'Email cannot be empty';
+const String emptyMobileNumberErrorMsg = 'Mobile number cannot be empty';
+const String invalidMobileNumberErrorMsg = 'Enter valid Mobile number';
+const String loginDesc =
+    'Please enter the registered Mobile number or Please input New Mobile number';
+const String generateOTP = 'Generate OTP';
+const String invalidEntry = 'Invalid Entry';
+
+//Icons
+const String farmerIcon = 'assets/images/farmer_ic.png';
+const String farmerRole = 'assets/images/farmerRole.svg';
+const String departmentRole = 'assets/images/departmentRole.svg';
+const String roleScreenIcon = 'assets/images/roleScreenIcon.svg';
+const String loginImage = 'assets/images/loginImage.png';
+const String filterIcon = 'assets/images/filterIcon.svg';
+const String departmentLoginImage = 'assets/images/departmentLoginLogo.svg';
+const String logo = 'assets/images/kkh_icon.png';
+const String keralaLogo = 'assets/images/kkh_icon.png';
+const String backArrowIcon = 'assets/images/backArrow.svg';
+const String notificationIcon = 'assets/images/notification_icon.svg';
+const String suveyorIcon = 'assets/images/surveyor_ic.png';
+const String departmentIcon = 'assets/images/supervisor_ic.png';
+const String otherVendorIcon = 'assets/images/other_vendor_ic.png';
+const String verificationIcon = 'assets/images/verification.png';
+const String agroAdvisoryIcon = 'assets/images/agroAdvisoryIcon.png';
+
+//routes
+const String initialRoute = '/';
+const String roleRoute = '/role';
+const String appInfoRoute = '/appInfoRoute';
+const String loginRoute = '/login';
+const String farmerLoginRoute = '/farmerLogin';
+const String departmentLoginRoute = '/departmentLogin';
+const String homeRoute = '/home';
+const String farmerHomeRoute = '/farmerHome';
 
 
 const String clickFromCamera = 'Click from Camera';
@@ -631,4 +817,4 @@ enum CropNameVerifyRadioOptions { agree, disagree }
 
 // const String genAiBaseUrl = "https://genai.vassarlabs.com/aquamind/";
 const String genAiBaseUrl = "https://nawrims.vassarlabs.com/genai/";
-const String ngrok = "https://63ab-196-12-47-4.ngrok-free.app/";
+// const String ngrok = "https://63ab-196-12-47-4.ngrok-free.app/";

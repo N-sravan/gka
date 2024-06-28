@@ -188,12 +188,12 @@ class HomeViewModel extends LoadingViewModel {
 
   Future<String?> createSession() async {
     try {
-      /*  String uuid = const Uuid().v4();
+        String uuid = const Uuid().v4();
       sessionId = uuid;
-      print("sessionId::${sessionId}");
+      print("sessionId::$sessionId");
       isFirstTime = true;
       notifyListeners();
-      return uuid;*/
+      return uuid;
       isLoading = true;
       String url = constants.genAiBaseUrl + constants.createSessionEndpoint;
       String data = AppState.instance.userData;
@@ -224,7 +224,6 @@ class HomeViewModel extends LoadingViewModel {
           ),
         ),
       );*/
-      print("Request data before encode::$data");
       http.Response response = await http.post(
         Uri.parse(url),
         body: data,

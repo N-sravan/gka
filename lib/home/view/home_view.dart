@@ -102,7 +102,11 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                     },
                     onSelected: (String value) async {
                       if (value == 'logout') {
-                        Navigator.pushReplacementNamed(context, '/login');
+                        if(constants.projectId == constants.keralaUUID){
+                          Navigator.pushReplacementNamed(context, constants.roleRoute);
+                        }else {
+                          Navigator.pushReplacementNamed(context, '/login');
+                        }
                         /*   bool? result = await viewModel.deleteToken(context);
                         if (result != null && result) {
                           await viewModel.setLogoutSharedPreferences(context);
@@ -438,7 +442,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                             AppState.instance.isOriyaSelected = false;
                           }*/
                           String? sessionId = await viewModel.createSession();
-                          if (viewModel.sessionId != null) {
+                          if (viewModel.sessionId != null && viewModel.sessionId!.isNotEmpty && sessionId!=null && sessionId.isNotEmpty) {
                             Navigator.push(
                               context,
                               MaterialPageRoute(

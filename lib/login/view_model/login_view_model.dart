@@ -2,10 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 import 'package:jwt_decoder/jwt_decoder.dart';
 import '../../services/api_provider.dart';
 import '../../utils/app_state.dart';
+import '../../utils/navigation_util.dart';
 import '../model/ap_login_response_model.dart' as apLogin;
 import '../../shared/loading_view_model.dart';
 import '../../utils/network_utils.dart';
@@ -30,8 +32,10 @@ class LoginViewModel extends LoadingViewModel {
   String? otpEntered;
   final otpKey = GlobalKey();
   final formKey = GlobalKey<FormState>();
+  String selectedRole = constants.farmer;
 
-  Future<bool> authenticate(String userName, String password, BuildContext context) async {
+  Future<bool> authenticate(
+      String userName, String password, BuildContext context) async {
     /// Checking for active internet connection
     if (await networkUtils.hasActiveInternet()) {
       late login.LoginResult loginResult;
@@ -77,24 +81,13 @@ class LoginViewModel extends LoadingViewModel {
               default:
                 break;
             }
-            AppState.instance.userData = encodedContent;
-            // AppState.instance.fcmToken = fcmToken!;
-            AppState.instance.locType =
-                userContent.userDetailsJson.data.locType!;
-            AppState.instance.locUUID = locUUID!;
-            AppState.instance.locName = locName!;
-            AppState.instance.userId = userContent.userId;
-            AppState.instance.userName = userContent.username;
+            String locType = userContent.userDetailsJson.data.locType;
+            String userId = userContent.userId;
+            String userName = userContent.username;
+            String role = '';
+            setAppStateValues(
+                encodedContent, locUUID, locName, locType, userId, userName,role);
 
-            await _setLoginSharedPreferences(
-              AppState.instance.userName,
-              AppState.instance.userId,
-              AppState.instance.locName,
-              AppState.instance.locType,
-              AppState.instance.userData,
-              AppState.instance.locUUID,
-              // AppState.instance.fcmToken
-            );
             notifyListeners();
           }
           isLoading = false;
@@ -141,7 +134,7 @@ class LoginViewModel extends LoadingViewModel {
         if (loginResult.statusCode == 200 && loginResult.accessToken != null) {
           /// Login is successful
           Map<String, dynamic> decodedToken =
-          JwtDecoder.decode(loginResult.accessToken!);
+              JwtDecoder.decode(loginResult.accessToken!);
           String userId = decodedToken["sub"];
           await _setLoginSharedPreferencesForKerala(userName, userId,
               loginResult.accessToken!, loginResult.refreshToken!);
@@ -149,26 +142,74 @@ class LoginViewModel extends LoadingViewModel {
           if (csrfResponse["statusCode"] == 200) {
             await _setCSRFSharedPreferences(
                 csrfResponse["response"]["tokens"]["csrf"]);
-              DepartmentUserPermissionsResponse userPermissionsResponse;
-              userPermissionsResponse = await ApiProvider.instance
-                  .fetchUserPermissionsForDepartmentLogin(context);
-              if (userPermissionsResponse.statusCode == 200) {
-
-                dept.Meta? userData = userPermissionsResponse.response?.meta;
-                String data = json.encode(userData?.toJson());
-                if (userData != null) {
-                  AppState.instance.userData = data;
+            DepartmentUserPermissionsResponse userPermissionsResponse;
+            userPermissionsResponse = await ApiProvider.instance
+                .fetchUserPermissionsForDepartmentLogin(context);
+            if (userPermissionsResponse.statusCode == 200) {
+              dept.Meta? userContent = userPermissionsResponse.response?.meta;
+              String encodedContent = json.encode(userContent?.toJson());
+              if (userContent != null) {
+                if (userContent.userDetails != null &&
+                    userContent.userDetails!.data!.location != null) {
+                  String locUUID = '';
+                  String locName = '';
+                  String? locType = userContent.userDetails!.data!.locType;
+                  switch (userContent.userDetails!.data!.locType) {
+                    case 'country':
+                      locUUID = userContent.userDetails!.data!.location!
+                          .country![0].countryUUID!;
+                      locName = userContent.userDetails!.data!.location!
+                          .country![0].countryName!;
+                      break;
+                    case 'state':
+                      locUUID = userContent.userDetails!.data!.location!
+                          .country![0].state![0].stateUUID!;
+                      locName = userContent.userDetails!.data!.location!
+                          .country![0].state![0].stateName!;
+                      break;
+                    case 'district':
+                      locUUID = userContent.userDetails!.data!.location!
+                          .country![0].state![0].district![0].districtUUID!;
+                      locName = userContent.userDetails!.data!.location!
+                          .country![0].state![0].district![0].districtName!;
+                      break;
+                    case 'mandal':
+                      locUUID = userContent
+                          .userDetails!
+                          .data!
+                          .location!
+                          .country![0]
+                          .state![0]
+                          .district![0]
+                          .block![0]
+                          .blockUUID!;
+                      locName = userContent
+                          .userDetails!
+                          .data!
+                          .location!
+                          .country![0]
+                          .state![0]
+                          .district![0]
+                          .block![0]
+                          .blockName!;
+                      break;
+                    default:
+                      break;
+                  }
+                  setAppStateValues(encodedContent, locUUID, locName, locType,
+                      userId, userName,"officer");
                 }
-                isLoading = false;
-                notifyListeners();
-                return true;
-              } else {
-                isLoading = false;
-                notifyListeners();
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text(constants.genericErrorMsg),
-                ));
               }
+              isLoading = false;
+              notifyListeners();
+              return true;
+            } else {
+              isLoading = false;
+              notifyListeners();
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(constants.genericErrorMsg),
+              ));
+            }
           } else {
             isLoading = false;
             notifyListeners();
@@ -226,7 +267,7 @@ class LoginViewModel extends LoadingViewModel {
               loginResult.result?.status == 200) {
             apLogin.Content? userContent = loginResult.result!.content;
             String encodedContent = json.encode(userContent?.toJson());
-
+            String? userId = userContent?.username;
 /*            login.Content? userContent = login.Content(
               username: "APWRIMS",
               userId: '44',
@@ -257,6 +298,7 @@ class LoginViewModel extends LoadingViewModel {
             if (userContent != null &&
                 userContent.userDetailsJson != null &&
                 userContent.userDetailsJson!.data != null) {
+              String? locType = userContent.userDetailsJson!.data!.locType;
               switch (userContent.userDetailsJson!.data!.locType) {
                 case 'mandal':
                   locUUID = userContent.userDetailsJson!.data!.location!
@@ -279,23 +321,8 @@ class LoginViewModel extends LoadingViewModel {
                 default:
                   break;
               }
-              AppState.instance.userData = encodedContent;
-              // AppState.instance.fcmToken = fcmToken!;
-              AppState.instance.locType = userContent.userDetailsJson!.data!.locType!;
-              AppState.instance.locUUID = locUUID!;
-              AppState.instance.locName = locName!;
-              AppState.instance.userId = userContent.userId!;
-              AppState.instance.userName = userContent.username!;
-
-              await _setLoginSharedPreferences(
-                AppState.instance.userName,
-                AppState.instance.userId,
-                AppState.instance.locName,
-                AppState.instance.locType,
-                AppState.instance.userData,
-                AppState.instance.locUUID,
-                // AppState.instance.fcmToken
-              );
+              setAppStateValues(
+                  encodedContent, locUUID, locName, locType, userId, userName,"");
               notifyListeners();
             }
             isLoading = false;
@@ -362,7 +389,7 @@ class LoginViewModel extends LoadingViewModel {
   /// Saving user logged in status, userId,token and refresh token
   /// Initialize userId and username to app state
   _setLoginSharedPreferences(String userName, String userId, String locName,
-      String locType, String userData, String locUUID) async {
+      String locType, String userData, String locUUID, String role) async {
     await SharedPreferenceUtil.instance.setPreferenceValue(
         constants.preferenceIsLoggedIn, true, constants.preferenceTypeBool);
     await SecuredStorageUtil.instance
@@ -379,11 +406,12 @@ class LoginViewModel extends LoadingViewModel {
     await SecuredStorageUtil.instance.writeSecureData(
         constants.preferenceLastLoginTime,
         DateTime.now().millisecondsSinceEpoch.toString());
-    await SecuredStorageUtil.instance
-        .writeSecureData(constants.preferenceUserData, userData);
+    await SecuredStorageUtil.instance.writeSecureData(constants.preferenceUserData, userData);
+    await SecuredStorageUtil.instance.writeSecureData(constants.preferenceUserRole, role);
   }
 
-  _setLoginSharedPreferencesForKerala(String userName, String userId, String token, String refreshToken) async {
+  _setLoginSharedPreferencesForKerala(
+      String userName, String userId, String token, String refreshToken) async {
     await SharedPreferenceUtil.instance.setPreferenceValue(
         constants.preferenceIsLoggedIn, true, constants.preferenceTypeBool);
     await SecuredStorageUtil.instance
@@ -482,5 +510,96 @@ class LoginViewModel extends LoadingViewModel {
     AppState.instance.userMobileNo = mobileNo;
     AppState.instance.userName = firstName;
     AppState.instance.userAssignedRole = roleName;
+  }
+
+  Future<void> setAppStateValues(
+    String encodedContent,
+    String? locUUID,
+    String? locName,
+    String? locType,
+    String? userId,
+    String? userName, String role,
+  ) async {
+    AppState.instance.userData = encodedContent;
+    // AppState.instance.fcmToken = fcmToken!;
+    AppState.instance.locType = locType!;
+    AppState.instance.locUUID = locUUID!;
+    AppState.instance.locName = locName!;
+    AppState.instance.userId = userId!;
+    AppState.instance.userName = userName!;
+    AppState.instance.role = role;
+
+    await _setLoginSharedPreferences(
+      AppState.instance.userName,
+      AppState.instance.userId,
+      AppState.instance.locName,
+      AppState.instance.locType,
+      AppState.instance.userData,
+      AppState.instance.locUUID,
+      AppState.instance.role,
+      // AppState.instance.fcmToken
+    );
+  }
+
+  roleSelection(String role, BuildContext context) {
+    selectedRole = role;
+    notifyListeners();
+  }
+
+  navigationBasedOnRole(BuildContext context) {
+    if (selectedRole == constants.farmer) {
+      AppState.instance.role = constants.farmer;
+      NavigationUtil.instance
+          .navigateToFarmerLoginScreen(context, selectedRole);
+    } else if (selectedRole == constants.department) {
+      AppState.instance.role = constants.department;
+      NavigationUtil.instance
+          .navigateToDepartmentLoginScreen(context, selectedRole);
+    }
+  }
+
+  generateOTP() {
+    getOtp = !getOtp;
+    notifyListeners();
+  }
+
+  void updateGetOtp(bool value) {
+    getOtp = value;
+    notifyListeners();
+  }
+
+  void clearAllData() {
+    getOtp = false;
+    notifyListeners();
+  }
+
+  bool validateOTP(BuildContext context) {
+    if (otpEntered == '1234') {
+      AppState.instance.userMobileNo = mobileNo!;
+      AppState.instance.stateUUID = constants.keralaUUID;
+      notifyListeners();
+      return true;
+    } else {
+      Fluttertoast.showToast(
+          msg: constants.otpErrorMsg, toastLength: Toast.LENGTH_LONG);
+      return false;
+    }
+  }
+
+
+  void updatedOTPValue(String value) {
+    otpEntered = value;
+    notifyListeners();
+  }
+
+  bool validateMobileNo(String? mobileNo) {
+    // Regular expression pattern for a valid mobile number
+    final RegExp regex = RegExp(r'^[6-9]\d{9}$');
+
+    // Check if the value matches the regex pattern
+    if (regex.hasMatch(mobileNo!)) {
+      return true; // Valid mobile number
+    }
+    return false; // Invalid mobile number
   }
 }

@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:gka/login/view/login_view.dart';
 import 'package:gka/permissions/view/permissions_view.dart';
+import 'package:gka/utils/navigation_util.dart';
 
 import '../../home/view/home_view.dart';
 import '../../login/model/department_user_permission_response.dart';
@@ -12,7 +14,7 @@ import 'package:flutter/material.dart';
 import '../../../utils/app_state.dart';
 import '../../../utils/common_constants.dart' as constants;
 import 'package:permission_handler/permission_handler.dart'
-as permission_handler;
+    as permission_handler;
 import '../../../utils/shared_preference_util.dart';
 import '../../shared/loading_view_model.dart';
 import '../../utils/secure_storage_util.dart';
@@ -56,29 +58,27 @@ class SplashViewModel extends LoadingViewModel {
         .readSecureData(constants.preferenceFcmToken);
 
     if (userId != null && userId.isNotEmpty && isLoggedIn) {
-      AppState.instance.userData = userContent;
+      String data = jsonEncode(userContent);
+      AppState.instance.userData = data;
       // AppState.instance.fcmToken = fcmToken!;
-      AppState.instance.locType = locType!;
-      AppState.instance.locUUID = locUUID!;
+      AppState.instance.locType = locType ?? '';
+      AppState.instance.locUUID = locUUID ?? '';
       AppState.instance.locName = locName!;
       AppState.instance.userId = userId!;
       AppState.instance.userName = userName;
-      Navigator.push(context,
-          MaterialPageRoute(builder: (context) => HomeScreenWidget()));
+      if (constants.projectId == constants.keralaUUID) {
+        NavigationUtil.instance.navigateToRoleScreen(context);
+      } else {
+        Navigator.push(context,
+            MaterialPageRoute(builder: (context) => HomeScreenWidget()));
+      }
     } else {
       // User isn't logged in
-      _startSplashTimerAndNavigate(context, '/login');
+      if (constants.projectId == constants.keralaUUID) {
+        NavigationUtil.instance.navigateToRoleScreen(context);
+      } else {
+        _startSplashTimerAndNavigate(context, '/login');
+      }
     }
-  }
-
-  _setUserPermissionsSharedPreferences(
-      String email, String mobileNo, String roleName) async {
-    await SecuredStorageUtil.instance
-        .writeSecureData(constants.preferenceUserEmail, email);
-    await SecuredStorageUtil.instance
-        .writeSecureData(constants.preferenceUserMobileNo, mobileNo);
-    AppState.instance.userEmail = email;
-    AppState.instance.userMobileNo = mobileNo;
-    AppState.instance.userAssignedRole = roleName;
   }
 }

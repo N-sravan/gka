@@ -40,13 +40,13 @@ class ChatWindow extends StatefulWidget {
   const ChatWindow({
     Key? key,
     required this.isFirstTime,
-    required this.finishSession,
+    this.finishSession,
     required this.sessionId,
     this.isFromHistory,
   }) : super(key: key);
 
   final bool isFirstTime;
-  final Function(bool finishSession) finishSession;
+  final Function(bool finishSession)? finishSession;
   final String sessionId;
   final bool? isFromHistory;
 
@@ -91,7 +91,6 @@ class _ChatWindowState extends State<ChatWindow>
   String summaryData = "";
   bool displayUserText = false;
   bool isLoadingResponse = false;
-  bool _toggleValue = true;
   OverlayEntry? overlayEntry;
   Timer? periodicTimer;
   Timer? dataTimer;
@@ -278,28 +277,6 @@ class _ChatWindowState extends State<ChatWindow>
   Future<void> _onSpeechResult(SpeechRecognitionResult result) async {
     print("_onSpeechResult ${result.recognizedWords}");
     updateChatControllerForSpeech(result.recognizedWords);
-    /*  DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
-
-    String? message = '';
-    print("session id::$sessionId");
-    if (language == 'odia') {
-      TransliterationResponse? response = await Transliteration.transliterate(
-          result.recognizedWords, Languages.ORIYA);
-      final translatedText = response?.transliterationSuggestions[0].toString();
-      message = translatedText;
-      print("translated::$translatedText");
-    } else {
-      message = result.recognizedWords;
-    }
-    await ref.push().set({
-      "isUser": true,
-      "message": message,
-      "mediaUrl": '',
-      'language': language,
-      'model_uuid': AppState.instance.modelUUID
-    });*/
-
     bool active = _speechToText.isListening;
     listeningActive.value = active;
   }
@@ -344,8 +321,42 @@ class _ChatWindowState extends State<ChatWindow>
         return false;
       },
       child: Scaffold(
-        drawer: const DrawerWidget(),
+        drawer: DrawerWidget(
+          isFirstTime: widget.isFirstTime,
+          sessionId: widget.sessionId,
+        ),
         appBar: AppBar(
+          actions: [
+            PopupMenuButton<String>(
+              itemBuilder: (BuildContext context) {
+                return <PopupMenuEntry<String>>[
+                  const PopupMenuItem<String>(
+                    value: 'Government Scheme',
+                    child: ListTile(
+                      // leading: Icon(Icons.exit_to_app),
+                      title: Text('Government Scheme'),
+                    ),
+                  ),
+                ];
+              },
+              onSelected: (String value) async {
+                if (value == 'logout') {
+                  if (constants.projectId == constants.keralaUUID) {
+                    Navigator.pushReplacementNamed(
+                        context, constants.roleRoute);
+                  } else {
+                    Navigator.pushReplacementNamed(context, '/login');
+                  }
+                  /*   bool? result = await viewModel.deleteToken(context);
+                        if (result != null && result) {
+                          await viewModel.setLogoutSharedPreferences(context);
+                          Fluttertoast.showToast(msg: "Logged out");
+                          Navigator.pushReplacementNamed(context, '/login');
+                        }*/
+                }
+              },
+            ),
+          ],
           leading: (widget.isFromHistory != null && widget.isFromHistory!)
               ? IconButton(
                   onPressed: () async {
@@ -358,299 +369,271 @@ class _ChatWindowState extends State<ChatWindow>
           centerTitle: true,
           backgroundColor: Colors.white,
           elevation: 0,
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: constants.black16W500,
-              ),
-              const Spacer(),
-              Text(
-                _toggleValue ? 'On-demand' : 'listening mode',
-                style: TextStyle(
-                  fontSize: 10,
-                  color: _toggleValue ? Colors.green : Colors.grey,
-                ),
-              ),
-              // const Spacer(),
-              IconButton(
-                onPressed: () async {
-                  setState(() {
-                    _toggleValue = !_toggleValue; // Toggle the value
-                  });
-                  print("wewewewewew _toggleValue::$_toggleValue");
-                  if (!_toggleValue) {
-                    // If switching to Always listening mode
-                    // autoSessionId = const Uuid().v4();
-                    await tts.stop();
-                    await initializeService();
-                    /*   periodicTimer = Timer.periodic(
-                      const Duration(seconds: 5),
-                      (timer) async {
-                        // await initializeSpeechToText(autoSessionId!);
-                        await initializeService();
-                      },
-                    );*/
-                  } else {
-                    listeningActive.value = false; // Stop speech recognition
-                    await tts.stop();
-                    final service = FlutterBackgroundService();
-                    var isRunning = await service.isRunning();
-                    if (isRunning) {
-                      service.invoke("stopService");
-                    }
-                    await _speechToText.stop(); // Stop speech recognition
-                    if (periodicTimer != null && periodicTimer!.isActive) {
-                      periodicTimer?.cancel();
-                    }
-                  }
-                },
-                icon: Icon(
-                  _toggleValue ? Icons.toggle_on : Icons.toggle_off,
-                  color: _toggleValue ? Colors.green : Colors.grey,
-                  size: 25,
-                ),
-              ),
-            ],
+          title: Text(
+            'Hello ${AppState.instance.userName}',
+            style: constants.black16W500,
           ),
         ),
-        body: Container(
-          color: Colors.grey[100],
-          child: Column(
-            children: [
-              _toggleValue
-                  ? Expanded(
-                      child: StreamBuilder(
-                        stream: FirebaseDatabase.instance
-                            .ref(
-                                "${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}")
-                            .onValue,
-                        builder: (context, AsyncSnapshot snapshot) {
-                          if (snapshot.hasData && snapshot.data != null) {
-                            List<ChatBubble> messageList = [];
-                            var data = (snapshot.data! as DatabaseEvent)
-                                    .snapshot
-                                    .value ??
-                                {};
-                            print("DATAFJLDLFHGLD $data");
-                            data = data as Map<dynamic, dynamic>;
-                            Map<String, String> dataTsMapping = {};
-                            dataTimer?.cancel();
-                            loadingTimer?.cancel();
-                            var sortedByKeyMap = Map.fromEntries(
-                                data.entries.toList()
-                                  ..sort((e1, e2) => e1.key.compareTo(e2.key)));
-                            sortedByKeyMap.forEach((key, value) async {
-                              if (key != "cart") {
-                                final datalast =
-                                    Map<String, dynamic>.from(value);
-                                print("SORTED MESSAGES ${datalast['message']}");
-                                bool errorLog = false;
-                                if (datalast['isUser'] == false &&
-                                    datalast['error_log'] != null) {
-                                  errorLog = true;
-                                }
-                                if (datalast['isUser']) {
-                                  dataTsMapping.clear();
-                                } else {
-                                  if (datalast['sql_query'] != null &&
-                                      !datalast['isUser']) {
-                                    dataTsMapping['sql_ts'] = key;
-                                  }
-                                  if (datalast['image_url'] != null &&
-                                      !datalast['isUser']) {
-                                    dataTsMapping['image_ts'] = key;
-                                  }
-                                  if (datalast['message'] != null &&
-                                      !datalast['isUser']) {
-                                    dataTsMapping['summary_ts'] = key;
-                                  }
-                                  if (datalast['sql_df_columns'] != null &&
-                                      datalast['sql_df_values'] != null &&
-                                      !datalast['isUser']) {
-                                    dataTsMapping['table_ts'] = key;
-                                  }
-                                  if (datalast['error_log'] != null &&
-                                      !datalast['isUser']) {
-                                    dataTsMapping['error_ts'] = key;
-                                  }
-                                }
-                                print("sessionId:${widget.sessionId}");
-                                print("log:${datalast['sql_query']}");
-                                print("mappping:$dataTsMapping");
-                                messageList.add(ChatBubble(
-                                  text: datalast['message'] ??
-                                      datalast['sql_query'] ??
-                                      '',
-                                  isUser: datalast['isUser'],
-                                  imageUrl: datalast['image_url'] ?? '',
-                                  tableColumnData: datalast['sql_df_columns'],
-                                  tableRowData: datalast['sql_df_values'] !=
-                                          null
-                                      ? jsonDecode(datalast['sql_df_values'])
-                                      : null,
-                                  logMessage: AppState.instance.mode ==
-                                          'hybrid_database'
-                                      ? datalast['sql_query'] ?? ''
-                                      : datalast['log'] ?? '',
-                                  hasErrorLog: errorLog,
-                                  timestampMapping: dataTsMapping,
-                                ));
+        body: Stack(
+          children: [
+            Container(
+              color: Colors.grey[100],
+              child: Column(
+                children: [
+                  !AppState.instance.isListeningMode
+                      ? Expanded(
+                    child: StreamBuilder(
+                      stream: FirebaseDatabase.instance
+                          .ref(
+                          "${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}")
+                          .onValue,
+                      builder: (context, AsyncSnapshot snapshot) {
+                        if (snapshot.hasData && snapshot.data != null) {
+                          List<ChatBubble> messageList = [];
+                          var data = (snapshot.data! as DatabaseEvent)
+                              .snapshot
+                              .value ??
+                              {};
+                          print("DATAFJLDLFHGLD $data");
+                          data = data as Map<dynamic, dynamic>;
+                          Map<String, String> dataTsMapping = {};
+                          dataTimer?.cancel();
+                          loadingTimer?.cancel();
+                          var sortedByKeyMap = Map.fromEntries(data.entries
+                              .toList()
+                            ..sort((e1, e2) => e1.key.compareTo(e2.key)));
+                          sortedByKeyMap.forEach((key, value) async {
+                            if (key != "cart") {
+                              final datalast =
+                              Map<String, dynamic>.from(value);
+                              print(
+                                  "SORTED MESSAGES ${datalast['message']}");
+                              bool errorLog = false;
+                              if (datalast['isUser'] == false &&
+                                  datalast['error_log'] != null) {
+                                errorLog = true;
                               }
-                            });
+                              if (datalast['isUser']) {
+                                dataTsMapping.clear();
+                              } else {
+                                if (datalast['sql_query'] != null &&
+                                    !datalast['isUser']) {
+                                  dataTsMapping['sql_ts'] = key;
+                                }
+                                if (datalast['image_url'] != null &&
+                                    !datalast['isUser']) {
+                                  dataTsMapping['image_ts'] = key;
+                                }
+                                if (datalast['message'] != null &&
+                                    !datalast['isUser']) {
+                                  dataTsMapping['summary_ts'] = key;
+                                }
+                                if (datalast['sql_df_columns'] != null &&
+                                    datalast['sql_df_values'] != null &&
+                                    !datalast['isUser']) {
+                                  dataTsMapping['table_ts'] = key;
+                                }
+                                if (datalast['error_log'] != null &&
+                                    !datalast['isUser']) {
+                                  dataTsMapping['error_ts'] = key;
+                                }
+                              }
+                              print("sessionId:${widget.sessionId}");
+                              print("log:${datalast['sql_query']}");
+                              print("mappping:$dataTsMapping");
+                              messageList.add(ChatBubble(
+                                text: datalast['message'] ??
+                                    datalast['sql_query'] ??
+                                    '',
+                                isUser: datalast['isUser'],
+                                imageUrl: datalast['image_url'] ?? '',
+                                tableColumnData: datalast['sql_df_columns'],
+                                tableRowData: datalast['sql_df_values'] !=
+                                    null
+                                    ? jsonDecode(datalast['sql_df_values'])
+                                    : null,
+                                logMessage: AppState.instance.mode ==
+                                    'hybrid_database'
+                                    ? datalast['sql_query'] ?? ''
+                                    : datalast['log'] ?? '',
+                                hasErrorLog: errorLog,
+                                timestampMapping: dataTsMapping,
+                              ));
+                            }
+                          });
 
-                            if (widget.isFromHistory != null &&
-                                widget.isFromHistory == true &&
-                                c == 0) {
-                              if (messageList.isNotEmpty &&
-                                  !messageList[messageList.length - 1].isUser &&
-                                  messageList.length > prevChatLength) {
-                                c++;
-                              }
-                            } else {
-                              if (messageList.isNotEmpty &&
-                                  !messageList[messageList.length - 1].isUser &&
-                                  messageList.length > prevChatLength) {
-                                WidgetsBinding.instance
-                                    .addPostFrameCallback((_) {
-                                  showLoader.value = false;
-                                });
-                                tts.speak(
-                                    messageList[messageList.length - 1].text);
-                              }
-                              prevChatLength = messageList.length;
-                              if (messageList.isNotEmpty &&
-                                  messageList[messageList.length - 1].isUser) {
-                                WidgetsBinding.instance
-                                    .addPostFrameCallback((_) {
-                                  showLoader.value = true;
-                                  tts.stop();
-                                });
-                              }
-
-                              loadingTimer =
-                                  Timer(const Duration(seconds: 4), () {
-                                int randomIndex =
-                                    Random().nextInt(loaderMsgList.length);
-                                if (showLoader.value) {
-                                  tts.speak(loaderMsgList[randomIndex]);
-                                }
+                          if (widget.isFromHistory != null &&
+                              widget.isFromHistory == true &&
+                              c == 0) {
+                            if (messageList.isNotEmpty &&
+                                !messageList[messageList.length - 1]
+                                    .isUser &&
+                                messageList.length > prevChatLength) {
+                              c++;
+                            }
+                          } else {
+                            if (messageList.isNotEmpty &&
+                                !messageList[messageList.length - 1]
+                                    .isUser &&
+                                messageList.length > prevChatLength) {
+                              WidgetsBinding.instance
+                                  .addPostFrameCallback((_) {
+                                showLoader.value = false;
                               });
-
-                              dataTimer =
-                                  Timer(const Duration(seconds: 100), () async {
-                                print("timerCounter::$timerCounter");
-                                if (showLoader.value) {
-                                  DatabaseReference ref =
-                                      FirebaseDatabase.instance.ref(
-                                          "${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
-                                  WidgetsBinding.instance
-                                      .addPostFrameCallback((_) async {
-                                    showLoader.value = false;
-                                    String timeStamp = DateTime.now()
-                                        .millisecondsSinceEpoch
-                                        .toString();
-                                    print("dataNotFoundMsg::$dataNotFoundMsg");
-                                    await ref.child(timeStamp).set({
-                                      "isUser": false,
-                                      "message": "Data Not Found!",
-                                    });
-                                  });
-                                  await tts.speak(dataNotFoundMsg);
-                                }
+                              tts.speak(
+                                  messageList[messageList.length - 1].text);
+                            }
+                            prevChatLength = messageList.length;
+                            if (messageList.isNotEmpty &&
+                                messageList[messageList.length - 1]
+                                    .isUser) {
+                              WidgetsBinding.instance
+                                  .addPostFrameCallback((_) {
+                                showLoader.value = true;
+                                tts.stop();
                               });
                             }
 
-                            return ListView.builder(
-                              reverse: true,
-                              physics: const AlwaysScrollableScrollPhysics(),
-                              controller: scrollControllerListView,
-                              addAutomaticKeepAlives: true,
-                              itemBuilder: (context, index) {
-                                if (index < messageList.length) {
-                                  return Padding(
-                                    padding: const EdgeInsets.all(4.0),
-                                    child: messageList[
-                                        messageList.length - 1 - index],
-                                  );
-                                }
-                                return null;
-                              },
-                              itemCount: messageList.length,
-                            );
+                            loadingTimer =
+                                Timer(const Duration(seconds: 4), () {
+                                  int randomIndex =
+                                  Random().nextInt(loaderMsgList.length);
+                                  if (showLoader.value) {
+                                    tts.speak(loaderMsgList[randomIndex]);
+                                  }
+                                });
+
+                            dataTimer = Timer(const Duration(seconds: 100),
+                                    () async {
+                                  print("timerCounter::$timerCounter");
+                                  if (showLoader.value) {
+                                    DatabaseReference ref =
+                                    FirebaseDatabase.instance.ref(
+                                        "${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
+                                    WidgetsBinding.instance
+                                        .addPostFrameCallback((_) async {
+                                      showLoader.value = false;
+                                      String timeStamp = DateTime.now()
+                                          .millisecondsSinceEpoch
+                                          .toString();
+                                      print(
+                                          "dataNotFoundMsg::$dataNotFoundMsg");
+                                      await ref.child(timeStamp).set({
+                                        "isUser": false,
+                                        "message": "Data Not Found!",
+                                      });
+                                    });
+                                    await tts.speak(dataNotFoundMsg);
+                                  }
+                                });
+                          }
+
+                          return ListView.builder(
+                            reverse: true,
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            controller: scrollControllerListView,
+                            addAutomaticKeepAlives: true,
+                            itemBuilder: (context, index) {
+                              if (index < messageList.length) {
+                                return Padding(
+                                  padding: const EdgeInsets.all(4.0),
+                                  child: messageList[
+                                  messageList.length - 1 - index],
+                                );
+                              }
+                              return null;
+                            },
+                            itemCount: messageList.length,
+                          );
+                        }
+                        return const SizedBox();
+                      },
+                    ),
+                  )
+                      : const SizedBox(),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 80.0),
+                    child: Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: ValueListenableBuilder(
+                        valueListenable: showLoader,
+                        builder: (context, value, _) {
+                          if (value) {
+                            return LoadingAnimationWidget.waveDots(
+                                color: Colors.green, size: 40);
                           }
                           return const SizedBox();
                         },
                       ),
-                    )
-                  : const SizedBox(),
-              Padding(
-                padding: const EdgeInsets.only(left: 80.0),
-                child: Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: ValueListenableBuilder(
-                    valueListenable: showLoader,
-                    builder: (context, value, _) {
-                      if (value) {
-                        return LoadingAnimationWidget.waveDots(
-                            color: Colors.green, size: 40);
-                      }
-                      return const SizedBox();
-                    },
+                    ),
+                  ),
+                  !AppState.instance.isListeningMode
+                      ? Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: bottomBar(),
+                  )
+                      : const SizedBox(),
+                  /* _toggleValue
+                    ? Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 30.0),
+                          child: Align(
+                            alignment: Alignment.bottomCenter,
+                            child: ValueListenableBuilder(
+                              valueListenable: listeningActive,
+                              builder: (context, value, _) {
+                                return AvatarGlow(
+                                  animate: value,
+                                  glowColor: Colors.purple,
+                                  child: FloatingActionButton(
+                                    onPressed:
+                                        // If not yet listening for speech start, otherwise stop
+                                        !value ? _startListening : _stopListening,
+                                    tooltip: 'Listen',
+                                    child:
+                                        Icon(!value ? Icons.mic_off : Icons.mic),
+                                  ),
+                                );
+                              },
+                            ), // your widget would go here
+                          ),
+                        ))
+                    : const Padding(
+                        padding: EdgeInsets.all(20),
+                        child: SizedBox(),
+                      )*/
+                ],
+              ),
+            ),
+            Positioned.fill(
+              child: IgnorePointer(
+                child: Center(
+                  child: Text(
+                    'FieldRishi',
+                    style: TextStyle(
+                      color: Colors.grey.withOpacity(0.2), // Adjust opacity as needed
+                      fontSize: 40.0,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
-              _toggleValue
-                  ? Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: bottomBar(),
-                    )
-                  : const SizedBox(),
-              /* _toggleValue
-                  ? Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 30.0),
-                        child: Align(
-                          alignment: Alignment.bottomCenter,
-                          child: ValueListenableBuilder(
-                            valueListenable: listeningActive,
-                            builder: (context, value, _) {
-                              return AvatarGlow(
-                                animate: value,
-                                glowColor: Colors.purple,
-                                child: FloatingActionButton(
-                                  onPressed:
-                                      // If not yet listening for speech start, otherwise stop
-                                      !value ? _startListening : _stopListening,
-                                  tooltip: 'Listen',
-                                  child:
-                                      Icon(!value ? Icons.mic_off : Icons.mic),
-                                ),
-                              );
-                            },
-                          ), // your widget would go here
-                        ),
-                      ))
-                  : const Padding(
-                      padding: EdgeInsets.all(20),
-                      child: SizedBox(),
-                    )*/
-            ],
-          ),
+            ),
+          ],
+
         ),
       ),
     );
   }
 
-  Widget bottomBar() {
+/*
+   Widget bottomBar() {
     return Container(
       // width: MediaQuery.of(context).size.width,
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
       child: Row(
         children: [
-          // SpeechToTextWidget(updateSpeech: updateChatControllerForSpeech, localeId: "en-US"),
           Padding(
             padding: const EdgeInsets.all(4.0),
             child: Align(
@@ -714,6 +697,26 @@ class _ChatWindowState extends State<ChatWindow>
       ),
     );
   }
+*/
+
+  Widget bottomBar() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Stack(
+              alignment: Alignment.centerLeft,
+              children: [
+                _chatInput(),
+                _speechButton(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   _sendButton() {
     return ValueListenableBuilder(
@@ -746,6 +749,76 @@ class _ChatWindowState extends State<ChatWindow>
     );
   }
 
+  _speechButton() {
+    return Positioned(
+      left: 2,
+      child: Row(
+        children: [
+          ValueListenableBuilder(
+            valueListenable: listeningActive,
+            builder: (context, value, _) {
+              return IconButton(
+                onPressed: !value ? _startListening : _stopListening,
+                icon: Icon(
+                  !value ? Icons.mic_off : Icons.mic,
+                  color: Colors.green,
+                ),
+                tooltip: 'Listen',
+              );
+            },
+          ),
+          capturedPhoto == null
+              ? CameraWidget(saveCapturedPhoto: saveCapturedPhoto)
+              : Padding(
+                  padding: const EdgeInsets.only(top: 4.0, bottom: 4),
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        capturedPhoto = null;
+                      });
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 4.0, bottom: 2),
+                      child: Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          image: DecorationImage(
+                            image: FileImage(File(capturedPhoto!.path)),
+                            fit: BoxFit.fill,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+        ],
+      ),
+    );
+  }
+
+  _chatInput() {
+    return TextFormField(
+      controller: chatController,
+      maxLines: null,
+      minLines: 1,
+      textCapitalization: TextCapitalization.sentences,
+      decoration: InputDecoration(
+        hintText: 'Ask a Question...',
+        border: OutlineInputBorder(
+          borderSide: const BorderSide(
+            color: Color(0xFF4BA164),
+            width: 2,
+          ),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        contentPadding: const EdgeInsets.fromLTRB(110, 4, 10, 4),
+        suffixIcon: _sendButton(),
+      ),
+    );
+  }
+
   updateChatControllerForSpeech(String text) {
     chatController.text = text;
     // setState(() {});
@@ -754,9 +827,6 @@ class _ChatWindowState extends State<ChatWindow>
   saveCapturedPhoto(XFile photo) {
     capturedPhoto = File(photo.path);
     setState(() {});
-    /*if (capturedPhoto != null) {
-      updateChatControllerWithPhotoName(photo.name);
-    }*/
   }
 
   addUserUploadedImageToChat() {

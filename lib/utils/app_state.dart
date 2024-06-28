@@ -10,6 +10,7 @@ class AppState {
   static AppState get instance => _instance ??= AppState._();
 
   String userName = "";
+  late String role;
   late String userAssignedRole;
   late String userEmail;
   late String userMobileNo;
@@ -51,4 +52,5 @@ class AppState {
   late String userId;
   late String language;
   late String mode;
+  bool isListeningMode =false;
 }

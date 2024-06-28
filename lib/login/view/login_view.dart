@@ -11,7 +11,9 @@ import '../model/login_api_response_model.dart' as response;
 import '../view_model/login_view_model.dart';
 
 class LoginScreenWidget extends StatefulWidget {
-  const LoginScreenWidget({super.key});
+  final String? role;
+
+  const LoginScreenWidget({super.key, this.role});
 
   @override
   State<LoginScreenWidget> createState() => _LoginScreenWidgetState();
@@ -106,7 +108,7 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                 ),
                               ),
                               Text(
-                                constants.loginto,
+                                constants.loginString,
                                 style: constants.darkblue20W600,
                               ),
                               const SizedBox(
@@ -267,18 +269,17 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                                     userId, password, context);
                                           } else if (constants.projectId ==
                                               constants.keralaUUID) {
-                                            bool result =
-                                                await viewModel.authenticateForKerala(
+                                            bool result = await viewModel
+                                                .authenticateForKerala(
                                                     userId, password, context);
-                                            if(result){
+                                            if (result) {
                                               Navigator.push(
                                                   context,
                                                   MaterialPageRoute(
                                                       builder: (context) =>
-                                                      const HomeScreenWidget()));
+                                                          const HomeScreenWidget()));
                                               print("authenticaion success");
                                             }
-
                                           } else {
                                             content =
                                                 await viewModel.authenticate(
@@ -313,7 +314,20 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                         }
                                       }
                                     },
-                                    style: constants.buttonStyle,
+                                    style: constants.projectId == constants.keralaUUID
+                                        ? ElevatedButton.styleFrom(
+                                      fixedSize: Size(
+                                        MediaQuery.of(context).size.height,
+                                        constants.splashButtonHeight,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(constants.borderRadius),
+                                      ),
+                                      backgroundColor: constants.splashButtonBg,
+                                    )
+                                        : ButtonStyle(
+                                      textStyle: MaterialStateProperty.all(constants.darkblue20W600)
+                                      ),
                                     child: Text(
                                       constants.loginString,
                                       style: constants.white16W500,

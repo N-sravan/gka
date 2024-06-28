@@ -1,16 +1,13 @@
 import 'dart:typed_data';
-
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
-
 class CameraWidget extends StatefulWidget {
-  const CameraWidget({
-    required this.saveCapturedPhoto,
-    Key? key
-  }) : super(key: key);
+  const CameraWidget({required this.saveCapturedPhoto, Key? key})
+      : super(key: key);
 
   final Function saveCapturedPhoto;
 
@@ -20,10 +17,18 @@ class CameraWidget extends StatefulWidget {
 
 class _CameraWidgetState extends State<CameraWidget> {
   final ImagePicker _picker = ImagePicker();
+  File? capturedPhoto;
+
+  @override
+  void dispose() {
+    capturedPhoto = null;
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      onPressed: () async{
+      onPressed: () async {
         int? userChoice = await imageUploadTypeAlertDialog();
         if (userChoice != null) {
           XFile? photo;
@@ -32,26 +37,27 @@ class _CameraWidgetState extends State<CameraWidget> {
           } else {
             photo = await _picker.pickImage(source: ImageSource.gallery);
           }
-          Uint8List data = await photo!.readAsBytes();
-          final directory = await getApplicationDocumentsDirectory();
-
-          String basename = '${const Uuid().v1()}.png';
-          await photo.saveTo('${directory.path}/$basename');
-          widget.saveCapturedPhoto(photo);
+          if (photo != null) {
+            Uint8List data = await photo.readAsBytes();
+            final directory = await getApplicationDocumentsDirectory();
+            String basename = '${const Uuid().v1()}.png';
+            await photo.saveTo('${directory.path}/$basename');
+            setState(() {
+              capturedPhoto = File(photo!.path);
+              // capturedPhoto = photo;
+            });
+            widget.saveCapturedPhoto(photo);
+          }
         }
       },
-      /*style: ButtonStyle(
-        backgroundColor: MaterialStateProperty.all(constants.continueButtonColor),
-        elevation: MaterialStateProperty.all(4.0),
-      ),*/
       icon: const Icon(
         Icons.upload,
-        color:  Color(0xFF4BA164),
+        color: Color(0xFF4BA164),
       ),
     );
   }
 
-  Future<int?> imageUploadTypeAlertDialog() async{
+  Future<int?> imageUploadTypeAlertDialog() async {
     int? value = await showDialog(
         context: context,
         builder: (context) {
@@ -68,11 +74,11 @@ class _CameraWidgetState extends State<CameraWidget> {
                 children: [
                   ElevatedButton(
                     style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all(const Color(0xFF4BA164)),
+                        backgroundColor:
+                            MaterialStateProperty.all(const Color(0xFF4BA164)),
                         shape: MaterialStateProperty.all(RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8.0),
-                        ))
-                    ),
+                        ))),
                     onPressed: () {
                       Navigator.pop(context, 1);
                     },
@@ -83,25 +89,24 @@ class _CameraWidgetState extends State<CameraWidget> {
                           Icons.camera_alt_outlined,
                           color: Colors.white,
                         ),
-                        Text(
-                          'Click from Camera',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontFamily: 'Roboto',
-                            fontWeight: FontWeight.w500,
-                          )
-                        ),
+                        Text('Click from Camera',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontFamily: 'Roboto',
+                              fontWeight: FontWeight.w500,
+                            )),
                       ],
                     ),
                   ),
                   ElevatedButton(
                       style: ButtonStyle(
-                          backgroundColor: MaterialStateProperty.all(const Color(0xFF4BA164)),
-                          shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                          backgroundColor: MaterialStateProperty.all(
+                              const Color(0xFF4BA164)),
+                          shape:
+                              MaterialStateProperty.all(RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8.0),
-                          ))
-                      ),
+                          ))),
                       onPressed: () {
                         Navigator.pop(context, 2);
                       },
@@ -112,28 +117,24 @@ class _CameraWidgetState extends State<CameraWidget> {
                             Icons.photo,
                             color: Colors.white,
                           ),
-                          Text(
-                            'Click from Gallery',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontFamily: 'Roboto',
-                              fontWeight: FontWeight.w500,
-                            )
-                          ),
+                          Text('Click from Gallery',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontFamily: 'Roboto',
+                                fontWeight: FontWeight.w500,
+                              )),
                         ],
-                      )
-                  )
+                      ))
                 ],
               ),
             ),
           );
-        }
-    );
+        });
     return value;
   }
 
-  Future<int?> imageUploadTypeBottomSheet() async{
+  Future<int?> imageUploadTypeBottomSheet() async {
     int? value = await showModalBottomSheet(
         context: context,
         builder: (context) {
@@ -144,19 +145,16 @@ class _CameraWidgetState extends State<CameraWidget> {
                   title: const Text("Click from Camera"),
                   onTap: () {
                     Navigator.pop(context, 1);
-                  }
-              ),
+                  }),
               ListTile(
                   leading: const Icon(Icons.photo),
                   title: const Text("Select from Gallery"),
                   onTap: () {
                     Navigator.pop(context, 2);
-                  }
-              )
+                  })
             ],
           );
-        }
-    );
+        });
     return value;
   }
 }
