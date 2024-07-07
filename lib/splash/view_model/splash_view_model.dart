@@ -4,6 +4,7 @@ import 'package:gka/login/view/login_view.dart';
 import 'package:gka/permissions/view/permissions_view.dart';
 import 'package:gka/utils/navigation_util.dart';
 
+import '../../chat_window.dart';
 import '../../home/view/home_view.dart';
 import '../../login/model/department_user_permission_response.dart';
 import '../../login/model/login_api_response_model.dart';
@@ -44,33 +45,28 @@ class SplashViewModel extends LoadingViewModel {
         .getBoolPreference(constants.preferenceIsLoggedIn);
     dynamic userName = await SecuredStorageUtil.instance
         .readSecureData(constants.preferenceUserName);
-    dynamic locName = await SecuredStorageUtil.instance
-        .readSecureData(constants.preferencelocName);
-    dynamic locUUID = await SecuredStorageUtil.instance
-        .readSecureData(constants.preferencelocUUID);
-    dynamic locType = await SecuredStorageUtil.instance
-        .readSecureData(constants.preferencelocType);
-    dynamic userId = await SecuredStorageUtil.instance
-        .readSecureData(constants.preferenceUserId);
-    dynamic userContent = await SecuredStorageUtil.instance
-        .readSecureData(constants.preferenceUserData);
-    dynamic fcmToken = await SecuredStorageUtil.instance
-        .readSecureData(constants.preferenceFcmToken);
+    dynamic userId = await SecuredStorageUtil.instance.readSecureData(constants.preferenceUserId);
+    dynamic sessionId = await SecuredStorageUtil.instance.readSecureData(constants.preferenceSessionId);
+    dynamic token = await SecuredStorageUtil.instance.readSecureData(constants.preferenceToken);
+
 
     if (userId != null && userId.isNotEmpty && isLoggedIn) {
-      String data = jsonEncode(userContent);
-      AppState.instance.userData = data;
-      // AppState.instance.fcmToken = fcmToken!;
-      AppState.instance.locType = locType ?? '';
-      AppState.instance.locUUID = locUUID ?? '';
-      AppState.instance.locName = locName!;
       AppState.instance.userId = userId!;
       AppState.instance.userName = userName;
+      AppState.instance.token = token;
+      AppState.instance.sessionId = sessionId;
       if (constants.projectId == constants.keralaUUID) {
         NavigationUtil.instance.navigateToRoleScreen(context);
       } else {
-        Navigator.push(context,
-            MaterialPageRoute(builder: (context) => HomeScreenWidget()));
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChatWindow(
+              isFromHistory: false,
+              sessionId: sessionId,
+            ),
+          ),
+        );
       }
     } else {
       // User isn't logged in

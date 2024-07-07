@@ -127,14 +127,6 @@ class _ChatHistoryViewState extends State<ChatHistoryView> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(10.0),
-              /*   boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.5),
-                  spreadRadius: 2,
-                  blurRadius: 5,
-                  offset: Offset(0, 3), // changes position of shadow
-                ),
-              ],*/
             ),
             child: ListTile(
               title: Text(value),
@@ -145,9 +137,9 @@ class _ChatHistoryViewState extends State<ChatHistoryView> {
                   MaterialPageRoute(
                     builder: (context) => ChatWindow(
                       sessionId: key,
-                      isFirstTime: true,
+                      // isFirstTime: true,
                       isFromHistory: true,
-                      finishSession: (finishSession) {}, // Adjust accordingly
+                      // finishSession: (finishSession) {}, // Adjust accordingly
                     ),
                   ),
                 );

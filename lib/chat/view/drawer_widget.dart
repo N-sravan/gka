@@ -16,11 +16,11 @@ import 'notifications_view.dart';
 class DrawerWidget extends StatefulWidget {
   const DrawerWidget({
     Key? key,
-    required this.isFirstTime,
+    // required this.isFirstTime,
     required this.sessionId,
   }) : super(key: key);
 
-  final bool isFirstTime;
+  // final bool isFirstTime;
   final String sessionId;
 
   @override
@@ -38,6 +38,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
 
   @override
   void initState() {
+    AppState.instance.mode='dashboard';
     mode = AppState.instance.mode;
     if (mode.isNotEmpty) {
       if (mode == 'data_interaction_chat') {
@@ -193,7 +194,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                           MaterialPageRoute(
                             builder: (context) => ChatWindow(
                               isFromHistory: false,
-                              isFirstTime: widget.isFirstTime!,
+                              // isFirstTime: widget.isFirstTime!,
                               sessionId: widget.sessionId!,
                             ),
                           ),

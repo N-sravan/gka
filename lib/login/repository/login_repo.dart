@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/material.dart';
+import 'package:gka/login/model/session_details_response_model.dart';
 import 'package:gka/login/model/ap_login_response_model.dart';
 import 'package:gka/login/model/kerala_login_response_model.dart';
 import 'package:http/http.dart' as http;
@@ -11,82 +12,16 @@ import 'package:gka/utils/common_constants.dart' as constants;
 
 /// Abstract class for the login repository
 abstract class LoginRepository {
-  Future<LoginResult> authenticate(
+  Future<SessionDetails?> authenticationForFieldRishi(
       Map<String, String> params, BuildContext context);
-
-  Future<ApLoginResult> authenticationForAp(Map<String, String> params, BuildContext context);
-
-  Future<KeralaLoginResult> authenticationForKerala(Map<String, String> params, BuildContext context);
 
   Future fetchCsrfToken(BuildContext context);
 
   Future<int?> saveFcmToken(BuildContext context);
-
 }
 
 /// Concrete class implementation for the login repository
 class LoginRepositoryImpl extends LoginRepository {
-  @override
-
-  @override
-  Future<KeralaLoginResult> authenticationForKerala(
-      Map<String, String> params, BuildContext context) async {
-    Map<String, String> authHeaders = {
-      constants.headerContentType: constants.headerContentTypeFormUrl
-    };
-    String authUrl = 'https://keralakrishihub.vassarlabs.com/auth/realms/kkhrealm/protocol/openid-connect/token';
-    http.Response response = await http.post(
-      Uri.parse(authUrl),
-      headers: authHeaders,
-      body: params,
-    );
-    Map<String, dynamic> responseMap = jsonDecode(response.body);
-
-    KeralaLoginResult loginResult = KeralaLoginResult.fromJson(responseMap);
-    loginResult.statusCode = response.statusCode;
-    return loginResult;
-  }
-  Future<LoginResult> authenticate(
-      Map<String, String> params, BuildContext context) async {
-    Map<String, String> authHeaders = {
-      constants.headerContentType: constants.headerJson
-    };
-    String? userName = params[constants.userName];
-    String endPoint = '';
-    constants.projectId == constants.tnwrimsUUID ? endPoint = constants.loginEndpointForTN : endPoint = constants.loginEndpoint;
-    String authUrl = endPoint + userName!;
-    String requestBody = jsonEncode(params);
-
-    Uri url = Uri.parse(authUrl);
-
-    var response = await http.get(url, headers: authHeaders);
-
-    Map<String, dynamic> responseMap = jsonDecode(response.body);
-
-    LoginResult loginResult = LoginResult.fromJson(responseMap);
-    return loginResult;
-  }
-
-  @override
-  Future<ApLoginResult> authenticationForAp(
-      Map<String, String> params, BuildContext context) async {
-    Map<String, String> authHeaders = {
-      constants.headerContentType: constants.headerJson
-    };
-    String authUrl = 'https://apwrims.ap.gov.in/auth/login-user-details';
-    String requestBody = jsonEncode(params);
-
-    http.Response response = await http.post(
-      Uri.parse(authUrl),
-      headers: authHeaders,
-      body: requestBody,
-    );
-    Map<String, dynamic> responseMap = jsonDecode(response.body);
-
-    ApLoginResult apLoginResult = ApLoginResult.fromJson(responseMap);
-    return apLoginResult;
-  }
-
   @override
   Future<int?> saveFcmToken(BuildContext context) async {
     Map<String, dynamic> params = {
@@ -129,5 +64,27 @@ class LoginRepositoryImpl extends LoginRepository {
     Map<String, dynamic> responseMap = jsonDecode(response.body);
 
     return responseMap;
+  }
+
+  @override
+  Future<SessionDetails?> authenticationForFieldRishi(
+      Map<String, String> params, BuildContext context) async {
+    Map<String, String> authHeaders = {
+      constants.headerContentType: constants.headerJson
+    };
+
+    Object data = jsonEncode(params);
+    String authUrl =
+        'https://nawrims.vassarlabs.com/vassar_mind/auth_and_session/login';
+    http.Response response = await http.post(
+      Uri.parse(authUrl),
+      headers: authHeaders,
+      body: data,
+    );
+
+    Map<String, dynamic> responseMap = jsonDecode(response.body);
+
+    SessionDetails sessionDetails = SessionDetails.fromJson(responseMap['session_details']);
+    return sessionDetails;
   }
 }

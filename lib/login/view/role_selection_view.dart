@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
@@ -41,7 +40,7 @@ class _RoleSelectionWidgetState extends State<RoleSelectionWidget> {
                     child: Column(
                       children: [
                         Text(
-                          constants.appTitle,
+                          constants.fieldRishiString,
                           style: constants.green32W600,
                         ),
                         SvgPicture.asset(
@@ -89,7 +88,7 @@ class _RoleSelectionWidgetState extends State<RoleSelectionWidget> {
                               constants.splashButtonHeight),
                           shape: RoundedRectangleBorder(
                             borderRadius:
-                            BorderRadius.circular(constants.borderRadius),
+                                BorderRadius.circular(constants.borderRadius),
                           ),
                           backgroundColor: constants.splashButtonBg,
                         ),
@@ -139,9 +138,9 @@ class _RoleSelectionWidgetState extends State<RoleSelectionWidget> {
               decoration: BoxDecoration(
                   border: isSelected
                       ? Border.all(
-                      color: constants.selectedRoleBorderColor, width: 2)
+                          color: constants.selectedRoleBorderColor, width: 2)
                       : Border.all(
-                      color: constants.defaultRoleBorderColor, width: 2),
+                          color: constants.defaultRoleBorderColor, width: 2),
                   borderRadius: BorderRadius.circular(constants.borderRadius),
                   color: isSelected ? constants.roleSelectedColor : null),
               child: Padding(

@@ -25,6 +25,7 @@ const String preferenceUserMobileNo = 'userMobileNo';
 const String preferenceUserId = 'userId';
 const String preferenceUserData = 'userData';
 const String preferenceToken = 'token';
+const String preferenceSessionId= 'sessionId';
 const String preferenceFcmToken = 'fcmToken';
 const String preferencelocName = 'locName';
 const String preferencelocUUID = 'locUUID';
@@ -759,6 +760,7 @@ const String register = 'Register';
 const String loginAs = 'Login As';
 const String dontHaveAccount = 'Don\'t have an account?';
 const String appTitle = 'FieldRishi';
+const String fieldRishiString = 'fieldRISHI';
 const String getOtpString = 'Get OTP';
 const String verifyOtpString = 'Verify OTP';
 const String enterOtpString = 'Enter OTP';
@@ -815,6 +817,6 @@ enum NameSortRadioOptions { ascending, descending }
 
 enum CropNameVerifyRadioOptions { agree, disagree }
 
-// const String genAiBaseUrl = "https://genai.vassarlabs.com/aquamind/";
-const String genAiBaseUrl = "https://nawrims.vassarlabs.com/genai/";
+// const String genAiBaseUrl = "https://nawrims.vassarlabs.com/genai/";
+const String genAiBaseUrl = "https://nawrims.vassarlabs.com/vassar_mind/";
 // const String ngrok = "https://63ab-196-12-47-4.ngrok-free.app/";

@@ -83,13 +83,13 @@ class _CameraWidgetState extends State<CameraWidget> {
                       Navigator.pop(context, 1);
                     },
                     child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
                           Icons.camera_alt_outlined,
                           color: Colors.white,
                         ),
-                        Text('Click from Camera',
+                        Text('Camera',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 16,
@@ -111,13 +111,13 @@ class _CameraWidgetState extends State<CameraWidget> {
                         Navigator.pop(context, 2);
                       },
                       child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
                             Icons.photo,
                             color: Colors.white,
                           ),
-                          Text('Click from Gallery',
+                          Text('Gallery',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
@@ -142,13 +142,13 @@ class _CameraWidgetState extends State<CameraWidget> {
             children: [
               ListTile(
                   leading: const Icon(Icons.camera_alt_outlined),
-                  title: const Text("Click from Camera"),
+                  title: const Text("Camera"),
                   onTap: () {
                     Navigator.pop(context, 1);
                   }),
               ListTile(
                   leading: const Icon(Icons.photo),
-                  title: const Text("Select from Gallery"),
+                  title: const Text("Gallery"),
                   onTap: () {
                     Navigator.pop(context, 2);
                   })

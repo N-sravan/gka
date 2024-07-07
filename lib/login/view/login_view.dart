@@ -6,6 +6,7 @@ import 'package:gka/permissions/view/permissions_view.dart';
 import 'package:gka/utils/app_state.dart';
 import 'package:provider/provider.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
+import '../../chat_window.dart';
 import '../../utils/network_utils.dart';
 import '../model/login_api_response_model.dart' as response;
 import '../view_model/login_view_model.dart';
@@ -31,25 +32,9 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
     super.initState();
     viewModel = Provider.of<LoginViewModel>(context, listen: false);
     switch (constants.projectId) {
-      case constants.odishaUUID:
-        _usernameController.text = "sudhansu_samal";
-        _passwordController.text = "agriwise@123";
-        break;
-      case constants.apwrimsUUID:
-        _usernameController.text = "sklm_burja";
-        _passwordController.text = "test123";
-        break;
-      case constants.kaleswaramUUID:
-        _usernameController.text = "Sandeep";
-        _passwordController.text = "test123";
-        break;
-      case constants.tnwrimsUUID:
-        _usernameController.text = "Pradeep";
-        _passwordController.text = "test123";
-        break;
       case constants.keralaUUID:
-        _usernameController.text = "394008";
-        _passwordController.text = "agriwise@123";
+        _usernameController.text = "genaiuser";
+        _passwordController.text = "genai123";
         break;
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -260,74 +245,47 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                             _passwordController.text;
                                         if (userId.isNotEmpty &&
                                             password.isNotEmpty) {
-                                          // String? fcmToken = await FirebaseMessaging.instance.getToken();
-                                          bool? content;
-                                          if (constants.projectId ==
-                                              constants.apwrimsUUID) {
-                                            content = await viewModel
-                                                .authenticateForAp(
-                                                    userId, password, context);
-                                          } else if (constants.projectId ==
-                                              constants.keralaUUID) {
-                                            bool result = await viewModel
-                                                .authenticateForKerala(
-                                                    userId, password, context);
-                                            if (result) {
-                                              Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          const HomeScreenWidget()));
-                                              print("authenticaion success");
-                                            }
-                                          } else {
-                                            content =
-                                                await viewModel.authenticate(
-                                                    userId, password, context);
-                                          }
-                                          if (content != null && content) {
+                                          bool? result = await viewModel
+                                              .authenticateForFieldRishi(
+                                                  userId, password, context);
+                                          if (result) {
                                             Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        const HomeScreenWidget()));
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    ChatWindow(
+                                                  isFromHistory: false,
+                                                  sessionId: AppState
+                                                      .instance.sessionId,
+                                                ),
+                                              ),
+                                            );
+                                            print("authenticaion success");
                                           }
-                                          /*   if (fcmToken != null &&
-                                              fcmToken.isNotEmpty &&
-                                              content) {
-                                            AppState.instance.fcmToken =
-                                                fcmToken;
-
-                                            bool? result = await viewModel
-                                                .sendFcmToken(context);
-                                            if (result != null &&
-                                                result == true) {
-                                              Navigator.pushNamed(
-                                                  context, '/home');
-                                              Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          const HomeScreenWidget()));
-                                            }
-                                          }*/
                                         }
                                       }
                                     },
-                                    style: constants.projectId == constants.keralaUUID
+                                    style: constants.projectId ==
+                                            constants.keralaUUID
                                         ? ElevatedButton.styleFrom(
-                                      fixedSize: Size(
-                                        MediaQuery.of(context).size.height,
-                                        constants.splashButtonHeight,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(constants.borderRadius),
-                                      ),
-                                      backgroundColor: constants.splashButtonBg,
-                                    )
+                                            fixedSize: Size(
+                                              MediaQuery.of(context)
+                                                  .size
+                                                  .height,
+                                              constants.splashButtonHeight,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                      constants.borderRadius),
+                                            ),
+                                            backgroundColor:
+                                                constants.splashButtonBg,
+                                          )
                                         : ButtonStyle(
-                                      textStyle: MaterialStateProperty.all(constants.darkblue20W600)
-                                      ),
+                                            textStyle:
+                                                MaterialStateProperty.all(
+                                                    constants.darkblue20W600)),
                                     child: Text(
                                       constants.loginString,
                                       style: constants.white16W500,

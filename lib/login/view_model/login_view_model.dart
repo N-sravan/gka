@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:gka/login/model/session_details_response_model.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 import 'package:jwt_decoder/jwt_decoder.dart';
 import '../../services/api_provider.dart';
@@ -33,326 +34,6 @@ class LoginViewModel extends LoadingViewModel {
   final otpKey = GlobalKey();
   final formKey = GlobalKey<FormState>();
   String selectedRole = constants.farmer;
-
-  Future<bool> authenticate(
-      String userName, String password, BuildContext context) async {
-    /// Checking for active internet connection
-    if (await networkUtils.hasActiveInternet()) {
-      late login.LoginResult loginResult;
-      String? locUUID;
-      String? locName;
-
-      /// Generating token and sending to backend
-      String? fcmToken = await FirebaseMessaging.instance.getToken();
-      print("fcmToken::$fcmToken");
-
-      isLoading = true;
-      try {
-        /// Creating login request parameters
-        Map<String, String> params = {
-          constants.userName: userName,
-        };
-
-        /// Calling the login API
-        loginResult = await repo.authenticate(params, context);
-        if (loginResult.result && loginResult.statusCode == 200) {
-          login.UserResponse userContent = loginResult.response;
-          String encodedContent = json.encode(userContent.toJson());
-          if (userContent != null && userContent.userDetailsJson != null) {
-            switch (userContent.userDetailsJson.data.locType) {
-              case 'state':
-                locUUID = userContent
-                    .userDetailsJson.data.location!.state![0].stateUUID;
-                locName = userContent
-                    .userDetailsJson.data.location!.state![0].stateName;
-                break;
-              case 'district':
-                locUUID = userContent.userDetailsJson.data.location!.state![0]
-                    .district![0].districtUUID;
-                locName = userContent.userDetailsJson.data.location!.state![0]
-                    .district![0].districtName;
-                break;
-              case 'mandal':
-                locUUID = userContent.userDetailsJson.data.location!.state![0]
-                    .district![0].mandal![0].mndalUUID;
-                locName = userContent.userDetailsJson.data.location!.state![0]
-                    .district![0].mandal![0].mandalName;
-                break;
-              default:
-                break;
-            }
-            String locType = userContent.userDetailsJson.data.locType;
-            String userId = userContent.userId;
-            String userName = userContent.username;
-            String role = '';
-            setAppStateValues(
-                encodedContent, locUUID, locName, locType, userId, userName,role);
-
-            notifyListeners();
-          }
-          isLoading = false;
-          debugPrint("User Details fetched successfully");
-          return true;
-        }
-      } catch (e) {
-        isLoading = false;
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(constants.genericErrorMsg),
-        ));
-        Util.instance
-            .logMessage('Login Model', 'Error while authenticating $e');
-      }
-    } else {
-      isLoading = false;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text(constants.noNetworkAvailability),
-      ));
-    }
-    return false;
-  }
-
-  Future<bool> authenticateForKerala(
-      String userName, String password, BuildContext context) async {
-    /// Checking for active internet connection
-    if (await networkUtils.hasActiveInternet()) {
-      // if (!await restrictLoginAttempts()) {
-      late KeralaLoginResult loginResult;
-      isLoading = true;
-      try {
-        /// Creating login request parameters
-        Map<String, String> params = {
-          constants.userName: userName,
-          constants.password: password,
-          constants.clientId: constants.agriwiseClient,
-          constants.grantType: constants.password,
-          'scope': 'openid'
-        };
-
-        /// Calling the login API
-        loginResult = await repo.authenticationForKerala(params, context);
-
-        if (loginResult.statusCode == 200 && loginResult.accessToken != null) {
-          /// Login is successful
-          Map<String, dynamic> decodedToken =
-              JwtDecoder.decode(loginResult.accessToken!);
-          String userId = decodedToken["sub"];
-          await _setLoginSharedPreferencesForKerala(userName, userId,
-              loginResult.accessToken!, loginResult.refreshToken!);
-          Map csrfResponse = await repo.fetchCsrfToken(context);
-          if (csrfResponse["statusCode"] == 200) {
-            await _setCSRFSharedPreferences(
-                csrfResponse["response"]["tokens"]["csrf"]);
-            DepartmentUserPermissionsResponse userPermissionsResponse;
-            userPermissionsResponse = await ApiProvider.instance
-                .fetchUserPermissionsForDepartmentLogin(context);
-            if (userPermissionsResponse.statusCode == 200) {
-              dept.Meta? userContent = userPermissionsResponse.response?.meta;
-              String encodedContent = json.encode(userContent?.toJson());
-              if (userContent != null) {
-                if (userContent.userDetails != null &&
-                    userContent.userDetails!.data!.location != null) {
-                  String locUUID = '';
-                  String locName = '';
-                  String? locType = userContent.userDetails!.data!.locType;
-                  switch (userContent.userDetails!.data!.locType) {
-                    case 'country':
-                      locUUID = userContent.userDetails!.data!.location!
-                          .country![0].countryUUID!;
-                      locName = userContent.userDetails!.data!.location!
-                          .country![0].countryName!;
-                      break;
-                    case 'state':
-                      locUUID = userContent.userDetails!.data!.location!
-                          .country![0].state![0].stateUUID!;
-                      locName = userContent.userDetails!.data!.location!
-                          .country![0].state![0].stateName!;
-                      break;
-                    case 'district':
-                      locUUID = userContent.userDetails!.data!.location!
-                          .country![0].state![0].district![0].districtUUID!;
-                      locName = userContent.userDetails!.data!.location!
-                          .country![0].state![0].district![0].districtName!;
-                      break;
-                    case 'mandal':
-                      locUUID = userContent
-                          .userDetails!
-                          .data!
-                          .location!
-                          .country![0]
-                          .state![0]
-                          .district![0]
-                          .block![0]
-                          .blockUUID!;
-                      locName = userContent
-                          .userDetails!
-                          .data!
-                          .location!
-                          .country![0]
-                          .state![0]
-                          .district![0]
-                          .block![0]
-                          .blockName!;
-                      break;
-                    default:
-                      break;
-                  }
-                  setAppStateValues(encodedContent, locUUID, locName, locType,
-                      userId, userName,"officer");
-                }
-              }
-              isLoading = false;
-              notifyListeners();
-              return true;
-            } else {
-              isLoading = false;
-              notifyListeners();
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(constants.genericErrorMsg),
-              ));
-            }
-          } else {
-            isLoading = false;
-            notifyListeners();
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(constants.genericErrorMsg),
-            ));
-          }
-        } else {
-          /// Login is unsuccessful
-          isLoading = false;
-          notifyListeners();
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(loginResult.errorDescription!),
-          ));
-        }
-      } catch (e) {
-        isLoading = false;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(constants.genericErrorMsg),
-        ));
-        Util.instance
-            .logMessage('Login Model', 'Error while authenticating $e');
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(constants.noNetworkAvailability),
-      ));
-    }
-    return false;
-  }
-
-  Future<bool?> authenticateForAp(
-      String userName, String password, BuildContext context) async {
-    /// Checking for active internet connection
-    if (await networkUtils.hasActiveInternet()) {
-      late apLogin.ApLoginResult loginResult;
-      String? locUUID;
-      String? locName;
-
-      /// Generating token and sending to backend
-      String? fcmToken = await FirebaseMessaging.instance.getToken();
-      print("fcmToken::$fcmToken");
-
-      isLoading = true;
-      try {
-        /// Creating login request parameters
-        Map<String, String> params = {
-          constants.userName: userName,
-        };
-
-        /// Calling the login API
-        loginResult = await repo.authenticationForAp(params, context);
-        if (loginResult.result != null) {
-          if (loginResult.result?.status != null &&
-              loginResult.result?.status == 200) {
-            apLogin.Content? userContent = loginResult.result!.content;
-            String encodedContent = json.encode(userContent?.toJson());
-            String? userId = userContent?.username;
-/*            login.Content? userContent = login.Content(
-              username: "APWRIMS",
-              userId: '44',
-              userDetailsJson: login.UserDetailsJson(
-                data: login.Data(
-                  locType: 'mandal',
-                  location: login.Location(state: [
-                    login.State(
-                        stateName: 'Andhra Pradesh',
-                        stateUUID: "6f86292b-dd9a-4987-bb8f-c3940263b349",
-                        district: [
-                          login.District(
-                              districtName: 'Srikakulam',
-                              districtUUID:
-                              '00bb53a0-a27e-46c4-9016-fe9545766cb9',
-                              mandal: [
-                                login.Mandal(
-                                    mandalName: 'BURJA',
-                                    mndalUUID:
-                                    '1437f9bf-207a-4d7e-bd9d-0af79b6ef8db')
-                              ]),
-                        ]),
-                  ]),
-                ),
-              ),
-            );*/
-
-            if (userContent != null &&
-                userContent.userDetailsJson != null &&
-                userContent.userDetailsJson!.data != null) {
-              String? locType = userContent.userDetailsJson!.data!.locType;
-              switch (userContent.userDetailsJson!.data!.locType) {
-                case 'mandal':
-                  locUUID = userContent.userDetailsJson!.data!.location!
-                      .state![0].district![0].mandal![0].mndalUUID;
-                  locName = userContent.userDetailsJson!.data!.location!
-                      .state![0].district![0].mandal![0].mandalName;
-                  break;
-                case 'district':
-                  locUUID = userContent.userDetailsJson!.data!.location!
-                      .state![0].district![0].districtUUID;
-                  locName = userContent.userDetailsJson!.data!.location!
-                      .state![0].district![0].districtName;
-                  break;
-                case 'state':
-                  locUUID = userContent
-                      .userDetailsJson!.data!.location!.state![0].stateUUID;
-                  locName = userContent
-                      .userDetailsJson!.data!.location!.state![0].stateName;
-                  break;
-                default:
-                  break;
-              }
-              setAppStateValues(
-                  encodedContent, locUUID, locName, locType, userId, userName,"");
-              notifyListeners();
-            }
-            isLoading = false;
-            debugPrint("User Details fetched successfully");
-            return true;
-          }
-        } else {
-          /// Login is unsuccessful
-          isLoading = false;
-          notifyListeners();
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Something went wrong,Please try later'),
-          ));
-        }
-      } catch (e) {
-        isLoading = false;
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(constants.genericErrorMsg),
-        ));
-        Util.instance
-            .logMessage('Login Model', 'Error while authenticating $e');
-      }
-    } else {
-      isLoading = false;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text(constants.noNetworkAvailability),
-      ));
-    }
-    return false;
-  }
 
   /// Restricting user after 10 unsuccessful attempts
   /// If user reaches 10 attempts then they have to wait for 15 minutes
@@ -386,10 +67,8 @@ class LoginViewModel extends LoadingViewModel {
     return false;
   }
 
-  /// Saving user logged in status, userId,token and refresh token
-  /// Initialize userId and username to app state
-  _setLoginSharedPreferences(String userName, String userId, String locName,
-      String locType, String userData, String locUUID, String role) async {
+  _setLoginSharedPreferences(
+      String userName, String userId, String token, String sessionId) async {
     await SharedPreferenceUtil.instance.setPreferenceValue(
         constants.preferenceIsLoggedIn, true, constants.preferenceTypeBool);
     await SecuredStorageUtil.instance
@@ -397,35 +76,13 @@ class LoginViewModel extends LoadingViewModel {
     await SecuredStorageUtil.instance
         .writeSecureData(constants.preferenceUserId, userId);
     await SecuredStorageUtil.instance
-        .writeSecureData(constants.preferencelocName, locName);
-    await SecuredStorageUtil.instance
-        .writeSecureData(constants.preferencelocUUID, locUUID);
-    await SecuredStorageUtil.instance
-        .writeSecureData(constants.preferencelocType, locType);
-    // await SecuredStorageUtil.instance.writeSecureData(constants.preferenceFcmToken, fcmToken);
-    await SecuredStorageUtil.instance.writeSecureData(
-        constants.preferenceLastLoginTime,
-        DateTime.now().millisecondsSinceEpoch.toString());
-    await SecuredStorageUtil.instance.writeSecureData(constants.preferenceUserData, userData);
-    await SecuredStorageUtil.instance.writeSecureData(constants.preferenceUserRole, role);
-  }
-
-  _setLoginSharedPreferencesForKerala(
-      String userName, String userId, String token, String refreshToken) async {
-    await SharedPreferenceUtil.instance.setPreferenceValue(
-        constants.preferenceIsLoggedIn, true, constants.preferenceTypeBool);
-    await SecuredStorageUtil.instance
-        .writeSecureData(constants.preferenceUserName, userName);
-    await SecuredStorageUtil.instance
-        .writeSecureData(constants.preferenceUserId, userId);
+        .writeSecureData(constants.preferenceSessionId, sessionId);
     await SecuredStorageUtil.instance
         .writeSecureData(constants.preferenceToken, token);
     await SecuredStorageUtil.instance.writeSecureData(
         constants.preferenceLastLoginTime,
         DateTime.now().millisecondsSinceEpoch.toString());
-    await SecuredStorageUtil.instance
-        .writeSecureData(constants.preferenceRefreshToken, refreshToken);
-    AppState.instance.refreshToken = refreshToken;
+    AppState.instance.sessionId = sessionId;
     AppState.instance.userName = userName;
     AppState.instance.userId = userId;
     AppState.instance.token = token;
@@ -512,35 +169,6 @@ class LoginViewModel extends LoadingViewModel {
     AppState.instance.userAssignedRole = roleName;
   }
 
-  Future<void> setAppStateValues(
-    String encodedContent,
-    String? locUUID,
-    String? locName,
-    String? locType,
-    String? userId,
-    String? userName, String role,
-  ) async {
-    AppState.instance.userData = encodedContent;
-    // AppState.instance.fcmToken = fcmToken!;
-    AppState.instance.locType = locType!;
-    AppState.instance.locUUID = locUUID!;
-    AppState.instance.locName = locName!;
-    AppState.instance.userId = userId!;
-    AppState.instance.userName = userName!;
-    AppState.instance.role = role;
-
-    await _setLoginSharedPreferences(
-      AppState.instance.userName,
-      AppState.instance.userId,
-      AppState.instance.locName,
-      AppState.instance.locType,
-      AppState.instance.userData,
-      AppState.instance.locUUID,
-      AppState.instance.role,
-      // AppState.instance.fcmToken
-    );
-  }
-
   roleSelection(String role, BuildContext context) {
     selectedRole = role;
     notifyListeners();
@@ -586,7 +214,6 @@ class LoginViewModel extends LoadingViewModel {
     }
   }
 
-
   void updatedOTPValue(String value) {
     otpEntered = value;
     notifyListeners();
@@ -601,5 +228,53 @@ class LoginViewModel extends LoadingViewModel {
       return true; // Valid mobile number
     }
     return false; // Invalid mobile number
+  }
+
+  Future<bool> authenticateForFieldRishi(
+      String userName, String password, BuildContext context) async {
+    /// Checking for active internet connection
+    if (await networkUtils.hasActiveInternet()) {
+      // if (!await restrictLoginAttempts()) {
+      late SessionDetails? sessionDetails;
+      isLoading = true;
+      try {
+        Map<String, String> params = {
+          constants.userName: userName,
+          constants.password: password,
+        };
+
+        sessionDetails =
+            await repo.authenticationForFieldRishi(params, context);
+
+        if (sessionDetails != null &&
+            sessionDetails.token!.isNotEmpty &&
+            sessionDetails.sessionId!.isNotEmpty) {
+          await _setLoginSharedPreferences(userName, sessionDetails.userId,
+              sessionDetails.token!, sessionDetails.sessionId!);
+          isLoading = false;
+          print("wewewew sessionId::${sessionDetails.sessionId}");
+          return true;
+        } else {
+          /// Login is unsuccessful
+          isLoading = false;
+          notifyListeners();
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text(constants.genericErrorMsg),
+          ));
+        }
+      } catch (e) {
+        isLoading = false;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(constants.genericErrorMsg),
+        ));
+        Util.instance
+            .logMessage('Login Model', 'Error while authenticating $e');
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(constants.noNetworkAvailability),
+      ));
+    }
+    return false;
   }
 }

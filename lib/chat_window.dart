@@ -39,16 +39,12 @@ Timer? periodicTimer;
 class ChatWindow extends StatefulWidget {
   const ChatWindow({
     Key? key,
-    required this.isFirstTime,
-    this.finishSession,
-    required this.sessionId,
     this.isFromHistory,
+    this.sessionId,
   }) : super(key: key);
 
-  final bool isFirstTime;
-  final Function(bool finishSession)? finishSession;
-  final String sessionId;
   final bool? isFromHistory;
+  final String? sessionId;
 
   @override
   State<ChatWindow> createState() => _ChatWindowState();
@@ -105,20 +101,9 @@ class _ChatWindowState extends State<ChatWindow>
   void initState() {
     super.initState();
     switch (constants.projectId) {
-      case constants.odishaUUID:
-        title = 'GoWater Bot';
-        break;
-      case constants.apwrimsUUID:
-        title = 'APWRIMS Bot';
-        break;
-      case constants.kaleswaramUUID:
-        title = 'Kaleswaram Bot';
-        break;
-      case constants.tnwrimsUUID:
-        title = 'TNWRIMS Bot';
-        break;
       case constants.keralaUUID:
-        title = 'AgriBot';
+        title = constants.fieldRishiString;
+        AppState.instance.language = 'English';
         break;
     }
     switch (AppState.instance.language) {
@@ -299,7 +284,7 @@ class _ChatWindowState extends State<ChatWindow>
     if (result.recognizedWords.isNotEmpty &&
         isVoiceInitiated &&
         result.recognizedWords.toLowerCase() != 'hello') {
-      await ref.push().set({"isUser": true, "message": result.recognizedWords});
+      await ref.push().set({"is_user": true, "message": result.recognizedWords});
     }
     bool active = _speechToText.isListening;
     tts.stop();
@@ -322,8 +307,8 @@ class _ChatWindowState extends State<ChatWindow>
       },
       child: Scaffold(
         drawer: DrawerWidget(
-          isFirstTime: widget.isFirstTime,
-          sessionId: widget.sessionId,
+          // isFirstTime: widget.isFirstTime,
+          sessionId: widget.sessionId!,
         ),
         appBar: AppBar(
           actions: [
@@ -394,7 +379,6 @@ class _ChatWindowState extends State<ChatWindow>
                                         .snapshot
                                         .value ??
                                     {};
-                                print("DATAFJLDLFHGLD $data");
                                 data = data as Map<dynamic, dynamic>;
                                 Map<String, String> dataTsMapping = {};
                                 dataTimer?.cancel();
@@ -403,65 +387,68 @@ class _ChatWindowState extends State<ChatWindow>
                                     .entries
                                     .toList()
                                   ..sort((e1, e2) => e1.key.compareTo(e2.key)));
+
+                                List<String> thoughtsList = [];
+
                                 sortedByKeyMap.forEach((key, value) async {
                                   if (key != "cart") {
                                     final datalast =
                                         Map<String, dynamic>.from(value);
-                                    print(
-                                        "SORTED MESSAGES ${datalast['message']}");
-                                    bool errorLog = false;
-                                    if (datalast['isUser'] == false &&
-                                        datalast['error_log'] != null) {
-                                      errorLog = true;
-                                    }
-                                    if (datalast['isUser']) {
-                                      dataTsMapping.clear();
+                                    if (datalast['is_user']) {
+                                      thoughtsList.clear();
+                                      messageList.add(ChatBubble(
+                                        text: datalast['message'] ?? '',
+                                        isUser: datalast['is_user'],
+                                        imageUrl: datalast['image_url'] ?? '',
+                                        tableColumnData:
+                                            datalast['sql_df_columns'],
+                                        tableRowData:
+                                            datalast['sql_df_values'] != null
+                                                ? jsonDecode(
+                                                    datalast['sql_df_values'])
+                                                : null,
+                                        logMessage: datalast['log'] ?? '',
+                                        hasErrorLog: false,
+                                        timestampMapping: dataTsMapping,
+                                        chainOfThoughts: [],
+                                        token: datalast['token'] ?? '',
+                                        expandChainOfThought: false,
+                                      ));
                                     } else {
-                                      if (datalast['sql_query'] != null &&
-                                          !datalast['isUser']) {
-                                        dataTsMapping['sql_ts'] = key;
+                                      if (datalast['chain_of_thought'] !=
+                                          null) {
+                                        thoughtsList.add(datalast['chain_of_thought']);
                                       }
-                                      if (datalast['image_url'] != null &&
-                                          !datalast['isUser']) {
-                                        dataTsMapping['image_ts'] = key;
+                                      if (datalast['is_valid_token'] != null &&
+                                          datalast['is_limit_exceeded'] !=
+                                              null) {
+                                        if (!datalast['is_valid_token'] ||
+                                            datalast['is_limit_exceeded']) {
+                                          Navigator.pop(context);
+                                          Fluttertoast.showToast(
+                                              msg: "Session Expired");
+                                        }
                                       }
-                                      if (datalast['message'] != null &&
-                                          !datalast['isUser']) {
-                                        dataTsMapping['summary_ts'] = key;
-                                      }
-                                      if (datalast['sql_df_columns'] != null &&
-                                          datalast['sql_df_values'] != null &&
-                                          !datalast['isUser']) {
-                                        dataTsMapping['table_ts'] = key;
-                                      }
-                                      if (datalast['error_log'] != null &&
-                                          !datalast['isUser']) {
-                                        dataTsMapping['error_ts'] = key;
-                                      }
+
+                                      messageList.add(ChatBubble(
+                                        text: datalast['message'] ?? '',
+                                        isUser: datalast['is_user'],
+                                        imageUrl: datalast['image_url'] ?? '',
+                                        tableColumnData:
+                                            datalast['sql_df_columns'],
+                                        tableRowData:
+                                            datalast['sql_df_values'] != null
+                                                ? jsonDecode(
+                                                    datalast['sql_df_values'])
+                                                : null,
+                                        logMessage: datalast['log'] ?? '',
+                                        hasErrorLog: false,
+                                        timestampMapping: dataTsMapping,
+                                        chainOfThoughts: thoughtsList,
+                                        token: datalast['token'] ?? '',
+                                        expandChainOfThought: false,
+                                      ));
                                     }
-                                    print("sessionId:${widget.sessionId}");
-                                    print("log:${datalast['sql_query']}");
-                                    print("mappping:$dataTsMapping");
-                                    messageList.add(ChatBubble(
-                                      text: datalast['message'] ??
-                                          datalast['sql_query'] ??
-                                          '',
-                                      isUser: datalast['isUser'],
-                                      imageUrl: datalast['image_url'] ?? '',
-                                      tableColumnData:
-                                          datalast['sql_df_columns'],
-                                      tableRowData:
-                                          datalast['sql_df_values'] != null
-                                              ? jsonDecode(
-                                                  datalast['sql_df_values'])
-                                              : null,
-                                      logMessage: AppState.instance.mode ==
-                                              'hybrid_database'
-                                          ? datalast['sql_query'] ?? ''
-                                          : datalast['log'] ?? '',
-                                      hasErrorLog: errorLog,
-                                      timestampMapping: dataTsMapping,
-                                    ));
                                   }
                                 });
 
@@ -478,6 +465,9 @@ class _ChatWindowState extends State<ChatWindow>
                                   if (messageList.isNotEmpty &&
                                       !messageList[messageList.length - 1]
                                           .isUser &&
+                                      messageList[messageList.length - 1]
+                                          .text
+                                          .isNotEmpty &&
                                       messageList.length > prevChatLength) {
                                     WidgetsBinding.instance
                                         .addPostFrameCallback((_) {
@@ -509,7 +499,6 @@ class _ChatWindowState extends State<ChatWindow>
 
                                   dataTimer = Timer(
                                       const Duration(seconds: 100), () async {
-                                    print("timerCounter::$timerCounter");
                                     if (showLoader.value) {
                                       DatabaseReference ref =
                                           FirebaseDatabase.instance.ref(
@@ -520,10 +509,8 @@ class _ChatWindowState extends State<ChatWindow>
                                         String timeStamp = DateTime.now()
                                             .millisecondsSinceEpoch
                                             .toString();
-                                        print(
-                                            "dataNotFoundMsg::$dataNotFoundMsg");
                                         await ref.child(timeStamp).set({
-                                          "isUser": false,
+                                          "is_user": false,
                                           "message": "Data Not Found!",
                                         });
                                       });
@@ -578,36 +565,6 @@ class _ChatWindowState extends State<ChatWindow>
                           child: bottomBar(),
                         )
                       : const SizedBox(),
-                  /* _toggleValue
-                    ? Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 30.0),
-                          child: Align(
-                            alignment: Alignment.bottomCenter,
-                            child: ValueListenableBuilder(
-                              valueListenable: listeningActive,
-                              builder: (context, value, _) {
-                                return AvatarGlow(
-                                  animate: value,
-                                  glowColor: Colors.purple,
-                                  child: FloatingActionButton(
-                                    onPressed:
-                                        // If not yet listening for speech start, otherwise stop
-                                        !value ? _startListening : _stopListening,
-                                    tooltip: 'Listen',
-                                    child:
-                                        Icon(!value ? Icons.mic_off : Icons.mic),
-                                  ),
-                                );
-                              },
-                            ), // your widget would go here
-                          ),
-                        ))
-                    : const Padding(
-                        padding: EdgeInsets.all(20),
-                        child: SizedBox(),
-                      )*/
                 ],
               ),
             ),
@@ -615,7 +572,7 @@ class _ChatWindowState extends State<ChatWindow>
               child: IgnorePointer(
                 child: Center(
                   child: Text(
-                    'FieldRishi',
+                    constants.fieldRishiString,
                     style: TextStyle(
                       color: Colors.grey.withOpacity(0.2),
                       // Adjust opacity as needed
@@ -713,8 +670,8 @@ class _ChatWindowState extends State<ChatWindow>
                     child: Padding(
                       padding: const EdgeInsets.only(top: 4.0, bottom: 2),
                       child: Container(
-                        width: 50,
-                        height: 50,
+                        width: 40,
+                        height: 40,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(8),
                           image: DecorationImage(
@@ -849,18 +806,20 @@ class _ChatWindowState extends State<ChatWindow>
     String formattedDate = DateFormat('kk:mm:ss \n EEE d MMM').format(now);
     print("wewewew DateTime before push:: $formattedDate");
     await ref.child(timeStamp).set({
-      "isUser": true,
+      "is_user": true,
       "message": text,
-      "image_url": imageUrl ?? '',
-      "language": language,
+      "mediaUrl": imageUrl ?? '',
+      "language": 'english',
       "model_uuid": AppState.instance.modelUUID,
-      "mode": AppState.instance.mode
+      "mode": '',
+      "token": AppState.instance.token,
+      "sm_enabled": true,
     });
 
     DateTime nowTime = DateTime.now();
     String formattedDateTime =
         DateFormat('kk:mm:ss \n EEE d MMM').format(nowTime);
-    print("wewewew DateTime after push:: $formattedDateTime");
+    // print("wewewew DateTime after push:: $formattedDateTime");
 
     chatController.clear();
     capturedPhoto = null;
@@ -1115,13 +1074,13 @@ Future<void> startListeningToYes(String sessionId, String word) async {
           print("wewewewewew 111111-yes::${result.recognizedWords}");
           await speechToText.stop();
           await ref.push().set({
-            "isUser": true,
+            "is_user": true,
             "event_name": 'CONTINUOUS_LISTEN_MODE',
             "trigger_word": '${AppState.instance.triggeredWord}'
           });
           print("111111-pushed");
           /* await ref.push().set({
-            "isUser": false,
+            "is_user": false,
             "event_name": 'CONTINUOUS_LISTEN_MODE',
             "changelog": 'No Change in $AppState.instance.triggeredWord Data'
           });*/
@@ -1134,7 +1093,7 @@ Future<void> startListeningToYes(String sessionId, String word) async {
               if (snapshot.value != null) {
                 dynamic values = snapshot.value;
                 values.forEach((key, value) async {
-                  if (!value['isUser']) {
+                  if (!value['is_user']) {
                     String responseMessage = value['changelog'] ?? '';
                     AppState.instance.triggeredWord = "";
                     await tts.speak(responseMessage);

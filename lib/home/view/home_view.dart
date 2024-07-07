@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/home/view_model/home_view_model.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import '../../chat_window.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 import '../../login/model/login_api_response_model.dart' as response;
@@ -54,10 +52,10 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
         viewModel.langList.add('Tamil');
         break;
       case constants.keralaUUID:
-        title = 'AgriBot';
+        title = constants.fieldRishiString;
         viewModel.langList.clear();
         viewModel.langList.add('English');
-        viewModel.langList.add('Hindi');
+        // viewModel.langList.add('Hindi');
         break;
     }
     /* WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -448,12 +446,6 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                               MaterialPageRoute(
                                 builder: (context) => ChatWindow(
                                   isFromHistory: false,
-                                  isFirstTime: viewModel.isFirstTime,
-                                  finishSession: (bool finishSession) {
-                                    if (finishSession) {
-                                      viewModel.updateFirstTimeValue();
-                                    }
-                                  },
                                   sessionId: viewModel.sessionId!,
                                 ),
                               ),

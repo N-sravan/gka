@@ -1,23 +1,27 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/utils/app_state.dart';
 import 'package:intl/intl.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 
 class ChatBubble extends StatefulWidget {
-  const ChatBubble(
-      {Key? key,
-      required this.text,
-      required this.isUser,
-      required this.logMessage,
-      this.imageUrl,
-      this.tableColumnData,
-      this.tableRowData,
-      this.errorLog,
-      required this.hasErrorLog,
-      this.timestampMapping,
-      this.sessionId})
-      : super(key: key);
+  ChatBubble({
+    Key? key,
+    required this.text,
+    required this.isUser,
+    required this.logMessage,
+    this.imageUrl,
+    this.tableColumnData,
+    this.tableRowData,
+    this.errorLog,
+    required this.hasErrorLog,
+    this.timestampMapping,
+    this.sessionId,
+    this.chainOfThoughts,
+    this.token,
+    this.expandChainOfThought,
+  }) : super(key: key);
 
   final String text;
   final bool isUser;
@@ -30,14 +34,24 @@ class ChatBubble extends StatefulWidget {
   final Map<String, String>? timestampMapping;
   final String? sessionId;
 
+  final List<String>? chainOfThoughts;
+
+  // final String? chainOfThoughts;
+  final String? token;
+  final bool? expandChainOfThought;
+
   @override
   State<ChatBubble> createState() => _ChatBubbleState();
 }
 
 class _ChatBubbleState extends State<ChatBubble> {
+  bool isExpanded = false;
+  ValueNotifier<bool> show = ValueNotifier<bool>(false);
+
   @override
   void initState() {
     super.initState();
+    // isExpanded = widget.expandChainOfThought ?? false;
   }
 
   @override
@@ -53,81 +67,177 @@ class _ChatBubbleState extends State<ChatBubble> {
             widget.tableRowData != null &&
             widget.tableRowData!.isNotEmpty) ||
         widget.text.isNotEmpty);
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        widget.isUser ? 64.0 : 16.0,
-        4,
-        widget.isUser ? 16.0 : 2.0,
-        4,
-      ),
-      child: Align(
-        alignment: widget.isUser ? Alignment.centerRight : Alignment.centerLeft,
-        child: Row(
-          mainAxisAlignment:
-              widget.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (!widget.isUser &&
-                (widget.hasErrorLog != null && !widget.hasErrorLog))
-              const Padding(
-                padding: EdgeInsets.only(right: 8.0),
-                child: SizedBox(
-                  width: 32,
-                  height: 32,
-                  child: CircleAvatar(
-                      backgroundImage: AssetImage('assets/images/vani.png')),
-                ),
-              ),
-            if (hasContent)
-              Flexible(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: !widget.isUser ? Colors.white : Colors.green[400],
-                    borderRadius: widget.isUser
-                        ? const BorderRadius.only(
-                            topLeft: Radius.circular(16),
-                            bottomLeft: Radius.circular(16),
-                            bottomRight: Radius.circular(16),
-                          )
-                        : const BorderRadius.only(
-                            topRight: Radius.circular(16),
-                            bottomLeft: Radius.circular(16),
-                            bottomRight: Radius.circular(16),
+
+    bool hasChainOfThoughts =
+        widget.chainOfThoughts != null && widget.chainOfThoughts!.isNotEmpty;
+
+    return (hasContent || hasChainOfThoughts)
+        ? Padding(
+            padding: EdgeInsets.fromLTRB(
+              widget.isUser ? 64.0 : 16.0,
+              4,
+              widget.isUser ? 16.0 : 2.0,
+              4,
+            ),
+            child: Align(
+              alignment:
+                  widget.isUser ? Alignment.centerRight : Alignment.centerLeft,
+              child: Column(
+                children: [
+                  ValueListenableBuilder(
+                    builder: (context, value, _) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: value ? chainOfThoughts() : [],
+                      );
+                    },
+                    valueListenable: show,
+                  ),
+                  Row(
+                    mainAxisAlignment: widget.isUser
+                        ? MainAxisAlignment.end
+                        : MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (!widget.isUser && hasContent)
+                        SizedBox(
+                          height: 100,
+                          child: Column(
+                            children: [
+                              ValueListenableBuilder(
+                                builder: (context, value, _) {
+                                  return IconButton(
+                                      onPressed: () {
+                                        show.value = !show.value;
+                                        /*setState(() {
+                        isExpanded = !isExpanded;
+                        print("isExpanded:::${isExpanded}");
+                        print("chainOfThougths:::${widget.chainOfThoughts}");
+                      });*/
+                                      },
+                                      icon: value
+                                          ? const Icon(Icons.keyboard_arrow_up)
+                                          : const Icon(
+                                              Icons.keyboard_arrow_down));
+                                },
+                                valueListenable: show,
+                              ),
+                              const Padding(
+                                padding: EdgeInsets.only(left: 4.0),
+                                child: SizedBox(
+                                  height: 32,
+                                  width: 32,
+                                  child: CircleAvatar(
+                                    radius: 50,
+                                    backgroundImage:
+                                        AssetImage('assets/images/vani.png'),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
+                        ),
+                      if (hasContent || hasChainOfThoughts)
+                        Flexible(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (hasContent)
+                                DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    color: !widget.isUser
+                                        ? Colors.white
+                                        : Colors.green[400],
+                                    borderRadius: widget.isUser
+                                        ? const BorderRadius.only(
+                                            topLeft: Radius.circular(16),
+                                            bottomLeft: Radius.circular(16),
+                                            bottomRight: Radius.circular(16),
+                                          )
+                                        : const BorderRadius.only(
+                                            topRight: Radius.circular(16),
+                                            bottomLeft: Radius.circular(16),
+                                            bottomRight: Radius.circular(16),
+                                          ),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(
+                                        left: 10, right: 10, bottom: 10),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        if (widget.imageUrl != null &&
+                                            widget.imageUrl!.isNotEmpty)
+                                          _imageView(),
+                                        if (widget.tableColumnData != null &&
+                                            widget
+                                                .tableColumnData!.isNotEmpty &&
+                                            widget.tableRowData != null &&
+                                            widget.tableRowData!.isNotEmpty)
+                                          _tableView(),
+                                        const SizedBox(height: 10),
+                                        if (widget.text.isNotEmpty) _textView(),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              if (!widget.isUser &&
+                                  widget.logMessage.isNotEmpty)
+                                _infoView(),
+                              if (widget.hasErrorLog) _buttonsView(),
+                              // if (isExpanded)
+                            ],
+                          ),
+                        ),
+                      if (widget.isUser) _userProfileView(),
+                    ],
                   ),
-                  child: Padding(
-                    padding:
-                        const EdgeInsets.only(left: 10, right: 10, bottom: 10),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (widget.imageUrl != null &&
-                            widget.imageUrl!.isNotEmpty)
-                          _imageView(),
-                        if (widget.tableColumnData != null &&
-                            widget.tableColumnData!.isNotEmpty &&
-                            widget.tableRowData != null &&
-                            widget.tableRowData!.isNotEmpty)
-                          _tableView(),
-                        const SizedBox(height: 10),
-                        if (widget.text.isNotEmpty) _textView(),
-                      ],
-                    ),
-                  ),
-                ),
+                ],
               ),
-            if (!widget.isUser && widget.logMessage.isNotEmpty) _infoView(),
-            if (widget.isUser) _userProfileView(),
-            if (widget.hasErrorLog) _buttonsView(),
-          ],
+            ),
+          )
+        : const SizedBox();
+  }
+
+  List<Widget> chainOfThoughts() {
+    /*   widget.chainOfThoughts!.add("HII");
+    widget.chainOfThoughts!.add("HII");
+    widget.chainOfThoughts!.add("HII");
+    widget.chainOfThoughts!.add("HII");
+    widget.chainOfThoughts!.add("HII");*/
+    List<Widget> widgets = [];
+    widgets.add(const Text(
+      'Chain of Thoughts',
+      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+    ));
+    widgets.add(SizedBox(height: 8));
+    for (String thought in widget.chainOfThoughts!) {
+      print(thought);
+      widgets.add(Padding(
+        padding: const EdgeInsets.only(bottom: 8.0),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(constants.xSmallPadding),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey),
+          ),
+          child: Text(
+            thought,
+            style: const TextStyle(fontSize: 16),
+          ),
         ),
-      ),
-    );
+      ));
+    }
+    return widgets;
   }
 
   _infoView() {
     return GestureDetector(
-      onTap: showInformation,
+      onTap: () {
+        showInformation(widget.logMessage);
+      },
       child: const Padding(
         padding: EdgeInsets.only(left: 8.0),
         child: Icon(
@@ -140,7 +250,7 @@ class _ChatBubbleState extends State<ChatBubble> {
 
   _userProfileView() {
     return const Padding(
-      padding: EdgeInsets.only(left: 16.0),
+      padding: EdgeInsets.only(left: 4.0),
       child: SizedBox(
         height: 32,
         width: 32,
@@ -152,12 +262,12 @@ class _ChatBubbleState extends State<ChatBubble> {
     );
   }
 
-  void showInformation() {
+  void showInformation(String message) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Info'),
-        content: SingleChildScrollView(child: Text(widget.logMessage)),
+        content: SingleChildScrollView(child: Text(message)),
         actions: [
           TextButton(
             onPressed: () {
@@ -244,7 +354,6 @@ class _ChatBubbleState extends State<ChatBubble> {
   }
 
   _imageView() {
-    print("222222 imageView");
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -373,5 +482,12 @@ class _ChatBubbleState extends State<ChatBubble> {
       "summary_ts": widget.timestampMapping!['summary_ts'] ?? '',
       "user_response": ''
     });
+  }
+
+  void validateToken(bool isUser, bool? isValidToken, bool? isLimitExceeded) {
+    if (!isUser && (isLimitExceeded! || !isValidToken!)) {
+      Navigator.pop(context);
+      Fluttertoast.showToast(msg: "Session Expired");
+    }
   }
 }

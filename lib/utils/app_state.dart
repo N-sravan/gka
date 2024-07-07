@@ -50,6 +50,7 @@ class AppState {
   late String locType;
   late String locName;
   late String userId;
+  late String sessionId;
   late String language;
   late String mode;
   bool isListeningMode =false;
