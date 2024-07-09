@@ -32,9 +32,23 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
     super.initState();
     viewModel = Provider.of<LoginViewModel>(context, listen: false);
     switch (constants.projectId) {
-      case constants.keralaUUID:
+      case constants.gowaterUUID:
         _usernameController.text = "genaiuser";
         _passwordController.text = "genai123";
+        // _usernameController.text = "sudhansu_samal";
+        // _passwordController.text = "agriwise@123";
+        break;
+      case constants.apwrimsUUID:
+        _usernameController.text = "sklm_burja";
+        _passwordController.text = "test123";
+        break;
+      case constants.kaleswaramUUID:
+        _usernameController.text = "Sandeep";
+        _passwordController.text = "test123";
+        break;
+      case constants.tnwrimsUUID:
+        _usernameController.text = "Pradeep";
+        _passwordController.text = "test123";
         break;
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -245,8 +259,8 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                             _passwordController.text;
                                         if (userId.isNotEmpty &&
                                             password.isNotEmpty) {
-                                          bool? result = await viewModel
-                                              .authenticateForFieldRishi(
+                                          bool? result =
+                                              await viewModel.authenticate(
                                                   userId, password, context);
                                           if (result) {
                                             Navigator.push(
@@ -282,10 +296,20 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                             backgroundColor:
                                                 constants.splashButtonBg,
                                           )
-                                        : ButtonStyle(
-                                            textStyle:
-                                                MaterialStateProperty.all(
-                                                    constants.darkblue20W600)),
+                                        : ElevatedButton.styleFrom(
+                                            fixedSize: Size(
+                                              MediaQuery.of(context)
+                                                  .size
+                                                  .height,
+                                              constants.splashButtonHeight,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                      constants.borderRadius),
+                                            ),
+                                            backgroundColor: Colors.blue,
+                                          ),
                                     child: Text(
                                       constants.loginString,
                                       style: constants.white16W500,

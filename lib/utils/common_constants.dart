@@ -59,7 +59,9 @@ const String headerRefeshToken = 'refresh_token';
 const String appIcon = 'assets/images/flutter_logo.png';
 
 // URLs
-const String baseUrl = 'https://keralakrishihub.vassarlabs.com/';
+const String keralaBaseUrl = 'https://keralakrishihub.vassarlabs.com/';
+const String gowaterBaseUrl = 'https://nawrims.vassarlabs.com/gowater_mind/';
+const String fieldRishiBaseUrl = 'https://nawrims.vassarlabs.com/vassar_mind/';
 // const String baseUrl = 'https://agriwise.vassarlabs.com/';
 // const String krishidsBaseUrl = 'http://acerkrishidss.vassarlabs.com/staging/api';
 // const String krishidsBaseUrl = 'https://agriwise.vassarlabs.com/staging/api';
@@ -86,7 +88,7 @@ const String createSessionEndpoint = 'session/create_session';
 
 //UUIDs & keys
 const String indiaUUID = 'd6b37905-d2d3-4275-9317-d9b6f47cd783';
-const String odishaUUID = 'd19a5290-2e40-494a-83d2-98f4c845b1f1';
+const String gowaterUUID = 'd19a5290-2e40-494a-83d2-98f4c845b1f1';
 const String kaleswaramUUID = '927b67e9-a2aa-46e9-99bc-41cf8c502668';
 const String apwrimsUUID = '6f86292b-dd9a-4987-bb8f-c3940263b349';
 const String tnwrimsUUID = 'e98cd5b7-6556-4c0f-a778-3429e1c14a6b';
@@ -95,8 +97,10 @@ const String prodKeySpace = 'CHAT_BOT_ONDEMAND_QUERY_DATA';
 const String testKeySpace = 'CHAT_BOT_TEST';
 
 //check this before generating apk
-const String projectId = keralaUUID;
+const String projectId = gowaterUUID;
 const String keyspace = prodKeySpace;
+String appTitle = '';
+String baseUrl= '';
 
 // Paddings
 const double largePadding = 32;
@@ -759,8 +763,10 @@ const String department = 'Department';
 const String register = 'Register';
 const String loginAs = 'Login As';
 const String dontHaveAccount = 'Don\'t have an account?';
-const String appTitle = 'FieldRishi';
 const String fieldRishiString = 'fieldRISHI';
+const String gowaterString = 'GoWater Bot';
+const String apwrimsString = 'APWRIMS Bot';
+const String kaleswaramString = 'Kaleswaram Bot';
 const String getOtpString = 'Get OTP';
 const String verifyOtpString = 'Verify OTP';
 const String enterOtpString = 'Enter OTP';

@@ -40,7 +40,7 @@ class _RoleSelectionWidgetState extends State<RoleSelectionWidget> {
                     child: Column(
                       children: [
                         Text(
-                          constants.fieldRishiString,
+                          constants.appTitle,
                           style: constants.green32W600,
                         ),
                         SvgPicture.asset(

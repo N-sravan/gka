@@ -230,7 +230,7 @@ class LoginViewModel extends LoadingViewModel {
     return false; // Invalid mobile number
   }
 
-  Future<bool> authenticateForFieldRishi(
+  Future<bool> authenticate(
       String userName, String password, BuildContext context) async {
     /// Checking for active internet connection
     if (await networkUtils.hasActiveInternet()) {
@@ -244,7 +244,7 @@ class LoginViewModel extends LoadingViewModel {
         };
 
         sessionDetails =
-            await repo.authenticationForFieldRishi(params, context);
+            await repo.authentication(params, context);
 
         if (sessionDetails != null &&
             sessionDetails.token!.isNotEmpty &&

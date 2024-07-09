@@ -79,6 +79,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final permissionsGranted = await requestPermissions();
 
+  setProjectSpecificValues();
+
   /*  SystemChrome.setPreferredOrientations([
     DeviceOrientation.landscapeRight, // Set landscape orientation
     DeviceOrientation.landscapeLeft,
@@ -137,6 +139,17 @@ void main() async {
     ),
   );
   // await initializeService();
+}
+
+void setProjectSpecificValues() {
+  if (constants.projectId == constants.keralaUUID) {
+    constants.appTitle = constants.fieldRishiString;
+    constants.baseUrl = constants.keralaBaseUrl;
+  }
+  if (constants.projectId == constants.gowaterUUID) {
+    constants.appTitle = constants.gowaterString;
+    constants.baseUrl = constants.gowaterBaseUrl;
+  }
 }
 
 Future<bool> requestPermissions() async {
@@ -282,7 +295,7 @@ Future<void> showNotification() async {
     }).join('\n');
 
     AndroidNotificationDetails androidPlatformChannelSpecifics =
-    AndroidNotificationDetails(
+        AndroidNotificationDetails(
       'high_importance_channel',
       'High Importance Notifications',
       importance: Importance.max,
@@ -296,7 +309,7 @@ Future<void> showNotification() async {
     );
 
     NotificationDetails platformChannelSpecifics =
-    NotificationDetails(android: androidPlatformChannelSpecifics);
+        NotificationDetails(android: androidPlatformChannelSpecifics);
 
     await flutterLocalNotificationsPlugin.show(
       0,
@@ -952,7 +965,6 @@ class MyApp extends StatelessWidget {
           constants.roleRoute: (context) => const RoleSelectionWidget(),
           // constants.loginRoute: (context) => const LoginScreenWidget(),
           constants.homeRoute: (context) => const HomeScreenWidget(),
-
         },
         onGenerateRoute: (settings) {
           final String? data = settings.arguments as String?;

@@ -12,7 +12,7 @@ import 'package:gka/utils/common_constants.dart' as constants;
 
 /// Abstract class for the login repository
 abstract class LoginRepository {
-  Future<SessionDetails?> authenticationForFieldRishi(
+  Future<SessionDetails?> authentication(
       Map<String, String> params, BuildContext context);
 
   Future fetchCsrfToken(BuildContext context);
@@ -30,7 +30,7 @@ class LoginRepositoryImpl extends LoginRepository {
       "locationUuid": AppState.instance.locUUID,
       "locationType": AppState.instance.locType,
       "locationName": AppState.instance.locName,
-      "project_uuid": constants.odishaUUID
+      "project_uuid": constants.gowaterUUID
     };
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
@@ -67,15 +67,15 @@ class LoginRepositoryImpl extends LoginRepository {
   }
 
   @override
-  Future<SessionDetails?> authenticationForFieldRishi(
+  Future<SessionDetails?> authentication(
       Map<String, String> params, BuildContext context) async {
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
     };
 
     Object data = jsonEncode(params);
-    String authUrl =
-        'https://nawrims.vassarlabs.com/vassar_mind/auth_and_session/login';
+    String authUrl = '${constants.baseUrl}auth_and_session/login';
+    print("wewewew app name:${constants.appTitle} auth_url ::${constants.baseUrl}");
     http.Response response = await http.post(
       Uri.parse(authUrl),
       headers: authHeaders,
@@ -84,7 +84,8 @@ class LoginRepositoryImpl extends LoginRepository {
 
     Map<String, dynamic> responseMap = jsonDecode(response.body);
 
-    SessionDetails sessionDetails = SessionDetails.fromJson(responseMap['session_details']);
+    SessionDetails sessionDetails =
+        SessionDetails.fromJson(responseMap['session_details']);
     return sessionDetails;
   }
 }

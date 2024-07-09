@@ -16,7 +16,6 @@ class HomeScreenWidget extends StatefulWidget {
 
 class _HomeScreenWidgetState extends State<HomeScreenWidget> {
   late HomeViewModel viewModel;
-  String title = '';
 
   @override
   void initState() {
@@ -27,32 +26,27 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
     super.initState();
     viewModel = Provider.of<HomeViewModel>(context, listen: false);
     switch (constants.projectId) {
-      case constants.odishaUUID:
+      case constants.gowaterUUID:
         viewModel.langList.clear();
-        title = 'GoWater Bot';
         viewModel.langList.add('English');
         viewModel.langList.add('Odia');
         break;
       case constants.apwrimsUUID:
-        title = 'APWRIMS Bot';
         viewModel.langList.clear();
         viewModel.langList.add('English');
         viewModel.langList.add('Telugu');
         break;
       case constants.kaleswaramUUID:
-        title = 'Kaleswaram Bot';
         viewModel.langList.clear();
         viewModel.langList.add('English');
         viewModel.langList.add('Telugu');
         break;
       case constants.tnwrimsUUID:
-        title = 'TNWRIMS Bot';
         viewModel.langList.clear();
         viewModel.langList.add('English');
         viewModel.langList.add('Tamil');
         break;
       case constants.keralaUUID:
-        title = constants.fieldRishiString;
         viewModel.langList.clear();
         viewModel.langList.add('English');
         // viewModel.langList.add('Hindi');
@@ -84,7 +78,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
               appBar: AppBar(
                 automaticallyImplyLeading: false,
                 centerTitle: true,
-                title: Text(title),
+                title: Text(constants.appTitle),
                 actions: [
                   PopupMenuButton<String>(
                     itemBuilder: (BuildContext context) {

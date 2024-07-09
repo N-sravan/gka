@@ -100,10 +100,10 @@ class _ChatWindowState extends State<ChatWindow>
   @override
   void initState() {
     super.initState();
+    AppState.instance.language = 'English';
     switch (constants.projectId) {
       case constants.keralaUUID:
-        title = constants.fieldRishiString;
-        AppState.instance.language = 'English';
+        title = constants.appTitle;
         break;
     }
     switch (AppState.instance.language) {
@@ -397,6 +397,7 @@ class _ChatWindowState extends State<ChatWindow>
                                     if (datalast['is_user']) {
                                       thoughtsList.clear();
                                       messageList.add(ChatBubble(
+                                        expandChainOfThought: false,
                                         text: datalast['message'] ?? '',
                                         isUser: datalast['is_user'],
                                         imageUrl: datalast['image_url'] ?? '',
@@ -412,12 +413,12 @@ class _ChatWindowState extends State<ChatWindow>
                                         timestampMapping: dataTsMapping,
                                         chainOfThoughts: [],
                                         token: datalast['token'] ?? '',
-                                        expandChainOfThought: false,
                                       ));
                                     } else {
                                       if (datalast['chain_of_thought'] !=
                                           null) {
-                                        thoughtsList.add(datalast['chain_of_thought']);
+                                        thoughtsList
+                                            .add(datalast['chain_of_thought']);
                                       }
                                       if (datalast['is_valid_token'] != null &&
                                           datalast['is_limit_exceeded'] !=
@@ -429,25 +430,28 @@ class _ChatWindowState extends State<ChatWindow>
                                               msg: "Session Expired");
                                         }
                                       }
-
-                                      messageList.add(ChatBubble(
-                                        text: datalast['message'] ?? '',
-                                        isUser: datalast['is_user'],
-                                        imageUrl: datalast['image_url'] ?? '',
-                                        tableColumnData:
-                                            datalast['sql_df_columns'],
-                                        tableRowData:
-                                            datalast['sql_df_values'] != null
-                                                ? jsonDecode(
-                                                    datalast['sql_df_values'])
-                                                : null,
-                                        logMessage: datalast['log'] ?? '',
-                                        hasErrorLog: false,
-                                        timestampMapping: dataTsMapping,
-                                        chainOfThoughts: thoughtsList,
-                                        token: datalast['token'] ?? '',
-                                        expandChainOfThought: false,
-                                      ));
+                                      messageList.last.expandChainOfThought = false;
+                                      if (datalast['message'] != null) {
+                                        messageList.add(ChatBubble(
+                                          expandChainOfThought: false,
+                                          text: datalast['message'] ?? '',
+                                          isUser: datalast['is_user'],
+                                          imageUrl: datalast['image_url'] ?? '',
+                                          tableColumnData:
+                                              datalast['sql_df_columns'],
+                                          tableRowData:
+                                              datalast['sql_df_values'] != null
+                                                  ? jsonDecode(
+                                                      datalast['sql_df_values'])
+                                                  : null,
+                                          logMessage: datalast['log'] ?? '',
+                                          hasErrorLog: false,
+                                          timestampMapping: dataTsMapping,
+                                          chainOfThoughts:
+                                              List<String>.from(thoughtsList),
+                                          token: datalast['token'] ?? '',
+                                        ));
+                                      }
                                     }
                                   }
                                 });
@@ -498,7 +502,7 @@ class _ChatWindowState extends State<ChatWindow>
                                   });
 
                                   dataTimer = Timer(
-                                      const Duration(seconds: 100), () async {
+                                      const Duration(seconds: 180), () async {
                                     if (showLoader.value) {
                                       DatabaseReference ref =
                                           FirebaseDatabase.instance.ref(
@@ -511,7 +515,7 @@ class _ChatWindowState extends State<ChatWindow>
                                             .toString();
                                         await ref.child(timeStamp).set({
                                           "is_user": false,
-                                          "message": "Data Not Found!",
+                                          "message": dataNotFoundMsg,
                                         });
                                       });
                                       await tts.speak(dataNotFoundMsg);
@@ -572,7 +576,7 @@ class _ChatWindowState extends State<ChatWindow>
               child: IgnorePointer(
                 child: Center(
                   child: Text(
-                    constants.fieldRishiString,
+                    constants.appTitle,
                     style: TextStyle(
                       color: Colors.grey.withOpacity(0.2),
                       // Adjust opacity as needed
@@ -804,11 +808,13 @@ class _ChatWindowState extends State<ChatWindow>
 
     DateTime now = DateTime.now();
     String formattedDate = DateFormat('kk:mm:ss \n EEE d MMM').format(now);
-    print("wewewew DateTime before push:: $formattedDate");
+    // print("wewewew DateTime before push:: $formattedDate");
+    print(
+        "wewewew data:: ${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
     await ref.child(timeStamp).set({
       "is_user": true,
       "message": text,
-      "mediaUrl": imageUrl ?? '',
+      "image_url": imageUrl ?? '',
       "language": 'english',
       "model_uuid": AppState.instance.modelUUID,
       "mode": '',
