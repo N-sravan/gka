@@ -430,31 +430,30 @@ class _ChatWindowState extends State<ChatWindow>
                                               msg: "Session Expired");
                                         }
                                       }
-                                      messageList.last.expandChainOfThought = false;
-                                      if (datalast['message'] != null) {
-                                        messageList.add(ChatBubble(
-                                          expandChainOfThought: false,
-                                          text: datalast['message'] ?? '',
-                                          isUser: datalast['is_user'],
-                                          imageUrl: datalast['image_url'] ?? '',
-                                          tableColumnData:
-                                              datalast['sql_df_columns'],
-                                          tableRowData:
-                                              datalast['sql_df_values'] != null
-                                                  ? jsonDecode(
-                                                      datalast['sql_df_values'])
-                                                  : null,
-                                          logMessage: datalast['log'] ?? '',
-                                          hasErrorLog: false,
-                                          timestampMapping: dataTsMapping,
-                                          chainOfThoughts:
-                                              List<String>.from(thoughtsList),
-                                          token: datalast['token'] ?? '',
-                                        ));
-                                      }
+                                      // messageList.last.expandChainOfThought = false;
+                                      messageList.add(ChatBubble(
+                                        expandChainOfThought: false,
+                                        text: datalast['message'] ?? '',
+                                        isUser: datalast['is_user'],
+                                        imageUrl: datalast['image_url'] ?? '',
+                                        tableColumnData:
+                                            datalast['sql_df_columns'],
+                                        tableRowData:
+                                            datalast['sql_df_values'] != null
+                                                ? jsonDecode(
+                                                    datalast['sql_df_values'])
+                                                : null,
+                                        logMessage: datalast['log'] ?? '',
+                                        hasErrorLog: false,
+                                        timestampMapping: dataTsMapping,
+                                        chainOfThoughts:
+                                            List<String>.from(thoughtsList),
+                                        token: datalast['token'] ?? '',
+                                      ));
                                     }
                                   }
                                 });
+
 
                                 if (widget.isFromHistory != null &&
                                     widget.isFromHistory == true &&
@@ -521,6 +520,10 @@ class _ChatWindowState extends State<ChatWindow>
                                       await tts.speak(dataNotFoundMsg);
                                     }
                                   });
+                                }
+
+                                if (messageList.isNotEmpty) {
+                                  messageList.last.expandChainOfThought = true;
                                 }
 
                                 return ListView.builder(

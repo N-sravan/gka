@@ -19,14 +19,11 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter_background_service_android/flutter_background_service_android.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/chat/view_model/chat_view_model.dart';
-import 'package:gka/chat_window.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:gka/login/repository/login_repo.dart';
 import 'package:gka/login/view/login_view.dart';
 import 'package:gka/login/view_model/login_view_model.dart';
-import 'package:gka/permissions/view/permissions_view.dart';
 import 'package:gka/permissions/view_model/permissions_view_model.dart';
 import 'package:gka/splash/view/splash_view.dart';
 import 'package:gka/splash/view_model/splash_view_model.dart';
@@ -108,13 +105,13 @@ void main() async {
 
   if (notificationStatus == PermissionStatus.granted) {
     print("wewewewewew notificationStatus:::${PermissionStatus.granted}");
-    Workmanager().initialize(callbackDispatcher);
+   /* Workmanager().initialize(callbackDispatcher);
     Workmanager().registerPeriodicTask(
       "speechTask",
       "speechTask",
       frequency: const Duration(minutes: 15),
       initialDelay: const Duration(minutes: 2),
-    );
+    );*/
   }
   runApp(
     MultiProvider(
@@ -150,6 +147,14 @@ void setProjectSpecificValues() {
     constants.appTitle = constants.gowaterString;
     constants.baseUrl = constants.gowaterBaseUrl;
   }
+  if (constants.projectId == constants.apwrimsUUID) {
+    constants.appTitle = constants.apwrimsString;
+    constants.baseUrl = constants.apwrimsBaseUrl;
+  }
+ /* if (constants.projectId == constants.gowaterUUID) {
+    constants.appTitle = constants.kuidfctring;
+    constants.baseUrl = constants.kuidfcBaseUrl;
+  }*/
 }
 
 Future<bool> requestPermissions() async {
