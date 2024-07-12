@@ -456,9 +456,9 @@ class _ChatWindowState extends State<ChatWindow>
                                         thoughtsList
                                             .add(datalast['chain_of_thought']);
                                       }
-                                      /*  if (datalast['message'] != null) {
+                                        if (datalast['message'] != null) {
                                         thoughtsList.clear();
-                                      }*/
+                                      }
                                       if (datalast['is_valid_token'] != null &&
                                           datalast['is_limit_exceeded'] !=
                                               null) {
@@ -470,7 +470,6 @@ class _ChatWindowState extends State<ChatWindow>
                                         }
                                       }
                                       // messageList.last.expandChainOfThought = false;
-                                      if (datalast['message'] != null) {
                                         messageList.add(ChatBubble(
                                           expandChainOfThought: false,
                                           text: datalast['message'] ?? '',
@@ -492,7 +491,6 @@ class _ChatWindowState extends State<ChatWindow>
                                         ));
                                       }
                                     }
-                                  }
                                 });
 
                                 if (widget.isFromHistory != null &&
@@ -628,16 +626,16 @@ class _ChatWindowState extends State<ChatWindow>
                                   controller: scrollControllerListView,
                                   addAutomaticKeepAlives: true,
                                   itemBuilder: (context, index) {
-                                    if (index < messageList.length) {
+                                    if (index < tempList.length) {
                                       return Padding(
                                         padding: const EdgeInsets.all(4.0),
-                                        child: messageList[
-                                            messageList.length - 1 - index],
+                                        child: tempList[
+                                            tempList.length - 1 - index],
                                       );
                                     }
                                     return null;
                                   },
-                                  itemCount: messageList.length,
+                                  itemCount: tempList.length,
                                 );
                               }
                               return const SizedBox();
