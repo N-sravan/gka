@@ -65,118 +65,118 @@ class _ChatBubbleState extends State<ChatBubble> {
 
     return (hasContent || hasChainOfThoughts)
         ? Padding(
-            padding: EdgeInsets.fromLTRB(
-              widget.isUser ? 64.0 : 16.0,
-              4,
-              widget.isUser ? 16.0 : 2.0,
-              4,
-            ),
-            child: Align(
-              alignment:
-                  widget.isUser ? Alignment.centerRight : Alignment.centerLeft,
-              child: Column(
-                children: [
-                  if (widget.isUser && hasChainOfThoughts)
-                    ValueListenableBuilder(
-                      builder: (context, value, _) {
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: value ? chainOfThoughts() : [],
-                        );
-                      },
-                      valueListenable: show,
-                    ),
-                  Row(
-                    mainAxisAlignment: widget.isUser
-                        ? MainAxisAlignment.end
-                        : MainAxisAlignment.start,
+      padding: EdgeInsets.fromLTRB(
+        widget.isUser ? 64.0 : 16.0,
+        4,
+        widget.isUser ? 16.0 : 2.0,
+        4,
+      ),
+      child: Align(
+        alignment:
+        widget.isUser ? Alignment.centerRight : Alignment.centerLeft,
+        child: Column(
+          children: [
+            if (widget.isUser && hasChainOfThoughts)
+              ValueListenableBuilder(
+                builder: (context, value, _) {
+                  return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (!widget.isUser)
-                        const SizedBox(
-                          height: 100,
-                          child: Column(
-                            children: [
-                              Padding(
-                                padding: EdgeInsets.only(left: 4.0),
-                                child: SizedBox(
-                                  height: 32,
-                                  width: 32,
-                                  child: CircleAvatar(
-                                    radius: 50,
-                                    backgroundImage:
-                                        AssetImage('assets/images/vani.png'),
-                                  ),
-                                ),
-                              ),
-                            ],
+                    children: value ? chainOfThoughts() : [],
+                  );
+                },
+                valueListenable: show,
+              ),
+            Row(
+              mainAxisAlignment: widget.isUser
+                  ? MainAxisAlignment.end
+                  : MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (!widget.isUser)
+                  const SizedBox(
+                    height: 100,
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.only(left: 4.0),
+                          child: SizedBox(
+                            height: 32,
+                            width: 32,
+                            child: CircleAvatar(
+                              radius: 50,
+                              backgroundImage:
+                              AssetImage('assets/images/vani.png'),
+                            ),
                           ),
                         ),
-                      const SizedBox(
-                        width: 8,
-                      ),
-                      if (hasContent || hasChainOfThoughts)
-                        Flexible(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (hasContent)
-                                DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    color: !widget.isUser
-                                        ? Colors.white
-                                        : Colors.green[400],
-                                    borderRadius: widget.isUser
-                                        ? const BorderRadius.only(
-                                            topLeft: Radius.circular(16),
-                                            bottomLeft: Radius.circular(16),
-                                            bottomRight: Radius.circular(16),
-                                          )
-                                        : const BorderRadius.only(
-                                            topRight: Radius.circular(16),
-                                            bottomLeft: Radius.circular(16),
-                                            bottomRight: Radius.circular(16),
-                                          ),
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(
-                                        left: 10, right: 10, bottom: 10),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        if (widget.imageUrl != null &&
-                                            widget.imageUrl!.isNotEmpty)
-                                          _imageView(),
-                                        if (widget.tableColumnData != null &&
-                                            widget
-                                                .tableColumnData!.isNotEmpty &&
-                                            widget.tableRowData != null &&
-                                            widget.tableRowData!.isNotEmpty)
-                                          _tableView(),
-                                        const SizedBox(height: 10),
-                                        if (widget.text.isNotEmpty) _textView(),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              /*  if (!widget.isUser &&
+                      ],
+                    ),
+                  ),
+                const SizedBox(
+                  width: 8,
+                ),
+                if (hasContent || hasChainOfThoughts)
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (hasContent)
+                          DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: !widget.isUser
+                                  ? Colors.white
+                                  : Colors.green[400],
+                              borderRadius: widget.isUser
+                                  ? const BorderRadius.only(
+                                topLeft: Radius.circular(16),
+                                bottomLeft: Radius.circular(16),
+                                bottomRight: Radius.circular(16),
+                              )
+                                  : const BorderRadius.only(
+                                topRight: Radius.circular(16),
+                                bottomLeft: Radius.circular(16),
+                                bottomRight: Radius.circular(16),
+                              ),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                  left: 10, right: 10, bottom: 10),
+                              child: Column(
+                                crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                                children: [
+                                  if (widget.imageUrl != null &&
+                                      widget.imageUrl!.isNotEmpty)
+                                    _imageView(),
+                                  if (widget.tableColumnData != null &&
+                                      widget
+                                          .tableColumnData!.isNotEmpty &&
+                                      widget.tableRowData != null &&
+                                      widget.tableRowData!.isNotEmpty)
+                                    _tableView(),
+                                  const SizedBox(height: 10),
+                                  if (widget.text.isNotEmpty) _textView(),
+                                ],
+                              ),
+                            ),
+                          ),
+                        /*  if (!widget.isUser &&
                                   widget.logMessage!.isNotEmpty)
                                 _infoView(),
                               if (widget.hasErrorLog != null &&
                                   widget.hasErrorLog == true)
                                 _buttonsView(),*/
-                              // if (isExpanded)
-                            ],
-                          ),
-                        ),
-                      if (widget.isUser) _userProfileView(),
-                    ],
+                        // if (isExpanded)
+                      ],
+                    ),
                   ),
-                ],
-              ),
+                if (widget.isUser) _userProfileView(),
+              ],
             ),
-          )
+          ],
+        ),
+      ),
+    )
         : const SizedBox();
   }
 
@@ -295,7 +295,7 @@ class _ChatBubbleState extends State<ChatBubble> {
   List<DataColumn> generateColumns(List<dynamic> row) {
     return List.generate(
       row.length,
-      (index) => DataColumn(
+          (index) => DataColumn(
         label: SizedBox(
           // Distribute width evenly for each column
           child: Text(row[index].toString()),
@@ -332,10 +332,10 @@ class _ChatBubbleState extends State<ChatBubble> {
               columns: generateColumns(widget.tableColumnData!),
               rows: List.generate(
                 widget.tableRowData!.length,
-                (index) => DataRow(
+                    (index) => DataRow(
                   cells: List.generate(
                     widget.tableRowData![index]!.length,
-                    (cellIndex) => DataCell(
+                        (cellIndex) => DataCell(
                       SizedBox(
                         child: Text(
                             widget.tableRowData![index][cellIndex].toString()),
@@ -383,7 +383,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                     child: CircularProgressIndicator(
                       value: loadingProgress.expectedTotalBytes != null
                           ? loadingProgress.cumulativeBytesLoaded /
-                              loadingProgress.expectedTotalBytes!
+                          loadingProgress.expectedTotalBytes!
                           : null,
                     ),
                   );

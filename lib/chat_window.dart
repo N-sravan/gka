@@ -453,10 +453,10 @@ class _ChatWindowState extends State<ChatWindow>
                                     } else {
                                       if (datalast['chain_of_thought'] !=
                                           null) {
-                                        thoughtsList.add(
-                                            datalast['chain_of_thought']);
+                                        thoughtsList
+                                            .add(datalast['chain_of_thought']);
                                       }
-                                    /*  if (datalast['message'] != null) {
+                                      /*  if (datalast['message'] != null) {
                                         thoughtsList.clear();
                                       }*/
                                       if (datalast['is_valid_token'] != null &&
@@ -477,22 +477,22 @@ class _ChatWindowState extends State<ChatWindow>
                                           isUser: datalast['is_user'],
                                           imageUrl: datalast['image_url'] ?? '',
                                           tableColumnData:
-                                          datalast['sql_df_columns'],
+                                              datalast['sql_df_columns'],
                                           tableRowData:
-                                          datalast['sql_df_values'] != null
-                                              ? jsonDecode(
-                                              datalast['sql_df_values'])
-                                              : null,
+                                              datalast['sql_df_values'] != null
+                                                  ? jsonDecode(
+                                                      datalast['sql_df_values'])
+                                                  : null,
                                           logMessage: datalast['log'] ?? '',
                                           hasErrorLog: false,
                                           timestampMapping: dataTsMapping,
-                                          chainOfThoughts: List<String>.from(
-                                              thoughtsList),
+                                          chainOfThoughts:
+                                              List<String>.from(thoughtsList),
                                           token: datalast['token'] ?? '',
                                         ));
                                       }
                                     }
-                                    }
+                                  }
                                 });
 
                                 if (widget.isFromHistory != null &&
@@ -565,7 +565,7 @@ class _ChatWindowState extends State<ChatWindow>
                                 if (messageList.isNotEmpty) {
                                   messageList.last.expandChainOfThought = true;
                                 }
-                               /* List<Map<String, dynamic>> mappedData = [];
+                                List<Map<String, dynamic>> mappedData = [];
                                 Map<String, dynamic>? currentQuestion = {};
 
                                 for (int i = 0; i < messageList.length; i++) {
@@ -578,11 +578,19 @@ class _ChatWindowState extends State<ChatWindow>
                                     mappedData.add(currentQuestion);
                                   } else {
                                     if (currentQuestion != null) {
-                                      if (messageList[i].chainOfThoughts!=null && messageList[i].chainOfThoughts!.isNotEmpty) {
-                                        currentQuestion['cots']=messageList[i].chainOfThoughts;
+                                      if (messageList[i].chainOfThoughts !=
+                                              null &&
+                                          messageList[i]
+                                              .chainOfThoughts!
+                                              .isNotEmpty) {
+                                        currentQuestion['cots'] =
+                                            messageList[i].chainOfThoughts;
                                       }
                                     }
-                                    if (currentQuestion !=null && messageList[i].chainOfThoughts!.isEmpty) {
+                                    if (currentQuestion != null &&
+                                        messageList[i]
+                                            .chainOfThoughts!
+                                            .isEmpty) {
                                       Map<String, dynamic> data = {
                                         'isUser': messageList[i].isUser,
                                         'text': messageList[i].text
@@ -611,7 +619,7 @@ class _ChatWindowState extends State<ChatWindow>
                                 for (int i = 0; i < tempList.length; i++) {
                                   print(
                                       "temp ${i} - ${tempList[i].isUser} -- ${tempList[i].text} -- ${tempList[i].chainOfThoughts}");
-                                }*/
+                                }
 
                                 return ListView.builder(
                                   reverse: true,
