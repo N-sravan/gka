@@ -181,8 +181,7 @@ class LoginViewModel extends LoadingViewModel {
           .navigateToFarmerLoginScreen(context, selectedRole);
     } else if (selectedRole == constants.department) {
       AppState.instance.role = constants.department;
-      NavigationUtil.instance
-          .navigateToDepartmentLoginScreen(context, selectedRole);
+      NavigationUtil.instance.navigateToDepartmentLoginScreen(context, selectedRole);
     }
   }
 

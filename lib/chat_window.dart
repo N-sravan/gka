@@ -310,55 +310,90 @@ class _ChatWindowState extends State<ChatWindow>
           // isFirstTime: widget.isFirstTime,
           sessionId: widget.sessionId!,
         ),
-        appBar: AppBar(
-          actions: [
-            PopupMenuButton<String>(
-              itemBuilder: (BuildContext context) {
-                return <PopupMenuEntry<String>>[
-                  const PopupMenuItem<String>(
-                    value: 'Government Scheme',
-                    child: ListTile(
-                      // leading: Icon(Icons.exit_to_app),
-                      title: Text('Government Scheme'),
+        appBar: constants.projectId == constants.keralaUUID
+            ? AppBar(
+                leading: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.arrow_back,
+                        color: Colors.white,
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
                     ),
-                  ),
-                ];
-              },
-              onSelected: (String value) async {
-                if (value == 'logout') {
-                  if (constants.projectId == constants.keralaUUID) {
-                    Navigator.pushReplacementNamed(
-                        context, constants.roleRoute);
-                  } else {
-                    Navigator.pushReplacementNamed(context, '/login');
-                  }
-                  /*   bool? result = await viewModel.deleteToken(context);
+                  ],
+                ),
+                backgroundColor: Colors.green,
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 0.0),
+                      child: Image.asset(
+                        'assets/images/appbar_heading.png',
+                        height: 30.0,
+                        width: 58.0,
+                      ),
+                    ),
+                  ],
+                ),
+                // elevation: 0,
+                // title: const Text('Your App Title'), // Optional: add a title
+              )
+            : AppBar(
+/*
+                actions: [
+                  PopupMenuButton<String>(
+                    itemBuilder: (BuildContext context) {
+                      return <PopupMenuEntry<String>>[
+                        const PopupMenuItem<String>(
+                          value: 'Government Scheme',
+                          child: ListTile(
+                            // leading: Icon(Icons.exit_to_app),
+                            title: Text('Government Scheme'),
+                          ),
+                        ),
+                      ];
+                    },
+                    onSelected: (String value) async {
+                      if (value == 'logout') {
+                        if (constants.projectId == constants.keralaUUID) {
+                          Navigator.pushReplacementNamed(
+                              context, constants.roleRoute);
+                        } else {
+                          Navigator.pushReplacementNamed(context, '/login');
+                        }
+                        */
+/*   bool? result = await viewModel.deleteToken(context);
                         if (result != null && result) {
                           await viewModel.setLogoutSharedPreferences(context);
                           Fluttertoast.showToast(msg: "Logged out");
                           Navigator.pushReplacementNamed(context, '/login');
-                        }*/
-                }
-              },
-            ),
-          ],
-          leading: (widget.isFromHistory != null && widget.isFromHistory!)
-              ? IconButton(
-                  onPressed: () async {
-                    await tts.stop();
-                    Navigator.pop(context);
-                  },
-                  icon: const Icon(Icons.arrow_back),
-                )
-              : null,
-          centerTitle: true,
-          backgroundColor: Colors.white,
-          elevation: 0,
-          title: Text(
-            'Hello ${AppState.instance.userName}',
-            style: constants.black16W500,
-          ),
-        ),
+                        }*/ /*
+                      }
+                    },
+                  ),
+                ],
+*/
+                leading: (widget.isFromHistory != null && widget.isFromHistory!)
+                    ? IconButton(
+                        onPressed: () async {
+                          await tts.stop();
+                          Navigator.pop(context);
+                        },
+                        icon: const Icon(Icons.arrow_back),
+                      )
+                    : null,
+                centerTitle: true,
+                backgroundColor: Colors.white,
+                elevation: 0,
+                title: Text(
+                  'Hello ${AppState.instance.userName}',
+                  style: constants.black16W500,
+                ),
+              ),
         body: Stack(
           children: [
             Container(
@@ -375,6 +410,7 @@ class _ChatWindowState extends State<ChatWindow>
                             builder: (context, AsyncSnapshot snapshot) {
                               if (snapshot.hasData && snapshot.data != null) {
                                 List<ChatBubble> messageList = [];
+                                List<ChatBubble> tempList = [];
                                 var data = (snapshot.data! as DatabaseEvent)
                                         .snapshot
                                         .value ??
@@ -417,9 +453,12 @@ class _ChatWindowState extends State<ChatWindow>
                                     } else {
                                       if (datalast['chain_of_thought'] !=
                                           null) {
-                                        thoughtsList
-                                            .add(datalast['chain_of_thought']);
+                                        thoughtsList.add(
+                                            datalast['chain_of_thought']);
                                       }
+                                    /*  if (datalast['message'] != null) {
+                                        thoughtsList.clear();
+                                      }*/
                                       if (datalast['is_valid_token'] != null &&
                                           datalast['is_limit_exceeded'] !=
                                               null) {
@@ -431,29 +470,30 @@ class _ChatWindowState extends State<ChatWindow>
                                         }
                                       }
                                       // messageList.last.expandChainOfThought = false;
-                                      messageList.add(ChatBubble(
-                                        expandChainOfThought: false,
-                                        text: datalast['message'] ?? '',
-                                        isUser: datalast['is_user'],
-                                        imageUrl: datalast['image_url'] ?? '',
-                                        tableColumnData:
-                                            datalast['sql_df_columns'],
-                                        tableRowData:
-                                            datalast['sql_df_values'] != null
-                                                ? jsonDecode(
-                                                    datalast['sql_df_values'])
-                                                : null,
-                                        logMessage: datalast['log'] ?? '',
-                                        hasErrorLog: false,
-                                        timestampMapping: dataTsMapping,
-                                        chainOfThoughts:
-                                            List<String>.from(thoughtsList),
-                                        token: datalast['token'] ?? '',
-                                      ));
+                                      if (datalast['message'] != null) {
+                                        messageList.add(ChatBubble(
+                                          expandChainOfThought: false,
+                                          text: datalast['message'] ?? '',
+                                          isUser: datalast['is_user'],
+                                          imageUrl: datalast['image_url'] ?? '',
+                                          tableColumnData:
+                                          datalast['sql_df_columns'],
+                                          tableRowData:
+                                          datalast['sql_df_values'] != null
+                                              ? jsonDecode(
+                                              datalast['sql_df_values'])
+                                              : null,
+                                          logMessage: datalast['log'] ?? '',
+                                          hasErrorLog: false,
+                                          timestampMapping: dataTsMapping,
+                                          chainOfThoughts: List<String>.from(
+                                              thoughtsList),
+                                          token: datalast['token'] ?? '',
+                                        ));
+                                      }
                                     }
-                                  }
+                                    }
                                 });
-
 
                                 if (widget.isFromHistory != null &&
                                     widget.isFromHistory == true &&
@@ -525,6 +565,53 @@ class _ChatWindowState extends State<ChatWindow>
                                 if (messageList.isNotEmpty) {
                                   messageList.last.expandChainOfThought = true;
                                 }
+                               /* List<Map<String, dynamic>> mappedData = [];
+                                Map<String, dynamic>? currentQuestion = {};
+
+                                for (int i = 0; i < messageList.length; i++) {
+                                  if (messageList[i].isUser) {
+                                    currentQuestion = {
+                                      'isUser': messageList[i].isUser,
+                                      'text': messageList[i].text,
+                                      'cots': []
+                                    };
+                                    mappedData.add(currentQuestion);
+                                  } else {
+                                    if (currentQuestion != null) {
+                                      if (messageList[i].chainOfThoughts!=null && messageList[i].chainOfThoughts!.isNotEmpty) {
+                                        currentQuestion['cots']=messageList[i].chainOfThoughts;
+                                      }
+                                    }
+                                    if (currentQuestion !=null && messageList[i].chainOfThoughts!.isEmpty) {
+                                      Map<String, dynamic> data = {
+                                        'isUser': messageList[i].isUser,
+                                        'text': messageList[i].text
+                                      };
+                                      mappedData.add(data);
+                                    }
+                                  }
+                                }
+
+                                String message;
+                                bool currentIsUser;
+                                List<dynamic>? cotsList = [];
+
+                                for (int i = 0; i < mappedData.length; i++) {
+                                  currentIsUser = mappedData[i]['isUser'];
+                                  message = mappedData[i]['text'];
+                                  cotsList = mappedData[i]['cots'];
+
+                                  tempList.add(ChatBubble(
+                                    text: message,
+                                    isUser: currentIsUser,
+                                    chainOfThoughts: cotsList,
+                                  ));
+                                }
+                                print("temp list length::${tempList.length}");
+                                for (int i = 0; i < tempList.length; i++) {
+                                  print(
+                                      "temp ${i} - ${tempList[i].isUser} -- ${tempList[i].text} -- ${tempList[i].chainOfThoughts}");
+                                }*/
 
                                 return ListView.builder(
                                   reverse: true,
@@ -575,21 +662,22 @@ class _ChatWindowState extends State<ChatWindow>
                 ],
               ),
             ),
-            Positioned.fill(
+            /*const Positioned.fill(
               child: IgnorePointer(
+                ignoring: false,
                 child: Center(
-                  child: Text(
-                    constants.appTitle,
-                    style: TextStyle(
-                      color: Colors.grey.withOpacity(0.2),
-                      // Adjust opacity as needed
-                      fontSize: 40.0,
-                      fontWeight: FontWeight.bold,
+                  child: SizedBox(
+                    height: 150,
+                    width: 200,
+                    child: Image(
+                      image:
+                      AssetImage('assets/images/appbar_heading.png'),
+                      fit: BoxFit.contain,
                     ),
                   ),
                 ),
               ),
-            ),
+            ),*/
           ],
         ),
       ),
@@ -616,33 +704,66 @@ class _ChatWindowState extends State<ChatWindow>
   }
 
   _sendButton() {
-    return ValueListenableBuilder(
-      valueListenable: showLoader,
-      builder: (context, value, _) {
-        return IconButton(
-            icon: Icon(
-              Icons.send,
-              color: showLoader.value ? Colors.grey : Colors.green,
-            ),
-            onPressed: showLoader.value
-                ? null
-                : () async {
-                    addUserUploadedImageToChat();
-                    addUserMessageToChat(chatController.text);
-                    print("capturedPhoto::$capturedPhoto");
-                    if (chatController.text.isEmpty) {
-                      Fluttertoast.showToast(
-                          msg: "Please enter your question.");
-                    } else {
-                      String? imageUrl = '';
-                      if (capturedPhoto != null) {
-                        imageUrl =
-                            await uploadMedia(context, capturedPhoto!.path);
-                      }
-                      await insertDataIntoDb(imageUrl, chatController.text);
-                    }
-                  });
-      },
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        capturedPhoto == null
+            ? CameraWidget(saveCapturedPhoto: saveCapturedPhoto)
+            : Padding(
+                padding: const EdgeInsets.only(top: 4.0, bottom: 4),
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      capturedPhoto = null;
+                    });
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 4.0, bottom: 2),
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        image: DecorationImage(
+                          image: FileImage(File(capturedPhoto!.path)),
+                          fit: BoxFit.fill,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+        ValueListenableBuilder(
+          valueListenable: showLoader,
+          builder: (context, value, _) {
+            return IconButton(
+                icon: Icon(Icons.send,
+                    color: showLoader.value
+                        ? Colors.grey
+                        : constants.projectId == constants.keralaUUID
+                            ? Colors.green
+                            : Colors.lightBlue),
+                onPressed: showLoader.value
+                    ? null
+                    : () async {
+                        addUserUploadedImageToChat();
+                        addUserMessageToChat(chatController.text);
+                        print("capturedPhoto::$capturedPhoto");
+                        if (chatController.text.isEmpty) {
+                          Fluttertoast.showToast(
+                              msg: "Please enter your question.");
+                        } else {
+                          String? imageUrl = '';
+                          if (capturedPhoto != null) {
+                            imageUrl =
+                                await uploadMedia(context, capturedPhoto!.path);
+                          }
+                          await insertDataIntoDb(imageUrl, chatController.text);
+                        }
+                      });
+          },
+        ),
+      ],
     );
   }
 
@@ -658,38 +779,12 @@ class _ChatWindowState extends State<ChatWindow>
                 onPressed: !value ? _startListening : _stopListening,
                 icon: Icon(
                   !value ? Icons.mic_off : Icons.mic,
-                  color: Colors.green,
+                  color: Colors.grey,
                 ),
                 tooltip: 'Listen',
               );
             },
           ),
-          capturedPhoto == null
-              ? CameraWidget(saveCapturedPhoto: saveCapturedPhoto)
-              : Padding(
-                  padding: const EdgeInsets.only(top: 4.0, bottom: 4),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        capturedPhoto = null;
-                      });
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 4.0, bottom: 2),
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          image: DecorationImage(
-                            image: FileImage(File(capturedPhoto!.path)),
-                            fit: BoxFit.fill,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                )
         ],
       ),
     );
@@ -702,7 +797,8 @@ class _ChatWindowState extends State<ChatWindow>
       minLines: 1,
       textCapitalization: TextCapitalization.sentences,
       decoration: InputDecoration(
-        hintText: 'Ask a Question...',
+        hintText: 'Ask AI anything...',
+        hintStyle: constants.lightGrey2_14W400,
         border: OutlineInputBorder(
           borderSide: const BorderSide(
             color: Color(0xFF4BA164),
@@ -710,7 +806,7 @@ class _ChatWindowState extends State<ChatWindow>
           ),
           borderRadius: BorderRadius.circular(20),
         ),
-        contentPadding: const EdgeInsets.fromLTRB(110, 4, 10, 4),
+        contentPadding: const EdgeInsets.fromLTRB(50, 4, 10, 4),
         suffixIcon: _sendButton(),
       ),
     );

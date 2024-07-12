@@ -26,29 +26,40 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
   late bool _passwordVisible;
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  String appIcon = '';
 
   @override
   void initState() {
     super.initState();
     viewModel = Provider.of<LoginViewModel>(context, listen: false);
+
     switch (constants.projectId) {
-      case constants.gowaterUUID:
+      case constants.keralaUUID:
         _usernameController.text = "genaiuser";
         _passwordController.text = "genai123";
+        appIcon = constants.fieldRishiIcon;
         // _usernameController.text = "sudhansu_samal";
         // _passwordController.text = "agriwise@123";
         break;
       case constants.apwrimsUUID:
-        _usernameController.text = "sklm_burja";
-        _passwordController.text = "test123";
+      /*  _usernameController.text = "sklm_burja";
+        _passwordController.text = "test123";*/
+        _usernameController.text = "genaiuser";
+        _passwordController.text = "genai123";
+        appIcon = constants.appIcon;
+
         break;
       case constants.kaleswaramUUID:
         _usernameController.text = "Sandeep";
         _passwordController.text = "test123";
+        appIcon = constants.fieldRishiIcon;
+
         break;
       case constants.tnwrimsUUID:
         _usernameController.text = "Pradeep";
         _passwordController.text = "test123";
+        appIcon = constants.fieldRishiIcon;
+
         break;
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -93,25 +104,29 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                               const SizedBox(
                                 height: constants.buttonHeight,
                               ),
-                              const Padding(
-                                padding: EdgeInsets.all(constants.smallPadding),
+                              Padding(
+                                padding: const EdgeInsets.all(constants.smallPadding),
                                 child: Center(
                                   child: SizedBox(
-                                    height: constants.loginIconHeight,
-                                    width: constants.loginIconWidth,
+                                    height: 150,
+                                    width: 200,
                                     child: Image(
-                                      image: AssetImage(constants.appIcon),
+                                      image: AssetImage(appIcon),
                                       fit: BoxFit.contain,
                                     ),
                                   ),
                                 ),
                               ),
-                              Text(
-                                constants.loginString,
-                                style: constants.darkblue20W600,
-                              ),
+                            /*  const Text(
+                                'fieldRISHI: GenAI Co-Pilot for AgriExpert Advisory',
+                                style: TextStyle(
+                                    fontFamily: 'serif',
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                    fontSize: 20),
+                              ),*/
                               const SizedBox(
-                                height: constants.largePadding,
+                                height: 100,
                               ),
                               Text(
                                 constants.userNameString,
@@ -126,7 +141,6 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                 child: Container(
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(10.0),
-                                    // Set your desired border radius
                                     color: constants
                                         .inputFieldColor, // Background color
                                   ),
@@ -274,7 +288,8 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                                 ),
                                               ),
                                             );
-                                            print("authenticaion success");
+                                            print("authenticaion success - ${AppState
+                                                .instance.sessionId}");
                                           }
                                         }
                                       }

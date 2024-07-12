@@ -10,12 +10,12 @@ class ChatBubble extends StatefulWidget {
     Key? key,
     required this.text,
     required this.isUser,
-    required this.logMessage,
+    this.logMessage,
     this.imageUrl,
     this.tableColumnData,
     this.tableRowData,
     this.errorLog,
-    required this.hasErrorLog,
+    this.hasErrorLog,
     this.timestampMapping,
     this.sessionId,
     this.chainOfThoughts,
@@ -28,12 +28,12 @@ class ChatBubble extends StatefulWidget {
   final String? imageUrl;
   final List<dynamic>? tableColumnData;
   final List<dynamic>? tableRowData;
-  final String logMessage;
+  final String? logMessage;
   final String? errorLog;
-  final bool hasErrorLog;
+  final bool? hasErrorLog;
   final Map<String, String>? timestampMapping;
   final String? sessionId;
-  final List<String>? chainOfThoughts;
+  final List<dynamic>? chainOfThoughts;
   final String? token;
   late bool? expandChainOfThought;
 
@@ -48,7 +48,7 @@ class _ChatBubbleState extends State<ChatBubble> {
   @override
   void initState() {
     super.initState();
-    show.value = widget.expandChainOfThought!;
+    // show.value = widget.expandChainOfThought!;
   }
 
   @override
@@ -58,12 +58,7 @@ class _ChatBubbleState extends State<ChatBubble> {
 
   @override
   Widget build(BuildContext context) {
-    bool hasContent = (widget.imageUrl!.isNotEmpty ||
-        (widget.tableColumnData != null &&
-            widget.tableColumnData!.isNotEmpty &&
-            widget.tableRowData != null &&
-            widget.tableRowData!.isNotEmpty) ||
-        widget.text.isNotEmpty);
+    bool hasContent = widget.text.isNotEmpty;
 
     bool hasChainOfThoughts =
         widget.chainOfThoughts != null && widget.chainOfThoughts!.isNotEmpty;
@@ -81,7 +76,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                   widget.isUser ? Alignment.centerRight : Alignment.centerLeft,
               child: Column(
                 children: [
-                  if (!widget.isUser && hasChainOfThoughts)
+                  if (widget.isUser && hasChainOfThoughts)
                     ValueListenableBuilder(
                       builder: (context, value, _) {
                         return Column(
@@ -97,12 +92,12 @@ class _ChatBubbleState extends State<ChatBubble> {
                         : MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (!widget.isUser && hasContent)
-                        SizedBox(
+                      if (!widget.isUser)
+                        const SizedBox(
                           height: 100,
                           child: Column(
                             children: [
-                              const Padding(
+                              Padding(
                                 padding: EdgeInsets.only(left: 4.0),
                                 child: SizedBox(
                                   height: 32,
@@ -114,22 +109,12 @@ class _ChatBubbleState extends State<ChatBubble> {
                                   ),
                                 ),
                               ),
-                              ValueListenableBuilder(
-                                builder: (context, value, _) {
-                                  return IconButton(
-                                      onPressed: () {
-                                        show.value = !show.value;
-                                      },
-                                      icon: value
-                                          ? const Icon(Icons.keyboard_arrow_up)
-                                          : const Icon(
-                                              Icons.keyboard_arrow_down));
-                                },
-                                valueListenable: show,
-                              ),
                             ],
                           ),
                         ),
+                      const SizedBox(
+                        width: 8,
+                      ),
                       if (hasContent || hasChainOfThoughts)
                         Flexible(
                           child: Column(
@@ -175,10 +160,12 @@ class _ChatBubbleState extends State<ChatBubble> {
                                     ),
                                   ),
                                 ),
-                              if (!widget.isUser &&
-                                  widget.logMessage.isNotEmpty)
+                              /*  if (!widget.isUser &&
+                                  widget.logMessage!.isNotEmpty)
                                 _infoView(),
-                              if (widget.hasErrorLog) _buttonsView(),
+                              if (widget.hasErrorLog != null &&
+                                  widget.hasErrorLog == true)
+                                _buttonsView(),*/
                               // if (isExpanded)
                             ],
                           ),
@@ -231,7 +218,7 @@ class _ChatBubbleState extends State<ChatBubble> {
   _infoView() {
     return GestureDetector(
       onTap: () {
-        showInformation(widget.logMessage);
+        showInformation(widget.logMessage!);
       },
       child: const Padding(
         padding: EdgeInsets.only(left: 8.0),
@@ -244,25 +231,41 @@ class _ChatBubbleState extends State<ChatBubble> {
   }
 
   _userProfileView() {
-    return const Padding(
-      padding: EdgeInsets.only(left: 4.0),
-      child: SizedBox(
-        height: 32,
-        width: 32,
-        child: CircleAvatar(
-          radius: 50,
-          backgroundImage: AssetImage('assets/images/user_profile_pic.png'),
+    return Column(
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(left: 4.0),
+          child: SizedBox(
+            height: 32,
+            width: 32,
+            child: CircleAvatar(
+              radius: 50,
+              backgroundImage: AssetImage('assets/images/user_profile_pic.png'),
+            ),
+          ),
         ),
-      ),
+        ValueListenableBuilder(
+          builder: (context, value, _) {
+            return IconButton(
+                onPressed: () {
+                  show.value = !show.value;
+                },
+                icon: value
+                    ? const Icon(Icons.keyboard_arrow_up)
+                    : const Icon(Icons.keyboard_arrow_down));
+          },
+          valueListenable: show,
+        ),
+      ],
     );
   }
 
-  void showInformation(String message) {
+  void showInformation(String? message) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Info'),
-        content: SingleChildScrollView(child: Text(message)),
+        content: SingleChildScrollView(child: Text(message!)),
         actions: [
           TextButton(
             onPressed: () {
@@ -430,7 +433,7 @@ class _ChatBubbleState extends State<ChatBubble> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Update SQL Query'),
-          content: SingleChildScrollView(child: Text(widget.logMessage)),
+          content: SingleChildScrollView(child: Text(widget.logMessage!)),
           actions: <Widget>[
             TextButton(
               child: const Text('Cancel'),

@@ -50,9 +50,12 @@ class _CameraWidgetState extends State<CameraWidget> {
           }
         }
       },
-      icon: const Icon(
-        Icons.upload,
-        color: Color(0xFF4BA164),
+      icon: Transform.rotate(
+        angle: -24.5,
+        child: const Icon(
+          Icons.attach_file,
+          color: Colors.grey,
+        ),
       ),
     );
   }

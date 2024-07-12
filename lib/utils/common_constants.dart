@@ -57,6 +57,7 @@ const String headerRefeshToken = 'refresh_token';
 
 // Icons
 const String appIcon = 'assets/images/flutter_logo.png';
+const String fieldRishiIcon = 'assets/images/Tooltip.png';
 
 // URLs
 const String keralaBaseUrl = 'https://keralakrishihub.vassarlabs.com/';
@@ -98,9 +99,10 @@ const String keralaUUID = '62d3dc99-5bc3-4303-8be1-d4fa1f7deee5';
 const String kuidfcUUID = '62d3dc99-5bc3-4303-8be1-d4fa1f7deee5';
 const String prodKeySpace = 'CHAT_BOT_ONDEMAND_QUERY_DATA';
 const String testKeySpace = 'CHAT_BOT_TEST';
+const String googleKeySpace = 'CHAT_BOT_GOOGLE';
 
 //check this before generating apk
-const String projectId = gowaterUUID;
+const String projectId = keralaUUID;
 const String keyspace = prodKeySpace;
 String appTitle = '';
 String baseUrl= '';

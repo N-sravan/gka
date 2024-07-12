@@ -141,7 +141,7 @@ void main() async {
 void setProjectSpecificValues() {
   if (constants.projectId == constants.keralaUUID) {
     constants.appTitle = constants.fieldRishiString;
-    constants.baseUrl = constants.keralaBaseUrl;
+    constants.baseUrl = constants.fieldRishiBaseUrl;
   }
   if (constants.projectId == constants.gowaterUUID) {
     constants.appTitle = constants.gowaterString;
@@ -967,7 +967,7 @@ class MyApp extends StatelessWidget {
         },*/
         routes: {
           constants.initialRoute: (context) => const SplashScreenWidget(),
-          constants.roleRoute: (context) => const RoleSelectionWidget(),
+          constants.roleRoute: (context) => const LoginScreenWidget(),
           // constants.loginRoute: (context) => const LoginScreenWidget(),
           constants.homeRoute: (context) => const HomeScreenWidget(),
         },
