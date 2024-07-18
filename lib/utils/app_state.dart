@@ -52,6 +52,7 @@ class AppState {
   late String userId;
   late String sessionId;
   late String language;
+  bool isEnglish = true;
   late String mode;
   bool isListeningMode =false;
 }

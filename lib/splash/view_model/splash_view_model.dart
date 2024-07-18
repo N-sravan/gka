@@ -55,6 +55,8 @@ class SplashViewModel extends LoadingViewModel {
       AppState.instance.userName = userName;
       AppState.instance.token = token;
       AppState.instance.sessionId = sessionId;
+      AppState.instance.language = 'english';
+      AppState.instance.isEnglish = true;
       if (constants.projectId == constants.keralaUUID) {
         NavigationUtil.instance.navigateToRoleScreen(context);
       } else {

@@ -25,7 +25,8 @@ const String preferenceUserMobileNo = 'userMobileNo';
 const String preferenceUserId = 'userId';
 const String preferenceUserData = 'userData';
 const String preferenceToken = 'token';
-const String preferenceSessionId= 'sessionId';
+const String preferenceLanguage = 'language';
+const String preferenceSessionId = 'sessionId';
 const String preferenceFcmToken = 'fcmToken';
 const String preferencelocName = 'locName';
 const String preferencelocUUID = 'locUUID';
@@ -68,26 +69,34 @@ const String kuidfcBaseUrl = 'https://nawrims.vassarlabs.com/kuidfc_mind/';
 // const String baseUrl = 'https://agriwise.vassarlabs.com/';
 // const String krishidsBaseUrl = 'http://acerkrishidss.vassarlabs.com/staging/api';
 // const String krishidsBaseUrl = 'https://agriwise.vassarlabs.com/staging/api';
-const String imageUploadUrl = 'https://agriwise.vassarlabs.com/agribot/bucket/insert_file';
+const String imageUploadUrl =
+    'https://agriwise.vassarlabs.com/agribot/bucket/insert_file';
 const String fileUploadEndPoint = 'vector/save_vector_data_from_upload';
 const String getFilesEndPoint = 'rag/get_rag_data';
-const String deleteFileEndPoint = 'rag/delete_rag_data';
+// const String deleteFileEndPoint = 'rag/delete_rag_data';
 /*const String krishidsBaseUrl =
     'http://agriwise.vassarlabs.com/api';*/ //-
 
-const String loginEndpoint = 'https://gowater-staging.vassarlabs.com/um/api/getUserDetailsForChatbot/';
-const String loginEndpointForTN = 'https://tnwrims.vassarlabs.com/um/api/getUserDetailsForChatbot/';
+const String loginEndpoint =
+    'https://gowater-staging.vassarlabs.com/um/api/getUserDetailsForChatbot/';
+const String loginEndpointForTN =
+    'https://tnwrims.vassarlabs.com/um/api/getUserDetailsForChatbot/';
 const String saveFcmTokenEndpoint = 'fcm_tokens/save_token';
 const String deleteTokenEndpoint = 'fcm_tokens/delete_token';
 const String getAvailabeModelsEndpoint = 'get_available_models';
 const String getAvailabePromptsEndpoint = 'get_all_prompt_templates';
-const String logoutEndpoint = 'auth/realms/agriwiserealm/protocol/openid-connect/logout';
+const String logoutEndpoint =
+    'auth/realms/agriwiserealm/protocol/openid-connect/logout';
 const String csrfEndPoint = 'um/generate-csrf-token';
 const String userPermissionsEndPoint = 'um/user-permissions/';
 const String getToolsEndpoint = 'tool_inventory/get_tools';
 const String updatePromptTemplateEndpoint = 'update_prompt_template';
 const String createPromptTemplateEndpoint = 'create_prompt_template';
 const String createSessionEndpoint = 'session/create_session';
+const String getDocumentsEndpoint = 'data_extractor/get_collection_data/';
+const String uploadDocumentEndpoint = 'data_extractor/save_data_upload/';
+const String deleteChunkEndpoint = 'data_extractor/delete_collection_data/';
+const String deleteFileEndpoint = 'data_extractor/delete-file-data/';
 
 //UUIDs & keys
 const String indiaUUID = 'd6b37905-d2d3-4275-9317-d9b6f47cd783';
@@ -101,10 +110,10 @@ const String prodKeySpace = 'CHAT_BOT_ONDEMAND_QUERY_DATA';
 const String testKeySpace = 'CHAT_BOT_TEST';
 
 //check this before generating apk
-const String projectId = apwrimsUUID;
+const String projectId = keralaUUID;
 const String keyspace = prodKeySpace;
 String appTitle = '';
-String baseUrl= '';
+String baseUrl = '';
 
 // Paddings
 const double largePadding = 32;
@@ -168,8 +177,6 @@ const double iconSize16 = 16;
 const double iconSizeLarge = 32;
 const double iconBorderRadius = 50;
 
-
-
 // Elevations
 const double appBarElevation = 4;
 const double formComponentsElevation = 4;
@@ -227,7 +234,6 @@ const Color roleSelectedColor = Color(0xffEDFFE8);
 const Color selectedRoleColor = Color(0xffEDFFE8);
 const Color selectedRoleBorderColor = Color(0xff00B251);
 const Color defaultRoleBorderColor = Color(0xffDADADA);
-
 
 TextStyle normalBlackTextStyle = const TextStyle(
   fontSize: 16,
@@ -647,7 +653,6 @@ TextStyle blackMont24W700 = const TextStyle(
   color: Colors.black,
 );
 
-
 TextStyle generateOTPStyle = const TextStyle(
     fontFamily: 'Montserrat',
     fontSize: 14,
@@ -668,8 +673,7 @@ ButtonStyle agriButtonStyle = ElevatedButton.styleFrom(
   // fixedSize: Size(MediaQuery.of(context).size.height,
   //     constants.splashButtonHeight),
   shape: RoundedRectangleBorder(
-    borderRadius:
-    BorderRadius.circular(borderRadius),
+    borderRadius: BorderRadius.circular(borderRadius),
   ),
   backgroundColor: splashButtonBg,
 );
@@ -813,10 +817,10 @@ const String roleRoute = '/role';
 const String appInfoRoute = '/appInfoRoute';
 const String loginRoute = '/login';
 const String farmerLoginRoute = '/farmerLogin';
+// const String farmerLoginRoute = '/farmerLogin';
 const String departmentLoginRoute = '/departmentLogin';
 const String homeRoute = '/home';
 const String farmerHomeRoute = '/farmerHome';
-
 
 const String clickFromCamera = 'Click from Camera';
 const String clickFromGallery = 'Click from Gallery';
@@ -830,4 +834,4 @@ enum CropNameVerifyRadioOptions { agree, disagree }
 
 // const String genAiBaseUrl = "https://nawrims.vassarlabs.com/genai/";
 const String genAiBaseUrl = "https://nawrims.vassarlabs.com/vassar_mind/";
-// const String ngrok = "https://63ab-196-12-47-4.ngrok-free.app/";
+const String ngrok = "https://a840-196-12-47-4.ngrok-free.app/";

@@ -77,8 +77,8 @@ class LoginViewModel extends LoadingViewModel {
         .writeSecureData(constants.preferenceUserId, userId);
     await SecuredStorageUtil.instance
         .writeSecureData(constants.preferenceSessionId, sessionId);
-    await SecuredStorageUtil.instance
-        .writeSecureData(constants.preferenceToken, token);
+    await SecuredStorageUtil.instance.writeSecureData(constants.preferenceToken, token);
+    // await SecuredStorageUtil.instance.writeSecureData(constants.preferenceLanguage, 'english');
     await SecuredStorageUtil.instance.writeSecureData(
         constants.preferenceLastLoginTime,
         DateTime.now().millisecondsSinceEpoch.toString());
@@ -86,6 +86,8 @@ class LoginViewModel extends LoadingViewModel {
     AppState.instance.userName = userName;
     AppState.instance.userId = userId;
     AppState.instance.token = token;
+    AppState.instance.language = 'english';
+    AppState.instance.isEnglish = true;
   }
 
   Future<bool?> sendFcmToken(BuildContext context) async {

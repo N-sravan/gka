@@ -99,15 +99,15 @@ class _ChatWindowState extends State<ChatWindow>
 
   @override
   void initState() {
+    print("language::${AppState.instance.language}");
     super.initState();
-    AppState.instance.language = 'English';
     switch (constants.projectId) {
       case constants.keralaUUID:
         title = constants.appTitle;
         break;
     }
     switch (AppState.instance.language) {
-      case 'English':
+      case 'english':
         dataNotFoundMsg = 'Data Not Found';
         loaderMsgList = [
           'Please wait',
@@ -121,13 +121,13 @@ class _ChatWindowState extends State<ChatWindow>
         langId = 'en-US';
         language = 'english';
         break;
-      case 'Telugu':
+      case 'telugu':
         dataNotFoundMsg = 'సమాచారం దొరకట్లేదు';
         loaderMsgList = ['దయచేసి వేచి ఉండండి', 'ఒక్క క్షణం వేచి ఉండండి'];
         langId = 'te-IN';
         language = 'telugu';
         break;
-      case 'Odia':
+      case 'odia':
         dataNotFoundMsg = 'ତଥ୍ୟ ମିଳିଲା ନାହିଁ';
         loaderMsgList = [
           'ଦୟାକରି ଅପେକ୍ଷା କର',
@@ -139,7 +139,7 @@ class _ChatWindowState extends State<ChatWindow>
         langId = 'or-IN';
         language = 'odia';
         break;
-      case 'Hindi':
+      case 'hindi':
         dataNotFoundMsg = 'जानकारी नहीं मिली';
         loaderMsgList = [
           'कृपया प्रतीक्षा करें',
@@ -191,8 +191,6 @@ class _ChatWindowState extends State<ChatWindow>
       print("LOCALESDSD $i   ${locales[i].name}");
     }
 
-    // AppState.instance.isOriyaSelected ? langId = 'te-IN' : langId = 'en-US';
-
     //for android tab english locale at 5
     print("_onSpeechResult_startListening");
     SpeechRecognitionResult result;
@@ -201,7 +199,7 @@ class _ChatWindowState extends State<ChatWindow>
           onSoundLevelChange: onSoundLevelChange,
           /*localeId: selectedLocale.localeId,*/
           localeId: langId,
-          partialResults: false,
+          partialResults: true,
           onResult: _onSpeechResult,
           pauseFor: const Duration(seconds: 5),
           listenFor: const Duration(seconds: 35),
@@ -312,7 +310,7 @@ class _ChatWindowState extends State<ChatWindow>
         ),
         appBar: constants.projectId == constants.keralaUUID
             ? AppBar(
-                leading: Row(
+                /*  leading: Row(
                   children: [
                     IconButton(
                       icon: const Icon(
@@ -324,7 +322,9 @@ class _ChatWindowState extends State<ChatWindow>
                       },
                     ),
                   ],
-                ),
+                ),*/
+                iconTheme: const IconThemeData(color: Colors.white),
+
                 backgroundColor: Colors.green,
                 title: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
@@ -431,6 +431,12 @@ class _ChatWindowState extends State<ChatWindow>
                                     final datalast =
                                         Map<String, dynamic>.from(value);
                                     if (datalast['is_user']) {
+                                      String query = datalast['message'];
+                                      if (!AppState.instance.isEnglish) {
+                                      /*  query = await translateText(
+                                            datalast['message'],
+                                            AppState.instance.language,false);*/
+                                      }
                                       thoughtsList.clear();
                                       messageList.add(ChatBubble(
                                         expandChainOfThought: false,
@@ -451,13 +457,20 @@ class _ChatWindowState extends State<ChatWindow>
                                         token: datalast['token'] ?? '',
                                       ));
                                     } else {
+                                      String query = '';
                                       if (datalast['chain_of_thought'] !=
                                           null) {
                                         thoughtsList
                                             .add(datalast['chain_of_thought']);
                                       }
-                                        if (datalast['message'] != null) {
+                                      if (datalast['message'] != null) {
                                         thoughtsList.clear();
+
+                                      /*  if (!AppState.instance.isEnglish) {
+                                          query = await translateText(
+                                              datalast['message'],
+                                              AppState.instance.language,false);
+                                        }*/
                                       }
                                       if (datalast['is_valid_token'] != null &&
                                           datalast['is_limit_exceeded'] !=
@@ -470,27 +483,27 @@ class _ChatWindowState extends State<ChatWindow>
                                         }
                                       }
                                       // messageList.last.expandChainOfThought = false;
-                                        messageList.add(ChatBubble(
-                                          expandChainOfThought: false,
-                                          text: datalast['message'] ?? '',
-                                          isUser: datalast['is_user'],
-                                          imageUrl: datalast['image_url'] ?? '',
-                                          tableColumnData:
-                                              datalast['sql_df_columns'],
-                                          tableRowData:
-                                              datalast['sql_df_values'] != null
-                                                  ? jsonDecode(
-                                                      datalast['sql_df_values'])
-                                                  : null,
-                                          logMessage: datalast['log'] ?? '',
-                                          hasErrorLog: false,
-                                          timestampMapping: dataTsMapping,
-                                          chainOfThoughts:
-                                              List<String>.from(thoughtsList),
-                                          token: datalast['token'] ?? '',
-                                        ));
-                                      }
+                                      messageList.add(ChatBubble(
+                                        expandChainOfThought: false,
+                                        text: datalast['message'] ?? '',
+                                        isUser: datalast['is_user'],
+                                        imageUrl: datalast['image_url'] ?? '',
+                                        tableColumnData:
+                                            datalast['sql_df_columns'],
+                                        tableRowData:
+                                            datalast['sql_df_values'] != null
+                                                ? jsonDecode(
+                                                    datalast['sql_df_values'])
+                                                : null,
+                                        logMessage: datalast['log'] ?? '',
+                                        hasErrorLog: false,
+                                        timestampMapping: dataTsMapping,
+                                        chainOfThoughts:
+                                            List<String>.from(thoughtsList),
+                                        token: datalast['token'] ?? '',
+                                      ));
                                     }
+                                  }
                                 });
 
                                 if (widget.isFromHistory != null &&
@@ -571,6 +584,8 @@ class _ChatWindowState extends State<ChatWindow>
                                     currentQuestion = {
                                       'isUser': messageList[i].isUser,
                                       'text': messageList[i].text,
+                                      'image_url':
+                                          messageList[i].imageUrl ?? '',
                                       'cots': []
                                     };
                                     mappedData.add(currentQuestion);
@@ -591,7 +606,9 @@ class _ChatWindowState extends State<ChatWindow>
                                             .isEmpty) {
                                       Map<String, dynamic> data = {
                                         'isUser': messageList[i].isUser,
-                                        'text': messageList[i].text
+                                        'text': messageList[i].text,
+                                        'image_url':
+                                            messageList[i].imageUrl ?? ''
                                       };
                                       mappedData.add(data);
                                     }
@@ -599,6 +616,7 @@ class _ChatWindowState extends State<ChatWindow>
                                 }
 
                                 String message;
+                                String image;
                                 bool currentIsUser;
                                 List<dynamic>? cotsList = [];
 
@@ -606,18 +624,20 @@ class _ChatWindowState extends State<ChatWindow>
                                   currentIsUser = mappedData[i]['isUser'];
                                   message = mappedData[i]['text'];
                                   cotsList = mappedData[i]['cots'];
+                                  image = mappedData[i]['image_url'] ?? '';
 
                                   tempList.add(ChatBubble(
                                     text: message,
                                     isUser: currentIsUser,
                                     chainOfThoughts: cotsList,
+                                    imageUrl: image,
                                   ));
                                 }
-                                print("temp list length::${tempList.length}");
+                                /* print("temp list length::${tempList.length}");
                                 for (int i = 0; i < tempList.length; i++) {
                                   print(
                                       "temp ${i} - ${tempList[i].isUser} -- ${tempList[i].text} -- ${tempList[i].chainOfThoughts}");
-                                }
+                                }*/
 
                                 return ListView.builder(
                                   reverse: true,
@@ -818,7 +838,7 @@ class _ChatWindowState extends State<ChatWindow>
     );
   }
 
-  updateChatControllerForSpeech(String text) {
+  void updateChatControllerForSpeech(String text) {
     chatController.text = text;
     // setState(() {});
   }
@@ -911,11 +931,12 @@ class _ChatWindowState extends State<ChatWindow>
 
     String timeStamp = DateTime.now().millisecondsSinceEpoch.toString();
 
-    DateTime now = DateTime.now();
-    String formattedDate = DateFormat('kk:mm:ss \n EEE d MMM').format(now);
-    // print("wewewew DateTime before push:: $formattedDate");
-    print(
-        "wewewew data:: ${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
+   /* if (AppState.instance.language != 'english') {
+      text = await translateText(text, AppState.instance.language, true);
+      print("translated text -- $text");
+    }*/
+
+    print("wewewew data:: ${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
     await ref.child(timeStamp).set({
       "is_user": true,
       "message": text,
@@ -926,11 +947,6 @@ class _ChatWindowState extends State<ChatWindow>
       "token": AppState.instance.token,
       "sm_enabled": true,
     });
-
-    DateTime nowTime = DateTime.now();
-    String formattedDateTime =
-        DateFormat('kk:mm:ss \n EEE d MMM').format(nowTime);
-    // print("wewewew DateTime after push:: $formattedDateTime");
 
     chatController.clear();
     capturedPhoto = null;
@@ -1041,6 +1057,28 @@ class _ChatWindowState extends State<ChatWindow>
 
   @override
   bool get wantKeepAlive => true;
+
+ /* Future<String> translateText(
+      String text, String language, bool isInserted) async {
+    String _translatedText = '';
+    final onDeviceTranslator = isInserted
+        ? GoogleMlKit.nlp.onDeviceTranslator(
+            sourceLanguage: TranslateLanguage.hindi,
+            targetLanguage: TranslateLanguage.english,
+          )
+        : GoogleMlKit.nlp.onDeviceTranslator(
+            sourceLanguage: TranslateLanguage.english,
+            targetLanguage: TranslateLanguage.hindi,
+          );
+
+    final result = await onDeviceTranslator.translateText(text);
+    setState(() {
+      _translatedText = result;
+    });
+
+    await onDeviceTranslator.close();
+    return _translatedText;
+  }*/
 }
 
 @pragma('vm:entry-point')

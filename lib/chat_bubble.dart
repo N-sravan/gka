@@ -58,7 +58,8 @@ class _ChatBubbleState extends State<ChatBubble> {
 
   @override
   Widget build(BuildContext context) {
-    bool hasContent = widget.text.isNotEmpty;
+    bool hasContent = widget.text.isNotEmpty ||
+        (widget.imageUrl != null && widget.imageUrl!.isNotEmpty);
 
     bool hasChainOfThoughts =
         widget.chainOfThoughts != null && widget.chainOfThoughts!.isNotEmpty;
@@ -174,11 +175,6 @@ class _ChatBubbleState extends State<ChatBubble> {
   }
 
   List<Widget> chainOfThoughts() {
-    /*   widget.chainOfThoughts!.add("HII");
-    widget.chainOfThoughts!.add("HII");
-    widget.chainOfThoughts!.add("HII");
-    widget.chainOfThoughts!.add("HII");
-    widget.chainOfThoughts!.add("HII");*/
     List<Widget> widgets = [];
     if (show.value) {
       widgets.add(const Text(
@@ -235,22 +231,25 @@ class _ChatBubbleState extends State<ChatBubble> {
               width: 32,
               child: CircleAvatar(
                 radius: 50,
-                backgroundImage: AssetImage('assets/images/user_profile_pic.png'),
+                backgroundImage:
+                    AssetImage('assets/images/user_profile_pic.png'),
               ),
             ),
           ),
-          ValueListenableBuilder(
-            builder: (context, value, _) {
-              return IconButton(
-                  onPressed: () {
-                    show.value = !show.value;
+          (widget.chainOfThoughts != null && widget.chainOfThoughts!.isNotEmpty)
+              ? ValueListenableBuilder(
+                  builder: (context, value, _) {
+                    return IconButton(
+                        onPressed: () {
+                          show.value = !show.value;
+                        },
+                        icon: value
+                            ? const Icon(Icons.keyboard_arrow_up)
+                            : const Icon(Icons.keyboard_arrow_down));
                   },
-                  icon: value
-                      ? const Icon(Icons.keyboard_arrow_up)
-                      : const Icon(Icons.keyboard_arrow_down));
-            },
-            valueListenable: show,
-          ),
+                  valueListenable: show,
+                )
+              : const SizedBox(),
         ],
       ),
     );

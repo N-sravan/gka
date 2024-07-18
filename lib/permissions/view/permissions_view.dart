@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:text_to_speech/text_to_speech.dart';
-import 'package:workmanager/workmanager.dart';
 import '../../login/model/department_user_permission_response.dart' as response;
 import '../../../utils/common_constants.dart' as constants;
 import '../../home/view/home_view.dart';
@@ -151,7 +150,7 @@ class _PermissionsScreenWidgetState extends State<PermissionsScreenWidget> {
     );
   }
 
-  void startWorkManager() {
+ /* void startWorkManager() {
     print("wewewewewewew startWorkManager");
     Workmanager().registerPeriodicTask(
       "speechTask",
@@ -159,8 +158,9 @@ class _PermissionsScreenWidgetState extends State<PermissionsScreenWidget> {
       frequency: const Duration(minutes: 15),
       initialDelay: const Duration(minutes: 2),
     );
-  }
+  }*/
 
+/*
   callbackDispatcher() {
     Workmanager().executeTask((
       task,
@@ -189,6 +189,7 @@ class _PermissionsScreenWidgetState extends State<PermissionsScreenWidget> {
       });
     });
   }
+*/
 
   void complexTask3(Map<String, dynamic> data) {
     print("complex task 3 started");

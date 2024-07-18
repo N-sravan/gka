@@ -13,7 +13,6 @@ class ToolInventoryView extends StatefulWidget {
 }
 
 class _ToolInventoryViewState extends State<ToolInventoryView> {
-  String? _selectedPromptTemplate;
 
   late ChatViewModel viewModel;
 

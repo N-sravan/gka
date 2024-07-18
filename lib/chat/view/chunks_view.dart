@@ -1,7 +1,6 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:gka/chat/model/get_documents_response.dart';
-import 'package:gka/chat/view/chunks_view.dart';
 import 'package:gka/chat/view/upload_document_view.dart';
 import 'package:provider/provider.dart';
 import '../../utils/app_state.dart';
@@ -10,14 +9,16 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 import 'create_prompt_template_view.dart';
 
-class DocumentsView extends StatefulWidget {
-  const DocumentsView({Key? key}) : super(key: key);
+class DocumentsChunkView extends StatefulWidget {
+  DocumentsChunkView({Key? key, this.chunksData}) : super(key: key);
+
+  final List<FileResponse>? chunksData;
 
   @override
-  State<DocumentsView> createState() => _DocumentsViewState();
+  State<DocumentsChunkView> createState() => _DocumentsChunkViewState();
 }
 
-class _DocumentsViewState extends State<DocumentsView> {
+class _DocumentsChunkViewState extends State<DocumentsChunkView> {
   TextEditingController _promptTextController = TextEditingController();
 
   late ChatViewModel viewModel;
@@ -26,9 +27,7 @@ class _DocumentsViewState extends State<DocumentsView> {
   void initState() {
     super.initState();
     viewModel = Provider.of<ChatViewModel>(context, listen: false);
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await viewModel.getDocuments(context);
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) async {});
   }
 
   @override
@@ -57,35 +56,13 @@ class _DocumentsViewState extends State<DocumentsView> {
             body: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ListTile(
-                  title: const Text(
-                    'Upload a document',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.normal,
-                    ),
-                  ),
-                  trailing: const Icon(
-                    Icons.upload,
-                  ),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const UploadDocumentView()),
-                    );
-                  },
-                ),
-                viewModel.documentIdTextMapping.isNotEmpty
+                widget.chunksData!.isNotEmpty
                     ? Expanded(
                         child: Padding(
                             padding: const EdgeInsets.only(bottom: 12),
                             child: ListView.builder(
-                              itemCount: viewModel.documentIdTextMapping.length,
+                              itemCount: widget.chunksData?.length,
                               itemBuilder: (context, index) {
-                                final key = viewModel.documentIdTextMapping.keys
-                                    .elementAt(index);
-                                final value = viewModel.documentIdTextMapping[key];
                                 return Card(
                                   margin: const EdgeInsets.symmetric(
                                       vertical: 8.0, horizontal: 16.0),
@@ -113,7 +90,7 @@ class _DocumentsViewState extends State<DocumentsView> {
                                                     child: const Text('Yes'),
                                                     onPressed: () async {
                                                       bool result =
-                                                          await viewModel.deleteDocument(context, viewModel.fileUUID);
+                                                          await viewModel.deleteChunk(context, widget.chunksData![index].chunkUUID.toString()!);
                                                       if (result) {
                                                         Fluttertoast.showToast(
                                                             msg:
@@ -136,19 +113,31 @@ class _DocumentsViewState extends State<DocumentsView> {
                                         size: 20,
                                       ),
                                     ),
+                                    // title: Text(getFirstLines(widget.chunksData![index].text, 2),style: TextStyle(fontSize: 10),),
                                     title: Text(
-                                      key,
-                                      style: const TextStyle(fontSize: 14.0),
+                                      widget.chunksData![index].text!,
+                                      style: const TextStyle(fontSize: 10),
                                     ),
                                     onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              DocumentsChunkView(
-                                                  chunksData: value),
-                                        ),
-                                      );
+                                      showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              title: const Text('Content'),
+                                              content: SingleChildScrollView(
+                                                child: Text(widget
+                                                    .chunksData![index].text!),
+                                              ),
+                                              actions: <Widget>[
+                                                TextButton(
+                                                  child: const Text('Close'),
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                ),
+                                              ],
+                                            );
+                                          });
                                     },
                                   ),
                                 );

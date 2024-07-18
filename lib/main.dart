@@ -34,7 +34,6 @@ import 'package:text_to_speech/text_to_speech.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:uuid/uuid.dart';
-import 'package:workmanager/workmanager.dart';
 import '../../login/model/department_user_permission_response.dart' as response;
 import 'dart:developer' as developer;
 import 'dart:io' as platform;
@@ -105,7 +104,7 @@ void main() async {
 
   if (notificationStatus == PermissionStatus.granted) {
     print("wewewewewew notificationStatus:::${PermissionStatus.granted}");
-   /* Workmanager().initialize(callbackDispatcher);
+    /* Workmanager().initialize(callbackDispatcher);
     Workmanager().registerPeriodicTask(
       "speechTask",
       "speechTask",
@@ -139,6 +138,7 @@ void main() async {
 }
 
 void setProjectSpecificValues() {
+  AppState.instance.language = 'english';
   if (constants.projectId == constants.keralaUUID) {
     constants.appTitle = constants.fieldRishiString;
     constants.baseUrl = constants.fieldRishiBaseUrl;
@@ -151,7 +151,7 @@ void setProjectSpecificValues() {
     constants.appTitle = constants.apwrimsString;
     constants.baseUrl = constants.apwrimsBaseUrl;
   }
- /* if (constants.projectId == constants.gowaterUUID) {
+  /* if (constants.projectId == constants.gowaterUUID) {
     constants.appTitle = constants.kuidfctring;
     constants.baseUrl = constants.kuidfcBaseUrl;
   }*/
@@ -171,7 +171,7 @@ Future<bool> requestPermissions() async {
   }
 }
 
-@pragma('vm:entry-point')
+/*@pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((
     task,
@@ -200,7 +200,7 @@ void callbackDispatcher() {
       return Future.value(true);
     });
   });
-}
+}*/
 
 Future<void> showNotification() async {
   await Firebase.initializeApp(

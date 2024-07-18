@@ -93,6 +93,8 @@ class ChatViewModel extends LoadingViewModel {
   String selectedModel = '';
   String selectedPromptModel = '';
   String selectedPromptModelUUID = '';
+  String fileUUID = '';
+
 
   final SpeechToText _speechToText = SpeechToText();
   ValueNotifier<bool> listeningActive = ValueNotifier<bool>(false);
@@ -100,13 +102,14 @@ class ChatViewModel extends LoadingViewModel {
   // ValueNotifier<bool> showLoader = ValueNotifier<bool>(false);
   bool speechEnabled = false;
   Map<String, String> promptTemplateIntentMapping = {};
-  Map<String, String> documentIdMapping = {};
+  Map<String, List<FileResponse>> documentIdTextMapping = {};
 
   Map<String, String> toolNameDescriptionMapping = {};
   Map<String, String> modelNameUuidMapping = {};
   Map<String, String> messageTimestampMapping = {};
   List<String>? modelList = [];
   List<String>? toolUUIDs = [];
+  List<FileResponse>? documentsList = [];
   DateFormat formatter = DateFormat("dd-MM-yyyy");
 
   clearData() {
@@ -189,19 +192,17 @@ class ChatViewModel extends LoadingViewModel {
       try {
         GetDocumentsResponseModel getDocumentsResponseModel =
             await repo.fetchDocuments(context);
-        Map<String, String> documentsMapping = {};
-        documentIdMapping.clear();
+        documentIdTextMapping.clear();
         if (getDocumentsResponseModel.statusCode == 200) {
-          if (getDocumentsResponseModel.response != null &&
-              getDocumentsResponseModel.response?.length != 0) {
-            for (int i = 0;
-                i < getDocumentsResponseModel.response!.length;
-                i++) {
-              documentsMapping[getDocumentsResponseModel.response![i].id!] =
-                  getDocumentsResponseModel.response![i].content!;
-            }
-            print("weweweww documentIdMapping $documentIdMapping");
-            documentIdMapping = documentsMapping;
+          if (getDocumentsResponseModel.response != null) {
+            getDocumentsResponseModel.response.forEach((key, value) {
+              if (value.isNotEmpty) {
+                documentIdTextMapping[key] = value;
+                fileUUID =value[0].fileUUID!;
+              }
+            });
+            print("weweweww documentIdMapping $documentIdTextMapping");
+            // documentIdMapping = documentsMapping;
             isLoading = false;
             notifyListeners();
           } else {
@@ -447,13 +448,49 @@ class ChatViewModel extends LoadingViewModel {
     return false;
   }
 
-  Future<bool> deleteDocument(BuildContext context, String chunkId) async {
+  Future<bool> deleteDocument(BuildContext context, String docName) async {
     /// Checking for active internet connection
     if (await networkUtils.hasActiveInternet()) {
       isLoading = true;
       try {
-        bool? result = await repo.deleteDocument(context, chunkId);
-        if (result != null && result == true) {
+        bool? result = await repo.deleteDocument(context, docName);
+        if (result == true) {
+          await getDocuments(context);
+          isLoading = false;
+          notifyListeners();
+          return true;
+        } else {
+          isLoading = false;
+          notifyListeners();
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Something went wrong,Please try later'),
+          ));
+        }
+      } catch (e) {
+        isLoading = false;
+        notifyListeners();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(constants.genericErrorMsg),
+        ));
+        Util.instance.logMessage('Chat View Model', 'Error : $e');
+      }
+    } else {
+      isLoading = false;
+      notifyListeners();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(constants.noNetworkAvailability),
+      ));
+    }
+    return false;
+  }
+
+  Future<bool> deleteChunk(BuildContext context, String chunkId) async {
+    /// Checking for active internet connection
+    if (await networkUtils.hasActiveInternet()) {
+      isLoading = true;
+      try {
+        bool? result = await repo.deleteChunk(context, chunkId);
+        if (result == true) {
           await getDocuments(context);
           isLoading = false;
           notifyListeners();
@@ -589,9 +626,9 @@ class ChatViewModel extends LoadingViewModel {
     if (await networkUtils.hasActiveInternet()) {
       try {
         Map<String, String> params = {
-          "project_uuid": constants.projectId,
+          // "project_uuid": constants.projectId,
           "user_uuid": AppState.instance.userId,
-          "metadata": "{}"
+          // "metadata": "{}"
         };
         bool result =
             await ApiProvider.instance.uploadMedia(params, path, 'file');

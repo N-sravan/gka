@@ -13,7 +13,6 @@ import '../model/prompt_submission_response.dart';
 
 /// Abstract class for the login repository
 abstract class ChatRepository {
-
   Future<int?> deleteToken(BuildContext context);
 
   Future<int?> deleteTools(List<String> toolUUIDs);
@@ -35,7 +34,9 @@ abstract class ChatRepository {
 
   Future<GetDocumentsResponseModel> fetchDocuments(BuildContext context);
 
-  Future<bool> deleteDocument(BuildContext context, String chunkId);
+  Future<bool> deleteDocument(BuildContext context, String docId);
+
+  Future<bool> deleteChunk(BuildContext context, String chunkId);
 }
 
 /// Concrete class implementation for the login repository
@@ -264,32 +265,50 @@ class ChatRepositoryImpl extends ChatRepository {
     };
 
     Map<String, dynamic> params = {
-      "project_uuid": constants.projectId,
+      // "project_uuid": constants.projectId,
       "user_uuid": AppState.instance.userId,
-      "metadata": {},
-      "threshold": 0
     };
-    String authUrl = constants.genAiBaseUrl + constants.getFilesEndPoint;
+    String authUrl = constants.ngrok + constants.getDocumentsEndpoint;
     String data = jsonEncode(params);
     var response =
         await http.post(Uri.parse(authUrl), headers: authHeaders, body: data);
 
     Map<String, dynamic> responseMap = jsonDecode(response.body);
 
-    GetDocumentsResponseModel getDocumentsResponseModel = GetDocumentsResponseModel.fromJson(responseMap);
+    GetDocumentsResponseModel getDocumentsResponseModel =
+        GetDocumentsResponseModel.fromJson(responseMap);
     return getDocumentsResponseModel;
   }
 
   @override
-  Future<bool> deleteDocument(BuildContext context, String chunkId) async {
-    Map<String, dynamic> params = {
-      "project_uuid": constants.projectId,
-      "chunk_id": chunkId
-    };
+  Future<bool> deleteDocument(BuildContext context, String fileUUID) async {
+    Map<String, dynamic> params = {"file_uuid": fileUUID};
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
     };
-    String authUrl = constants.genAiBaseUrl + constants.deleteFileEndPoint;
+    String authUrl = constants.ngrok + constants.deleteFileEndpoint;
+    String requestBody = jsonEncode(params);
+
+    http.Response response = await http.post(
+      Uri.parse(authUrl),
+      headers: authHeaders,
+      body: requestBody,
+    );
+    Map<String, dynamic> responseMap = jsonDecode(response.body);
+
+    if (responseMap['statusCode'] == 200) {
+      return true;
+    }
+    return false;
+  }
+
+  @override
+  Future<bool> deleteChunk(BuildContext context, String chunkId) async {
+    Map<String, dynamic> params = {"chunk_uuid": chunkId};
+    Map<String, String> authHeaders = {
+      constants.headerContentType: constants.headerJson
+    };
+    String authUrl = constants.ngrok + constants.deleteChunkEndpoint;
     String requestBody = jsonEncode(params);
 
     http.Response response = await http.post(
