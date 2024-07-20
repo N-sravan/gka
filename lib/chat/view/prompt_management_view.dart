@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../utils/app_state.dart';
 import '../view_model/chat_view_model.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 import 'create_prompt_template_view.dart';
 
@@ -27,7 +26,7 @@ class _PromptManagementViewState extends State<PromptManagementView> {
     viewModel = Provider.of<ChatViewModel>(context, listen: false);
     viewModel.selectedPromptModelUUID = AppState.instance.modelUUID;
     viewModel.selectedPromptModel = AppState.instance.modelName;
-    WidgetsBinding.instance!.addPostFrameCallback((_) async {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       await viewModel.getAvailablePrompts(
           context, viewModel.selectedPromptModelUUID);
       await viewModel.getAvailableModels(context);

@@ -69,8 +69,7 @@ const String kuidfcBaseUrl = 'https://nawrims.vassarlabs.com/kuidfc_mind/';
 // const String baseUrl = 'https://agriwise.vassarlabs.com/';
 // const String krishidsBaseUrl = 'http://acerkrishidss.vassarlabs.com/staging/api';
 // const String krishidsBaseUrl = 'https://agriwise.vassarlabs.com/staging/api';
-const String imageUploadUrl =
-    'https://agriwise.vassarlabs.com/agribot/bucket/insert_file';
+const String imageUploadUrl = 'https://agriwise.vassarlabs.com/agribot/bucket/insert_file';
 const String fileUploadEndPoint = 'vector/save_vector_data_from_upload';
 const String getFilesEndPoint = 'rag/get_rag_data';
 // const String deleteFileEndPoint = 'rag/delete_rag_data';
@@ -108,9 +107,10 @@ const String keralaUUID = '62d3dc99-5bc3-4303-8be1-d4fa1f7deee5';
 const String kuidfcUUID = '62d3dc99-5bc3-4303-8be1-d4fa1f7deee5';
 const String prodKeySpace = 'CHAT_BOT_ONDEMAND_QUERY_DATA';
 const String testKeySpace = 'CHAT_BOT_TEST';
+const String recordingKeySpace = 'CHAT_BOT_GOOGLE';
 
 //check this before generating apk
-const String projectId = keralaUUID;
+const String projectId = apwrimsUUID;
 const String keyspace = prodKeySpace;
 String appTitle = '';
 String baseUrl = '';

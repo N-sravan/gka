@@ -64,12 +64,12 @@ class _ChatBubbleState extends State<ChatBubble> {
     bool hasChainOfThoughts =
         widget.chainOfThoughts != null && widget.chainOfThoughts!.isNotEmpty;
 
-    return (hasContent || hasChainOfThoughts)
+    return (hasContent)
         ? Padding(
             padding: EdgeInsets.fromLTRB(
               widget.isUser ? 64.0 : 16.0,
               4,
-              widget.isUser ? 16.0 : 2.0,
+              widget.isUser ? 16.0 : 8.0,
               4,
             ),
             child: Align(
@@ -109,7 +109,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                       const SizedBox(
                         width: 8,
                       ),
-                      if (hasContent || hasChainOfThoughts)
+                      if (hasContent)
                         Flexible(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -117,9 +117,9 @@ class _ChatBubbleState extends State<ChatBubble> {
                               if (hasContent)
                                 DecoratedBox(
                                   decoration: BoxDecoration(
-                                    color: !widget.isUser
-                                        ? Colors.white
-                                        : Colors.green[400],
+                                    color: widget.isUser
+                                        ? const Color(0xffE2E3E4)
+                                        : Colors.green[500],
                                     borderRadius: widget.isUser
                                         ? const BorderRadius.only(
                                             topLeft: Radius.circular(16),
@@ -220,23 +220,23 @@ class _ChatBubbleState extends State<ChatBubble> {
   }
 
   _userProfileView() {
-    return SizedBox(
+    return const SizedBox(
       height: 80,
       child: Column(
         children: [
-          const Padding(
+          Padding(
             padding: EdgeInsets.only(left: 4.0),
             child: SizedBox(
               height: 32,
               width: 32,
               child: CircleAvatar(
-                radius: 50,
+                radius: 0,
                 backgroundImage:
-                    AssetImage('assets/images/user_profile_pic.png'),
+                    AssetImage('assets/images/pradeep.png'),
               ),
             ),
           ),
-          (widget.chainOfThoughts != null && widget.chainOfThoughts!.isNotEmpty)
+          /*(widget.chainOfThoughts != null && widget.chainOfThoughts!.isNotEmpty)
               ? ValueListenableBuilder(
                   builder: (context, value, _) {
                     return IconButton(
@@ -249,7 +249,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                   },
                   valueListenable: show,
                 )
-              : const SizedBox(),
+              : const SizedBox(),*/
         ],
       ),
     );
@@ -395,7 +395,7 @@ class _ChatBubbleState extends State<ChatBubble> {
     return SelectableText(
       widget.text.trim(),
       style: TextStyle(
-        color: widget.isUser ? Colors.white : Colors.black87,
+        color: !widget.isUser ? Color(0xffFFFFFF) : Color(0xff1B1D1F),
       ),
     );
   }

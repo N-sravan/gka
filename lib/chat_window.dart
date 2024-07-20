@@ -179,9 +179,15 @@ class _ChatWindowState extends State<ChatWindow>
       },
     );
 
+    await tts.setLanguage('en-US');
+    await tts.setSpeechRate(0.5);
+    await insertDataIntoDb(
+        '',
+        'Hi,I am aquaMind your personal assistant. How may I help you today ?',
+        false);
+
     // print("Available voices ${await textToSpeech.getVoiceByLang('ta-IN')}");
     print("Available languages ${await tts.getLanguages}");
-    await tts.setLanguage(langId);
   }
 
   /// Each time to start a speech recognition session
@@ -304,43 +310,64 @@ class _ChatWindowState extends State<ChatWindow>
         return false;
       },
       child: Scaffold(
-        drawer: DrawerWidget(
+        /*drawer: DrawerWidget(
           // isFirstTime: widget.isFirstTime,
           sessionId: widget.sessionId!,
-        ),
+        ),*/
         appBar: constants.projectId == constants.keralaUUID
             ? AppBar(
-                /*  leading: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(
-                        Icons.arrow_back,
-                        color: Colors.white,
-                      ),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
+                leading: IconButton(
+                  icon: Container(
+                    width: 30, // Adjust the width of the circle
+                    height: 40, // Adjust the height of the circle
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.grey[200],
                     ),
-                  ],
-                ),*/
-                iconTheme: const IconThemeData(color: Colors.white),
-
-                backgroundColor: Colors.green,
-                title: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(left: 0.0),
-                      child: Image.asset(
-                        'assets/images/appbar_heading.png',
-                        height: 30.0,
-                        width: 58.0,
+                    child: const Center(
+                      child: Icon(
+                        Icons.arrow_back_ios,
+                        color: Colors.black,
+                        size: 15,
                       ),
                     ),
-                  ],
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
                 ),
-                // elevation: 0,
-                // title: const Text('Your App Title'), // Optional: add a title
+                actions: [
+                  PopupMenuButton<String>(itemBuilder: (BuildContext context) {
+                    return <PopupMenuEntry<String>>[
+                      const PopupMenuItem<String>(
+                        value: 'Government Scheme',
+                        child: ListTile(
+                          // leading: Icon(Icons.exit_to_app),
+                          title: Text('Government Scheme'),
+                        ),
+                      ),
+                    ];
+                  }, onSelected: (String value) async {
+                    if (value == 'logout') {
+                      if (constants.projectId == constants.keralaUUID) {
+                        Navigator.pushReplacementNamed(
+                            context, constants.roleRoute);
+                      } else {
+                        Navigator.pushReplacementNamed(context, '/login');
+                      }
+                    }
+                  })
+                ],
+                backgroundColor: Colors.white,
+                title: const Text(
+                  'aquaMind',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontFamily: 'roboto',
+                      fontWeight: FontWeight.bold),
+                ),
+                automaticallyImplyLeading:
+                    false, // Prevent the default back arrow from showing
               )
             : AppBar(
 /*
@@ -433,7 +460,7 @@ class _ChatWindowState extends State<ChatWindow>
                                     if (datalast['is_user']) {
                                       String query = datalast['message'];
                                       if (!AppState.instance.isEnglish) {
-                                      /*  query = await translateText(
+                                        /*  query = await translateText(
                                             datalast['message'],
                                             AppState.instance.language,false);*/
                                       }
@@ -466,7 +493,7 @@ class _ChatWindowState extends State<ChatWindow>
                                       if (datalast['message'] != null) {
                                         thoughtsList.clear();
 
-                                      /*  if (!AppState.instance.isEnglish) {
+                                        /*  if (!AppState.instance.isEnglish) {
                                           query = await translateText(
                                               datalast['message'],
                                               AppState.instance.language,false);
@@ -712,17 +739,17 @@ class _ChatWindowState extends State<ChatWindow>
 
   Widget bottomBar() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+      // padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+      padding: const EdgeInsets.all(8),
       child: Row(
         children: [
           Expanded(
-            child: Stack(
-              alignment: Alignment.centerLeft,
-              children: [
-                _chatInput(),
-                _speechButton(),
-              ],
-            ),
+            child: _chatInput(),
+          ),
+          CameraWidget(saveCapturedPhoto: saveCapturedPhoto),
+          IconButton(
+            icon: const Icon(Icons.mic_off, color: Colors.green),
+            onPressed: () {},
           ),
         ],
       ),
@@ -733,7 +760,7 @@ class _ChatWindowState extends State<ChatWindow>
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        capturedPhoto == null
+/*        capturedPhoto == null
             ? CameraWidget(saveCapturedPhoto: saveCapturedPhoto)
             : Padding(
                 padding: const EdgeInsets.only(top: 4.0, bottom: 4),
@@ -758,17 +785,20 @@ class _ChatWindowState extends State<ChatWindow>
                     ),
                   ),
                 ),
-              ),
+              ),*/
         ValueListenableBuilder(
           valueListenable: showLoader,
           builder: (context, value, _) {
             return IconButton(
-                icon: Icon(Icons.send,
-                    color: showLoader.value
-                        ? Colors.grey
-                        : constants.projectId == constants.keralaUUID
-                            ? Colors.green
-                            : Colors.lightBlue),
+                icon: Transform.rotate(
+                  angle: 24.5,
+                  child: Icon(Icons.send,
+                      color: showLoader.value
+                          ? Colors.grey
+                          : constants.projectId == constants.keralaUUID
+                              ? Colors.green
+                              : Colors.lightBlue),
+                ),
                 onPressed: showLoader.value
                     ? null
                     : () async {
@@ -784,7 +814,8 @@ class _ChatWindowState extends State<ChatWindow>
                             imageUrl =
                                 await uploadMedia(context, capturedPhoto!.path);
                           }
-                          await insertDataIntoDb(imageUrl, chatController.text);
+                          await insertDataIntoDb(
+                              imageUrl, chatController.text, true);
                         }
                       });
           },
@@ -823,16 +854,15 @@ class _ChatWindowState extends State<ChatWindow>
       minLines: 1,
       textCapitalization: TextCapitalization.sentences,
       decoration: InputDecoration(
-        hintText: 'Ask AI anything...',
+        fillColor: const Color(0XFFE2E3E4),
+        filled: true,
+        hintText: 'Enter your message..',
         hintStyle: constants.lightGrey2_14W400,
         border: OutlineInputBorder(
-          borderSide: const BorderSide(
-            color: Color(0xFF4BA164),
-            width: 2,
-          ),
+          borderSide: BorderSide.none,
           borderRadius: BorderRadius.circular(20),
         ),
-        contentPadding: const EdgeInsets.fromLTRB(50, 4, 10, 4),
+        contentPadding: const EdgeInsets.fromLTRB(10, 4, 10, 4),
         suffixIcon: _sendButton(),
       ),
     );
@@ -925,28 +955,37 @@ class _ChatWindowState extends State<ChatWindow>
     );
   }
 
-  Future<void> insertDataIntoDb(String? imageUrl, String text) async {
+  Future<void> insertDataIntoDb(
+      String? imageUrl, String text, bool isUser) async {
     DatabaseReference ref = FirebaseDatabase.instance.ref(
         "${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
 
     String timeStamp = DateTime.now().millisecondsSinceEpoch.toString();
 
-   /* if (AppState.instance.language != 'english') {
-      text = await translateText(text, AppState.instance.language, true);
-      print("translated text -- $text");
-    }*/
+    print(
+        "wewewew data:: ${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
 
-    print("wewewew data:: ${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
-    await ref.child(timeStamp).set({
-      "is_user": true,
-      "message": text,
-      "image_url": imageUrl ?? '',
-      "language": 'english',
-      "model_uuid": AppState.instance.modelUUID,
-      "mode": '',
-      "token": AppState.instance.token,
-      "sm_enabled": true,
-    });
+    isUser
+        ? await ref.child(timeStamp).set({
+            "is_user": true,
+            "message": text,
+            "image_url": imageUrl ?? '',
+            "language": 'english',
+            "model_uuid": AppState.instance.modelUUID,
+            "mode": '',
+            "token": AppState.instance.token,
+            "sm_enabled": true,
+          })
+        : await ref.child(timeStamp).set({
+            "is_user": false,
+            "message": text,
+            "image_url": imageUrl ?? '',
+            "language": 'english',
+            "model_uuid": AppState.instance.modelUUID,
+            "mode": '',
+            "token": AppState.instance.token,
+            "sm_enabled": true,
+          });
 
     chatController.clear();
     capturedPhoto = null;
@@ -1058,7 +1097,7 @@ class _ChatWindowState extends State<ChatWindow>
   @override
   bool get wantKeepAlive => true;
 
- /* Future<String> translateText(
+/* Future<String> translateText(
       String text, String language, bool isInserted) async {
     String _translatedText = '';
     final onDeviceTranslator = isInserted
