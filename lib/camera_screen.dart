@@ -55,7 +55,7 @@ class _CameraWidgetState extends State<CameraWidget> {
         angle: 0,
         child: const Icon(
           Icons.attach_file,
-          color: Colors.green,
+          color: Colors.grey,
         ),
       ),
     );

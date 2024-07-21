@@ -75,7 +75,7 @@ class LoginRepositoryImpl extends LoginRepository {
 
     Object data = jsonEncode(params);
     String authUrl = '${constants.baseUrl}auth_and_session/login';
-    print("wewewew app name:${constants.appTitle} auth_url ::${constants.baseUrl}");
+    print("wewewew app name:${constants.appTitle} auth_url ::$authUrl");
     http.Response response = await http.post(
       Uri.parse(authUrl),
       headers: authHeaders,

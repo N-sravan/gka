@@ -35,8 +35,8 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
 
     switch (constants.projectId) {
       case constants.keralaUUID:
-        _usernameController.text = "genaiuser";
-        _passwordController.text = "genai123";
+        _usernameController.text = "tapranauser";
+        _passwordController.text = "fieldwise@123";
         appIcon = constants.fieldRishiIcon;
         // _usernameController.text = "sudhansu_samal";
         // _passwordController.text = "agriwise@123";

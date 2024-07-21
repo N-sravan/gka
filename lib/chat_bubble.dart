@@ -64,7 +64,7 @@ class _ChatBubbleState extends State<ChatBubble> {
     bool hasChainOfThoughts =
         widget.chainOfThoughts != null && widget.chainOfThoughts!.isNotEmpty;
 
-    return (hasContent)
+    return (hasContent || hasChainOfThoughts)
         ? Padding(
             padding: EdgeInsets.fromLTRB(
               widget.isUser ? 64.0 : 16.0,
@@ -220,8 +220,8 @@ class _ChatBubbleState extends State<ChatBubble> {
   }
 
   _userProfileView() {
-    return const SizedBox(
-      height: 80,
+    return  SizedBox(
+      // height: 40,
       child: Column(
         children: [
           Padding(
@@ -231,12 +231,13 @@ class _ChatBubbleState extends State<ChatBubble> {
               width: 32,
               child: CircleAvatar(
                 radius: 0,
-                backgroundImage:
-                    AssetImage('assets/images/pradeep.png'),
+                backgroundImage: constants.projectId == constants.keralaUUID
+                    ? AssetImage('assets/images/user_profile_pic.png')
+                    : AssetImage('assets/images/pradeep.png'),
               ),
             ),
           ),
-          /*(widget.chainOfThoughts != null && widget.chainOfThoughts!.isNotEmpty)
+          (widget.chainOfThoughts != null && widget.chainOfThoughts!.isNotEmpty)
               ? ValueListenableBuilder(
                   builder: (context, value, _) {
                     return IconButton(
@@ -249,7 +250,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                   },
                   valueListenable: show,
                 )
-              : const SizedBox(),*/
+              : const SizedBox(),
         ],
       ),
     );
