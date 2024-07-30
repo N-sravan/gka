@@ -43,12 +43,12 @@ class ChatBubble extends StatefulWidget {
 
 class _ChatBubbleState extends State<ChatBubble> {
   // bool isExpanded = false;
-  ValueNotifier<bool> show = ValueNotifier<bool>(false);
+  ValueNotifier<bool> show = ValueNotifier<bool>(true);
 
   @override
   void initState() {
     super.initState();
-    // show.value = widget.expandChainOfThought!;
+    show.value = widget.expandChainOfThought!;
   }
 
   @override

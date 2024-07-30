@@ -84,12 +84,12 @@ void main() async {
 
   await Firebase.initializeApp(
       options: const FirebaseOptions(
-    apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
-    appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
-    messagingSenderId: '1062998944432',
-    projectId: 'apwrims---chatbot',
-    storageBucket: 'apwrims---chatbot.appspot.com',
-    iosBundleId: 'com.vassar.apwrimschatbot',
+    apiKey: 'AIzaSyB3ItstCC27ZMjtlta7Vq52K606YebXHX4',
+    appId: '1:915537810859:android:f803660609065bf23ceeee',
+    messagingSenderId: '915537810859',
+    projectId: 'kerala-aims',
+    storageBucket: 'kerala-aims.appspot.com',
+    iosBundleId: 'com.vassar.aims',
   ));
 
   NotificationHelper.initializeNotification(myBackgroundMessageHandler);

@@ -264,7 +264,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => UserAnalyticsView(),
+                        builder: (context) => const UserAnalyticsView(),
                       ),
                     );
                   },

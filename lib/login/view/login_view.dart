@@ -42,10 +42,8 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
         // _passwordController.text = "agriwise@123";
         break;
       case constants.apwrimsUUID:
-      /*  _usernameController.text = "sklm_burja";
-        _passwordController.text = "test123";*/
-        _usernameController.text = "genaiuser";
-        _passwordController.text = "genai123";
+        _usernameController.text = "tapranauser";
+        _passwordController.text = "fieldwise@123";
         appIcon = constants.appIcon;
 
         break;

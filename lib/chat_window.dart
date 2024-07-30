@@ -82,6 +82,11 @@ class _ChatWindowState extends State<ChatWindow>
 
   List<String> langLoaderMsgList = [];
 
+  Map<String, String> currentVoice = {
+    "name": "en-us-x-tpf-local",
+    "locale": "en-US"
+  };
+
   TextToSpeechService? textToSpeechService;
   MessageBubble? textToSpeechMessageBubble;
   String summaryData = "";
@@ -181,8 +186,11 @@ class _ChatWindowState extends State<ChatWindow>
 
     // print("Available voices ${await textToSpeech.getVoiceByLang('ta-IN')}");
     print("Available languages ${await tts.getLanguages}");
+    // currentVoice = {"name": "en-us-x-tpd-network", "locale": "en-US"};
+    // currentVoice = {"name": "en-us-x-sfg-network", "locale": "en-US"};
     await tts.setLanguage(langId);
     await tts.setSpeechRate(0.5);
+    // await tts.setVoice(currentVoice);
   }
 
   /// Each time to start a speech recognition session
@@ -305,10 +313,12 @@ class _ChatWindowState extends State<ChatWindow>
         return false;
       },
       child: Scaffold(
-        /*   drawer: DrawerWidget(
-          // isFirstTime: widget.isFirstTime,
-          sessionId: widget.sessionId!,
-        ),*/
+        /* drawer: constants.projectId != constants.keralaUUID
+            ? DrawerWidget(
+                // isFirstTime: widget.isFirstTime,
+                sessionId: widget.sessionId!,
+              )
+            : const SizedBox(),*/
         appBar: constants.projectId == constants.keralaUUID
             ? AppBar(
                 /*  leading: Row(
@@ -378,7 +388,7 @@ class _ChatWindowState extends State<ChatWindow>
                   ),
                 ],
 */
-                leading: (widget.isFromHistory != null && widget.isFromHistory!)
+              /*  leading: (widget.isFromHistory != null && widget.isFromHistory!)
                     ? IconButton(
                         onPressed: () async {
                           await tts.stop();
@@ -386,14 +396,27 @@ class _ChatWindowState extends State<ChatWindow>
                         },
                         icon: const Icon(Icons.arrow_back),
                       )
-                    : null,
+                    : null,*/
                 // centerTitle: true,
                 backgroundColor: Colors.white,
-                elevation: 0,
-                title: Text(
+                // elevation: 0,
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 0.0),
+                      child: Image.asset(
+                        'assets/images/aquamind_logo.jpeg',
+                        height: 70.0,
+                        width: 58.0,
+                      ),
+                    ),
+                  ],
+                ),
+                /*title: Text(
                   'aquaMind',
                   style: constants.black16W500,
-                ),
+                ),*/
               ),
         body: Stack(
           children: [
@@ -466,13 +489,12 @@ class _ChatWindowState extends State<ChatWindow>
                                       }
                                       if (datalast['message'] != null) {
                                         thoughtsList.clear();
-
-                                        /*  if (!AppState.instance.isEnglish) {
-                                          query = await translateText(
-                                              datalast['message'],
-                                              AppState.instance.language,false);
-                                        }*/
                                       }
+
+                                      /* if (!datalast['is_user']) {
+                                        Navigator.pop(context);
+                                        Fluttertoast.showToast(msg: "Session Expired");
+                                      }*/
 
                                       if (datalast['is_valid_token'] != null &&
                                           datalast['is_limit_exceeded'] !=
@@ -544,14 +566,14 @@ class _ChatWindowState extends State<ChatWindow>
                                     });
                                   }
 
-                                  loadingTimer =
+                                  /*  loadingTimer =
                                       Timer(const Duration(seconds: 4), () {
                                     int randomIndex =
                                         Random().nextInt(loaderMsgList.length);
                                     if (showLoader.value) {
                                       tts.speak(loaderMsgList[randomIndex]);
                                     }
-                                  });
+                                  });*/
 
                                   dataTimer = Timer(
                                       const Duration(seconds: 180), () async {
@@ -627,14 +649,22 @@ class _ChatWindowState extends State<ChatWindow>
                                   message = mappedData[i]['text'];
                                   cotsList = mappedData[i]['cots'];
                                   image = mappedData[i]['image_url'] ?? '';
+                                  bool cotExpand = false;
+
+                                  if (i == (mappedData.length - 1) &&
+                                      currentIsUser) {
+                                    cotExpand = true;
+                                  }
 
                                   tempList.add(ChatBubble(
                                     text: message,
                                     isUser: currentIsUser,
                                     chainOfThoughts: cotsList,
                                     imageUrl: image,
+                                    expandChainOfThought: cotExpand,
                                   ));
                                 }
+
                                 /* print("temp list length::${tempList.length}");
                                 for (int i = 0; i < tempList.length; i++) {
                                   print(
@@ -666,7 +696,7 @@ class _ChatWindowState extends State<ChatWindow>
                         )
                       : const SizedBox(),
                   Padding(
-                    padding: const EdgeInsets.only(left: 80.0),
+                    padding: const EdgeInsets.only(left: 50.0),
                     child: Align(
                       alignment: AlignmentDirectional.centerStart,
                       child: ValueListenableBuilder(
@@ -841,8 +871,23 @@ class _ChatWindowState extends State<ChatWindow>
   }
 
   void updateChatControllerForSpeech(String text) {
+    if (text.toLowerCase().contains('best')) {
+      text = text.replaceAll('best', 'pest');
+    }
+    if (text.toLowerCase().contains('effect')) {
+      text = text.replaceAll('effect', 'affect');
+    }
+    if (text.toLowerCase().contains('sheet')) {
+      text = text.replaceAll('sheet', 'sheath');
+    }
+    if (text.contains('PU 002')) {
+      text = text.replaceAll('PU 002', 'PU-002');
+    }
+    if (text.contains('H A 101')) {
+      text = text.replaceAll('H A 101', 'HA-101');
+    }
     chatController.text = text;
-    // setState(() {});
+    setState(() {});
   }
 
   saveCapturedPhoto(XFile photo) {
