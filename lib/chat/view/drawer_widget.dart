@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:gka/chat/view/prompt_management_view.dart';
 import 'package:gka/chat/view/tool_inventory_view.dart';
-import 'package:gka/chat/view/user_analytics_view.dart';
+import 'package:gka/chat/view/user_management_view.dart';
 import 'package:gka/utils/app_state.dart';
 import '../../../utils/common_constants.dart' as constants;
 import '../../chat_window.dart';
@@ -117,26 +117,50 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                     );
                   },
                 ),
-                ListTile(
-                  trailing: const Icon(Icons.upload_file),
-                  title: Row(
-                    children: [
-                      Text(
-                        "Documents",
-                        style: constants.appBarListTileTextStyle,
-                      ),
-                    ],
-                  ),
-                  onTap: () {
-                    // Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const DocumentsView(),
-                      ),
-                    );
-                  },
-                ),
+                AppState.instance.role == 'fieldwise super admin'
+                    ? ListTile(
+                        trailing: const Icon(Icons.upload_file),
+                        title: Row(
+                          children: [
+                            Text(
+                              "User Management",
+                              style: constants.appBarListTileTextStyle,
+                            ),
+                          ],
+                        ),
+                        onTap: () {
+                          // Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const UserManagementView(),
+                            ),
+                          );
+                        },
+                      )
+                    : const SizedBox(),
+                AppState.instance.role == 'fieldwise super admin'
+                    ? ListTile(
+                        trailing: const Icon(Icons.upload_file),
+                        title: Row(
+                          children: [
+                            Text(
+                              "Knowledge Bank Management",
+                              style: constants.appBarListTileTextStyle,
+                            ),
+                          ],
+                        ),
+                        onTap: () {
+                          // Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const DocumentsView(),
+                            ),
+                          );
+                        },
+                      )
+                    : const SizedBox(),
                 ListTile(
                   trailing: const Icon(Icons.manage_accounts),
                   title: Row(
@@ -215,6 +239,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                     ],
                   ),
                 ),
+/*
                 ListTile(
                   trailing: Transform.scale(
                     scale: 0.60, // Reduce the size of the switch
@@ -248,27 +273,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                     style: constants.appBarListTileTextStyle,
                   ),
                 ),
-                ListTile(
-                  title: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "User Analytics",
-                        style: constants.appBarListTileTextStyle,
-                      ),
-                      const Icon(Icons.analytics),
-                    ],
-                  ),
-                  onTap: () {
-                    // Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const UserAnalyticsView(),
-                      ),
-                    );
-                  },
-                ),
+*/
               ],
             ),
           ),

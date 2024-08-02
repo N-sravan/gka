@@ -85,7 +85,11 @@ class _DocumentsViewState extends State<DocumentsView> {
                               itemBuilder: (context, index) {
                                 final key = viewModel.documentIdTextMapping.keys
                                     .elementAt(index);
-                                final value = viewModel.documentIdTextMapping[key];
+                                final value =
+                                    viewModel.documentIdTextMapping[key];
+                                final admin = value![0].userDetails!.name;
+                                final phone = value![0].userDetails!.phone;
+                                final date = value![0].uploadedDate;
                                 return Card(
                                   margin: const EdgeInsets.symmetric(
                                       vertical: 8.0, horizontal: 16.0),
@@ -113,7 +117,11 @@ class _DocumentsViewState extends State<DocumentsView> {
                                                     child: const Text('Yes'),
                                                     onPressed: () async {
                                                       bool result =
-                                                          await viewModel.deleteDocument(context, viewModel.fileUUID);
+                                                          await viewModel
+                                                              .deleteDocument(
+                                                                  context,
+                                                                  viewModel
+                                                                      .fileUUID);
                                                       if (result) {
                                                         Fluttertoast.showToast(
                                                             msg:
@@ -136,9 +144,85 @@ class _DocumentsViewState extends State<DocumentsView> {
                                         size: 20,
                                       ),
                                     ),
-                                    title: Text(
-                                      key,
-                                      style: const TextStyle(fontSize: 14.0),
+                                    title: RichText(
+                                      text: TextSpan(
+                                        text: 'File Name - ',
+                                        style: const TextStyle(
+                                            fontSize: 14.0,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black),
+                                        children: [
+                                          TextSpan(
+                                            text: key,
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.normal),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    subtitle: Padding(
+                                      padding: const EdgeInsets.only(top: 8.0),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          RichText(
+                                            text: TextSpan(
+                                              text: 'Admin - ',
+                                              style: const TextStyle(
+                                                  fontSize: 12.0,
+                                                  fontWeight: FontWeight.normal,
+                                                  color: Colors.black),
+                                              children: [
+                                                TextSpan(
+                                                  text: admin,
+                                                  style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.normal),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                              height: 4.0), // Add spacing
+                                          RichText(
+                                            text: TextSpan(
+                                              text: 'Uploaded Date - ',
+                                              style: const TextStyle(
+                                                  fontSize: 12.0,
+                                                  fontWeight: FontWeight.normal,
+                                                  color: Colors.black),
+                                              children: [
+                                                TextSpan(
+                                                  text: date,
+                                                  style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.normal),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                              height: 4.0), // Add spacing
+                                          RichText(
+                                            text: TextSpan(
+                                              text: 'Phone - ',
+                                              style: const TextStyle(
+                                                  fontSize: 12.0,
+                                                  fontWeight: FontWeight.normal,
+                                                  color: Colors.black),
+                                              children: [
+                                                TextSpan(
+                                                  text: phone,
+                                                  style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.normal),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                     onTap: () {
                                       Navigator.push(

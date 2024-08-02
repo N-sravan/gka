@@ -46,7 +46,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
         viewModel.langList.add('English');
         viewModel.langList.add('Tamil');
         break;
-      case constants.keralaUUID:
+      case constants.fieldRishiUUID:
         viewModel.langList.clear();
         viewModel.langList.add('English');
         // viewModel.langList.add('Hindi');
@@ -94,7 +94,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                     },
                     onSelected: (String value) async {
                       if (value == 'logout') {
-                        if(constants.projectId == constants.keralaUUID){
+                        if(constants.projectId == constants.fieldRishiUUID){
                           Navigator.pushReplacementNamed(context, constants.roleRoute);
                         }else {
                           Navigator.pushReplacementNamed(context, '/login');

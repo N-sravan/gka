@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -96,6 +97,9 @@ const String getDocumentsEndpoint = 'data_extractor/get_collection_data/';
 const String uploadDocumentEndpoint = 'data_extractor/save_data_upload/';
 const String deleteChunkEndpoint = 'data_extractor/delete_collection_data/';
 const String deleteFileEndpoint = 'data_extractor/delete-file-data/';
+const String getUsersDataEndpoint = 'auth_and_session/admin-user-management';
+const String increaseLimitEndpoint = 'auth_and_session/add-tokens';
+const String decreaseLimitEndpoint = 'auth_and_session/remove-tokens';
 
 //UUIDs & keys
 const String indiaUUID = 'd6b37905-d2d3-4275-9317-d9b6f47cd783';
@@ -103,7 +107,7 @@ const String gowaterUUID = 'd19a5290-2e40-494a-83d2-98f4c845b1f1';
 const String kaleswaramUUID = '927b67e9-a2aa-46e9-99bc-41cf8c502668';
 const String apwrimsUUID = '6f86292b-dd9a-4987-bb8f-c3940263b349';
 const String tnwrimsUUID = 'e98cd5b7-6556-4c0f-a778-3429e1c14a6b';
-const String keralaUUID = '62d3dc99-5bc3-4303-8be1-d4fa1f7deee5';
+const String fieldRishiUUID = '62d3dc99-5bc3-4303-8be1-d4fa1f7deee5';
 const String kuidfcUUID = '62d3dc99-5bc3-4303-8be1-d4fa1f7deee5';
 const String prodKeySpace = 'CHAT_BOT_ONDEMAND_QUERY_DATA';
 const String testKeySpace = 'CHAT_BOT_TEST';
@@ -111,7 +115,7 @@ const String recordingKeySpace = 'CHAT_BOT_GOOGLE';
 
 //check this before generating apk
 const String projectId = apwrimsUUID;
-const String keyspace = recordingKeySpace;
+const String keyspace = prodKeySpace;
 String appTitle = '';
 String baseUrl = '';
 
@@ -528,7 +532,7 @@ TextStyle appBarSubHeaderTextStyle = const TextStyle(
 );
 
 TextStyle appBarListTileTextStyle = const TextStyle(
-  fontSize: 16,
+  fontSize: 14,
   color: Colors.black,
   fontWeight: FontWeight.w400,
 );
@@ -834,4 +838,47 @@ enum CropNameVerifyRadioOptions { agree, disagree }
 
 // const String genAiBaseUrl = "https://nawrims.vassarlabs.com/genai/";
 const String genAiBaseUrl = "https://nawrims.vassarlabs.com/vassar_mind/";
-const String ngrok = "https://a840-196-12-47-4.ngrok-free.app/";
+// const String ngrok = "https://a840-196-12-47-4.ngrok-free.app/";
+
+
+//firebase options
+
+const FirebaseOptions gowaterOptions = FirebaseOptions(
+    apiKey: 'AIzaSyB-MGSrm6VQ4dA9gMg50c1R1DjoFjp6scg',
+    appId: '1:462188079667:android:8f12adc9f75aff61c3d146',
+    messagingSenderId: '462188079667',
+    projectId: 'gowater-99642',
+    storageBucket: 'gowater-99642.appspot.com',
+    databaseURL: 'https://gowater-99642-default-rtdb.firebaseio.com',
+    iosBundleId: 'com.vassar.gowater');
+
+const FirebaseOptions apwrimsOptions = FirebaseOptions(
+  apiKey: 'AIzaSyD8fruYZA8oA4xbj4HxoNry_NSt5g51vhc',
+  appId: '1:920228951079:android:bd82265a19119e84c20a02',
+  messagingSenderId: '920228951079',
+  projectId: 'apwrd-uni-app',
+  storageBucket: 'apwrd-uni-app.appspot.com',
+  databaseURL: 'https://apwrd-uni-app.firebaseio.com',
+  iosBundleId: 'com.vassar.polavaram',
+);
+
+const FirebaseOptions kuidfcOptions = FirebaseOptions(
+  apiKey: 'AIzaSyCuWwtL0PzdnaVcUArgFqgUVuNAo4_Cm10',
+  appId: '1:781102277554:android:1e7182778369922ce27aab',
+  messagingSenderId: '781102277554',
+  projectId: 'kuidfc-1a8dc',
+  storageBucket: 'kuidfc-1a8dc.appspot.com',
+  databaseURL: 'https://kuidfc-1a8dc-default-rtdb.firebaseio.com',
+  iosBundleId: 'com.vassar.kuidfc',
+);
+
+
+const FirebaseOptions fieldRishiOptions = FirebaseOptions(
+  apiKey: 'AIzaSyB3ItstCC27ZMjtlta7Vq52K606YebXHX4',
+  appId: '1:915537810859:android:f803660609065bf23ceeee',
+  messagingSenderId: '915537810859',
+  projectId: 'kerala-aims',
+  storageBucket: 'kerala-aims.appspot.com',
+  databaseURL: 'https://kerala-aims-default-rtdb.firebaseio.com',
+  iosBundleId: 'com.vassar.aims',
+);

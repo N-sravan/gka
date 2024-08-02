@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -21,6 +23,7 @@ class ChatBubble extends StatefulWidget {
     this.chainOfThoughts,
     this.token,
     this.expandChainOfThought,
+    this.sessionExpired,
   }) : super(key: key);
 
   final String text;
@@ -36,6 +39,7 @@ class ChatBubble extends StatefulWidget {
   final List<dynamic>? chainOfThoughts;
   final String? token;
   late bool? expandChainOfThought;
+  late bool? sessionExpired;
 
   @override
   State<ChatBubble> createState() => _ChatBubbleState();
@@ -44,11 +48,25 @@ class ChatBubble extends StatefulWidget {
 class _ChatBubbleState extends State<ChatBubble> {
   // bool isExpanded = false;
   ValueNotifier<bool> show = ValueNotifier<bool>(true);
+  List<Color> colors = [
+    const Color(0xFFCFE2FF).withOpacity(0.5),
+    const Color(0xFFFFF3CD).withOpacity(0.5),
+    const Color(0xFFf8d7da).withOpacity(0.5), //pink
+    // const Color(0xFFe2e3e5).withOpacity(0.5),  //g
+  ];
 
   @override
   void initState() {
     super.initState();
     show.value = widget.expandChainOfThought!;
+    _sessionExpiry();
+  }
+
+  _sessionExpiry() {
+    print("session expiry--${widget.sessionExpired}");
+    if (widget.sessionExpired != null && widget.sessionExpired == true) {
+      Navigator.pop(context);
+    }
   }
 
   @override
@@ -64,7 +82,7 @@ class _ChatBubbleState extends State<ChatBubble> {
     bool hasChainOfThoughts =
         widget.chainOfThoughts != null && widget.chainOfThoughts!.isNotEmpty;
 
-    return (hasContent || hasChainOfThoughts)
+    return (hasContent)
         ? Padding(
             padding: EdgeInsets.fromLTRB(
               widget.isUser ? 64.0 : 16.0,
@@ -119,7 +137,10 @@ class _ChatBubbleState extends State<ChatBubble> {
                                   decoration: BoxDecoration(
                                     color: widget.isUser
                                         ? const Color(0xffE2E3E4)
-                                        : Colors.green[500],
+                                            .withOpacity(0.6)
+                                        : const Color(0xFF2FAB2D)
+                                            .withOpacity(0.15),
+                                    // : Colors.green[500],
                                     borderRadius: widget.isUser
                                         ? const BorderRadius.only(
                                             topLeft: Radius.circular(16),
@@ -183,6 +204,7 @@ class _ChatBubbleState extends State<ChatBubble> {
       ));
       widgets.add(const SizedBox(height: 8));
       for (String thought in widget.chainOfThoughts!) {
+        Color randomColor = randomCotColor(colors);
         print(thought);
         widgets.add(Padding(
           padding: const EdgeInsets.only(bottom: 8.0),
@@ -190,8 +212,9 @@ class _ChatBubbleState extends State<ChatBubble> {
             width: double.infinity,
             padding: const EdgeInsets.all(constants.xSmallPadding),
             decoration: BoxDecoration(
+              color: randomColor,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey),
+              // border: Border.all(color: Colors.grey),
             ),
             child: Text(
               thought.trim(),
@@ -202,6 +225,11 @@ class _ChatBubbleState extends State<ChatBubble> {
       }
     }
     return widgets;
+  }
+
+  Color randomCotColor(List<Color> colors) {
+    colors.shuffle(Random());
+    return colors.first;
   }
 
   _infoView() {
@@ -220,18 +248,18 @@ class _ChatBubbleState extends State<ChatBubble> {
   }
 
   _userProfileView() {
-    return  SizedBox(
+    return SizedBox(
       // height: 40,
       child: Column(
         children: [
-          Padding(
+          const Padding(
             padding: EdgeInsets.only(left: 4.0),
             child: SizedBox(
               height: 32,
               width: 32,
               child: CircleAvatar(
                 radius: 0,
-                backgroundImage: constants.projectId == constants.keralaUUID
+                backgroundImage: constants.projectId == constants.fieldRishiUUID
                     ? AssetImage('assets/images/user_profile_pic.png')
                     : AssetImage('assets/images/pradeep.png'),
               ),
@@ -395,8 +423,9 @@ class _ChatBubbleState extends State<ChatBubble> {
   _textView() {
     return SelectableText(
       widget.text.trim(),
-      style: TextStyle(
-        color: !widget.isUser ? Color(0xffFFFFFF) : Color(0xff1B1D1F),
+      style: const TextStyle(
+        // color: !widget.isUser ? const Color(0xffFFFFFF) : const Color(0xff1E1E1E),
+        color: Color(0xff1E1E1E),
       ),
     );
   }

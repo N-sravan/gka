@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/material.dart';
+import 'package:gka/chat/model/activity_status_response.dart';
 import 'package:gka/chat/model/get_documents_response.dart';
+import 'package:gka/chat/model/get_users_response.dart';
 import 'package:http/http.dart' as http;
 import '../../home/model/available_models.dart';
 import '../../shared/token_response.dart';
@@ -34,9 +36,14 @@ abstract class ChatRepository {
 
   Future<GetDocumentsResponseModel> fetchDocuments(BuildContext context);
 
+  Future<UserResponseModel> fetchUsers(BuildContext context);
+
   Future<bool> deleteDocument(BuildContext context, String docId);
 
   Future<bool> deleteChunk(BuildContext context, String chunkId);
+
+  Future<ActivityStatusResponse> submitActivityStatus(
+      Map<String, dynamic> data, bool isIncreased);
 }
 
 /// Concrete class implementation for the login repository
@@ -268,7 +275,7 @@ class ChatRepositoryImpl extends ChatRepository {
       // "project_uuid": constants.projectId,
       "user_uuid": AppState.instance.userId,
     };
-    String authUrl = constants.ngrok + constants.getDocumentsEndpoint;
+    String authUrl = constants.baseUrl + constants.getDocumentsEndpoint;
     String data = jsonEncode(params);
     var response =
         await http.post(Uri.parse(authUrl), headers: authHeaders, body: data);
@@ -281,12 +288,33 @@ class ChatRepositoryImpl extends ChatRepository {
   }
 
   @override
+  Future<UserResponseModel> fetchUsers(BuildContext context) async {
+    Map<String, String> authHeaders = {
+      constants.headerContentType: constants.headerJson
+    };
+
+    Map<String, dynamic> params = {
+      "admin_id": AppState.instance.userId,
+    };
+    String authUrl = constants.baseUrl + constants.getUsersDataEndpoint;
+    String data = jsonEncode(params);
+    var response =
+        await http.post(Uri.parse(authUrl), headers: authHeaders, body: data);
+
+    Map<String, dynamic> responseMap = jsonDecode(response.body);
+
+    UserResponseModel userResponseModel =
+        UserResponseModel.fromJson(responseMap);
+    return userResponseModel;
+  }
+
+  @override
   Future<bool> deleteDocument(BuildContext context, String fileUUID) async {
     Map<String, dynamic> params = {"file_uuid": fileUUID};
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
     };
-    String authUrl = constants.ngrok + constants.deleteFileEndpoint;
+    String authUrl = constants.baseUrl + constants.deleteFileEndpoint;
     String requestBody = jsonEncode(params);
 
     http.Response response = await http.post(
@@ -308,7 +336,7 @@ class ChatRepositoryImpl extends ChatRepository {
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
     };
-    String authUrl = constants.ngrok + constants.deleteChunkEndpoint;
+    String authUrl = constants.baseUrl + constants.deleteChunkEndpoint;
     String requestBody = jsonEncode(params);
 
     http.Response response = await http.post(
@@ -322,5 +350,32 @@ class ChatRepositoryImpl extends ChatRepository {
       return true;
     }
     return false;
+  }
+
+  @override
+  Future<ActivityStatusResponse> submitActivityStatus(
+      Map<String, dynamic> body, bool isIncreased) async {
+    Map<String, String> authHeaders = {
+      constants.headerContentType: constants.headerJson
+    };
+    String authUrl = '';
+
+    isIncreased
+        ? constants.baseUrl + constants.increaseLimitEndpoint
+        : constants.baseUrl + constants.decreaseLimitEndpoint;
+
+    String requestBody = jsonEncode(body);
+
+    http.Response response = await http.post(
+      Uri.parse(authUrl),
+      headers: authHeaders,
+      body: requestBody,
+    );
+    Map<String, dynamic> responseMap = jsonDecode(response.body);
+
+    ActivityStatusResponse activityStatusResponse =
+        ActivityStatusResponse.fromJson(responseMap);
+
+    return activityStatusResponse;
   }
 }

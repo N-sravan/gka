@@ -18,7 +18,7 @@ class ApiProvider {
   Future<dynamic?> uploadMedia(data, path, mediaType) async {
     String submissionUrl = '';
     if (mediaType == 'file') {
-      submissionUrl = constants.ngrok + constants.uploadDocumentEndpoint;
+      submissionUrl = constants.baseUrl + constants.uploadDocumentEndpoint;
     } else {
       submissionUrl = constants.imageUploadUrl;
     }

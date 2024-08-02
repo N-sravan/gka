@@ -67,8 +67,8 @@ class LoginViewModel extends LoadingViewModel {
     return false;
   }
 
-  _setLoginSharedPreferences(
-      String userName, String userId, String token, String sessionId) async {
+  _setLoginSharedPreferences(String userName, String userId, String token,
+      String sessionId, String role) async {
     await SharedPreferenceUtil.instance.setPreferenceValue(
         constants.preferenceIsLoggedIn, true, constants.preferenceTypeBool);
     await SecuredStorageUtil.instance
@@ -77,7 +77,8 @@ class LoginViewModel extends LoadingViewModel {
         .writeSecureData(constants.preferenceUserId, userId);
     await SecuredStorageUtil.instance
         .writeSecureData(constants.preferenceSessionId, sessionId);
-    await SecuredStorageUtil.instance.writeSecureData(constants.preferenceToken, token);
+    await SecuredStorageUtil.instance
+        .writeSecureData(constants.preferenceToken, token);
     // await SecuredStorageUtil.instance.writeSecureData(constants.preferenceLanguage, 'english');
     await SecuredStorageUtil.instance.writeSecureData(
         constants.preferenceLastLoginTime,
@@ -88,6 +89,7 @@ class LoginViewModel extends LoadingViewModel {
     AppState.instance.token = token;
     AppState.instance.language = 'english';
     AppState.instance.isEnglish = true;
+    AppState.instance.role = role;
   }
 
   Future<bool?> sendFcmToken(BuildContext context) async {
@@ -183,7 +185,8 @@ class LoginViewModel extends LoadingViewModel {
           .navigateToFarmerLoginScreen(context, selectedRole);
     } else if (selectedRole == constants.department) {
       AppState.instance.role = constants.department;
-      NavigationUtil.instance.navigateToDepartmentLoginScreen(context, selectedRole);
+      NavigationUtil.instance
+          .navigateToDepartmentLoginScreen(context, selectedRole);
     }
   }
 
@@ -205,7 +208,7 @@ class LoginViewModel extends LoadingViewModel {
   bool validateOTP(BuildContext context) {
     if (otpEntered == '1234') {
       AppState.instance.userMobileNo = mobileNo!;
-      AppState.instance.stateUUID = constants.keralaUUID;
+      AppState.instance.stateUUID = constants.fieldRishiUUID;
       notifyListeners();
       return true;
     } else {
@@ -244,14 +247,17 @@ class LoginViewModel extends LoadingViewModel {
           constants.password: password,
         };
 
-        sessionDetails =
-            await repo.authentication(params, context);
+        sessionDetails = await repo.authentication(params, context);
 
         if (sessionDetails != null &&
             sessionDetails.token!.isNotEmpty &&
             sessionDetails.sessionId!.isNotEmpty) {
-          await _setLoginSharedPreferences(userName, sessionDetails.userId,
-              sessionDetails.token!, sessionDetails.sessionId!);
+          await _setLoginSharedPreferences(
+              userName,
+              sessionDetails.userId,
+              sessionDetails.token!,
+              sessionDetails.sessionId!,
+              sessionDetails.role!);
           isLoading = false;
           print("wewewew sessionId::${sessionDetails.sessionId}");
           return true;

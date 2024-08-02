@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
+import 'package:gka/utils/secure_storage_util.dart';
 import 'package:intl/intl.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
@@ -69,6 +70,8 @@ class _ChatWindowState extends State<ChatWindow>
   List<MessageBubble> chatMessages = [];
   TextToSpeech textToSpeech = TextToSpeech();
   FlutterTts tts = FlutterTts();
+  String highlightedText = "";
+  String remainingText = "";
 
   List<String> loaderMsgList = [
     'Please wait',
@@ -107,7 +110,7 @@ class _ChatWindowState extends State<ChatWindow>
     print("language::${AppState.instance.language}");
     super.initState();
     switch (constants.projectId) {
-      case constants.keralaUUID:
+      case constants.fieldRishiUUID:
         title = constants.appTitle;
         break;
     }
@@ -186,11 +189,10 @@ class _ChatWindowState extends State<ChatWindow>
 
     // print("Available voices ${await textToSpeech.getVoiceByLang('ta-IN')}");
     print("Available languages ${await tts.getLanguages}");
-    // currentVoice = {"name": "en-us-x-tpd-network", "locale": "en-US"};
-    // currentVoice = {"name": "en-us-x-sfg-network", "locale": "en-US"};
+    currentVoice = {"name": "en-us-x-iom-local", "locale": "en-US"};
     await tts.setLanguage(langId);
     await tts.setSpeechRate(0.5);
-    // await tts.setVoice(currentVoice);
+    await tts.setVoice(currentVoice);
   }
 
   /// Each time to start a speech recognition session
@@ -266,6 +268,17 @@ class _ChatWindowState extends State<ChatWindow>
     setState(() {});
   }
 
+  setLogoutSharedPreferences(BuildContext context) async {
+    await SecuredStorageUtil.instance.deleteAllSecureData();
+    AppState.instance.sessionId = '';
+    AppState.instance.userName = '';
+    AppState.instance.userId = '';
+    AppState.instance.token = '';
+    AppState.instance.language = '';
+    AppState.instance.isEnglish = false;
+    setState(() {});
+  }
+
   Future<void> _onSpeechResult(SpeechRecognitionResult result) async {
     print("_onSpeechResult ${result.recognizedWords}");
     updateChatControllerForSpeech(result.recognizedWords);
@@ -273,30 +286,30 @@ class _ChatWindowState extends State<ChatWindow>
     listeningActive.value = active;
   }
 
-/*  Future<void> _onSpeechResultForAutoMode(
-      SpeechRecognitionResult result) async {
-    print("_onSpeechResultForAutoMode ${result.recognizedWords}");
-    DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${autoSessionId}");
+  /*  Future<void> _onSpeechResultForAutoMode(
+        SpeechRecognitionResult result) async {
+      print("_onSpeechResultForAutoMode ${result.recognizedWords}");
+      DatabaseReference ref = FirebaseDatabase.instance.ref(
+          "${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${autoSessionId}");
 
-    if (result.recognizedWords.toLowerCase() == "hello" && !isVoiceInitiated) {
-      await _speechToText.stop();
-      await tts.speak("Hello");
-      isVoiceInitiated = true;
-      setState(() {});
-    }
-    print("wewewewewe recognizedWords ::${result.recognizedWords}");
-    print("wewewewewe isVoiceInitiated ::$isVoiceInitiated");
+      if (result.recognizedWords.toLowerCase() == "hello" && !isVoiceInitiated) {
+        await _speechToText.stop();
+        await tts.speak("Hello");
+        isVoiceInitiated = true;
+        setState(() {});
+      }
+      print("wewewewewe recognizedWords ::${result.recognizedWords}");
+      print("wewewewewe isVoiceInitiated ::$isVoiceInitiated");
 
-    if (result.recognizedWords.isNotEmpty &&
-        isVoiceInitiated &&
-        result.recognizedWords.toLowerCase() != 'hello') {
-      await ref.push().set({"is_user": true, "message": result.recognizedWords});
-    }
-    bool active = _speechToText.isListening;
-    tts.stop();
-    listeningActive.value = active;
-  }*/
+      if (result.recognizedWords.isNotEmpty &&
+          isVoiceInitiated &&
+          result.recognizedWords.toLowerCase() != 'hello') {
+        await ref.push().set({"is_user": true, "message": result.recognizedWords});
+      }
+      bool active = _speechToText.isListening;
+      tts.stop();
+      listeningActive.value = active;
+    }*/
 
   @override
   Widget build(BuildContext context) {
@@ -313,110 +326,99 @@ class _ChatWindowState extends State<ChatWindow>
         return false;
       },
       child: Scaffold(
-        /* drawer: constants.projectId != constants.keralaUUID
-            ? DrawerWidget(
-                // isFirstTime: widget.isFirstTime,
-                sessionId: widget.sessionId!,
-              )
-            : const SizedBox(),*/
-        appBar: constants.projectId == constants.keralaUUID
+        drawer: DrawerWidget(
+          // isFirstTime: widget.isFirstTime,
+          sessionId: widget.sessionId!,
+        ),
+        appBar: constants.projectId == constants.fieldRishiUUID
             ? AppBar(
                 /*  leading: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(
-                        Icons.arrow_back,
-                        color: Colors.white,
+                    children: [
+                      IconButton(
+                        icon: const Icon(
+                          Icons.arrow_back,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
                       ),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ],
-                ),*/
+                    ],
+                  ),*/
                 iconTheme: const IconThemeData(color: Colors.white),
 
-                backgroundColor: Colors.green,
-                title: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(left: 0.0),
-                      child: Image.asset(
-                        'assets/images/appbar_heading.png',
-                        height: 30.0,
-                        width: 58.0,
-                      ),
-                    ),
-                  ],
+                backgroundColor: const Color.fromRGBO(47, 171, 45, 1),
+                titleSpacing: 0,
+                title: Image.asset(
+                  'assets/images/appbar_heading.png',
                 ),
                 // elevation: 0,
                 // title: const Text('Your App Title'), // Optional: add a title
               )
             : AppBar(
-/*
-                actions: [
-                  PopupMenuButton<String>(
-                    itemBuilder: (BuildContext context) {
-                      return <PopupMenuEntry<String>>[
-                        const PopupMenuItem<String>(
-                          value: 'Government Scheme',
-                          child: ListTile(
-                            // leading: Icon(Icons.exit_to_app),
-                            title: Text('Government Scheme'),
+                /*
+                  actions: [
+                    PopupMenuButton<String>(
+                      itemBuilder: (BuildContext context) {
+                        return <PopupMenuEntry<String>>[
+                          const PopupMenuItem<String>(
+                            value: 'Government Scheme',
+                            child: ListTile(
+                              // leading: Icon(Icons.exit_to_app),
+                              title: Text('Government Scheme'),
+                            ),
                           ),
-                        ),
-                      ];
-                    },
-                    onSelected: (String value) async {
-                      if (value == 'logout') {
-                        if (constants.projectId == constants.keralaUUID) {
-                          Navigator.pushReplacementNamed(
-                              context, constants.roleRoute);
-                        } else {
-                          Navigator.pushReplacementNamed(context, '/login');
+                        ];
+                      },
+                      onSelected: (String value) async {
+                        if (value == 'logout') {
+                          if (constants.projectId == constants.fieldRishiUUID) {
+                            Navigator.pushReplacementNamed(
+                                context, constants.roleRoute);
+                          } else {
+                            Navigator.pushReplacementNamed(context, '/login');
+                          }
+                          */
+                /*   bool? result = await viewModel.deleteToken(context);
+                          if (result != null && result) {
+                            await viewModel.setLogoutSharedPreferences(context);
+                            Fluttertoast.showToast(msg: "Logged out");
+                            Navigator.pushReplacementNamed(context, '/login');
+                          }*/ /*
                         }
-                        */
-/*   bool? result = await viewModel.deleteToken(context);
-                        if (result != null && result) {
-                          await viewModel.setLogoutSharedPreferences(context);
-                          Fluttertoast.showToast(msg: "Logged out");
-                          Navigator.pushReplacementNamed(context, '/login');
-                        }*/ /*
-                      }
-                    },
-                  ),
-                ],
-*/
-              /*  leading: (widget.isFromHistory != null && widget.isFromHistory!)
-                    ? IconButton(
-                        onPressed: () async {
-                          await tts.stop();
-                          Navigator.pop(context);
-                        },
-                        icon: const Icon(Icons.arrow_back),
-                      )
-                    : null,*/
+                      },
+                    ),
+                  ],
+  */
+                /*  leading: (widget.isFromHistory != null && widget.isFromHistory!)
+                      ? IconButton(
+                          onPressed: () async {
+                            await tts.stop();
+                            Navigator.pop(context);
+                          },
+                          icon: const Icon(Icons.arrow_back),
+                        )
+                      : null,*/
                 // centerTitle: true,
                 backgroundColor: Colors.white,
                 // elevation: 0,
-                title: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(left: 0.0),
-                      child: Image.asset(
-                        'assets/images/aquamind_logo.jpeg',
-                        height: 70.0,
-                        width: 58.0,
+                /*title: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(left: 0.0),
+                        child: Image.asset(
+                          'assets/images/aquamind_logo.jpeg',
+                          height: 70.0,
+                          width: 58.0,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                /*title: Text(
+                    ],
+                  ),*/
+                title: Text(
                   'aquaMind',
                   style: constants.black16W500,
-                ),*/
+                ),
               ),
         body: Stack(
           children: [
@@ -455,12 +457,6 @@ class _ChatWindowState extends State<ChatWindow>
                                     final datalast =
                                         Map<String, dynamic>.from(value);
                                     if (datalast['is_user']) {
-                                      String query = datalast['message'];
-                                      if (!AppState.instance.isEnglish) {
-                                        /*  query = await translateText(
-                                            datalast['message'],
-                                            AppState.instance.language,false);*/
-                                      }
                                       thoughtsList.clear();
                                       messageList.add(ChatBubble(
                                         expandChainOfThought: false,
@@ -481,7 +477,6 @@ class _ChatWindowState extends State<ChatWindow>
                                         token: datalast['token'] ?? '',
                                       ));
                                     } else {
-                                      String query = '';
                                       if (datalast['chain_of_thought'] !=
                                           null) {
                                         thoughtsList
@@ -491,19 +486,20 @@ class _ChatWindowState extends State<ChatWindow>
                                         thoughtsList.clear();
                                       }
 
-                                      /* if (!datalast['is_user']) {
-                                        Navigator.pop(context);
-                                        Fluttertoast.showToast(msg: "Session Expired");
-                                      }*/
+                                      /*if (!datalast['is_user']) {
+                                          Fluttertoast.showToast(
+                                              msg: "Session Expired");
+                                          Navigator.pop(context);
+                                        }*/
 
                                       if (datalast['is_valid_token'] != null &&
                                           datalast['is_limit_exceeded'] !=
                                               null) {
                                         if (!datalast['is_valid_token'] ||
                                             datalast['is_limit_exceeded']) {
-                                          Navigator.pop(context);
                                           Fluttertoast.showToast(
                                               msg: "Session Expired");
+                                          Navigator.pop(context);
                                         }
                                       }
                                       // messageList.last.expandChainOfThought = false;
@@ -551,9 +547,15 @@ class _ChatWindowState extends State<ChatWindow>
                                         .addPostFrameCallback((_) {
                                       showLoader.value = false;
                                     });
-                                    tts.speak(
-                                        messageList[messageList.length - 1]
-                                            .text);
+
+                                    WidgetsBinding.instance
+                                        .addPostFrameCallback((_) async {
+                                      await speakMsg(
+                                          messageList[messageList.length - 1]
+                                              .text);
+                                    });
+
+                                    // tts.speak(messageList[messageList.length - 1].text);
                                   }
                                   prevChatLength = messageList.length;
                                   if (messageList.isNotEmpty &&
@@ -567,13 +569,13 @@ class _ChatWindowState extends State<ChatWindow>
                                   }
 
                                   /*  loadingTimer =
-                                      Timer(const Duration(seconds: 4), () {
-                                    int randomIndex =
-                                        Random().nextInt(loaderMsgList.length);
-                                    if (showLoader.value) {
-                                      tts.speak(loaderMsgList[randomIndex]);
-                                    }
-                                  });*/
+                                        Timer(const Duration(seconds: 4), () {
+                                      int randomIndex =
+                                          Random().nextInt(loaderMsgList.length);
+                                      if (showLoader.value) {
+                                        tts.speak(loaderMsgList[randomIndex]);
+                                      }
+                                    });*/
 
                                   dataTimer = Timer(
                                       const Duration(seconds: 180), () async {
@@ -665,12 +667,6 @@ class _ChatWindowState extends State<ChatWindow>
                                   ));
                                 }
 
-                                /* print("temp list length::${tempList.length}");
-                                for (int i = 0; i < tempList.length; i++) {
-                                  print(
-                                      "temp ${i} - ${tempList[i].isUser} -- ${tempList[i].text} -- ${tempList[i].chainOfThoughts}");
-                                }*/
-
                                 return ListView.builder(
                                   reverse: true,
                                   physics:
@@ -721,21 +717,21 @@ class _ChatWindowState extends State<ChatWindow>
               ),
             ),
             /*const Positioned.fill(
-              child: IgnorePointer(
-                ignoring: false,
-                child: Center(
-                  child: SizedBox(
-                    height: 150,
-                    width: 200,
-                    child: Image(
-                      image:
-                      AssetImage('assets/images/appbar_heading.png'),
-                      fit: BoxFit.contain,
+                child: IgnorePointer(
+                  ignoring: false,
+                  child: Center(
+                    child: SizedBox(
+                      height: 150,
+                      width: 200,
+                      child: Image(
+                        image:
+                        AssetImage('assets/images/appbar_heading.png'),
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),*/
+              ),*/
           ],
         ),
       ),
@@ -798,15 +794,12 @@ class _ChatWindowState extends State<ChatWindow>
                 icon: Icon(Icons.send,
                     color: showLoader.value
                         ? Colors.grey
-                        : constants.projectId == constants.keralaUUID
-                            ? Colors.green
-                            : Colors.green),
+                        : const Color(0xff2FAB2D)),
                 onPressed: showLoader.value
                     ? null
                     : () async {
                         addUserUploadedImageToChat();
                         addUserMessageToChat(chatController.text);
-                        print("capturedPhoto::$capturedPhoto");
                         if (chatController.text.isEmpty) {
                           Fluttertoast.showToast(
                               msg: "Please enter your question.");
@@ -871,20 +864,11 @@ class _ChatWindowState extends State<ChatWindow>
   }
 
   void updateChatControllerForSpeech(String text) {
-    if (text.toLowerCase().contains('best')) {
-      text = text.replaceAll('best', 'pest');
+    if (text.toLowerCase().contains('ki')) {
+      text = text.replaceAll('ki', 'key');
     }
     if (text.toLowerCase().contains('effect')) {
       text = text.replaceAll('effect', 'affect');
-    }
-    if (text.toLowerCase().contains('sheet')) {
-      text = text.replaceAll('sheet', 'sheath');
-    }
-    if (text.contains('PU 002')) {
-      text = text.replaceAll('PU 002', 'PU-002');
-    }
-    if (text.contains('H A 101')) {
-      text = text.replaceAll('H A 101', 'HA-101');
     }
     chatController.text = text;
     setState(() {});
@@ -1061,8 +1045,8 @@ class _ChatWindowState extends State<ChatWindow>
       onStatus: (status) async {
         print('Status: $status');
         /*  if (status == 'notListening') {
-        await startListeningBg();
-      }*/
+          await startListeningBg();
+        }*/
       },
       onError: (error) async {
         print('Error: $error');
@@ -1080,49 +1064,76 @@ class _ChatWindowState extends State<ChatWindow>
       // await startListeningToYes(sessionId, AppState.instance.triggeredWord);
     }
 
-/*  bool initialized = await speechToText.initialize(
-    onStatus: (status) async {
-      print('Status: $status');
-      print('sessionId: $sessionId');
-      if (status == 'notListening') {
+    /*  bool initialized = await speechToText.initialize(
+      onStatus: (status) async {
+        print('Status: $status');
+        print('sessionId: $sessionId');
+        if (status == 'notListening') {
+          //await speechToText.stop();
+          // await startListenings(sessionId);
+        }
+      },
+      onError: (error) async {
+        print('Error: $error');
         //await speechToText.stop();
-        // await startListenings(sessionId);
-      }
-    },
-    onError: (error) async {
-      print('Error: $error');
-      //await speechToText.stop();
-      await startListenings(sessionId);
-    },
-  );
+        await startListenings(sessionId);
+      },
+    );
 
-  await startListenings(sessionId);*/
+    await startListenings(sessionId);*/
   }
 
   @override
   bool get wantKeepAlive => true;
 
-/* Future<String> translateText(
-      String text, String language, bool isInserted) async {
-    String _translatedText = '';
-    final onDeviceTranslator = isInserted
-        ? GoogleMlKit.nlp.onDeviceTranslator(
-            sourceLanguage: TranslateLanguage.hindi,
-            targetLanguage: TranslateLanguage.english,
-          )
-        : GoogleMlKit.nlp.onDeviceTranslator(
-            sourceLanguage: TranslateLanguage.english,
-            targetLanguage: TranslateLanguage.hindi,
-          );
+  List<Map<String, dynamic>> _getWordsWithPositions(String text) {
+    final words = text
+        .split(RegExp(r'(\s+)')); // Split by spaces, keeping them as separators
+    List<Map<String, dynamic>> wordPositions = [];
+    int start = 0;
 
-    final result = await onDeviceTranslator.translateText(text);
+    for (final word in words) {
+      if (word.trim().isNotEmpty) {
+        wordPositions.add({
+          'word': word,
+          'start': start,
+          'end': start + word.length,
+        });
+      }
+      start += word.length;
+    }
+
+    return wordPositions;
+  }
+
+  Future<void> speakMsg(String text) async {
     setState(() {
-      _translatedText = result;
+      highlightedText = "";
+      remainingText = text;
     });
+    await tts.speak(text);
+  }
+/* Future<String> translateText(
+        String text, String language, bool isInserted) async {
+      String _translatedText = '';
+      final onDeviceTranslator = isInserted
+          ? GoogleMlKit.nlp.onDeviceTranslator(
+              sourceLanguage: TranslateLanguage.hindi,
+              targetLanguage: TranslateLanguage.english,
+            )
+          : GoogleMlKit.nlp.onDeviceTranslator(
+              sourceLanguage: TranslateLanguage.english,
+              targetLanguage: TranslateLanguage.hindi,
+            );
 
-    await onDeviceTranslator.close();
-    return _translatedText;
-  }*/
+      final result = await onDeviceTranslator.translateText(text);
+      setState(() {
+        _translatedText = result;
+      });
+
+      await onDeviceTranslator.close();
+      return _translatedText;
+    }*/
 }
 
 @pragma('vm:entry-point')
@@ -1160,24 +1171,24 @@ onStart(ServiceInstance service) async {
       if (await service.isForegroundService()) {
         /// the notification id must be equals with AndroidConfiguration when you call configure() method.
         /*      flutterLocalNotificationsPlugin.show(
-          888,
-          'COOL SERVICE',
-          'Awesome ${DateTime.now()}',
-          const NotificationDetails(
-            android: AndroidNotificationDetails(
-              'my_foreground',
-              'MY FOREGROUND SERVICE',
-              icon: 'ic_bg_service_small',
-              ongoing: true,
+            888,
+            'COOL SERVICE',
+            'Awesome ${DateTime.now()}',
+            const NotificationDetails(
+              android: AndroidNotificationDetails(
+                'my_foreground',
+                'MY FOREGROUND SERVICE',
+                icon: 'ic_bg_service_small',
+                ongoing: true,
+              ),
             ),
-          ),
-        );*/
+          );*/
 
         /* // if you don't using custom notification, uncomment this
-        service.setForegroundNotificationInfo(
-          title: "Agri Data",
-          content: "Updated at ${DateTime.now()}",
-        );*/
+          service.setForegroundNotificationInfo(
+            title: "Agri Data",
+            content: "Updated at ${DateTime.now()}",
+          );*/
       }
     }
 
@@ -1228,8 +1239,8 @@ Future<void> initializeSpeechToText(String sessionId) async {
     onStatus: (status) async {
       print('Status: $status');
       /*  if (status == 'notListening') {
-        await startListeningBg();
-      }*/
+          await startListeningBg();
+        }*/
     },
     onError: (error) async {
       print('Error: $error');
@@ -1273,10 +1284,10 @@ Future<void> startListeningToYes(String sessionId, String word) async {
           });
           print("111111-pushed");
           /* await ref.push().set({
-            "is_user": false,
-            "event_name": 'CONTINUOUS_LISTEN_MODE',
-            "changelog": 'No Change in $AppState.instance.triggeredWord Data'
-          });*/
+              "is_user": false,
+              "event_name": 'CONTINUOUS_LISTEN_MODE',
+              "changelog": 'No Change in $AppState.instance.triggeredWord Data'
+            });*/
           Future.delayed(const Duration(seconds: 2), () async {
             print(
                 "wewewewewe AppState.instance.triggeredWord after completion::${AppState.instance.triggeredWord}");

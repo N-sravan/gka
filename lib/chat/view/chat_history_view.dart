@@ -10,7 +10,7 @@ import '../../chat_window.dart';
 class ChatHistoryView extends StatefulWidget {
   final String? sessionId;
 
-  ChatHistoryView({Key? key, this.sessionId}) : super(key: key);
+  const ChatHistoryView({Key? key, this.sessionId}) : super(key: key);
 
   @override
   State<ChatHistoryView> createState() => _ChatHistoryViewState();

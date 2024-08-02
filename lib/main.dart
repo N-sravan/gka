@@ -75,22 +75,12 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final permissionsGranted = await requestPermissions();
 
-  setProjectSpecificValues();
+  await setProjectSpecificValues();
 
   /*  SystemChrome.setPreferredOrientations([
     DeviceOrientation.landscapeRight, // Set landscape orientation
     DeviceOrientation.landscapeLeft,
   ]);*/
-
-  await Firebase.initializeApp(
-      options: const FirebaseOptions(
-    apiKey: 'AIzaSyB3ItstCC27ZMjtlta7Vq52K606YebXHX4',
-    appId: '1:915537810859:android:f803660609065bf23ceeee',
-    messagingSenderId: '915537810859',
-    projectId: 'kerala-aims',
-    storageBucket: 'kerala-aims.appspot.com',
-    iosBundleId: 'com.vassar.aims',
-  ));
 
   NotificationHelper.initializeNotification(myBackgroundMessageHandler);
 
@@ -137,19 +127,22 @@ void main() async {
   // await initializeService();
 }
 
-void setProjectSpecificValues() {
+Future<void> setProjectSpecificValues() async {
   AppState.instance.language = 'english';
-  if (constants.projectId == constants.keralaUUID) {
+  if (constants.projectId == constants.fieldRishiUUID) {
     constants.appTitle = constants.fieldRishiString;
     constants.baseUrl = constants.fieldRishiBaseUrl;
+    await Firebase.initializeApp(options: constants.fieldRishiOptions);
   }
   if (constants.projectId == constants.gowaterUUID) {
     constants.appTitle = constants.gowaterString;
     constants.baseUrl = constants.gowaterBaseUrl;
+    await Firebase.initializeApp(options: constants.gowaterOptions);
   }
   if (constants.projectId == constants.apwrimsUUID) {
     constants.appTitle = constants.apwrimsString;
     constants.baseUrl = constants.apwrimsBaseUrl;
+    await Firebase.initializeApp(options: constants.apwrimsOptions);
   }
   /* if (constants.projectId == constants.gowaterUUID) {
     constants.appTitle = constants.kuidfctring;

@@ -84,8 +84,7 @@ class LoginRepositoryImpl extends LoginRepository {
 
     Map<String, dynamic> responseMap = jsonDecode(response.body);
 
-    SessionDetails sessionDetails =
-        SessionDetails.fromJson(responseMap['session_details']);
+    SessionDetails sessionDetails = SessionDetails.fromJson(responseMap['session_details']);
     return sessionDetails;
   }
 }

@@ -7,6 +7,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/chat/model/get_documents_response.dart';
+import 'package:gka/chat/model/get_users_response.dart';
 import 'package:gka/chat_bubble.dart';
 import 'package:gka/shared/loading_view_model.dart';
 import 'package:gka/text_to_speech.dart';
@@ -25,6 +26,7 @@ import '../../message_bubble.dart';
 import '../../services/api_provider.dart';
 import '../../utils/network_utils.dart';
 import '../../utils/util.dart';
+import '../model/activity_status_response.dart';
 import '../model/get_prompts_response.dart';
 import '../model/get_tools_response_model.dart';
 import '../model/prompt_submission_response.dart';
@@ -48,6 +50,7 @@ class ChatViewModel extends LoadingViewModel {
   String llmType = '';
   File? selectedFile;
   bool isUploading = false;
+  String userActivity = '';
   TextEditingController chatController = TextEditingController();
   TextEditingController promptController = TextEditingController();
   TextEditingController intentController = TextEditingController();
@@ -95,7 +98,6 @@ class ChatViewModel extends LoadingViewModel {
   String selectedPromptModelUUID = '';
   String fileUUID = '';
 
-
   final SpeechToText _speechToText = SpeechToText();
   ValueNotifier<bool> listeningActive = ValueNotifier<bool>(false);
 
@@ -103,7 +105,7 @@ class ChatViewModel extends LoadingViewModel {
   bool speechEnabled = false;
   Map<String, String> promptTemplateIntentMapping = {};
   Map<String, List<FileResponse>> documentIdTextMapping = {};
-
+  List<User> usersList = [];
   Map<String, String> toolNameDescriptionMapping = {};
   Map<String, String> modelNameUuidMapping = {};
   Map<String, String> messageTimestampMapping = {};
@@ -153,7 +155,6 @@ class ChatViewModel extends LoadingViewModel {
                   getAllPromptsResponseModel.response![i].intent!;
             }
             isLoading = false;
-            print("weweweww promptTemplateIntentMapping ${promptTemplates}");
             promptTemplateIntentMapping = promptTemplates;
             notifyListeners();
           } else {
@@ -186,6 +187,49 @@ class ChatViewModel extends LoadingViewModel {
     return null;
   }
 
+  Future? getUsersList(BuildContext context) async {
+    if (await networkUtils.hasActiveInternet()) {
+      isLoading = true;
+      try {
+        UserResponseModel userResponseModel = await repo.fetchUsers(context);
+        usersList.clear();
+        if (userResponseModel.statusCode == 200) {
+          if (userResponseModel.users != null) {
+            userResponseModel.users!.forEach((key, value) {
+              usersList.add(value);
+            });
+            isLoading = false;
+            notifyListeners();
+          } else {
+            isLoading = false;
+            notifyListeners();
+          }
+        } else {
+          isLoading = false;
+          notifyListeners();
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Something went wrong,Please try later'),
+          ));
+        }
+      } catch (e) {
+        isLoading = false;
+        notifyListeners();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(constants.genericErrorMsg),
+        ));
+        Util.instance
+            .logMessage('Chat View Model', 'Error while authenticating $e');
+      }
+    } else {
+      isLoading = false;
+      notifyListeners();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(constants.noNetworkAvailability),
+      ));
+    }
+    return null;
+  }
+
   Future? getDocuments(BuildContext context) async {
     if (await networkUtils.hasActiveInternet()) {
       isLoading = true;
@@ -198,11 +242,10 @@ class ChatViewModel extends LoadingViewModel {
             getDocumentsResponseModel.response.forEach((key, value) {
               if (value.isNotEmpty) {
                 documentIdTextMapping[key] = value;
-                fileUUID =value[0].fileUUID!;
+                fileUUID = value[0].fileUUID!;
               }
             });
             print("weweweww documentIdMapping $documentIdTextMapping");
-            // documentIdMapping = documentsMapping;
             isLoading = false;
             notifyListeners();
           } else {
@@ -648,6 +691,43 @@ class ChatViewModel extends LoadingViewModel {
     return false;
   }
 
+  Future<bool?> submitActivityStatus(
+      BuildContext context, String text, bool isIncreased) async {
+    if (await networkUtils.hasActiveInternet()) {
+      try {
+        isLoading = true;
+        Map<String, dynamic> params = {};
+        isIncreased
+            ? params = {
+                "user_id": AppState.instance.userId,
+                "increased_limit": int.parse(text),
+              }
+            : params = {
+                "user_id": AppState.instance.userId,
+                "decreased_limit": int.parse(text),
+              };
+        ActivityStatusResponse activityStatusResponse =
+            await repo.submitActivityStatus(params,isIncreased);
+        if (activityStatusResponse != null) {
+          if (activityStatusResponse.statusCode == 200) {
+            return true;
+          }
+          return false;
+        }
+      } catch (e) {
+        Fluttertoast.showToast(
+            msg: constants.genericErrorMsg, toastLength: Toast.LENGTH_LONG);
+      }
+    } else {
+      Navigator.pop(context);
+      Fluttertoast.showToast(
+          msg: constants.noNetworkAvailability, toastLength: Toast.LENGTH_LONG);
+    }
+    notifyListeners();
+    isLoading = false;
+    return false;
+  }
+
   String formatDateTime(DateTime dateTime) {
     // Define the desired format
     String day = dateTime.day.toString().padLeft(2, '0');
@@ -659,5 +739,9 @@ class ChatViewModel extends LoadingViewModel {
 
     // Create the formatted string
     return "$day-$month-$year $hour:$minute:$second";
+  }
+
+  updateActivityStatus(String? newValue) {
+    userActivity = newValue!;
   }
 }

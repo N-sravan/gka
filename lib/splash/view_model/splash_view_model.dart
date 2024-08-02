@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:gka/login/view/fieldrishi_login_view.dart';
 import 'package:gka/login/view/login_view.dart';
 import 'package:gka/permissions/view/permissions_view.dart';
 import 'package:gka/utils/navigation_util.dart';
@@ -23,17 +24,37 @@ import '../../utils/util.dart';
 
 class SplashViewModel extends LoadingViewModel {
   checkPermissionsAndNavigate(BuildContext context) async {
-    await _checkIfUserIsLoggedIn(context);
+    if (constants.projectId == constants.fieldRishiUUID) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => const FieldRishiLoginScreenWidget()),
+      );
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreenWidget()),
+      );
+    }
+    // await _checkIfUserIsLoggedIn(context);
   }
 
   /// Navigator function based on route argument
   _startSplashTimerAndNavigate(BuildContext context, String routeName) {
     Timer(const Duration(seconds: constants.splashDuration), () async {
       if (routeName == '/login') {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginScreenWidget()),
-        );
+        if (constants.projectId == constants.fieldRishiUUID) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => const FieldRishiLoginScreenWidget()),
+          );
+        } else {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginScreenWidget()),
+          );
+        }
       }
     });
   }
@@ -45,10 +66,12 @@ class SplashViewModel extends LoadingViewModel {
         .getBoolPreference(constants.preferenceIsLoggedIn);
     dynamic userName = await SecuredStorageUtil.instance
         .readSecureData(constants.preferenceUserName);
-    dynamic userId = await SecuredStorageUtil.instance.readSecureData(constants.preferenceUserId);
-    dynamic sessionId = await SecuredStorageUtil.instance.readSecureData(constants.preferenceSessionId);
-    dynamic token = await SecuredStorageUtil.instance.readSecureData(constants.preferenceToken);
-
+    dynamic userId = await SecuredStorageUtil.instance
+        .readSecureData(constants.preferenceUserId);
+    dynamic sessionId = await SecuredStorageUtil.instance
+        .readSecureData(constants.preferenceSessionId);
+    dynamic token = await SecuredStorageUtil.instance
+        .readSecureData(constants.preferenceToken);
 
     if (userId != null && userId.isNotEmpty && isLoggedIn) {
       AppState.instance.userId = userId!;
@@ -57,7 +80,7 @@ class SplashViewModel extends LoadingViewModel {
       AppState.instance.sessionId = sessionId;
       AppState.instance.language = 'english';
       AppState.instance.isEnglish = true;
-      if (constants.projectId == constants.keralaUUID) {
+      if (constants.projectId == constants.fieldRishiUUID) {
         NavigationUtil.instance.navigateToRoleScreen(context);
       } else {
         Navigator.push(
@@ -72,7 +95,7 @@ class SplashViewModel extends LoadingViewModel {
       }
     } else {
       // User isn't logged in
-      if (constants.projectId == constants.keralaUUID) {
+      if (constants.projectId == constants.fieldRishiUUID) {
         NavigationUtil.instance.navigateToRoleScreen(context);
       } else {
         _startSplashTimerAndNavigate(context, '/login');

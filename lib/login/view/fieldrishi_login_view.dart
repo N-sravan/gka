@@ -11,16 +11,18 @@ import '../../utils/network_utils.dart';
 import '../model/login_api_response_model.dart' as response;
 import '../view_model/login_view_model.dart';
 
-class LoginScreenWidget extends StatefulWidget {
+class FieldRishiLoginScreenWidget extends StatefulWidget {
   final String? role;
 
-  const LoginScreenWidget({super.key, this.role});
+  const FieldRishiLoginScreenWidget({super.key, this.role});
 
   @override
-  State<LoginScreenWidget> createState() => _LoginScreenWidgetState();
+  State<FieldRishiLoginScreenWidget> createState() =>
+      _FieldRishiLoginScreenWidgetState();
 }
 
-class _LoginScreenWidgetState extends State<LoginScreenWidget> {
+class _FieldRishiLoginScreenWidgetState
+    extends State<FieldRishiLoginScreenWidget> {
   late LoginViewModel viewModel;
   final _formKey = GlobalKey<FormState>();
   late bool _passwordVisible;
@@ -33,38 +35,9 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
     super.initState();
     viewModel = Provider.of<LoginViewModel>(context, listen: false);
 
-    switch (constants.projectId) {
-      case constants.fieldRishiUUID:
-        _usernameController.text = "tapranauser";
-        _passwordController.text = "fieldwise@123";
-        appIcon = constants.fieldRishiIcon;
-        // _usernameController.text = "sudhansu_samal";
-        // _passwordController.text = "agriwise@123";
-        break;
-      case constants.apwrimsUUID:
-        _usernameController.text = "tapranauser";
-        _passwordController.text = "fieldwise@123";
-        appIcon = constants.appIcon;
-        break;
-      case constants.gowaterUUID:
-        _usernameController.text = "tapranauser";
-        _passwordController.text = "fieldwise@123";
-        appIcon = constants.appIcon;
-
-        break;
-      case constants.kaleswaramUUID:
-        _usernameController.text = "Sandeep";
-        _passwordController.text = "test123";
-        appIcon = constants.fieldRishiIcon;
-
-        break;
-      case constants.tnwrimsUUID:
-        _usernameController.text = "Pradeep";
-        _passwordController.text = "test123";
-        appIcon = constants.fieldRishiIcon;
-
-        break;
-    }
+    _usernameController.text = "fieldwisesuperadmin";
+    _passwordController.text = "agriwise@123";
+    appIcon = constants.fieldRishiIcon;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       networkUtils.startTrackingConnection();
     });
@@ -121,17 +94,15 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                   ),
                                 ),
                               ),
-                              constants.projectId == constants.fieldRishiUUID ?   const Text(
+                              const Text(
                                 'fieldRISHI: GenAI Co-Pilot for AgriExpert Advisory',
                                 style: TextStyle(
                                     fontFamily: 'serif',
                                     fontWeight: FontWeight.bold,
                                     color: Colors.black,
                                     fontSize: 20),
-                              ): SizedBox(),
-                              const SizedBox(
-                                height:  constants.projectId == constants.fieldRishiUUID ? 60 :100
                               ),
+                              const SizedBox(height: 60),
                               Text(
                                 constants.userNameString,
                                 style: constants.grey16W400,
@@ -252,7 +223,7 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                               padding: EdgeInsets.fromLTRB(
                                   0.0,
                                   constants.largePadding,
-                                  0.0,
+                                  60.0,
                                   constants.mediumPadding),
                               child: CircularProgressIndicator(
                                 color: Colors.blue,
