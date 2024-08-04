@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/utils/app_state.dart';
 import 'package:intl/intl.dart';
@@ -54,6 +55,9 @@ class _ChatBubbleState extends State<ChatBubble> {
     const Color(0xFFf8d7da).withOpacity(0.5), //pink
     // const Color(0xFFe2e3e5).withOpacity(0.5),  //g
   ];
+
+  int start = 0;
+  int end = 0;
 
   @override
   void initState() {
@@ -115,12 +119,12 @@ class _ChatBubbleState extends State<ChatBubble> {
                         const Padding(
                           padding: EdgeInsets.only(left: 4.0),
                           child: SizedBox(
-                            height: 32,
-                            width: 32,
+                            height: 38,
+                            width: 38,
                             child: CircleAvatar(
                               radius: 50,
                               backgroundImage:
-                                  AssetImage('assets/images/vani.png'),
+                                  AssetImage('assets/images/male_bot.jfif'),
                             ),
                           ),
                         ),
@@ -170,7 +174,8 @@ class _ChatBubbleState extends State<ChatBubble> {
                                             widget.tableRowData!.isNotEmpty)
                                           _tableView(),
                                         const SizedBox(height: 10),
-                                        if (widget.text.isNotEmpty) _textView(),
+                                        if (widget.text.isNotEmpty)
+                                         _textView(),
                                       ],
                                     ),
                                   ),
@@ -329,7 +334,6 @@ class _ChatBubbleState extends State<ChatBubble> {
   }
 
   _tableView() {
-    print("222222 tableView");
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -429,6 +433,25 @@ class _ChatBubbleState extends State<ChatBubble> {
       ),
     );
   }
+
+  Widget _textFromInput(int start, int end, String text) => Container(
+      // alignment: Alignment.topCenter,
+      padding: const EdgeInsets.only(top: 25.0, left: 25.0, right: 25.0),
+      child: RichText(
+        textAlign: TextAlign.center,
+        text: TextSpan(children: <TextSpan>[
+          TextSpan(
+              text: text != null && start != 0 ? text!.substring(0, start) : "",
+              style: const TextStyle(color: Colors.black)),
+          TextSpan(
+              text: text != null ? text!.substring(start, end) : "",
+              style: const TextStyle(
+                  color: Colors.red, fontWeight: FontWeight.bold)),
+          TextSpan(
+              text: text != null ? text!.substring(end) : "",
+              style: const TextStyle(color: Colors.black)),
+        ]),
+      ));
 
   _buttonsView() {
     return Row(

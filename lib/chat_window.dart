@@ -54,11 +54,13 @@ class ChatWindow extends StatefulWidget {
 class _ChatWindowState extends State<ChatWindow>
     with AutomaticKeepAliveClientMixin {
   var scrollControllerListView = ScrollController();
+  int start = 0;
+  int end = 0;
+  String? _newVoiceText;
   int prevChatLength = 0;
   int prevChatLengthHistory = 0;
   int c = 0;
 
-  // TextToSpeech tts = TextToSpeech();
   int responseCount = 1;
   String sessionId = "";
   String queryString = "";
@@ -107,7 +109,6 @@ class _ChatWindowState extends State<ChatWindow>
 
   @override
   void initState() {
-    print("language::${AppState.instance.language}");
     super.initState();
     switch (constants.projectId) {
       case constants.fieldRishiUUID:
@@ -161,6 +162,7 @@ class _ChatWindowState extends State<ChatWindow>
         break;
     }
     _initSpeech();
+
   }
 
   @override
@@ -416,7 +418,7 @@ class _ChatWindowState extends State<ChatWindow>
                     ],
                   ),*/
                 title: Text(
-                  'aquaMind',
+                  constants.appTitle,
                   style: constants.black16W500,
                 ),
               ),
@@ -555,7 +557,7 @@ class _ChatWindowState extends State<ChatWindow>
                                               .text);
                                     });
 
-                                    // tts.speak(messageList[messageList.length - 1].text);
+                                    tts.speak(messageList[messageList.length - 1].text);
                                   }
                                   prevChatLength = messageList.length;
                                   if (messageList.isNotEmpty &&
@@ -1107,11 +1109,10 @@ class _ChatWindowState extends State<ChatWindow>
   }
 
   Future<void> speakMsg(String text) async {
-    setState(() {
-      highlightedText = "";
-      remainingText = text;
-    });
-    await tts.speak(text);
+    if (_newVoiceText != null) {
+      await tts.awaitSpeakCompletion(true);
+      await tts.speak(_newVoiceText!);
+    }
   }
 /* Future<String> translateText(
         String text, String language, bool isInserted) async {

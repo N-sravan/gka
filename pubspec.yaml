@@ -33,7 +33,7 @@ dependencies:
   livespeechtotext: ^1.0.9
   flutter_speech: ^2.0.0
   uuid: ^4.3.3
-#  workmanager: ^0.5.2
+  workmanager: ^0.5.2
   permission_handler: ^10.4.3
   notification_permissions: ^0.6.1
   firebase_messaging: ^14.6.9
@@ -62,15 +62,10 @@ dependencies:
   loading_animation_widget: ^1.2.1
   flutter_svg: ^2.0.7
   pin_code_fields: ^7.4.0
-  fl_chart: ^0.68.0
-#  google_ml_kit: ^0.18.0
-#  flutter_translate: ^4.1.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
-
   flutter_lints: ^2.0.0
 
 flutter:
