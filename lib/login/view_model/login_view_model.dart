@@ -257,7 +257,7 @@ class LoginViewModel extends LoadingViewModel {
               sessionDetails.userId,
               sessionDetails.token!,
               sessionDetails.sessionId!,
-              sessionDetails.role!);
+              sessionDetails.userType!);
           isLoading = false;
           print("wewewew sessionId::${sessionDetails.sessionId}");
           return true;

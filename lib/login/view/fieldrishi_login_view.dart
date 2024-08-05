@@ -35,8 +35,10 @@ class _FieldRishiLoginScreenWidgetState
     super.initState();
     viewModel = Provider.of<LoginViewModel>(context, listen: false);
 
-    _usernameController.text = "fieldwisesuperadmin";
-    _passwordController.text = "agriwise@123";
+    /*_usernameController.text = "fieldwisesuperadmin";
+    _passwordController.text = "agriwise@123";*/
+    _usernameController.text = "tapranauser";
+    _passwordController.text = "fieldwise@123";
     appIcon = constants.fieldRishiIcon;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       networkUtils.startTrackingConnection();

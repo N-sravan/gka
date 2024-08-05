@@ -1,5 +1,4 @@
 import 'dart:math';
-
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -22,6 +21,7 @@ class ChatBubble extends StatefulWidget {
     this.timestampMapping,
     this.sessionId,
     this.chainOfThoughts,
+    this.followUpQuestions,
     this.token,
     this.expandChainOfThought,
     this.sessionExpired,
@@ -37,7 +37,8 @@ class ChatBubble extends StatefulWidget {
   final bool? hasErrorLog;
   final Map<String, String>? timestampMapping;
   final String? sessionId;
-  final List<dynamic>? chainOfThoughts;
+  final Map<String, String>? chainOfThoughts;
+  late List<String>? followUpQuestions;
   final String? token;
   late bool? expandChainOfThought;
   late bool? sessionExpired;
@@ -49,20 +50,24 @@ class ChatBubble extends StatefulWidget {
 class _ChatBubbleState extends State<ChatBubble> {
   // bool isExpanded = false;
   ValueNotifier<bool> show = ValueNotifier<bool>(true);
+  Map<String, bool> _expanded = {};
   List<Color> colors = [
-    const Color(0xFFCFE2FF).withOpacity(0.5),
-    const Color(0xFFFFF3CD).withOpacity(0.5),
+    const Color(0xFFCFE2FF).withOpacity(0.5), //blue
+    const Color(0xFFFFF3CD).withOpacity(0.5), //yellow
     const Color(0xFFf8d7da).withOpacity(0.5), //pink
-    // const Color(0xFFe2e3e5).withOpacity(0.5),  //g
+    const Color(0xFFcff4fc).withOpacity(0.5), //skyblue
   ];
-
-  int start = 0;
-  int end = 0;
 
   @override
   void initState() {
     super.initState();
     show.value = widget.expandChainOfThought!;
+    _expanded = {};
+    if (widget.chainOfThoughts != null) {
+      for (String key in widget.chainOfThoughts!.keys) {
+        _expanded[key] = false;
+      }
+    }
     _sessionExpiry();
   }
 
@@ -81,7 +86,9 @@ class _ChatBubbleState extends State<ChatBubble> {
   @override
   Widget build(BuildContext context) {
     bool hasContent = widget.text.isNotEmpty ||
-        (widget.imageUrl != null && widget.imageUrl!.isNotEmpty);
+        (widget.imageUrl != null && widget.imageUrl!.isNotEmpty) ||
+        (widget.followUpQuestions != null &&
+            widget.followUpQuestions!.isNotEmpty);
 
     bool hasChainOfThoughts =
         widget.chainOfThoughts != null && widget.chainOfThoughts!.isNotEmpty;
@@ -102,10 +109,104 @@ class _ChatBubbleState extends State<ChatBubble> {
                   if (widget.isUser && hasChainOfThoughts)
                     ValueListenableBuilder(
                       builder: (context, value, _) {
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: value ? chainOfThoughts() : [],
-                        );
+                        return (show.value &&
+                                widget.chainOfThoughts != null &&
+                                widget.chainOfThoughts!.isNotEmpty)
+                            ? Card(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'Chain of Thoughts',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 14),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          ...widget.chainOfThoughts!.entries
+                                              .map((entry) {
+                                            int colorIndex = widget
+                                                    .chainOfThoughts!.keys
+                                                    .toList()
+                                                    .indexOf(entry.key) %
+                                                4;
+                                            return Padding(
+                                              padding: const EdgeInsets.only(
+                                                  bottom: 8.0),
+                                              child: GestureDetector(
+                                                onTap: () {
+                                                  setState(() {
+                                                    if (_expanded[entry.key] ==
+                                                        null) {
+                                                      _expanded[entry.key] =
+                                                          false;
+                                                    }
+                                                    _expanded[entry.key] =
+                                                        !_expanded[entry.key]!;
+                                                  });
+                                                },
+                                                child: Container(
+                                                  width: double.infinity,
+                                                  padding:
+                                                      const EdgeInsets.all(8.0),
+                                                  decoration: BoxDecoration(
+                                                    color: colors[colorIndex],
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            12),
+                                                  ),
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        entry.key.trim(),
+                                                        style: const TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 12,
+                                                        ),
+                                                      ),
+                                                      if (_expanded[
+                                                                  entry.key] !=
+                                                              null &&
+                                                          _expanded[
+                                                                  entry.key] ==
+                                                              true)
+                                                        Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .only(
+                                                                  top: 8.0),
+                                                          child: Text(
+                                                            entry.value.trim(),
+                                                            style:
+                                                                const TextStyle(
+                                                                    fontSize:
+                                                                        12),
+                                                          ),
+                                                        ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          }).toList(),
+                                        ],
+                                      )
+                                    ],
+                                  ),
+                                ),
+                              )
+                            : const SizedBox();
                       },
                       valueListenable: show,
                     ),
@@ -119,12 +220,12 @@ class _ChatBubbleState extends State<ChatBubble> {
                         const Padding(
                           padding: EdgeInsets.only(left: 4.0),
                           child: SizedBox(
-                            height: 38,
-                            width: 38,
+                            height: 32,
+                            width: 32,
                             child: CircleAvatar(
                               radius: 50,
                               backgroundImage:
-                                  AssetImage('assets/images/male_bot.jfif'),
+                                  AssetImage('assets/images/vani.png'),
                             ),
                           ),
                         ),
@@ -134,61 +235,64 @@ class _ChatBubbleState extends State<ChatBubble> {
                       if (hasContent)
                         Flexible(
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (hasContent)
-                                DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    color: widget.isUser
-                                        ? const Color(0xffE2E3E4)
-                                            .withOpacity(0.6)
-                                        : const Color(0xFF2FAB2D)
-                                            .withOpacity(0.15),
-                                    // : Colors.green[500],
-                                    borderRadius: widget.isUser
-                                        ? const BorderRadius.only(
-                                            topLeft: Radius.circular(16),
-                                            bottomLeft: Radius.circular(16),
-                                            bottomRight: Radius.circular(16),
-                                          )
-                                        : const BorderRadius.only(
-                                            topRight: Radius.circular(16),
-                                            bottomLeft: Radius.circular(16),
-                                            bottomRight: Radius.circular(16),
-                                          ),
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(
-                                        left: 10, right: 10, bottom: 10),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        if (widget.imageUrl != null &&
-                                            widget.imageUrl!.isNotEmpty)
-                                          _imageView(),
-                                        if (widget.tableColumnData != null &&
-                                            widget
-                                                .tableColumnData!.isNotEmpty &&
-                                            widget.tableRowData != null &&
-                                            widget.tableRowData!.isNotEmpty)
-                                          _tableView(),
-                                        const SizedBox(height: 10),
-                                        if (widget.text.isNotEmpty)
-                                         _textView(),
-                                      ],
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (hasContent)
+                                  DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      color: widget.isUser
+                                          ? const Color(0xffE2E3E4)
+                                              .withOpacity(0.6)
+                                          : const Color(0xFF2FAB2D)
+                                              .withOpacity(0.15),
+                                      // : Colors.green[500],
+                                      borderRadius: widget.isUser
+                                          ? const BorderRadius.only(
+                                              topLeft: Radius.circular(16),
+                                              bottomLeft: Radius.circular(16),
+                                              bottomRight: Radius.circular(16),
+                                            )
+                                          : const BorderRadius.only(
+                                              topRight: Radius.circular(16),
+                                              bottomLeft: Radius.circular(16),
+                                              bottomRight: Radius.circular(16),
+                                            ),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(
+                                          left: 10, right: 10, bottom: 10),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          if (widget.imageUrl != null &&
+                                              widget.imageUrl!.isNotEmpty)
+                                            _imageView(),
+                                          if (widget.tableColumnData != null &&
+                                              widget.tableColumnData!
+                                                  .isNotEmpty &&
+                                              widget.tableRowData != null &&
+                                              widget.tableRowData!.isNotEmpty)
+                                            _tableView(),
+                                          const SizedBox(height: 10),
+                                          if (widget.text.isNotEmpty)
+                                            _textView(),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                ),
-                              /*  if (!widget.isUser &&
+                                if (!widget.isUser &&
+                                    widget.followUpQuestions != null &&
+                                    widget.followUpQuestions!.isNotEmpty)
+                                  _followUpQuestionsView(),
+                                /*  if (!widget.isUser &&
                                   widget.logMessage!.isNotEmpty)
                                 _infoView(),
                               if (widget.hasErrorLog != null &&
                                   widget.hasErrorLog == true)
                                 _buttonsView(),*/
-                              // if (isExpanded)
-                            ],
-                          ),
+                                // if (isExpanded)
+                              ]),
                         ),
                       if (widget.isUser) _userProfileView(),
                     ],
@@ -202,32 +306,57 @@ class _ChatBubbleState extends State<ChatBubble> {
 
   List<Widget> chainOfThoughts() {
     List<Widget> widgets = [];
-    if (show.value) {
+    if (show.value &&
+        widget.chainOfThoughts != null &&
+        widget.chainOfThoughts!.isNotEmpty) {
       widgets.add(const Text(
         'Chain of Thoughts',
         style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
       ));
       widgets.add(const SizedBox(height: 8));
-      for (String thought in widget.chainOfThoughts!) {
-        Color randomColor = randomCotColor(colors);
-        print(thought);
+      int colorCount = 0;
+      widget.chainOfThoughts!.forEach((key, value) {
         widgets.add(Padding(
           padding: const EdgeInsets.only(bottom: 8.0),
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(constants.xSmallPadding),
-            decoration: BoxDecoration(
-              color: randomColor,
-              borderRadius: BorderRadius.circular(12),
-              // border: Border.all(color: Colors.grey),
-            ),
-            child: Text(
-              thought.trim(),
-              style: const TextStyle(fontSize: 12),
+          child: GestureDetector(
+            onTap: () {
+              setState(() {
+                if (_expanded[key] == null) {
+                  _expanded[key] = false;
+                }
+                _expanded[key] = !_expanded[key]!;
+              });
+            },
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(constants.xSmallPadding),
+              decoration: BoxDecoration(
+                color: colors[colorCount % 4],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    key.trim(),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                  if (_expanded[key] != null && _expanded[key] == true)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        value.trim(),
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ));
-      }
+        colorCount++;
+      });
     }
     return widgets;
   }
@@ -434,100 +563,78 @@ class _ChatBubbleState extends State<ChatBubble> {
     );
   }
 
-  Widget _textFromInput(int start, int end, String text) => Container(
-      // alignment: Alignment.topCenter,
-      padding: const EdgeInsets.only(top: 25.0, left: 25.0, right: 25.0),
-      child: RichText(
-        textAlign: TextAlign.center,
-        text: TextSpan(children: <TextSpan>[
-          TextSpan(
-              text: text != null && start != 0 ? text!.substring(0, start) : "",
-              style: const TextStyle(color: Colors.black)),
-          TextSpan(
-              text: text != null ? text!.substring(start, end) : "",
-              style: const TextStyle(
-                  color: Colors.red, fontWeight: FontWeight.bold)),
-          TextSpan(
-              text: text != null ? text!.substring(end) : "",
-              style: const TextStyle(color: Colors.black)),
-        ]),
-      ));
-
-  _buttonsView() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        ElevatedButton(
-          onPressed: () async {
-            await pushData("auto");
-          },
-          child: const Text('Auto Fix'),
-        ),
-        const SizedBox(width: 10),
-        ElevatedButton(
-          onPressed: () async {
-            _updateSqlQuery();
-            // await pushData("manual");
-          },
-          child: const Text('Manual Fix'),
-        ),
-      ],
-    );
-  }
-
-  _updateSqlQuery() {
-    return showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Update SQL Query'),
-          content: SingleChildScrollView(child: Text(widget.logMessage!)),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('Update'),
-              onPressed: () async {
-                await pushData("manual");
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  pushData(String fix) async {
+  Future _pushFollowUpQuestionInFirebase(String data) async {
     DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
+        "${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${AppState.instance.sessionId}");
 
     String timeStamp = DateTime.now().millisecondsSinceEpoch.toString();
 
     DateTime now = DateTime.now();
     String formattedDate = DateFormat('kk:mm:ss \n EEE d MMM').format(now);
-    print("wewewew DateTime before push:: $formattedDate");
+    print(
+        "wewewew data:: ${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
     await ref.child(timeStamp).set({
-      "isUser": true,
-      "message": widget.text,
-      "image_url": widget.imageUrl,
+      "is_user": true,
+      "message": data,
+      "image_url": '',
       "language": AppState.instance.language.toLowerCase(),
       "model_uuid": AppState.instance.modelUUID,
-      "mode": AppState.instance.mode,
-      "fix_type": fix,
-      "error_log": widget.errorLog,
-      "assistant_response": widget.logMessage,
-      "sql_ts": widget.timestampMapping!['sql_ts'] ?? '',
-      "error_ts": widget.timestampMapping!['error_ts'] ?? '',
-      "table_ts": widget.timestampMapping!['table_ts'] ?? '',
-      "image_ts": widget.timestampMapping!['image_ts'] ?? '',
-      "summary_ts": widget.timestampMapping!['summary_ts'] ?? '',
-      "user_response": ''
+      "mode": '',
+      "token": AppState.instance.token,
+      "sm_enabled": true,
     });
+    setState(() {});
+  }
+
+  _followUpQuestionsView() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8.0),
+      child: Card(
+        color: Colors.orange.withOpacity(0.26),
+        elevation: 2.0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'What would you like to know other?',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: widget.followUpQuestions!.map((question) {
+                  return GestureDetector(
+                    onTap: () async {
+                      await _pushFollowUpQuestionInFirebase(question);
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(top: 8.0),
+                      padding: const EdgeInsets.all(8.0),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        question,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void validateToken(bool isUser, bool? isValidToken, bool? isLimitExceeded) {

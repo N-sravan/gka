@@ -162,7 +162,6 @@ class _ChatWindowState extends State<ChatWindow>
         break;
     }
     _initSpeech();
-
   }
 
   @override
@@ -418,7 +417,7 @@ class _ChatWindowState extends State<ChatWindow>
                     ],
                   ),*/
                 title: Text(
-                  constants.appTitle,
+                  'aquaMind',
                   style: constants.black16W500,
                 ),
               ),
@@ -453,6 +452,9 @@ class _ChatWindowState extends State<ChatWindow>
                                   ..sort((e1, e2) => e1.key.compareTo(e2.key)));
 
                                 List<String> thoughtsList = [];
+                                List<String> followUpQuestionsList = [];
+                                Map<String, String> cotMapping = {};
+                                Map<String, String> maps = {};
 
                                 sortedByKeyMap.forEach((key, value) async {
                                   if (key != "cart") {
@@ -460,6 +462,8 @@ class _ChatWindowState extends State<ChatWindow>
                                         Map<String, dynamic>.from(value);
                                     if (datalast['is_user']) {
                                       thoughtsList.clear();
+                                      maps.clear();
+                                      cotMapping.clear();
                                       messageList.add(ChatBubble(
                                         expandChainOfThought: false,
                                         text: datalast['message'] ?? '',
@@ -475,24 +479,39 @@ class _ChatWindowState extends State<ChatWindow>
                                         logMessage: datalast['log'] ?? '',
                                         hasErrorLog: false,
                                         timestampMapping: dataTsMapping,
-                                        chainOfThoughts: [],
+                                        chainOfThoughts: {},
                                         token: datalast['token'] ?? '',
+                                        followUpQuestions: [],
                                       ));
                                     } else {
                                       if (datalast['chain_of_thought'] !=
                                           null) {
-                                        thoughtsList
-                                            .add(datalast['chain_of_thought']);
-                                      }
-                                      if (datalast['message'] != null) {
-                                        thoughtsList.clear();
-                                      }
+                                        (datalast['chain_of_thought'] as Map)
+                                            .forEach((key, value) {
+                                          maps[key.toString()] =
+                                              value.toString();
+                                        });
+                                        cotMapping.addAll(maps);
+                                        /* List<String> list = [
+                                          "How are you ?",
+                                          "What is this?",
+                                          "What would you like to know?"
+                                        ];
 
-                                      /*if (!datalast['is_user']) {
-                                          Fluttertoast.showToast(
-                                              msg: "Session Expired");
-                                          Navigator.pop(context);
+                                        if(!followUpQuestionsList.contains(list)){
+                                          followUpQuestionsList.addAll(list);
                                         }*/
+                                      }
+                                      if (datalast['follow_up_questions'] !=
+                                          null) {
+                                        List<Object?> followUpQuestions =
+                                            datalast['follow_up_questions'];
+                                        followUpQuestionsList =
+                                            followUpQuestions
+                                                .map((item) => item.toString())
+                                                .toList();
+                                      }
+                                      print("follow:$followUpQuestionsList");
 
                                       if (datalast['is_valid_token'] != null &&
                                           datalast['is_limit_exceeded'] !=
@@ -520,8 +539,9 @@ class _ChatWindowState extends State<ChatWindow>
                                         logMessage: datalast['log'] ?? '',
                                         hasErrorLog: false,
                                         timestampMapping: dataTsMapping,
-                                        chainOfThoughts:
-                                            List<String>.from(thoughtsList),
+                                        chainOfThoughts: cotMapping,
+                                        followUpQuestions:
+                                            followUpQuestionsList,
                                         token: datalast['token'] ?? '',
                                       ));
                                     }
@@ -550,14 +570,9 @@ class _ChatWindowState extends State<ChatWindow>
                                       showLoader.value = false;
                                     });
 
-                                    WidgetsBinding.instance
-                                        .addPostFrameCallback((_) async {
-                                      await speakMsg(
-                                          messageList[messageList.length - 1]
-                                              .text);
-                                    });
-
-                                    tts.speak(messageList[messageList.length - 1].text);
+                                    tts.speak(
+                                        messageList[messageList.length - 1]
+                                            .text);
                                   }
                                   prevChatLength = messageList.length;
                                   if (messageList.isNotEmpty &&
@@ -614,7 +629,8 @@ class _ChatWindowState extends State<ChatWindow>
                                       'text': messageList[i].text,
                                       'image_url':
                                           messageList[i].imageUrl ?? '',
-                                      'cots': []
+                                      'cots': {},
+                                      'followQns': [],
                                     };
                                     mappedData.add(currentQuestion);
                                   } else {
@@ -629,14 +645,17 @@ class _ChatWindowState extends State<ChatWindow>
                                       }
                                     }
                                     if (currentQuestion != null &&
-                                        messageList[i]
-                                            .chainOfThoughts!
-                                            .isEmpty) {
+                                        messageList[i].text!.isNotEmpty) {
                                       Map<String, dynamic> data = {
                                         'isUser': messageList[i].isUser,
-                                        'text': messageList[i].text,
+                                        'text': messageList[i].text.toString(),
                                         'image_url':
-                                            messageList[i].imageUrl ?? ''
+                                            messageList[i].imageUrl ?? '',
+                                        'cots':
+                                            messageList[i].chainOfThoughts ??
+                                                '',
+                                        'followQns':
+                                            messageList[i].followUpQuestions
                                       };
                                       mappedData.add(data);
                                     }
@@ -646,15 +665,18 @@ class _ChatWindowState extends State<ChatWindow>
                                 String message;
                                 String image;
                                 bool currentIsUser;
-                                List<dynamic>? cotsList = [];
+                                Map<String, String> cotsMap = {};
+                                List<String> questions = [];
 
                                 for (int i = 0; i < mappedData.length; i++) {
                                   currentIsUser = mappedData[i]['isUser'];
                                   message = mappedData[i]['text'];
-                                  cotsList = mappedData[i]['cots'];
+                                  cotsMap = Map<String, String>.from(
+                                      mappedData[i]['cots']);
                                   image = mappedData[i]['image_url'] ?? '';
                                   bool cotExpand = false;
-
+                                  questions = List<String>.from(
+                                      mappedData[i]['followQns']);
                                   if (i == (mappedData.length - 1) &&
                                       currentIsUser) {
                                     cotExpand = true;
@@ -663,9 +685,10 @@ class _ChatWindowState extends State<ChatWindow>
                                   tempList.add(ChatBubble(
                                     text: message,
                                     isUser: currentIsUser,
-                                    chainOfThoughts: cotsList,
+                                    chainOfThoughts: cotsMap,
                                     imageUrl: image,
                                     expandChainOfThought: cotExpand,
+                                    followUpQuestions: questions,
                                   ));
                                 }
 

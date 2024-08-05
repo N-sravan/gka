@@ -17,7 +17,7 @@
         </intent>
     </queries>
     <application
-        android:label="chat_bot_weather"
+        android:label="fieldRishi"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

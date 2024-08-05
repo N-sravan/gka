@@ -59,7 +59,7 @@ const String headerRefeshToken = 'refresh_token';
 
 // Icons
 const String appIcon = 'assets/images/flutter_logo.png';
-const String fieldRishiIcon = 'assets/images/Tooltip.png';
+const String fieldRishiIcon = 'assets/images/field_rishi_logo.png';
 
 // URLs
 const String keralaBaseUrl = 'https://keralakrishihub.vassarlabs.com/';
@@ -114,8 +114,8 @@ const String testKeySpace = 'CHAT_BOT_TEST';
 const String recordingKeySpace = 'CHAT_BOT_GOOGLE';
 
 //check this before generating apk
-const String projectId = gowaterUUID;
-const String keyspace = prodKeySpace;
+const String projectId = apwrimsUUID;
+const String keyspace = recordingKeySpace;
 String appTitle = '';
 String baseUrl = '';
 
@@ -838,7 +838,7 @@ enum CropNameVerifyRadioOptions { agree, disagree }
 
 // const String genAiBaseUrl = "https://nawrims.vassarlabs.com/genai/";
 const String genAiBaseUrl = "https://nawrims.vassarlabs.com/vassar_mind/";
-// const String ngrok = "https://a840-196-12-47-4.ngrok-free.app/";
+const String ngrok = "https://e085-196-12-47-4.ngrok-free.app/";
 
 
 //firebase options

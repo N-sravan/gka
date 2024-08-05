@@ -170,9 +170,7 @@ class _UserManagementViewState extends State<UserManagementView> {
                                                       onChanged:
                                                           (String? newValue) {
                                                         setState(() {
-                                                          activityStatusMap[
-                                                                  index] =
-                                                              newValue!;
+                                                          activityStatusMap[index] = newValue!;
                                                         });
                                                       },
                                                     ),
