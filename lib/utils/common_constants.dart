@@ -114,8 +114,8 @@ const String testKeySpace = 'CHAT_BOT_TEST';
 const String recordingKeySpace = 'CHAT_BOT_GOOGLE';
 
 //check this before generating apk
-const String projectId = apwrimsUUID;
-const String keyspace = recordingKeySpace;
+const String projectId = fieldRishiUUID;
+const String keyspace = prodKeySpace;
 String appTitle = '';
 String baseUrl = '';
 

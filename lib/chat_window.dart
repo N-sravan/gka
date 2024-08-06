@@ -331,9 +331,8 @@ class _ChatWindowState extends State<ChatWindow>
           // isFirstTime: widget.isFirstTime,
           sessionId: widget.sessionId!,
         ),
-        appBar: constants.projectId == constants.fieldRishiUUID
-            ? AppBar(
-                /*  leading: Row(
+        appBar: AppBar(
+          /*  leading: Row(
                     children: [
                       IconButton(
                         icon: const Icon(
@@ -346,81 +345,15 @@ class _ChatWindowState extends State<ChatWindow>
                       ),
                     ],
                   ),*/
-                iconTheme: const IconThemeData(color: Colors.white),
+          iconTheme: const IconThemeData(color: Colors.white),
 
-                backgroundColor: const Color.fromRGBO(47, 171, 45, 1),
-                titleSpacing: 0,
-                title: Image.asset(
-                  'assets/images/appbar_heading.png',
-                ),
-                // elevation: 0,
-                // title: const Text('Your App Title'), // Optional: add a title
-              )
-            : AppBar(
-                /*
-                  actions: [
-                    PopupMenuButton<String>(
-                      itemBuilder: (BuildContext context) {
-                        return <PopupMenuEntry<String>>[
-                          const PopupMenuItem<String>(
-                            value: 'Government Scheme',
-                            child: ListTile(
-                              // leading: Icon(Icons.exit_to_app),
-                              title: Text('Government Scheme'),
-                            ),
-                          ),
-                        ];
-                      },
-                      onSelected: (String value) async {
-                        if (value == 'logout') {
-                          if (constants.projectId == constants.fieldRishiUUID) {
-                            Navigator.pushReplacementNamed(
-                                context, constants.roleRoute);
-                          } else {
-                            Navigator.pushReplacementNamed(context, '/login');
-                          }
-                          */
-                /*   bool? result = await viewModel.deleteToken(context);
-                          if (result != null && result) {
-                            await viewModel.setLogoutSharedPreferences(context);
-                            Fluttertoast.showToast(msg: "Logged out");
-                            Navigator.pushReplacementNamed(context, '/login');
-                          }*/ /*
-                        }
-                      },
-                    ),
-                  ],
-  */
-                /*  leading: (widget.isFromHistory != null && widget.isFromHistory!)
-                      ? IconButton(
-                          onPressed: () async {
-                            await tts.stop();
-                            Navigator.pop(context);
-                          },
-                          icon: const Icon(Icons.arrow_back),
-                        )
-                      : null,*/
-                // centerTitle: true,
-                backgroundColor: Colors.white,
-                // elevation: 0,
-                /*title: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(left: 0.0),
-                        child: Image.asset(
-                          'assets/images/aquamind_logo.jpeg',
-                          height: 70.0,
-                          width: 58.0,
-                        ),
-                      ),
-                    ],
-                  ),*/
-                title: Text(
-                  'aquaMind',
-                  style: constants.black16W500,
-                ),
-              ),
+          backgroundColor: const Color.fromRGBO(47, 171, 45, 1),
+          titleSpacing: 0,
+          title: Image.asset(
+            'assets/images/appbar_heading.png',
+          ),
+          // title: const Text('fieldRishi'), // Optional: add a title
+        ),
         body: Stack(
           children: [
             Container(
@@ -492,15 +425,6 @@ class _ChatWindowState extends State<ChatWindow>
                                               value.toString();
                                         });
                                         cotMapping.addAll(maps);
-                                        /* List<String> list = [
-                                          "How are you ?",
-                                          "What is this?",
-                                          "What would you like to know?"
-                                        ];
-
-                                        if(!followUpQuestionsList.contains(list)){
-                                          followUpQuestionsList.addAll(list);
-                                        }*/
                                       }
                                       if (datalast['follow_up_questions'] !=
                                           null) {
