@@ -8,7 +8,7 @@
 PRODUCT_NAME = gka2
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.vassar.apwrimschatbot
+PRODUCT_BUNDLE_IDENTIFIER = com.vassar.fieldrishi
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2023 com.vassar. All rights reserved.

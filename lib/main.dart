@@ -203,7 +203,7 @@ Future<void> showNotification() async {
     messagingSenderId: '1062998944432',
     projectId: 'apwrims---chatbot',
     storageBucket: 'apwrims---chatbot.appspot.com',
-    iosBundleId: 'com.vassar.apwrimschatbot',
+    iosBundleId: 'com.vassar.fieldrishi',
   ));
   DatabaseReference ref = FirebaseDatabase.instance
       .ref("CHAT_BOT_ALERT/HOURLY_NOTIFICATION/${constants.projectId}");
@@ -483,7 +483,7 @@ Future<void> initializeSpeechToText(String sessionId) async {
     messagingSenderId: '1062998944432',
     projectId: 'apwrims---chatbot',
     storageBucket: 'apwrims---chatbot.appspot.com',
-    iosBundleId: 'com.vassar.apwrimschatbot',
+    iosBundleId: 'com.vassar.fieldrishi',
   ));
 
   bool available = await speechToText.initialize(
@@ -537,7 +537,7 @@ Future<void> initializeSpeechToTextBg() async {
     messagingSenderId: '1062998944432',
     projectId: 'apwrims---chatbot',
     storageBucket: 'apwrims---chatbot.appspot.com',
-    iosBundleId: 'com.vassar.apwrimschatbot',
+    iosBundleId: 'com.vassar.fieldrishi',
   ));
 
   bool available = await speechToText.initialize(

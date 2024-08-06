@@ -213,7 +213,7 @@ class _PermissionsScreenWidgetState extends State<PermissionsScreenWidget> {
       messagingSenderId: '1062998944432',
       projectId: 'apwrims---chatbot',
       storageBucket: 'apwrims---chatbot.appspot.com',
-      iosBundleId: 'com.vassar.apwrimschatbot',
+      iosBundleId: 'com.vassar.fieldrishi',
     ));
 
     bool available = await speechToText.initialize(

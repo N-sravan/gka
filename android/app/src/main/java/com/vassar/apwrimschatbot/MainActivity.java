@@ -1,4 +1,4 @@
-package com.vassar.apwrimschatbot;
+package com.vassar.fieldrishi;
 
 import io.flutter.embedding.android.FlutterActivity;
 

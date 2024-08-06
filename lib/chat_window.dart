@@ -987,7 +987,7 @@ class _ChatWindowState extends State<ChatWindow>
       messagingSenderId: '1062998944432',
       projectId: 'apwrims---chatbot',
       storageBucket: 'apwrims---chatbot.appspot.com',
-      iosBundleId: 'com.vassar.apwrimschatbot',
+      iosBundleId: 'com.vassar.fieldrishi',
     ));
 
     bool available = await _speechToText.initialize(
@@ -1180,7 +1180,7 @@ Future<void> initializeSpeechToText(String sessionId) async {
     messagingSenderId: '1062998944432',
     projectId: 'apwrims---chatbot',
     storageBucket: 'apwrims---chatbot.appspot.com',
-    iosBundleId: 'com.vassar.apwrimschatbot',
+    iosBundleId: 'com.vassar.fieldrishi',
   ));
 
   bool available = await speechToText.initialize(
