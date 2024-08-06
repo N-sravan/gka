@@ -107,7 +107,6 @@ const String gowaterUUID = 'd19a5290-2e40-494a-83d2-98f4c845b1f1';
 const String kaleswaramUUID = '927b67e9-a2aa-46e9-99bc-41cf8c502668';
 const String apwrimsUUID = '6f86292b-dd9a-4987-bb8f-c3940263b349';
 const String tnwrimsUUID = 'e98cd5b7-6556-4c0f-a778-3429e1c14a6b';
-const String fieldRishiUUID = '62d3dc99-5bc3-4303-8be1-d4fa1f7deee5';
 const String kuidfcUUID = '62d3dc99-5bc3-4303-8be1-d4fa1f7deee5';
 const String prodKeySpace = 'CHAT_BOT_ONDEMAND_QUERY_DATA';
 const String testKeySpace = 'CHAT_BOT_TEST';
@@ -115,7 +114,7 @@ const String recordingKeySpace = 'CHAT_BOT_GOOGLE';
 
 //check this before generating apk
 const String projectId = apwrimsUUID;
-const String keyspace = recordingKeySpace;
+const String keyspace = prodKeySpace;
 String appTitle = '';
 String baseUrl = '';
 

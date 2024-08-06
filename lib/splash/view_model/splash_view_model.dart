@@ -1,17 +1,6 @@
 import 'dart:async';
-import 'dart:convert';
-import 'package:gka/login/view/fieldrishi_login_view.dart';
 import 'package:gka/login/view/login_view.dart';
-import 'package:gka/permissions/view/permissions_view.dart';
-import 'package:gka/utils/navigation_util.dart';
-
 import '../../chat_window.dart';
-import '../../home/view/home_view.dart';
-import '../../login/model/department_user_permission_response.dart';
-import '../../login/model/login_api_response_model.dart';
-import '../../login/model/user_permission_response_model.dart';
-import '../../main.dart';
-import '../../services/api_provider.dart';
 import 'package:flutter/material.dart';
 import '../../../utils/app_state.dart';
 import '../../../utils/common_constants.dart' as constants;
@@ -20,22 +9,14 @@ import 'package:permission_handler/permission_handler.dart'
 import '../../../utils/shared_preference_util.dart';
 import '../../shared/loading_view_model.dart';
 import '../../utils/secure_storage_util.dart';
-import '../../utils/util.dart';
 
 class SplashViewModel extends LoadingViewModel {
   checkPermissionsAndNavigate(BuildContext context) async {
-    if (constants.projectId == constants.fieldRishiUUID) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => const FieldRishiLoginScreenWidget()),
-      );
-    } else {
+
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const LoginScreenWidget()),
       );
-    }
     // await _checkIfUserIsLoggedIn(context);
   }
 
@@ -43,18 +24,10 @@ class SplashViewModel extends LoadingViewModel {
   _startSplashTimerAndNavigate(BuildContext context, String routeName) {
     Timer(const Duration(seconds: constants.splashDuration), () async {
       if (routeName == '/login') {
-        if (constants.projectId == constants.fieldRishiUUID) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => const FieldRishiLoginScreenWidget()),
-          );
-        } else {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const LoginScreenWidget()),
           );
-        }
       }
     });
   }
@@ -80,9 +53,6 @@ class SplashViewModel extends LoadingViewModel {
       AppState.instance.sessionId = sessionId;
       AppState.instance.language = 'english';
       AppState.instance.isEnglish = true;
-      if (constants.projectId == constants.fieldRishiUUID) {
-        NavigationUtil.instance.navigateToRoleScreen(context);
-      } else {
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -92,14 +62,9 @@ class SplashViewModel extends LoadingViewModel {
             ),
           ),
         );
-      }
     } else {
       // User isn't logged in
-      if (constants.projectId == constants.fieldRishiUUID) {
-        NavigationUtil.instance.navigateToRoleScreen(context);
-      } else {
         _startSplashTimerAndNavigate(context, '/login');
-      }
     }
   }
 }

@@ -208,7 +208,6 @@ class LoginViewModel extends LoadingViewModel {
   bool validateOTP(BuildContext context) {
     if (otpEntered == '1234') {
       AppState.instance.userMobileNo = mobileNo!;
-      AppState.instance.stateUUID = constants.fieldRishiUUID;
       notifyListeners();
       return true;
     } else {

@@ -110,11 +110,6 @@ class _ChatWindowState extends State<ChatWindow>
   @override
   void initState() {
     super.initState();
-    switch (constants.projectId) {
-      case constants.fieldRishiUUID:
-        title = constants.appTitle;
-        break;
-    }
     switch (AppState.instance.language) {
       case 'english':
         dataNotFoundMsg = 'Data Not Found';
@@ -331,32 +326,7 @@ class _ChatWindowState extends State<ChatWindow>
           // isFirstTime: widget.isFirstTime,
           sessionId: widget.sessionId!,
         ),
-        appBar: constants.projectId == constants.fieldRishiUUID
-            ? AppBar(
-          /*  leading: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.arrow_back,
-                          color: Colors.white,
-                        ),
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                      ),
-                    ],
-                  ),*/
-          iconTheme: const IconThemeData(color: Colors.white),
-
-          backgroundColor: const Color.fromRGBO(47, 171, 45, 1),
-          titleSpacing: 0,
-          title: Image.asset(
-            'assets/images/appbar_heading.png',
-          ),
-          // elevation: 0,
-          // title: const Text('Your App Title'), // Optional: add a title
-        )
-            : AppBar(
+        appBar: AppBar(
           /*
                   actions: [
                     PopupMenuButton<String>(

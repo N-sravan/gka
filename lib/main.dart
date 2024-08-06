@@ -129,11 +129,6 @@ void main() async {
 
 Future<void> setProjectSpecificValues() async {
   AppState.instance.language = 'english';
-  if (constants.projectId == constants.fieldRishiUUID) {
-    constants.appTitle = constants.fieldRishiString;
-    constants.baseUrl = constants.fieldRishiBaseUrl;
-    await Firebase.initializeApp(options: constants.fieldRishiOptions);
-  }
   if (constants.projectId == constants.gowaterUUID) {
     constants.appTitle = constants.gowaterString;
     constants.baseUrl = constants.gowaterBaseUrl;

@@ -46,11 +46,11 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
         viewModel.langList.add('English');
         viewModel.langList.add('Tamil');
         break;
-      case constants.fieldRishiUUID:
+    /*  case constants.fieldRishiUUID:
         viewModel.langList.clear();
         viewModel.langList.add('English');
         // viewModel.langList.add('Hindi');
-        break;
+        break;*/
     }
     /* WidgetsBinding.instance.addPostFrameCallback((_) async {
       // await viewModel.deleteData();
@@ -94,9 +94,6 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                     },
                     onSelected: (String value) async {
                       if (value == 'logout') {
-                        if(constants.projectId == constants.fieldRishiUUID){
-                          Navigator.pushReplacementNamed(context, constants.roleRoute);
-                        }else {
                           Navigator.pushReplacementNamed(context, '/login');
                         }
                         /*   bool? result = await viewModel.deleteToken(context);
@@ -105,7 +102,6 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                           Fluttertoast.showToast(msg: "Logged out");
                           Navigator.pushReplacementNamed(context, '/login');
                         }*/
-                      }
                     },
                   ),
                 ],
