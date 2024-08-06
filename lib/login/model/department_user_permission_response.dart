@@ -187,7 +187,7 @@ class Data {
     return Data(
       locType: json['locType'],
       location:
-          json['location'] != null ? Location.fromJson(json['location']) : null,
+      json['location'] != null ? Location.fromJson(json['location']) : null,
     );
   }
 
@@ -268,7 +268,7 @@ class State {
       stateUUID: json['stateUUID'],
       district: json['district'] != null
           ? List<District>.from(
-              json['district'].map((x) => District.fromJson(x)))
+          json['district'].map((x) => District.fromJson(x)))
           : null,
     );
   }
@@ -329,7 +329,7 @@ class Block {
       blockUUID: json['blockUUID'],
       panchayat: json['panchayat'] != null
           ? List<Panchayat>.from(
-              json['panchayat'].map((x) => Panchayat.fromJson(x)))
+          json['panchayat'].map((x) => Panchayat.fromJson(x)))
           : null,
     );
   }
@@ -397,11 +397,11 @@ class KRISHIDSS {
 
   KRISHIDSS(
       {this.applicationId,
-      this.applicationName,
-      this.roleId,
-      this.roleName,
-      this.userRoleScope,
-      this.resources});
+        this.applicationName,
+        this.roleId,
+        this.roleName,
+        this.userRoleScope,
+        this.resources});
 
   KRISHIDSS.fromJson(Map<String, dynamic> json) {
     applicationId = json['applicationId'];
@@ -476,7 +476,7 @@ class Resource {
       resourceId: json['resourceId'],
       resourceName: json['resourceName'],
       actions:
-          json['actions'] != null ? List<String>.from(json['actions']) : null,
+      json['actions'] != null ? List<String>.from(json['actions']) : null,
       actionsInfo: json['actionsInfo'],
       resourceTypeName: json['resourceTypeName'],
     );

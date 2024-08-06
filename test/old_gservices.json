@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "298120067435",
+    "firebase_url": "https://gpt-drive-thru-default-rtdb.firebaseio.com",
+    "project_id": "gpt-drive-thru",
+    "storage_bucket": "gpt-drive-thru.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:298120067435:android:e42d862fd74cf345bf342e",
+        "android_client_info": {
+          "package_name": "com.vassar.gka"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDyyxZ1SI-Hqk9zqT_x1x61rvS1zpQXjw0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

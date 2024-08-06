@@ -79,7 +79,7 @@ class _CameraWidgetState extends State<CameraWidget> {
                   ElevatedButton(
                     style: ButtonStyle(
                         backgroundColor:
-                            MaterialStateProperty.all(const Color(0xFF4BA164)),
+                        MaterialStateProperty.all(const Color(0xFF4BA164)),
                         shape: MaterialStateProperty.all(RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8.0),
                         ))),
@@ -108,7 +108,7 @@ class _CameraWidgetState extends State<CameraWidget> {
                           backgroundColor: MaterialStateProperty.all(
                               const Color(0xFF4BA164)),
                           shape:
-                              MaterialStateProperty.all(RoundedRectangleBorder(
+                          MaterialStateProperty.all(RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8.0),
                           ))),
                       onPressed: () {

@@ -174,7 +174,7 @@ class UserDataLocation {
   factory UserDataLocation.fromJson(Map<String, dynamic> json) {
     var stateList = json['state'] as List;
     List<UserDataState> states =
-        stateList.map((state) => UserDataState.fromJson(state)).toList();
+    stateList.map((state) => UserDataState.fromJson(state)).toList();
     return UserDataLocation(state: states);
   }
 

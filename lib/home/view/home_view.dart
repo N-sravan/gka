@@ -131,17 +131,17 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                         hint: const Text('Select'),
                         items: viewModel.langList
                             .map((String item) => DropdownMenuItem<String>(
-                                  value: item,
-                                  child: Text(
-                                    item,
-                                    style: const TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 14,
-                                      fontFamily: 'Poppins',
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                                  ),
-                                ))
+                          value: item,
+                          child: Text(
+                            item,
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 14,
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ))
                             .toList(),
                         value: viewModel.selectedLang.isNotEmpty == true
                             ? viewModel.selectedLang
@@ -337,17 +337,17 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                         hint: const Text('Select'),
                         items: viewModel.modeList!
                             .map((String item) => DropdownMenuItem<String>(
-                                  value: item,
-                                  child: Text(
-                                    item,
-                                    style: const TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 14,
-                                      fontFamily: 'Poppins',
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                                  ),
-                                ))
+                          value: item,
+                          child: Text(
+                            item,
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 14,
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ))
                             .toList(),
                         value: viewModel.selectedMode.isNotEmpty == true
                             ? viewModel.selectedMode
@@ -452,11 +452,11 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                       child: !model.isLoading
                           ? const Text('Start Session')
                           : Container(
-                              width: MediaQuery.of(context).size.width,
-                              height: MediaQuery.of(context).size.height,
-                              color: Colors.white,
-                              child: constants.indicator,
-                            ),
+                        width: MediaQuery.of(context).size.width,
+                        height: MediaQuery.of(context).size.height,
+                        color: Colors.white,
+                        child: constants.indicator,
+                      ),
                     ),
                   ],
                 ),

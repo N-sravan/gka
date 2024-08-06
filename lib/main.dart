@@ -65,7 +65,7 @@ int prevChatLength = 0;
 PermissionStatus? notificationStatus;
 
 ValueNotifier<SpeechStatus> speechStatus =
-    ValueNotifier<SpeechStatus>(SpeechStatus.idle);
+ValueNotifier<SpeechStatus>(SpeechStatus.idle);
 
 enum SpeechStatus { listening, speaking, idle }
 
@@ -198,19 +198,19 @@ void callbackDispatcher() {
 Future<void> showNotification() async {
   await Firebase.initializeApp(
       options: const FirebaseOptions(
-    apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
-    appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
-    messagingSenderId: '1062998944432',
-    projectId: 'apwrims---chatbot',
-    storageBucket: 'apwrims---chatbot.appspot.com',
-    iosBundleId: 'com.vassar.apwrimschatbot',
-  ));
+        apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
+        appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
+        messagingSenderId: '1062998944432',
+        projectId: 'apwrims---chatbot',
+        storageBucket: 'apwrims---chatbot.appspot.com',
+        iosBundleId: 'com.vassar.apwrimschatbot',
+      ));
   DatabaseReference ref = FirebaseDatabase.instance
       .ref("CHAT_BOT_ALERT/HOURLY_NOTIFICATION/${constants.projectId}");
   String responseMessage = '';
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+  FlutterLocalNotificationsPlugin();
 
   void onDidReceiveNotificationResponse(
       NotificationResponse notificationResponse) async {
@@ -293,7 +293,7 @@ Future<void> showNotification() async {
     }).join('\n');
 
     AndroidNotificationDetails androidPlatformChannelSpecifics =
-        AndroidNotificationDetails(
+    AndroidNotificationDetails(
       'high_importance_channel',
       'High Importance Notifications',
       importance: Importance.max,
@@ -307,7 +307,7 @@ Future<void> showNotification() async {
     );
 
     NotificationDetails platformChannelSpecifics =
-        NotificationDetails(android: androidPlatformChannelSpecifics);
+    NotificationDetails(android: androidPlatformChannelSpecifics);
 
     await flutterLocalNotificationsPlugin.show(
       0,
@@ -344,7 +344,7 @@ Future<void> initializeService() async {
   );
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+  FlutterLocalNotificationsPlugin();
 
   if (platform.Platform.isAndroid || platform.Platform.isAndroid) {
     await flutterLocalNotificationsPlugin.initialize(
@@ -357,7 +357,7 @@ Future<void> initializeService() async {
 
   await flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
+      AndroidFlutterLocalNotificationsPlugin>()
       ?.createNotificationChannel(channel);
 
   await service.configure(
@@ -404,7 +404,7 @@ void onStart(ServiceInstance service) async {
 
   /// OPTIONAL when use custom notification
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+  FlutterLocalNotificationsPlugin();
 
   if (service is AndroidServiceInstance) {
     service.on('setAsForeground').listen((event) {
@@ -478,13 +478,13 @@ Future<void> initializeSpeechToText(String sessionId) async {
   print(("startListeningToHello: starting listening"));
   await Firebase.initializeApp(
       options: const FirebaseOptions(
-    apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
-    appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
-    messagingSenderId: '1062998944432',
-    projectId: 'apwrims---chatbot',
-    storageBucket: 'apwrims---chatbot.appspot.com',
-    iosBundleId: 'com.vassar.apwrimschatbot',
-  ));
+        apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
+        appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
+        messagingSenderId: '1062998944432',
+        projectId: 'apwrims---chatbot',
+        storageBucket: 'apwrims---chatbot.appspot.com',
+        iosBundleId: 'com.vassar.apwrimschatbot',
+      ));
 
   bool available = await speechToText.initialize(
     onStatus: (status) async {
@@ -532,13 +532,13 @@ Future<void> initializeSpeechToTextBg() async {
   print(("startListeningToHello: starting listening"));
   await Firebase.initializeApp(
       options: const FirebaseOptions(
-    apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
-    appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
-    messagingSenderId: '1062998944432',
-    projectId: 'apwrims---chatbot',
-    storageBucket: 'apwrims---chatbot.appspot.com',
-    iosBundleId: 'com.vassar.apwrimschatbot',
-  ));
+        apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',
+        appId: '1:1062998944432:ios:597dab286cd6fc12f22975',
+        messagingSenderId: '1062998944432',
+        projectId: 'apwrims---chatbot',
+        storageBucket: 'apwrims---chatbot.appspot.com',
+        iosBundleId: 'com.vassar.apwrimschatbot',
+      ));
 
   bool available = await speechToText.initialize(
     onStatus: (status) async {
@@ -855,17 +855,17 @@ Future<String> listenForSessionId() async {
                               response.District(
                                   districtName: "Palakkad",
                                   districtUUID:
-                                      "1270f554-20cc-43ee-803e-1532f00e047c",
+                                  "1270f554-20cc-43ee-803e-1532f00e047c",
                                   block: [
                                     response.Block(
                                         blockName: "Sreekrishnapuram",
                                         blockUUID:
-                                            "db64691f-a7de-4e88-b5af-ecbe4dc6d191",
+                                        "db64691f-a7de-4e88-b5af-ecbe4dc6d191",
                                         panchayat: [
                                           response.Panchayat(
                                               panchayatName: "Karimpuzha",
                                               panchayatUUID:
-                                                  "0ec4c732-5db9-4a3e-896a-f7baf24b2966")
+                                              "0ec4c732-5db9-4a3e-896a-f7baf24b2966")
                                         ])
                                   ])
                             ])

@@ -140,7 +140,7 @@ class ChatViewModel extends LoadingViewModel {
       isLoading = true;
       try {
         GetAllPromptsResponseModel getAllPromptsResponseModel =
-            await repo.fetchPrompts(context, modelUUID);
+        await repo.fetchPrompts(context, modelUUID);
         Map<String, String> promptTemplates = {};
         promptTemplateIntentMapping.clear();
         if (getAllPromptsResponseModel.statusCode == 200 &&
@@ -148,11 +148,11 @@ class ChatViewModel extends LoadingViewModel {
           if (getAllPromptsResponseModel.response != null &&
               getAllPromptsResponseModel.response?.length != 0) {
             for (int i = 0;
-                i < getAllPromptsResponseModel.response!.length;
-                i++) {
+            i < getAllPromptsResponseModel.response!.length;
+            i++) {
               promptTemplates[
-                      getAllPromptsResponseModel.response![i].promptTemplate!] =
-                  getAllPromptsResponseModel.response![i].intent!;
+              getAllPromptsResponseModel.response![i].promptTemplate!] =
+              getAllPromptsResponseModel.response![i].intent!;
             }
             isLoading = false;
             promptTemplateIntentMapping = promptTemplates;
@@ -235,7 +235,7 @@ class ChatViewModel extends LoadingViewModel {
       isLoading = true;
       try {
         GetDocumentsResponseModel getDocumentsResponseModel =
-            await repo.fetchDocuments(context);
+        await repo.fetchDocuments(context);
         documentIdTextMapping.clear();
         if (getDocumentsResponseModel.statusCode == 200) {
           if (getDocumentsResponseModel.response != null) {
@@ -284,15 +284,15 @@ class ChatViewModel extends LoadingViewModel {
       isLoading = true;
       try {
         ToolInventoryResponseModel toolInventoryResponseModel =
-            await repo.fetchTools(context);
+        await repo.fetchTools(context);
 
         if (toolInventoryResponseModel.statusCode == 200 &&
             toolInventoryResponseModel.result == true) {
           if (toolInventoryResponseModel.response != null &&
               toolInventoryResponseModel.response!.isNotEmpty) {
             for (int i = 0;
-                i < toolInventoryResponseModel.response!.length;
-                i++) {
+            i < toolInventoryResponseModel.response!.length;
+            i++) {
               toolNameDescriptionMapping[toolInventoryResponseModel.response![i]
                   .name!] = toolInventoryResponseModel.response![i].desc!;
             }
@@ -372,7 +372,7 @@ class ChatViewModel extends LoadingViewModel {
       isLoading = true;
       try {
         PromptSubmissionResponse promptSubmissionResponse =
-            await repo.updatePrompt(context, prompt, intent);
+        await repo.updatePrompt(context, prompt, intent);
         if (promptSubmissionResponse.statusCode == 200 &&
             promptSubmissionResponse.result == true) {
           isLoading = false;
@@ -410,7 +410,7 @@ class ChatViewModel extends LoadingViewModel {
       isLoading = true;
       try {
         model.AvailabeModelResponse availabeModelResponse =
-            await repo.fetchModels(context);
+        await repo.fetchModels(context);
 
         if (availabeModelResponse.statusCode == 200 &&
             availabeModelResponse.result == true) {
@@ -419,7 +419,7 @@ class ChatViewModel extends LoadingViewModel {
             for (int i = 0; i < availabeModelResponse.response!.length; i++) {
               modelNameUuidMapping.addAll({
                 availabeModelResponse.response![i].modelName!:
-                    availabeModelResponse.response![i].modelUuid!
+                availabeModelResponse.response![i].modelUuid!
               });
               if (!modelList!
                   .contains(availabeModelResponse.response![i].modelName)) {
@@ -674,7 +674,7 @@ class ChatViewModel extends LoadingViewModel {
           // "metadata": "{}"
         };
         bool result =
-            await ApiProvider.instance.uploadMedia(params, path, 'file');
+        await ApiProvider.instance.uploadMedia(params, path, 'file');
         if (result != null && result) {
           return true;
         }
@@ -699,15 +699,15 @@ class ChatViewModel extends LoadingViewModel {
         Map<String, dynamic> params = {};
         isIncreased
             ? params = {
-                "user_id": AppState.instance.userId,
-                "increased_limit": int.parse(text),
-              }
+          "user_id": AppState.instance.userId,
+          "increased_limit": int.parse(text),
+        }
             : params = {
-                "user_id": AppState.instance.userId,
-                "decreased_limit": int.parse(text),
-              };
+          "user_id": AppState.instance.userId,
+          "decreased_limit": int.parse(text),
+        };
         ActivityStatusResponse activityStatusResponse =
-            await repo.submitActivityStatus(params,isIncreased);
+        await repo.submitActivityStatus(params,isIncreased);
         if (activityStatusResponse != null) {
           if (activityStatusResponse.statusCode == 200) {
             return true;
