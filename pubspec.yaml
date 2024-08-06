@@ -67,10 +67,10 @@ dependencies:
 # flutter pub get
 # flutter pub run flutter_launcher_icons:main
 
-#flutter_icons:
-#  image_path: "assets/images/flutter_logo.png"
-#  android: true
-#  ios: false
+flutter_launcher_icons:
+  image_path: "assets/images/aquamind_app_logo.png"
+  android: true
+  ios: false
 
 dev_dependencies:
   flutter_test:

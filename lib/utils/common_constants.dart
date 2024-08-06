@@ -129,6 +129,7 @@ const double splashIconHeight = 150;
 const double splashIconWidth = 120;
 const double departmentIconTop = 134;
 const double buttonHeight = 46;
+const double maxButtonHeight = 52;
 const double minButtonHeight = 32;
 const double mediumButtonHeight = 38;
 const double buttonHeightFarmer = 66;
@@ -813,6 +814,9 @@ const String departmentIcon = 'assets/images/supervisor_ic.png';
 const String otherVendorIcon = 'assets/images/other_vendor_ic.png';
 const String verificationIcon = 'assets/images/verification.png';
 const String agroAdvisoryIcon = 'assets/images/agroAdvisoryIcon.png';
+const String aquamindBgImage= 'assets/images/aquamind_bg.png';
+const String aquamindAppIcon= 'assets/images/aquamind_app_logo.png';
+const String aquamindTitleIcon= 'assets/images/aquamind_title.png';
 
 //routes
 const String initialRoute = '/';
