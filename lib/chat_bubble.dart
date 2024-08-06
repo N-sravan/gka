@@ -546,70 +546,79 @@ class _ChatBubbleState extends State<ChatBubble> {
   }
 
   showChainOfThoughts() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Chain of Thoughts',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                ),
-                const SizedBox(height: 8),
-                ...widget.chainOfThoughts!.entries.map((entry) {
-                  int colorIndex =
-                      widget.chainOfThoughts!.keys.toList().indexOf(entry.key) %
-                          4;
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          if (_expanded[entry.key] == null) {
-                            _expanded[entry.key] = false;
-                          }
-                          _expanded[entry.key] = !_expanded[entry.key]!;
-                        });
-                      },
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(8.0),
-                        decoration: BoxDecoration(
-                          color: colors[colorIndex],
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              entry.key.trim(),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                              ),
-                            ),
-                            if (_expanded[entry.key] != null &&
-                                _expanded[entry.key] == true)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 8.0),
-                                child: Text(
-                                  entry.value.trim(),
-                                  style: const TextStyle(fontSize: 12),
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12.0),
+            border: Border.all(
+              color: Colors.black.withOpacity(0.3),
+              width: 1.0,
+            )),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Chain of Thoughts',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                  const SizedBox(height: 8),
+                  ...widget.chainOfThoughts!.entries.map((entry) {
+                    int colorIndex =
+                        widget.chainOfThoughts!.keys.toList().indexOf(entry.key) %
+                            4;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            if (_expanded[entry.key] == null) {
+                              _expanded[entry.key] = false;
+                            }
+                            _expanded[entry.key] = !_expanded[entry.key]!;
+                          });
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(8.0),
+                          decoration: BoxDecoration(
+                            color: colors[colorIndex],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                entry.key.trim(),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
                                 ),
                               ),
-                          ],
+                              if (_expanded[entry.key] != null &&
+                                  _expanded[entry.key] == true)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8.0),
+                                  child: Text(
+                                    entry.value.trim(),
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                }).toList(),
-              ],
-            )
-          ],
+                    );
+                  }).toList(),
+                ],
+              )
+            ],
+          ),
         ),
       ),
     );

@@ -490,7 +490,9 @@ class _ChatWindowState extends State<ChatWindow>
                                       datalast['is_limit_exceeded']) {
                                     Fluttertoast.showToast(
                                         msg: "Session Expired");
-                                    Navigator.pop(context);
+                                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                                      Navigator.pop(context);
+                                    });
                                   }
                                 }
                                 // messageList.last.expandChainOfThought = false;
@@ -1303,4 +1305,13 @@ Future<void> startListeningToYes(String sessionId, String word) async {
         }
       });
   // await startListenings(sessionId);
+
+  Widget sessionExpired() {
+    return Center(
+      child: Text(
+        "Session Expired...",
+        style: constants.black16W500,
+      ),
+    );
+  }
 }
