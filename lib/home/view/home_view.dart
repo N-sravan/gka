@@ -2,6 +2,7 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/home/view_model/home_view_model.dart';
+import 'package:gka/utils/app_state.dart';
 import 'package:provider/provider.dart';
 import '../../chat_window.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
@@ -49,7 +50,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
       case constants.fieldRishiUUID:
         viewModel.langList.clear();
         viewModel.langList.add('English');
-        // viewModel.langList.add('Hindi');
+        viewModel.langList.add('Hindi');
         break;
     }
     /* WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -94,9 +95,10 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                     },
                     onSelected: (String value) async {
                       if (value == 'logout') {
-                        if(constants.projectId == constants.fieldRishiUUID){
-                          Navigator.pushReplacementNamed(context, constants.roleRoute);
-                        }else {
+                        if (constants.projectId == constants.fieldRishiUUID) {
+                          Navigator.pushReplacementNamed(
+                              context, constants.roleRoute);
+                        } else {
                           Navigator.pushReplacementNamed(context, '/login');
                         }
                         /*   bool? result = await viewModel.deleteToken(context);
@@ -217,7 +219,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                         ),
                       ),
                     ),
-                    /*  const SizedBox(height: 20),
+                    /*   const SizedBox(height: 20),
                     const Text(
                       'Select Model',
                       style: TextStyle(
@@ -319,7 +321,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                           ),
                         ),
                       ),
-                    ),*/
+                    ),
                     const SizedBox(height: 20),
                     const Text(
                       'Select Mode',
@@ -423,7 +425,8 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 40),
+                    */
+                    const SizedBox(height: 80),
                     ElevatedButton(
                       onPressed: () async {
                         if (viewModel.selectedLang.isNotEmpty ||
@@ -433,14 +436,14 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                           } else {
                             AppState.instance.isOriyaSelected = false;
                           }*/
-                          String? sessionId = await viewModel.createSession();
-                          if (viewModel.sessionId != null && viewModel.sessionId!.isNotEmpty && sessionId!=null && sessionId.isNotEmpty) {
+                          // String? sessionId = await viewModel.createSession();
+                          if (AppState.instance.sessionId.isNotEmpty) {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => ChatWindow(
                                   isFromHistory: false,
-                                  sessionId: viewModel.sessionId!,
+                                  sessionId: AppState.instance.sessionId,
                                 ),
                               ),
                             );

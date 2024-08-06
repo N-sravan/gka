@@ -838,7 +838,7 @@ enum CropNameVerifyRadioOptions { agree, disagree }
 
 // const String genAiBaseUrl = "https://nawrims.vassarlabs.com/genai/";
 const String genAiBaseUrl = "https://nawrims.vassarlabs.com/vassar_mind/";
-const String ngrok = "https://e085-196-12-47-4.ngrok-free.app/";
+const String ngrok = "https://d637-196-12-47-4.ngrok-free.app/";
 
 
 //firebase options

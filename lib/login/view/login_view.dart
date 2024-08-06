@@ -17,10 +17,12 @@ class LoginScreenWidget extends StatefulWidget {
   const LoginScreenWidget({super.key, this.role});
 
   @override
-  State<LoginScreenWidget> createState() => _LoginScreenWidgetState();
+  State<LoginScreenWidget> createState() =>
+      _LoginScreenWidgetState();
 }
 
-class _LoginScreenWidgetState extends State<LoginScreenWidget> {
+class _LoginScreenWidgetState
+    extends State<LoginScreenWidget> {
   late LoginViewModel viewModel;
   final _formKey = GlobalKey<FormState>();
   late bool _passwordVisible;
@@ -33,38 +35,11 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
     super.initState();
     viewModel = Provider.of<LoginViewModel>(context, listen: false);
 
-    switch (constants.projectId) {
-      case constants.fieldRishiUUID:
-        _usernameController.text = "tapranauser";
-        _passwordController.text = "fieldwise@123";
-        appIcon = constants.fieldRishiIcon;
-        // _usernameController.text = "sudhansu_samal";
-        // _passwordController.text = "agriwise@123";
-        break;
-      case constants.apwrimsUUID:
-        _usernameController.text = "tapranauser";
-        _passwordController.text = "fieldwise@123";
-        appIcon = constants.appIcon;
-        break;
-      case constants.gowaterUUID:
-        _usernameController.text = "tapranauser";
-        _passwordController.text = "fieldwise@123";
-        appIcon = constants.appIcon;
-
-        break;
-      case constants.kaleswaramUUID:
-        _usernameController.text = "Sandeep";
-        _passwordController.text = "test123";
-        appIcon = constants.fieldRishiIcon;
-
-        break;
-      case constants.tnwrimsUUID:
-        _usernameController.text = "Pradeep";
-        _passwordController.text = "test123";
-        appIcon = constants.fieldRishiIcon;
-
-        break;
-    }
+    /*_usernameController.text = "fieldwisesuperadmin";
+    _passwordController.text = "agriwise@123";*/
+    _usernameController.text = "tapranauser";
+    _passwordController.text = "fieldwise@123";
+    appIcon = constants.fieldRishiIcon;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       networkUtils.startTrackingConnection();
     });
@@ -90,7 +65,7 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                       child: SingleChildScrollView(
                         child: Padding(
                           padding:
-                              const EdgeInsets.all(constants.mediumPadding),
+                          const EdgeInsets.all(constants.mediumPadding),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -121,17 +96,15 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                   ),
                                 ),
                               ),
-                              constants.projectId == constants.fieldRishiUUID ?   const Text(
+                              const Text(
                                 'fieldRISHI: GenAI Co-Pilot for AgriExpert Advisory',
                                 style: TextStyle(
                                     fontFamily: 'serif',
                                     fontWeight: FontWeight.bold,
                                     color: Colors.black,
                                     fontSize: 20),
-                              ): SizedBox(),
-                              const SizedBox(
-                                height:  constants.projectId == constants.fieldRishiUUID ? 60 :100
                               ),
+                              const SizedBox(height: 60),
                               Text(
                                 constants.userNameString,
                                 style: constants.grey16W400,
@@ -151,7 +124,7 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                   child: TextFormField(
                                     keyboardType: TextInputType.text,
                                     autovalidateMode:
-                                        AutovalidateMode.onUserInteraction,
+                                    AutovalidateMode.onUserInteraction,
                                     controller: _usernameController,
                                     style: const TextStyle(color: Colors.black),
                                     decoration: InputDecoration(
@@ -196,7 +169,7 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                   ),
                                   child: TextFormField(
                                     autovalidateMode:
-                                        AutovalidateMode.onUserInteraction,
+                                    AutovalidateMode.onUserInteraction,
                                     controller: _passwordController,
                                     obscureText: !_passwordVisible,
                                     enableSuggestions: false,
@@ -217,7 +190,7 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                           onPressed: () {
                                             setState(() {
                                               _passwordVisible =
-                                                  !_passwordVisible;
+                                              !_passwordVisible;
                                             });
                                           },
                                         ),
@@ -249,92 +222,86 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                       padding: const EdgeInsets.all(constants.mediumPadding),
                       child: model.isLoading
                           ? const Padding(
-                              padding: EdgeInsets.fromLTRB(
-                                  0.0,
-                                  constants.largePadding,
-                                  0.0,
-                                  constants.mediumPadding),
-                              child: CircularProgressIndicator(
-                                color: Colors.blue,
-                              ),
-                            )
+                        padding: EdgeInsets.fromLTRB(
+                            0.0,
+                            constants.largePadding,
+                            60.0,
+                            constants.mediumPadding),
+                        child: CircularProgressIndicator(
+                          color: Colors.blue,
+                        ),
+                      )
                           : Padding(
-                              padding: const EdgeInsets.fromLTRB(
-                                  0.0,
-                                  constants.largePadding,
-                                  0.0,
-                                  constants.mediumPadding),
-                              child: SizedBox(
-                                width: MediaQuery.of(context).size.width,
-                                height: constants.buttonHeight,
-                                child: ElevatedButton(
-                                    onPressed: () async {
-                                      if (_formKey.currentState!.validate()) {
-                                        /// Data entered in the form is valid, continue to login
-                                        String userId =
-                                            _usernameController.text;
-                                        String password =
-                                            _passwordController.text;
-                                        if (userId.isNotEmpty &&
-                                            password.isNotEmpty) {
-                                          bool? result =
-                                              await viewModel.authenticate(
-                                                  userId, password, context);
-                                          if (result) {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    ChatWindow(
-                                                  isFromHistory: false,
-                                                  sessionId: AppState
-                                                      .instance.sessionId,
-                                                ),
-                                              ),
-                                            );
-                                            print(
-                                                "authenticaion success - ${AppState.instance.sessionId}");
-                                          }
-                                        }
-                                      }
-                                    },
-                                    style: constants.projectId ==
-                                            constants.fieldRishiUUID
-                                        ? ElevatedButton.styleFrom(
-                                            fixedSize: Size(
-                                              MediaQuery.of(context)
-                                                  .size
-                                                  .height,
-                                              constants.splashButtonHeight,
-                                            ),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                      constants.borderRadius),
-                                            ),
-                                            backgroundColor:
-                                                constants.splashButtonBg,
-                                          )
-                                        : ElevatedButton.styleFrom(
-                                            fixedSize: Size(
-                                              MediaQuery.of(context)
-                                                  .size
-                                                  .height,
-                                              constants.splashButtonHeight,
-                                            ),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                      constants.borderRadius),
-                                            ),
-                                            backgroundColor: Colors.blue,
-                                          ),
-                                    child: Text(
-                                      constants.loginString,
-                                      style: constants.white16W500,
-                                    )),
+                        padding: const EdgeInsets.fromLTRB(
+                            0.0,
+                            constants.largePadding,
+                            0.0,
+                            constants.mediumPadding),
+                        child: SizedBox(
+                          width: MediaQuery.of(context).size.width,
+                          height: constants.buttonHeight,
+                          child: ElevatedButton(
+                              onPressed: () async {
+                                if (_formKey.currentState!.validate()) {
+                                  /// Data entered in the form is valid, continue to login
+                                  String userId =
+                                      _usernameController.text;
+                                  String password =
+                                      _passwordController.text;
+                                  if (userId.isNotEmpty &&
+                                      password.isNotEmpty) {
+                                    bool? result =
+                                    await viewModel.authenticate(
+                                        userId, password, context);
+                                    if (result) {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => const HomeScreenWidget(),
+                                        ),
+                                      );
+                                      print("authenticaion success - ${AppState.instance.sessionId}");
+                                    }
+                                  }
+                                }
+                              },
+                              style: constants.projectId ==
+                                  constants.fieldRishiUUID
+                                  ? ElevatedButton.styleFrom(
+                                fixedSize: Size(
+                                  MediaQuery.of(context)
+                                      .size
+                                      .height,
+                                  constants.splashButtonHeight,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                  BorderRadius.circular(
+                                      constants.borderRadius),
+                                ),
+                                backgroundColor:
+                                constants.splashButtonBg,
+                              )
+                                  : ElevatedButton.styleFrom(
+                                fixedSize: Size(
+                                  MediaQuery.of(context)
+                                      .size
+                                      .height,
+                                  constants.splashButtonHeight,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                  BorderRadius.circular(
+                                      constants.borderRadius),
+                                ),
+                                backgroundColor: Colors.blue,
                               ),
-                            ),
+                              child: Text(
+                                constants.loginString,
+                                style: constants.white16W500,
+                              )),
+                        ),
+                      ),
                     ),
                   ],
                 ),

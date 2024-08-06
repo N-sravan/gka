@@ -440,10 +440,8 @@ class _ChatWindowState extends State<ChatWindow>
                                       if (datalast['is_valid_token'] != null &&
                                           datalast['is_limit_exceeded'] !=
                                               null) {
-                                        if (!datalast['is_valid_token'] ||
-                                            datalast['is_limit_exceeded']) {
-                                          Fluttertoast.showToast(
-                                              msg: "Session Expired");
+                                        if (!datalast['is_valid_token'] || datalast['is_limit_exceeded']) {
+                                          Fluttertoast.showToast(msg: "Session Expired");
                                           Navigator.pop(context);
                                         }
                                       }
@@ -911,14 +909,13 @@ class _ChatWindowState extends State<ChatWindow>
 
     String timeStamp = DateTime.now().millisecondsSinceEpoch.toString();
 
-    print(
-        "wewewew data:: ${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
+    print("wewewew data:: ${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
 
     await ref.child(timeStamp).set({
       "is_user": true,
       "message": text,
       "image_url": imageUrl ?? '',
-      "language": 'english',
+      "language": AppState.instance.language.toLowerCase(),
       "model_uuid": AppState.instance.modelUUID,
       "mode": '',
       "token": AppState.instance.token,
