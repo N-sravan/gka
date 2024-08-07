@@ -60,6 +60,7 @@ const String headerRefeshToken = 'refresh_token';
 // Icons
 const String appIcon = 'assets/images/flutter_logo.png';
 const String fieldRishiIcon = 'assets/images/field_rishi_logo.png';
+const String fieldRishiBgIcon = 'assets/images/fieldrishi_bg.png';
 
 // URLs
 const String keralaBaseUrl = 'https://keralakrishihub.vassarlabs.com/';
