@@ -46,7 +46,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
         viewModel.langList.add('English');
         viewModel.langList.add('Tamil');
         break;
-    /*  case constants.fieldRishiUUID:
+      /*  case constants.fieldRishiUUID:
         viewModel.langList.clear();
         viewModel.langList.add('English');
         // viewModel.langList.add('Hindi');
@@ -94,9 +94,9 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                     },
                     onSelected: (String value) async {
                       if (value == 'logout') {
-                          Navigator.pushReplacementNamed(context, '/login');
-                        }
-                        /*   bool? result = await viewModel.deleteToken(context);
+                        Navigator.pushReplacementNamed(context, '/login');
+                      }
+                      /*   bool? result = await viewModel.deleteToken(context);
                         if (result != null && result) {
                           await viewModel.setLogoutSharedPreferences(context);
                           Fluttertoast.showToast(msg: "Logged out");
@@ -127,17 +127,17 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                         hint: const Text('Select'),
                         items: viewModel.langList
                             .map((String item) => DropdownMenuItem<String>(
-                          value: item,
-                          child: Text(
-                            item,
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 14,
-                              fontFamily: 'Poppins',
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ))
+                                  value: item,
+                                  child: Text(
+                                    item,
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 14,
+                                      fontFamily: 'Poppins',
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                ))
                             .toList(),
                         value: viewModel.selectedLang.isNotEmpty == true
                             ? viewModel.selectedLang
@@ -333,17 +333,17 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                         hint: const Text('Select'),
                         items: viewModel.modeList!
                             .map((String item) => DropdownMenuItem<String>(
-                          value: item,
-                          child: Text(
-                            item,
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 14,
-                              fontFamily: 'Poppins',
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ))
+                                  value: item,
+                                  child: Text(
+                                    item,
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 14,
+                                      fontFamily: 'Poppins',
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                ))
                             .toList(),
                         value: viewModel.selectedMode.isNotEmpty == true
                             ? viewModel.selectedMode
@@ -430,7 +430,10 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                             AppState.instance.isOriyaSelected = false;
                           }*/
                           String? sessionId = await viewModel.createSession();
-                          if (viewModel.sessionId != null && viewModel.sessionId!.isNotEmpty && sessionId!=null && sessionId.isNotEmpty) {
+                          if (viewModel.sessionId != null &&
+                              viewModel.sessionId!.isNotEmpty &&
+                              sessionId != null &&
+                              sessionId.isNotEmpty) {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -448,11 +451,11 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                       child: !model.isLoading
                           ? const Text('Start Session')
                           : Container(
-                        width: MediaQuery.of(context).size.width,
-                        height: MediaQuery.of(context).size.height,
-                        color: Colors.white,
-                        child: constants.indicator,
-                      ),
+                              width: MediaQuery.of(context).size.width,
+                              height: MediaQuery.of(context).size.height,
+                              color: Colors.white,
+                              child: constants.indicator,
+                            ),
                     ),
                   ],
                 ),

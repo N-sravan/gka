@@ -110,7 +110,106 @@ class _ChatBubbleState extends State<ChatBubble> {
                         return (show.value &&
                                 widget.chainOfThoughts != null &&
                                 widget.chainOfThoughts!.isNotEmpty)
-                            ? showChainOfThoughts()
+                            ? Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12.0),
+                                    border: Border.all(
+                                      color: Colors.black.withOpacity(0.3),
+                                      width: 1.0,
+                                    ),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'Chain of Thoughts',
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 14),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            ...widget.chainOfThoughts!.entries
+                                                .map((entry) {
+                                              int colorIndex = widget
+                                                      .chainOfThoughts!.keys
+                                                      .toList()
+                                                      .indexOf(entry.key) %
+                                                  4;
+                                              return Padding(
+                                                padding: const EdgeInsets.only(
+                                                    bottom: 8.0),
+                                                child: GestureDetector(
+                                                  onTap: () {
+                                                    setState(() {
+                                                      _expanded[entry.key] =
+                                                          !_expanded[
+                                                              entry.key]!;
+                                                    });
+                                                  },
+                                                  child: Container(
+                                                    width: double.infinity,
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            8.0),
+                                                    decoration: BoxDecoration(
+                                                      color: colors[colorIndex],
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              12),
+                                                    ),
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Text(
+                                                          entry.key.trim(),
+                                                          style:
+                                                              const TextStyle(
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            fontSize: 12,
+                                                          ),
+                                                        ),
+                                                        if (_expanded[
+                                                                entry.key] ==
+                                                            true)
+                                                          Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .only(
+                                                                    top: 8.0),
+                                                            child: Text(
+                                                              entry.value
+                                                                  .trim(),
+                                                              style:
+                                                                  const TextStyle(
+                                                                      fontSize:
+                                                                          12),
+                                                            ),
+                                                          ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              );
+                                            }).toList(),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              )
                             : const SizedBox();
                       },
                       valueListenable: show,
@@ -125,12 +224,12 @@ class _ChatBubbleState extends State<ChatBubble> {
                         const Padding(
                           padding: EdgeInsets.only(left: 4.0),
                           child: SizedBox(
-                            height: 32,
-                            width: 32,
+                            height: 36,
+                            width: 36,
                             child: CircleAvatar(
                               radius: 50,
                               backgroundImage:
-                                  AssetImage('assets/images/vani.png'),
+                                  AssetImage('assets/images/male_bot.jfif'),
                             ),
                           ),
                         ),
@@ -491,8 +590,8 @@ class _ChatBubbleState extends State<ChatBubble> {
     return Padding(
       padding: const EdgeInsets.only(top: 8.0),
       child: Card(
-        color: Colors.orange.withOpacity(0.26),
-        elevation: 2.0,
+        color: Colors.greenAccent.withOpacity(0.1),
+        // elevation: 2.0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
@@ -502,7 +601,7 @@ class _ChatBubbleState extends State<ChatBubble> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'What would you like to know other?',
+                'What else would you like to know?',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
@@ -545,16 +644,17 @@ class _ChatBubbleState extends State<ChatBubble> {
     }
   }
 
-  showChainOfThoughts() {
+  Widget showChainOfThoughts() {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: DecoratedBox(
         decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12.0),
-            border: Border.all(
-              color: Colors.black.withOpacity(0.3),
-              width: 1.0,
-            )),
+          borderRadius: BorderRadius.circular(12.0),
+          border: Border.all(
+            color: Colors.black.withOpacity(0.3),
+            width: 1.0,
+          ),
+        ),
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Column(
@@ -569,17 +669,15 @@ class _ChatBubbleState extends State<ChatBubble> {
                   ),
                   const SizedBox(height: 8),
                   ...widget.chainOfThoughts!.entries.map((entry) {
-                    int colorIndex =
-                        widget.chainOfThoughts!.keys.toList().indexOf(entry.key) %
-                            4;
+                    int colorIndex = widget.chainOfThoughts!.keys
+                            .toList()
+                            .indexOf(entry.key) %
+                        4;
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
                       child: GestureDetector(
                         onTap: () {
                           setState(() {
-                            if (_expanded[entry.key] == null) {
-                              _expanded[entry.key] = false;
-                            }
                             _expanded[entry.key] = !_expanded[entry.key]!;
                           });
                         },
@@ -600,8 +698,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                                   fontSize: 12,
                                 ),
                               ),
-                              if (_expanded[entry.key] != null &&
-                                  _expanded[entry.key] == true)
+                              if (_expanded[entry.key] == true)
                                 Padding(
                                   padding: const EdgeInsets.only(top: 8.0),
                                   child: Text(
@@ -616,7 +713,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                     );
                   }).toList(),
                 ],
-              )
+              ),
             ],
           ),
         ),

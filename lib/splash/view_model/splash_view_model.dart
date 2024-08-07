@@ -12,11 +12,10 @@ import '../../utils/secure_storage_util.dart';
 
 class SplashViewModel extends LoadingViewModel {
   checkPermissionsAndNavigate(BuildContext context) async {
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginScreenWidget()),
-      );
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreenWidget()),
+    );
     // await _checkIfUserIsLoggedIn(context);
   }
 
@@ -24,10 +23,10 @@ class SplashViewModel extends LoadingViewModel {
   _startSplashTimerAndNavigate(BuildContext context, String routeName) {
     Timer(const Duration(seconds: constants.splashDuration), () async {
       if (routeName == '/login') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const LoginScreenWidget()),
-          );
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreenWidget()),
+        );
       }
     });
   }
@@ -53,18 +52,18 @@ class SplashViewModel extends LoadingViewModel {
       AppState.instance.sessionId = sessionId;
       AppState.instance.language = 'english';
       AppState.instance.isEnglish = true;
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ChatWindow(
-              isFromHistory: false,
-              sessionId: sessionId,
-            ),
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ChatWindow(
+            isFromHistory: false,
+            sessionId: sessionId,
           ),
-        );
+        ),
+      );
     } else {
       // User isn't logged in
-        _startSplashTimerAndNavigate(context, '/login');
+      _startSplashTimerAndNavigate(context, '/login');
     }
   }
 }
