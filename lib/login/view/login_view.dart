@@ -362,7 +362,8 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                                     child: const Text(
                                                       constants.loginString,
                                                       style: TextStyle(
-                                                        color: Color(0XFF55A18F),
+                                                        color:
+                                                            Color(0XFF55A18F),
                                                         fontSize: 16,
                                                       ),
                                                     ),

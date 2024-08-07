@@ -5,7 +5,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
-import 'package:text_to_speech/text_to_speech.dart';
 import '../../login/model/department_user_permission_response.dart' as response;
 import '../../../utils/common_constants.dart' as constants;
 import '../../home/view/home_view.dart';
@@ -28,7 +27,6 @@ class PermissionsScreenWidget extends StatefulWidget {
 class _PermissionsScreenWidgetState extends State<PermissionsScreenWidget> {
   late PermissionsViewModel viewModel;
   late final response.Meta data;
-  TextToSpeech tts = TextToSpeech();
 
   @override
   void initState() {
