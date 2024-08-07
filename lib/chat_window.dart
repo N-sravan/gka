@@ -28,7 +28,6 @@ import 'package:gka/text_to_speech.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
-import 'package:text_to_speech/text_to_speech.dart';
 import 'dart:developer' as developer;
 import 'camera_screen.dart';
 import 'main.dart';
@@ -70,7 +69,6 @@ class _ChatWindowState extends State<ChatWindow>
   File? capturedPhoto;
   int timerCounter = 0;
   List<MessageBubble> chatMessages = [];
-  TextToSpeech textToSpeech = TextToSpeech();
   FlutterTts tts = FlutterTts();
   String highlightedText = "";
   String remainingText = "";
