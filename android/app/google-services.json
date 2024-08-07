@@ -1,22 +1,22 @@
 {
   "project_info": {
-    "project_number": "915537810859",
-    "firebase_url": "https://kerala-aims-default-rtdb.firebaseio.com",
-    "project_id": "kerala-aims",
-    "storage_bucket": "kerala-aims.appspot.com"
+    "project_number": "1062998944432",
+    "firebase_url": "https://apwrims---chatbot-default-rtdb.firebaseio.com",
+    "project_id": "apwrims---chatbot",
+    "storage_bucket": "apwrims---chatbot.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:915537810859:android:f803660609065bf23ceeee",
+        "mobilesdk_app_id": "1:1062998944432:android:183b1324072b14def22975",
         "android_client_info": {
-          "package_name": "com.vassar.aims"
+          "package_name": "com.vassar.apwrimschatbot"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyB3ItstCC27ZMjtlta7Vq52K606YebXHX4"
+          "current_key": "AIzaSyAyiFb_LYf7vgGvENVaycJo7nud4gfrjxU"
         }
       ],
       "services": {

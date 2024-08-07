@@ -841,7 +841,7 @@ enum CropNameVerifyRadioOptions { agree, disagree }
 
 // const String genAiBaseUrl = "https://nawrims.vassarlabs.com/genai/";
 const String genAiBaseUrl = "https://nawrims.vassarlabs.com/vassar_mind/";
-const String ngrok = "https://e085-196-12-47-4.ngrok-free.app/";
+// const String ngrok = "https://e085-196-12-47-4.ngrok-free.app/";
 
 
 //firebase options
@@ -853,7 +853,8 @@ const FirebaseOptions gowaterOptions = FirebaseOptions(
     projectId: 'gowater-99642',
     storageBucket: 'gowater-99642.appspot.com',
     databaseURL: 'https://gowater-99642-default-rtdb.firebaseio.com',
-    iosBundleId: 'com.vassar.gowater');
+    iosBundleId: 'com.vassar.gowater'
+);
 
 const FirebaseOptions apwrimsOptions = FirebaseOptions(
   apiKey: 'AIzaSyD8fruYZA8oA4xbj4HxoNry_NSt5g51vhc',
