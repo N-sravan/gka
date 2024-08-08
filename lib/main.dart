@@ -969,10 +969,10 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(
               builder: (context) => LoginScreenWidget(role: data ?? ''),
             );
-          } else if (settings.name == constants.farmerLoginRoute) {
-            return MaterialPageRoute(
-              builder: (context) => FarmerLoginScreenWidget(role: data ?? ''),
-            );
+          // } else if (settings.name == constants.farmerLoginRoute) {
+          //   return MaterialPageRoute(
+          //     builder: (context) => FarmerLoginScreenWidget(role: data ?? ''),
+          //   );
           } else if (settings.name == constants.departmentLoginRoute) {
             return MaterialPageRoute(
               builder: (context) => LoginScreenWidget(role: data ?? ''),

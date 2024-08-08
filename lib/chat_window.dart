@@ -4,13 +4,13 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
 import 'package:gka/utils/secure_storage_util.dart';
-import 'package:gka/utils/util.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_switch/flutter_switch.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 import 'package:avatar_glow/avatar_glow.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:gka/text_to_speech.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -25,7 +25,6 @@ import '../utils/common_constants.dart' as constants;
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/chat_bubble.dart';
-import 'package:gka/text_to_speech.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
@@ -87,7 +86,7 @@ class _ChatWindowState extends State<ChatWindow>
   List<String> langLoaderMsgList = [];
 
   Map<String, String> currentVoice = {
-    "name": "en-us-x-tpf-local",
+    "name": "en-us-x-iom-local",
     "locale": "en-US"
   };
 
@@ -177,6 +176,7 @@ class _ChatWindowState extends State<ChatWindow>
   bool _speechEnabled = false;
   ValueNotifier<bool> listeningActive = ValueNotifier<bool>(false);
   ValueNotifier<bool> showLoader = ValueNotifier<bool>(false);
+  // TextToSpeech textToSpeech = TextToSpeech();
 
   _initSpeech() async {
     _speechEnabled = await _speechToText.initialize(
@@ -188,10 +188,8 @@ class _ChatWindowState extends State<ChatWindow>
         print("FLKJFJLJF STATUS ${status}");
       },
     );
-
-    // print("Available voices ${await textToSpeech.getVoiceByLang('ta-IN')}");
+    // print("Available voices ${await textToSpeech.getVoiceByLang('hi-IN')}");
     print("Available languages ${await tts.getLanguages}");
-    currentVoice = {"name": "en-us-x-iom-local", "locale": "en-US"};
     await tts.setLanguage(langId);
     await tts.setSpeechRate(0.5);
     await tts.setVoice(currentVoice);
@@ -338,40 +336,57 @@ class _ChatWindowState extends State<ChatWindow>
           iconTheme: const IconThemeData(color: Colors.white),
           backgroundColor: const Color(0XFF55A18F),
           titleSpacing: 0,
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Image.asset(
-                'assets/images/appbar_heading.png',
-              ),
-              Tooltip(
-                message: ("change Language"),
-                child: IconButton(
-                    onPressed: () async {
-                      setState(() {
-                        AppState.instance.isEnglish = !AppState.instance.isEnglish;
-                        if (!AppState.instance.isEnglish) {
-                          AppState.instance.language = 'Hindi';
-                          langId = 'hi-IN';
-                          dataNotFoundMsg = 'जानकारी नहीं मिली';
-                          language = 'hindi';
-                          Fluttertoast.showToast(msg: "Switched to ${AppState.instance.language}");
-
-                        } else {
-                          AppState.instance.language = 'English';
-                          langId = 'en-US';
-                          dataNotFoundMsg = 'Data Not found';
-                          language = 'english';
-                          Fluttertoast.showToast(msg: "Switched to ${AppState.instance.language}");
-
-                        }
-                      });
-                      await _initSpeech();
-                    },
-                    icon: const Icon(Icons.language)),
-              ),
-            ],
+          title: Image.asset(
+            'assets/images/appbar_heading.png',
           ),
+          actions: [
+            Container(
+              margin: const EdgeInsets.only(right: 16.0), // Adjust spacing as needed
+              child: FlutterSwitch(
+                width: 60.0,
+                height: 30.0,
+                valueFontSize: 10.0,
+                toggleSize: 18.0,
+                value: AppState.instance.isEnglish,
+                borderRadius: 30.0,
+                // padding: 2.0,
+                activeColor: Colors.black26,
+                inactiveColor: Colors.black26,
+                activeText: 'ENG',
+                activeTextColor: Colors.white,
+                inactiveTextColor: Colors.white,
+                inactiveText: 'हिंदी',
+                showOnOff: true,
+                onToggle: (val) async {
+                  setState(() {
+                    AppState.instance.isEnglish = val;
+                    if (AppState.instance.isEnglish) {
+                      AppState.instance.language = 'English';
+                      langId = 'en-US';
+                      dataNotFoundMsg = 'Data Not found';
+                      language = 'english';
+                      currentVoice = {
+                        "name": "en-us-x-iom-local",
+                        "locale": "en-US"
+                      };
+                      Fluttertoast.showToast(msg: "Switched to ${AppState.instance.language}");
+                    } else {
+                      AppState.instance.language = 'Hindi';
+                      langId = 'hi-IN';
+                      dataNotFoundMsg = 'जानकारी नहीं मिली';
+                      language = 'hindi';
+                      currentVoice = {
+                        "name": "hi-in-x-hid-network",
+                        "locale": "hi-IN"
+                      };
+                      Fluttertoast.showToast(msg: "Switched to ${AppState.instance.language}");
+                    }
+                  });
+                  await _initSpeech();
+                },
+              ),
+            ),
+          ],
         ),
         body: Stack(
           children: [
@@ -454,7 +469,7 @@ class _ChatWindowState extends State<ChatWindow>
                                                 .map((item) => item.toString())
                                                 .toList();
                                       }
-                                      print("follow:$followUpQuestionsList");
+                                      // print("follow:$followUpQuestionsList");
 
                                       if (datalast['is_valid_token'] != null &&
                                           datalast['is_limit_exceeded'] !=

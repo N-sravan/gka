@@ -63,6 +63,7 @@ dependencies:
   flutter_svg: ^2.0.7
   pin_code_fields: ^8.0.1
   flutter_launcher_icons: ^0.13.1
+  flutter_switch: ^0.3.2
 
 # flutter pub get
 # flutter pub run flutter_launcher_icons:main
