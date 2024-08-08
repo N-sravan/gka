@@ -66,7 +66,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                   height: constants.appDrawerHeaderHeight,
                   child: DrawerHeader(
                     decoration: const BoxDecoration(
-                      color: Colors.green,
+                      color: Color(0XFF55A18F),
                     ),
                     child: Align(
                       alignment: Alignment.bottomLeft,

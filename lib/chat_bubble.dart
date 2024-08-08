@@ -1,10 +1,8 @@
 import 'dart:math';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/utils/app_state.dart';
-import 'package:intl/intl.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 
 class ChatBubble extends StatefulWidget {
@@ -72,7 +70,7 @@ class _ChatBubbleState extends State<ChatBubble> {
   }
 
   _sessionExpiry() {
-    print("session expiry--${widget.sessionExpired}");
+    // print("session expiry--${widget.sessionExpired}");
     if (widget.sessionExpired != null && widget.sessionExpired == true) {
       Navigator.pop(context);
     }
@@ -112,100 +110,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                         return (show.value &&
                                 widget.chainOfThoughts != null &&
                                 widget.chainOfThoughts!.isNotEmpty)
-                            ? Card(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          const Text(
-                                            'Chain of Thoughts',
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 14),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          ...widget.chainOfThoughts!.entries
-                                              .map((entry) {
-                                            int colorIndex = widget
-                                                    .chainOfThoughts!.keys
-                                                    .toList()
-                                                    .indexOf(entry.key) %
-                                                4;
-                                            return Padding(
-                                              padding: const EdgeInsets.only(
-                                                  bottom: 8.0),
-                                              child: GestureDetector(
-                                                onTap: () {
-                                                  setState(() {
-                                                    if (_expanded[entry.key] ==
-                                                        null) {
-                                                      _expanded[entry.key] =
-                                                          false;
-                                                    }
-                                                    _expanded[entry.key] =
-                                                        !_expanded[entry.key]!;
-                                                  });
-                                                },
-                                                child: Container(
-                                                  width: double.infinity,
-                                                  padding:
-                                                      const EdgeInsets.all(8.0),
-                                                  decoration: BoxDecoration(
-                                                    color: colors[colorIndex],
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            12),
-                                                  ),
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Text(
-                                                        entry.key.trim(),
-                                                        style: const TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          fontSize: 12,
-                                                        ),
-                                                      ),
-                                                      if (_expanded[
-                                                                  entry.key] !=
-                                                              null &&
-                                                          _expanded[
-                                                                  entry.key] ==
-                                                              true)
-                                                        Padding(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .only(
-                                                                  top: 8.0),
-                                                          child: Text(
-                                                            entry.value.trim(),
-                                                            style:
-                                                                const TextStyle(
-                                                                    fontSize:
-                                                                        12),
-                                                          ),
-                                                        ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                            );
-                                          }).toList(),
-                                        ],
-                                      )
-                                    ],
-                                  ),
-                                ),
-                              )
+                            ? showChainOfThoughts()
                             : const SizedBox();
                       },
                       valueListenable: show,
@@ -220,12 +125,12 @@ class _ChatBubbleState extends State<ChatBubble> {
                         const Padding(
                           padding: EdgeInsets.only(left: 4.0),
                           child: SizedBox(
-                            height: 32,
-                            width: 32,
+                            height: 36,
+                            width: 36,
                             child: CircleAvatar(
                               radius: 50,
                               backgroundImage:
-                                  AssetImage('assets/images/vani.png'),
+                                  AssetImage('assets/images/male_bot.jfif'),
                             ),
                           ),
                         ),
@@ -393,9 +298,7 @@ class _ChatBubbleState extends State<ChatBubble> {
               width: 32,
               child: CircleAvatar(
                 radius: 0,
-                backgroundImage: constants.projectId == constants.fieldRishiUUID
-                    ? AssetImage('assets/images/user_profile_pic.png')
-                    : AssetImage('assets/images/pradeep.png'),
+                backgroundImage: AssetImage('assets/images/pradeep.png'),
               ),
             ),
           ),
@@ -569,8 +472,6 @@ class _ChatBubbleState extends State<ChatBubble> {
 
     String timeStamp = DateTime.now().millisecondsSinceEpoch.toString();
 
-    DateTime now = DateTime.now();
-    String formattedDate = DateFormat('kk:mm:ss \n EEE d MMM').format(now);
     print(
         "wewewew data:: ${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
     await ref.child(timeStamp).set({
@@ -590,8 +491,8 @@ class _ChatBubbleState extends State<ChatBubble> {
     return Padding(
       padding: const EdgeInsets.only(top: 8.0),
       child: Card(
-        color: Colors.orange.withOpacity(0.26),
-        elevation: 2.0,
+        color: Colors.greenAccent.withOpacity(0.1),
+        // elevation: 2.0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
@@ -601,7 +502,7 @@ class _ChatBubbleState extends State<ChatBubble> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'What would you like to know other?',
+                'What else would you like to know?',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
@@ -642,5 +543,82 @@ class _ChatBubbleState extends State<ChatBubble> {
       Navigator.pop(context);
       Fluttertoast.showToast(msg: "Session Expired");
     }
+  }
+
+  Widget showChainOfThoughts() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12.0),
+          border: Border.all(
+            color: Colors.black.withOpacity(0.3),
+            width: 1.0,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Chain of Thoughts',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                  const SizedBox(height: 8),
+                  ...widget.chainOfThoughts!.entries.map((entry) {
+                    int colorIndex = widget.chainOfThoughts!.keys
+                            .toList()
+                            .indexOf(entry.key) %
+                        4;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _expanded[entry.key] = !_expanded[entry.key]!;
+                          });
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(8.0),
+                          decoration: BoxDecoration(
+                            color: colors[colorIndex],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                entry.key.trim(),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              if (_expanded[entry.key] == true)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8.0),
+                                  child: Text(
+                                    entry.value.trim(),
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

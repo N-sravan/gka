@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
 import 'package:gka/utils/secure_storage_util.dart';
+import 'package:gka/utils/util.dart';
 import 'package:intl/intl.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
@@ -108,12 +109,13 @@ class _ChatWindowState extends State<ChatWindow>
   @override
   void initState() {
     super.initState();
+    AppState.instance.isEnglish = true;
     switch (constants.projectId) {
       case constants.fieldRishiUUID:
         title = constants.appTitle;
         break;
     }
-    switch (AppState.instance.language) {
+    switch (AppState.instance.language.toLowerCase()) {
       case 'english':
         dataNotFoundMsg = 'Data Not Found';
         loaderMsgList = [
@@ -156,6 +158,7 @@ class _ChatWindowState extends State<ChatWindow>
           'एक क्षण रुकिए'
         ];
         langId = 'hi-IN';
+        dataNotFoundMsg = 'जानकारी नहीं मिली';
         language = 'hindi';
         break;
     }
@@ -175,7 +178,7 @@ class _ChatWindowState extends State<ChatWindow>
   ValueNotifier<bool> listeningActive = ValueNotifier<bool>(false);
   ValueNotifier<bool> showLoader = ValueNotifier<bool>(false);
 
-  void _initSpeech() async {
+  _initSpeech() async {
     _speechEnabled = await _speechToText.initialize(
       onError: (error) {
         print("FLKJFJLJF ERROR");
@@ -192,6 +195,8 @@ class _ChatWindowState extends State<ChatWindow>
     await tts.setLanguage(langId);
     await tts.setSpeechRate(0.5);
     await tts.setVoice(currentVoice);
+    print("language::${AppState.instance.language.toLowerCase()}");
+    print("lang Id::$langId");
   }
 
   /// Each time to start a speech recognition session
@@ -330,27 +335,43 @@ class _ChatWindowState extends State<ChatWindow>
           sessionId: widget.sessionId!,
         ),
         appBar: AppBar(
-          /*  leading: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.arrow_back,
-                          color: Colors.white,
-                        ),
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                      ),
-                    ],
-                  ),*/
           iconTheme: const IconThemeData(color: Colors.white),
-
-          backgroundColor: const Color.fromRGBO(47, 171, 45, 1),
+          backgroundColor: const Color(0XFF55A18F),
           titleSpacing: 0,
-          title: Image.asset(
-            'assets/images/appbar_heading.png',
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Image.asset(
+                'assets/images/appbar_heading.png',
+              ),
+              Tooltip(
+                message: ("change Language"),
+                child: IconButton(
+                    onPressed: () async {
+                      setState(() {
+                        AppState.instance.isEnglish = !AppState.instance.isEnglish;
+                        if (!AppState.instance.isEnglish) {
+                          AppState.instance.language = 'Hindi';
+                          langId = 'hi-IN';
+                          dataNotFoundMsg = 'जानकारी नहीं मिली';
+                          language = 'hindi';
+                          Fluttertoast.showToast(msg: "Switched to ${AppState.instance.language}");
+
+                        } else {
+                          AppState.instance.language = 'English';
+                          langId = 'en-US';
+                          dataNotFoundMsg = 'Data Not found';
+                          language = 'english';
+                          Fluttertoast.showToast(msg: "Switched to ${AppState.instance.language}");
+
+                        }
+                      });
+                      await _initSpeech();
+                    },
+                    icon: const Icon(Icons.language)),
+              ),
+            ],
           ),
-          // title: const Text('fieldRishi'), // Optional: add a title
         ),
         body: Stack(
           children: [
@@ -464,7 +485,9 @@ class _ChatWindowState extends State<ChatWindow>
                                         logMessage: datalast['log'] ?? '',
                                         hasErrorLog: false,
                                         timestampMapping: dataTsMapping,
-                                        chainOfThoughts: cotMapping,
+                                        chainOfThoughts:
+                                            Map<String, String>.from(
+                                                cotMapping),
                                         followUpQuestions:
                                             followUpQuestionsList,
                                         token: datalast['token'] ?? '',
@@ -650,7 +673,7 @@ class _ChatWindowState extends State<ChatWindow>
                         builder: (context, value, _) {
                           if (value) {
                             return LoadingAnimationWidget.waveDots(
-                                color: Colors.green, size: 40);
+                                color: const Color(0XFF55A18F), size: 40);
                           }
                           return const SizedBox();
                         },
@@ -744,7 +767,7 @@ class _ChatWindowState extends State<ChatWindow>
                 icon: Icon(Icons.send,
                     color: showLoader.value
                         ? Colors.grey
-                        : const Color(0xff2FAB2D)),
+                        : const Color(0XFF55A18F)),
                 onPressed: showLoader.value
                     ? null
                     : () async {
@@ -1036,26 +1059,6 @@ class _ChatWindowState extends State<ChatWindow>
   @override
   bool get wantKeepAlive => true;
 
-  List<Map<String, dynamic>> _getWordsWithPositions(String text) {
-    final words = text
-        .split(RegExp(r'(\s+)')); // Split by spaces, keeping them as separators
-    List<Map<String, dynamic>> wordPositions = [];
-    int start = 0;
-
-    for (final word in words) {
-      if (word.trim().isNotEmpty) {
-        wordPositions.add({
-          'word': word,
-          'start': start,
-          'end': start + word.length,
-        });
-      }
-      start += word.length;
-    }
-
-    return wordPositions;
-  }
-
   Future<void> speakMsg(String text) async {
     if (_newVoiceText != null) {
       await tts.awaitSpeakCompletion(true);
@@ -1196,9 +1199,7 @@ Future<void> initializeSpeechToText(String sessionId) async {
       // await startListeningBg();
     },
   );
-  print(
-      "wewewewewew AppState.instance.triggeredWord ::  ${AppState.instance.triggeredWord}");
-  print("wewewewewew session $sessionId");
+
   if (available && AppState.instance.triggeredWord == "") {
     AppState.instance.triggeredWord = await startListenings(sessionId);
   }
