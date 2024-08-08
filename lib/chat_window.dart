@@ -518,9 +518,11 @@ class _ChatWindowState extends State<ChatWindow>
                                       showLoader.value = false;
                                     });
 
-                                    tts.speak(
+                                    _speakMessage(messageList[messageList.length - 1].text);
+
+                                   /* tts.speak(
                                         messageList[messageList.length - 1]
-                                            .text);
+                                            .text);*/
                                   }
                                   prevChatLength = messageList.length;
                                   if (messageList.isNotEmpty &&
@@ -789,6 +791,16 @@ class _ChatWindowState extends State<ChatWindow>
         ),
       ],
     );
+  }
+
+  _speakMessage(String text) async {
+    String plainText = _extractPlainText(text.trim());
+    await tts.speak(plainText);
+  }
+
+  String _extractPlainText(String text) {
+    final RegExp regex = RegExp(r'\*\*(.*?)\*\*');
+    return text.replaceAllMapped(regex, (match) => match.group(1) ?? '');
   }
 
   _speechButton() {

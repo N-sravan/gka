@@ -181,6 +181,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                                             _tableView(),
                                           const SizedBox(height: 10),
                                           if (widget.text.isNotEmpty)
+                                           widget.text.contains("**") ? _boldTextView():
                                             _textView(),
                                         ],
                                       ),
@@ -464,6 +465,42 @@ class _ChatBubbleState extends State<ChatBubble> {
         color: Color(0xff1E1E1E),
       ),
     );
+  }
+
+  _boldTextView() {
+    return RichText(
+      text: TextSpan(
+        children: _parseText(widget.text.trim()),
+        style: const TextStyle(
+          color: Color(0xff1E1E1E),
+          //fontSize: 16.0, // adjust as needed
+        ),
+      ),
+    );
+  }
+  List<TextSpan> _parseText(String text) {
+    final List<TextSpan> spans = [];
+    final RegExp regex = RegExp(r'\*\*(.*?)\*\*');
+    final Iterable<RegExpMatch> matches = regex.allMatches(text);
+
+    int start = 0;
+
+    for (final match in matches) {
+      if (match.start > start) {
+        spans.add(TextSpan(text: text.substring(start, match.start)));
+      }
+      spans.add(TextSpan(
+        text: match.group(1),
+        style: const TextStyle(fontWeight: FontWeight.bold),
+      ));
+      start = match.end;
+    }
+
+    if (start < text.length) {
+      spans.add(TextSpan(text: text.substring(start)));
+    }
+
+    return spans;
   }
 
   Future _pushFollowUpQuestionInFirebase(String data) async {
