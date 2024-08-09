@@ -501,9 +501,11 @@ class _ChatBubbleState extends State<ChatBubble> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'What else would you like to know?',
-                style: TextStyle(
+              Text(
+                AppState.instance.language.toLowerCase() == 'english'
+                    ? 'What else would you like to know?'
+                    : '"आप और क्या जानना चाहेंगे?"',
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
                 ),
