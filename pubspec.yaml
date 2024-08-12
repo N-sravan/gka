@@ -26,7 +26,7 @@ dependencies:
   flutter_screenutil: ^5.9.0
   firebase_core: ^2.24.2
   firebase_database: ^10.3.8
-  text_to_speech: ^0.2.3
+#  text_to_speech: ^0.2.3
   flutter_tts: ^3.0.1
   http: ^0.13.1
   avatar_glow: ^3.0.1
@@ -63,6 +63,7 @@ dependencies:
   flutter_svg: ^2.0.7
   pin_code_fields: ^7.4.0
   flutter_launcher_icons: ^0.13.1
+  flutter_switch: ^0.3.2
 
 # flutter pub get
 # flutter pub run flutter_launcher_icons:main

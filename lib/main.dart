@@ -22,7 +22,6 @@ import 'package:flutter_background_service_android/flutter_background_service_an
 import 'package:gka/chat/view_model/chat_view_model.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:gka/login/repository/login_repo.dart';
-import 'package:gka/login/view/login_view.dart';
 import 'package:gka/login/view_model/login_view_model.dart';
 import 'package:gka/permissions/view_model/permissions_view_model.dart';
 import 'package:gka/splash/view/splash_view.dart';
@@ -41,6 +40,7 @@ import 'helpers/notification_helper.dart';
 import 'home/view/home_view.dart';
 import 'locator.dart';
 import 'login/view/farmer_login_view.dart';
+import 'login/view/login_view.dart';
 import 'login/view/role_selection_view.dart';
 
 var initializationSettingsAndroid = const AndroidInitializationSettings(
@@ -760,166 +760,6 @@ Future<void> speak(String text) async {
   isSpeaking = false;
 }
 
-/*Future<void> startListenings(String sessionId) async {
-  DatabaseReference ref =
-      FirebaseDatabase.instance.ref("CHAT_BOT_TEST/$sessionId");
-  SpeechRecognitionResult result;
-
-  await speechToText.listen(
-    partialResults: false,
-    onResult: (data) async {
-      result = data;
-      if (result.recognizedWords.isNotEmpty) {
-        speechStatus.value = SpeechStatus.speaking;
-        await ref
-            .push()
-            .set({"isUser": true, "message": result.recognizedWords});
-        await ref
-            .push()
-            .set({"isUser": false, "message": "How can I help you tell me recognized word. Average rainfall here is 9.7 degrees in HYer"});
-
-        await ref.orderByKey().limitToLast(1).once().then((event) async {
-          DataSnapshot snapshot = event.snapshot;
-          if (snapshot.value != null) {
-            print("OPOPOPOPOPOP three ${snapshot.value}");
-            dynamic values = snapshot.value;
-            values.forEach((key, value) async {
-              print("123::${value}");
-              if (value['isUser'] == false) {
-                String responseMessage = value['message'] ?? '';
-                print("4444$responseMessage");
-                await tts.speak(responseMessage);
-              }
-            });
-          }
-        });
-        // await tts.speak("How can I help you");
-        print("111111-input::${result.recognizedWords}");
-        // Use ValueListenableBuilder to wait until speechStatus.value changes to idle
-        await ValueListenableBuilder(
-          valueListenable: speechStatus,
-          builder: (BuildContext context, SpeechStatus value, Widget? child) {
-            if (value == SpeechStatus.listening) {
-              // Once speech is completed, set the status to idle and continue listening
-              speechStatus.value = SpeechStatus.idle;
-              return const SizedBox.shrink(); // Return an empty widget
-            } else {
-              return const SizedBox.shrink(); // Return an empty widget while waiting
-            }
-          },
-        );
-        speechStatus.value = SpeechStatus.listening;
-        await speechToText.stop();
-        Future.delayed(Duration(seconds: 5),() async {
-          await startListenings(sessionId);
-        });
-      }
-    },
-  );
-}*/
-
-Future<String> listenForSessionId() async {
-  Completer<String> completer = Completer<String>();
-  String sessionId = '';
-  SpeechRecognitionResult result;
-  await speechToText.listen(
-    partialResults: false,
-    onResult: (data) async {
-      result = data;
-      if (result.recognizedWords.toLowerCase() == 'hello') {
-        response.Meta data = response.Meta(
-          userId: "b7a7ca67-6fd3-4f2e-97c6-b9b84fdbd7da",
-          username: "kerala_ao",
-          firstName: "Aswin",
-          lastName: "Kumar",
-          email: "keralaao@gmail.com",
-          mobileNo: "+919889786767",
-          userDetails: response.UserDetails(
-            data: response.Data(
-                locType: "Panchayat",
-                location: response.Location(country: [
-                  response.Country(
-                      countryName: "INDIA",
-                      countryUUID: "d6b37905-d2d3-4275-9317-d9b6f47cd783",
-                      state: [
-                        response.State(
-                            stateName: "KERALA",
-                            stateUUID: "62d3dc99-5bc3-4303-8be1-d4fa1f7deee5",
-                            district: [
-                              response.District(
-                                  districtName: "Palakkad",
-                                  districtUUID:
-                                  "1270f554-20cc-43ee-803e-1532f00e047c",
-                                  block: [
-                                    response.Block(
-                                        blockName: "Sreekrishnapuram",
-                                        blockUUID:
-                                        "db64691f-a7de-4e88-b5af-ecbe4dc6d191",
-                                        panchayat: [
-                                          response.Panchayat(
-                                              panchayatName: "Karimpuzha",
-                                              panchayatUUID:
-                                              "0ec4c732-5db9-4a3e-896a-f7baf24b2966")
-                                        ])
-                                  ])
-                            ])
-                      ])
-                ])),
-            scope: null,
-          ),
-          createdTs: null,
-          updatedTs: null,
-          lastLoginTs: "2024-03-11T10:45:55.398+00:00",
-          status: true,
-          title: null,
-          customerId: "931e0a8e-54e9-49f4-87db-d6e1fe350432",
-          customerName: "keralacustomer",
-          customAttributes: null,
-        );
-        sessionId = (await createSession(data))!;
-        print("sessionId::$sessionId");
-        if (sessionId.isNotEmpty) {
-          await tts.speak('Session is Created');
-          completer.complete(sessionId);
-          // return sessionId;
-        } else {
-          await tts.speak("Sorry, Couldn\'t create a session");
-          completer.complete(null);
-        }
-        //await speechToText.stop();
-      }
-    },
-  );
-  return completer.future;
-}
-
-Future<String?> createSession(response.Meta requestData) async {
-  /*try {
-    String url = constants.ngrok;
-    Object object = json.encode(requestData);
-    Response response = await post(
-      Uri.parse(url),
-      body: object,
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-    );
-    if (response.statusCode == 200) {
-      print("sessionId:: ${jsonDecode(response.body)["session_id"]}");
-      String sessionId = jsonDecode(response.body)["session_id"];
-      return sessionId;
-    } else {
-      Fluttertoast.showToast(msg: "Couldn't create Session");
-    }
-  } catch (error, stacktrace) {
-    Fluttertoast.showToast(msg: "Couldn't create Session");
-    print("Error Stacktrace $error $stacktrace");
-  }*/
-
-  String uuid = const Uuid().v4();
-  return uuid;
-  return null;
-}
 
 speakText(String text) async {
   print("Speak text");
@@ -954,8 +794,8 @@ class MyApp extends StatelessWidget {
         },*/
         routes: {
           constants.initialRoute: (context) => const SplashScreenWidget(),
-          constants.roleRoute: (context) => const LoginScreenWidget(),
-          // constants.loginRoute: (context) => const LoginScreenWidget(),
+          // constants.roleRoute: (context) => const LoginScreenWidget(),
+          constants.loginRoute: (context) => const LoginScreenWidget(),
           constants.homeRoute: (context) => const HomeScreenWidget(),
         },
         onGenerateRoute: (settings) {

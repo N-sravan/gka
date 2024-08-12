@@ -1,12 +1,11 @@
 import 'dart:async';
-import 'package:gka/login/view/login_view.dart';
 import '../../chat_window.dart';
 import 'package:flutter/material.dart';
 import '../../../utils/app_state.dart';
 import '../../../utils/common_constants.dart' as constants;
-import 'package:permission_handler/permission_handler.dart'
-    as permission_handler;
+import 'package:permission_handler/permission_handler.dart' as permission_handler;
 import '../../../utils/shared_preference_util.dart';
+import '../../login/view/login_view.dart';
 import '../../shared/loading_view_model.dart';
 import '../../utils/secure_storage_util.dart';
 

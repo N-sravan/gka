@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:gka/home/view/home_view.dart';
-import 'package:gka/login/view/login_view.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../../utils/app_state.dart';
 import '../../../utils/common_constants.dart' as constants;
 import '../../../utils/shared_preference_util.dart';
 import '../../login/model/department_user_permission_response.dart' as response;
+import '../../login/view/login_view.dart';
 import '../../shared/loading_view_model.dart';
 import '../../utils/secure_storage_util.dart';
 
