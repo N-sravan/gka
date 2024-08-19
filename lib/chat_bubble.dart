@@ -298,7 +298,7 @@ class _ChatBubbleState extends State<ChatBubble> {
               width: 32,
               child: CircleAvatar(
                 radius: 0,
-                backgroundImage: AssetImage('assets/images/pradeep.png'),
+                backgroundImage: AssetImage('assets/images/vani.png'),
               ),
             ),
           ),
