@@ -1,29 +1,32 @@
 import 'dart:math';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:gka/main.dart';
 import 'package:gka/utils/app_state.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 
 class ChatBubble extends StatefulWidget {
-  ChatBubble({
-    Key? key,
-    required this.text,
-    required this.isUser,
-    this.logMessage,
-    this.imageUrl,
-    this.tableColumnData,
-    this.tableRowData,
-    this.errorLog,
-    this.hasErrorLog,
-    this.timestampMapping,
-    this.sessionId,
-    this.chainOfThoughts,
-    this.followUpQuestions,
-    this.token,
-    this.expandChainOfThought,
-    this.sessionExpired,
-  }) : super(key: key);
+  ChatBubble(
+      {Key? key,
+      required this.text,
+      required this.isUser,
+      this.logMessage,
+      this.imageUrl,
+      this.tableColumnData,
+      this.tableRowData,
+      this.errorLog,
+      this.hasErrorLog,
+      this.timestampMapping,
+      this.sessionId,
+      this.chainOfThoughts,
+      this.followUpQuestions,
+      this.token,
+      this.expandChainOfThought,
+      this.sessionExpired,
+      this.isLatestResponse})
+      : super(key: key);
 
   final String text;
   final bool isUser;
@@ -40,6 +43,7 @@ class ChatBubble extends StatefulWidget {
   final String? token;
   late bool? expandChainOfThought;
   late bool? sessionExpired;
+  late bool? isLatestResponse;
 
   @override
   State<ChatBubble> createState() => _ChatBubbleState();
@@ -48,6 +52,7 @@ class ChatBubble extends StatefulWidget {
 class _ChatBubbleState extends State<ChatBubble> {
   // bool isExpanded = false;
   ValueNotifier<bool> show = ValueNotifier<bool>(true);
+  ValueNotifier<bool> speak = ValueNotifier<bool>(false);
   Map<String, bool> _expanded = {};
   List<Color> colors = [
     const Color(0xFFCFE2FF).withOpacity(0.5), //blue
@@ -56,9 +61,14 @@ class _ChatBubbleState extends State<ChatBubble> {
     const Color(0xFFcff4fc).withOpacity(0.5), //skyblue
   ];
 
+  late FlutterTts tts;
+  bool speakClicked = false;
+
   @override
   void initState() {
+    tts = FlutterTts();
     super.initState();
+    speak.value = widget.isLatestResponse!;
     show.value = widget.expandChainOfThought!;
     _expanded = {};
     if (widget.chainOfThoughts != null) {
@@ -66,6 +76,14 @@ class _ChatBubbleState extends State<ChatBubble> {
         _expanded[key] = false;
       }
     }
+    tts.setCompletionHandler(() {
+      print("Speak completion handler");
+      print("hello:${speakClicked}");
+      setState(() {
+        speakClicked = false;
+        print(speakClicked);
+      });
+    });
     _sessionExpiry();
   }
 
@@ -457,14 +475,55 @@ class _ChatBubbleState extends State<ChatBubble> {
   }
 
   _textView() {
-    return SelectableText(
-      widget.text.trim(),
-      style: const TextStyle(
-        // color: !widget.isUser ? const Color(0xffFFFFFF) : const Color(0xff1E1E1E),
-        color: Color(0xff1E1E1E),
-      ),
-    );
+    if (widget.isUser) {
+      return SelectableText(
+        widget.text.trim(),
+        style: const TextStyle(
+          // color: !widget.isUser ? const Color(0xffFFFFFF) : const Color(0xff1E1E1E),
+          color: Color(0xff1E1E1E),
+        ),
+      );
+    } else {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
+            child: SelectableText(
+              widget.text.trim(),
+              style: const TextStyle(
+                // color: !widget.isUser ? const Color(0xffFFFFFF) : const Color(0xff1E1E1E),
+                color: Color(0xff1E1E1E),
+              ),
+            ),
+          ),
+          //const SizedBox(width: 5,),
+          (widget.isLatestResponse!=null && widget.isLatestResponse!)?
+            ValueListenableBuilder(
+              builder: (context, value, _) {
+                return IconButton(
+                    onPressed: () async{
+                      if(speak.value)
+                        {
+                          await tts.stop();
+                          speak.value=false;
+                        }
+                      else{
+                        speak.value=true;
+                        await tts.speak(widget.text.trim());
+                      }
+                    },
+                    icon: value
+                        ? const Icon(Icons.volume_up_sharp)
+                        : const Icon(Icons.volume_off_sharp));
+              },
+              valueListenable: speak,
+            ):
+              const SizedBox(),
+        ],
+      );
+    }
   }
+
 
   Future _pushFollowUpQuestionInFirebase(String data) async {
     DatabaseReference ref = FirebaseDatabase.instance.ref(
