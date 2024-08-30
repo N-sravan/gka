@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/utils/app_state.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
@@ -46,6 +47,8 @@ class ChatBubble extends StatefulWidget {
 }
 
 class _ChatBubbleState extends State<ChatBubble> {
+  String _processedText = ''; // To store processed text
+
   // bool isExpanded = false;
   ValueNotifier<bool> show = ValueNotifier<bool>(true);
   Map<String, bool> _expanded = {};
@@ -93,120 +96,124 @@ class _ChatBubbleState extends State<ChatBubble> {
 
     return (hasContent)
         ? Padding(
-            padding: EdgeInsets.fromLTRB(
-              widget.isUser ? 64.0 : 16.0,
-              4,
-              widget.isUser ? 16.0 : 8.0,
-              4,
-            ),
-            child: Align(
-              alignment:
-                  widget.isUser ? Alignment.centerRight : Alignment.centerLeft,
-              child: Column(
-                children: [
-                  if (widget.isUser && hasChainOfThoughts)
-                    ValueListenableBuilder(
-                      builder: (context, value, _) {
-                        return (show.value &&
-                                widget.chainOfThoughts != null &&
-                                widget.chainOfThoughts!.isNotEmpty)
-                            ? showChainOfThoughts()
-                            : const SizedBox();
-                      },
-                      valueListenable: show,
-                    ),
-                  Row(
-                    mainAxisAlignment: widget.isUser
-                        ? MainAxisAlignment.end
-                        : MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (!widget.isUser)
-                        const Padding(
-                          padding: EdgeInsets.only(left: 4.0),
-                          child: SizedBox(
-                            height: 36,
-                            width: 36,
-                            child: CircleAvatar(
-                              radius: 50,
-                              backgroundImage:
-                                  AssetImage('assets/images/male_bot.jfif'),
-                            ),
-                          ),
-                        ),
-                      const SizedBox(
-                        width: 8,
+      padding: EdgeInsets.fromLTRB(
+        widget.isUser ? 64.0 : 16.0,
+        4,
+        widget.isUser ? 16.0 : 8.0,
+        4,
+      ),
+      child: Align(
+        alignment:
+        widget.isUser ? Alignment.centerRight : Alignment.centerLeft,
+        child: Column(
+          children: [
+            if (widget.isUser && hasChainOfThoughts)
+              ValueListenableBuilder(
+                builder: (context, value, _) {
+                  return (show.value &&
+                      widget.chainOfThoughts != null &&
+                      widget.chainOfThoughts!.isNotEmpty)
+                      ? showChainOfThoughts()
+                      : const SizedBox();
+                },
+                valueListenable: show,
+              ),
+            Row(
+              mainAxisAlignment: widget.isUser
+                  ? MainAxisAlignment.end
+                  : MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (!widget.isUser)
+                  const Padding(
+                    padding: EdgeInsets.only(left: 4.0),
+                    child: SizedBox(
+                      height: 36,
+                      width: 36,
+                      child: CircleAvatar(
+                        radius: 50,
+                        backgroundImage:
+                        AssetImage('assets/images/male_bot.jfif'),
                       ),
-                      if (hasContent)
-                        Flexible(
-                          child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (hasContent)
-                                  DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      color: widget.isUser
-                                          ? const Color(0xffE2E3E4)
-                                              .withOpacity(0.6)
-                                          : const Color(0xFF2FAB2D)
-                                              .withOpacity(0.15),
-                                      // : Colors.green[500],
-                                      borderRadius: widget.isUser
-                                          ? const BorderRadius.only(
-                                              topLeft: Radius.circular(16),
-                                              bottomLeft: Radius.circular(16),
-                                              bottomRight: Radius.circular(16),
-                                            )
-                                          : const BorderRadius.only(
-                                              topRight: Radius.circular(16),
-                                              bottomLeft: Radius.circular(16),
-                                              bottomRight: Radius.circular(16),
-                                            ),
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(
-                                          left: 10, right: 10, bottom: 10),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          if (widget.imageUrl != null &&
-                                              widget.imageUrl!.isNotEmpty)
-                                            _imageView(),
-                                          if (widget.tableColumnData != null &&
-                                              widget.tableColumnData!
-                                                  .isNotEmpty &&
-                                              widget.tableRowData != null &&
-                                              widget.tableRowData!.isNotEmpty)
-                                            _tableView(),
-                                          const SizedBox(height: 10),
-                                          if (widget.text.isNotEmpty)
-                                           widget.text.contains("**") ? _boldTextView():
-                                            _textView(),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                if (!widget.isUser &&
-                                    widget.followUpQuestions != null &&
-                                    widget.followUpQuestions!.isNotEmpty)
-                                  _followUpQuestionsView(),
-                                /*  if (!widget.isUser &&
+                    ),
+                  ),
+                const SizedBox(
+                  width: 8,
+                ),
+                if (hasContent)
+                  Flexible(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (hasContent)
+                            DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: widget.isUser
+                                    ? const Color(0xffE2E3E4)
+                                    .withOpacity(0.6)
+                                    : const Color(0xFF2FAB2D)
+                                    .withOpacity(0.15),
+                                // : Colors.green[500],
+                                borderRadius: widget.isUser
+                                    ? const BorderRadius.only(
+                                  topLeft: Radius.circular(16),
+                                  bottomLeft: Radius.circular(16),
+                                  bottomRight: Radius.circular(16),
+                                )
+                                    : const BorderRadius.only(
+                                  topRight: Radius.circular(16),
+                                  bottomLeft: Radius.circular(16),
+                                  bottomRight: Radius.circular(16),
+                                ),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.only(
+                                    left: 10, right: 10, bottom: 10),
+                                child: Column(
+                                  crossAxisAlignment:
+                                  CrossAxisAlignment.start,
+                                  children: [
+                                    if (widget.imageUrl != null &&
+                                        widget.imageUrl!.isNotEmpty)
+                                      _imageView(),
+                                    if (widget.tableColumnData != null &&
+                                        widget.tableColumnData!
+                                            .isNotEmpty &&
+                                        widget.tableRowData != null &&
+                                        widget.tableRowData!.isNotEmpty)
+                                      _tableView(),
+                                    const SizedBox(height: 10),
+                                    if (widget.text.isNotEmpty)
+                                       _formattedTextView(),
+                                      /*widget.text.contains("**")
+                                          ? _boldTextView()
+                                          : widget.text.contains("\\n")
+                                          ? _bulletTextView()
+                                          : _textView(),*/
+                                  ],
+                                ),
+                              ),
+                            ),
+                          if (!widget.isUser &&
+                              widget.followUpQuestions != null &&
+                              widget.followUpQuestions!.isNotEmpty)
+                            _followUpQuestionsView(),
+                          /*  if (!widget.isUser &&
                                   widget.logMessage!.isNotEmpty)
                                 _infoView(),
                               if (widget.hasErrorLog != null &&
                                   widget.hasErrorLog == true)
                                 _buttonsView(),*/
-                                // if (isExpanded)
-                              ]),
-                        ),
-                      if (widget.isUser) _userProfileView(),
-                    ],
+                          // if (isExpanded)
+                        ]),
                   ),
-                ],
-              ),
+                if (widget.isUser) _userProfileView(),
+              ],
             ),
-          )
+          ],
+        ),
+      ),
+    )
         : const SizedBox();
   }
 
@@ -466,7 +473,112 @@ class _ChatBubbleState extends State<ChatBubble> {
       ),
     );
   }
+  _formattedTextView() {
+    // Trim the text and handle single quotes
+    String trimmedText = widget.text.trim().replaceAll("'", "");
+    if (trimmedText.startsWith("'")) {
+      trimmedText = trimmedText.substring(1);
+    }
+    if (trimmedText.endsWith("'")) {
+      trimmedText = trimmedText.substring(0, trimmedText.length - 1);
+    }
+    if (trimmedText.endsWith('"')) {
+      trimmedText = trimmedText.substring(0, trimmedText.length - 1);
+    }
+    // Split the text by line breaks (\\n)
+    List<String> lines = trimmedText.split('\\n');
 
+    // Process each line to apply bold formatting and replace '*' with '•'
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: lines.map((line) {
+        // Apply bold formatting first
+        final boldTextLine = _parseText(line);
+
+        // Replace '*' with '•' in the bold formatted text
+        final bulletPointText = boldTextLine.map((span) {
+          String text = span.text ?? '';
+          return TextSpan(
+            text: text.replaceAll('*', '•'),
+            style: span.style,
+          );
+        }).toList();
+
+        // Render the text with bullet points
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 4.0),
+          child: RichText(
+            text: TextSpan(
+              children: bulletPointText,
+              style: const TextStyle(
+                color: Color(0xff1E1E1E),
+                fontSize: 14.0, // adjust as needed
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+
+
+
+  }
+
+  List<TextSpan> _parseText(String text) {
+    final List<TextSpan> spans = [];
+    final RegExp regex = RegExp(r'\*\*(.*?)\*\*');
+    final Iterable<RegExpMatch> matches = regex.allMatches(text);
+
+    int start = 0;
+
+    for (final match in matches) {
+      if (match.start > start) {
+        spans.add(TextSpan(text: text.substring(start, match.start)));
+      }
+      spans.add(TextSpan(
+        text: match.group(1),
+        style: const TextStyle(fontWeight: FontWeight.bold),
+      ));
+      start = match.end;
+    }
+
+    if (start < text.length) {
+      spans.add(TextSpan(text: text.substring(start)));
+    }
+
+    return spans;
+  }
+
+/*
+  _bulletTextView() {
+
+    String trimmedText = widget.text.trim();
+    trimmedText = widget.text.replaceAll("'", "");
+    if (trimmedText.startsWith("'")) {
+      trimmedText = trimmedText.substring(1);
+    }
+    if (trimmedText.endsWith("'")) {
+      trimmedText = trimmedText.substring(0, trimmedText.length - 1);
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: widget.text.split('\\n').map((line) {
+        final eachLine = line.replaceAll("'", "");
+        final bulletPointLine = eachLine.replaceAll('*', '•');
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 4.0),
+          child: Text(
+            bulletPointLine,
+            style: const TextStyle(
+              color: Color(0xff1E1E1E),
+              fontSize: 14.0,
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
   _boldTextView() {
     return RichText(
       text: TextSpan(
@@ -501,7 +613,7 @@ class _ChatBubbleState extends State<ChatBubble> {
     }
 
     return spans;
-  }
+  }*/
 
   Future _pushFollowUpQuestionInFirebase(String data) async {
     DatabaseReference ref = FirebaseDatabase.instance.ref(
@@ -608,8 +720,8 @@ class _ChatBubbleState extends State<ChatBubble> {
                   const SizedBox(height: 8),
                   ...widget.chainOfThoughts!.entries.map((entry) {
                     int colorIndex = widget.chainOfThoughts!.keys
-                            .toList()
-                            .indexOf(entry.key) %
+                        .toList()
+                        .indexOf(entry.key) %
                         4;
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),

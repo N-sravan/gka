@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 import 'dart:ui';
 import 'package:gka/utils/secure_storage_util.dart';
 import 'package:gka/utils/util.dart';
@@ -798,10 +797,24 @@ class _ChatWindowState extends State<ChatWindow>
     await tts.speak(plainText);
   }
 
+  //make changes here
   String _extractPlainText(String text) {
-    final RegExp regex = RegExp(r'\*\*(.*?)\*\*');
-    return text.replaceAllMapped(regex, (match) => match.group(1) ?? '');
+    // Remove double asterisks for bold text
+    final RegExp boldRegex = RegExp(r'\*\*(.*?)\*\*');
+    String result = text.replaceAllMapped(boldRegex, (match) => match.group(1) ?? '');
+
+    // Remove single asterisks
+    final RegExp singleAsteriskRegex = RegExp(r'\*');
+    result = result.replaceAll(singleAsteriskRegex, '');
+
+    return result;
   }
+
+  /*String _extractPlainText(String text) {
+    final RegExp regex = RegExp(r'\*\*(.*?)\*\*');
+
+    return text.replaceAllMapped(regex, (match) => match.group(1) ?? '');
+  }*/
 
   _speechButton() {
     return Positioned(
@@ -1083,7 +1096,10 @@ class _ChatWindowState extends State<ChatWindow>
       final onDeviceTranslator = isInserted
           ? GoogleMlKit.nlp.onDeviceTranslator(
               sourceLanguage: TranslateLanguage.hindi,
-              targetLanguage: TranslateLanguage.english,
+              targetLanguage: TranslateLan _speakMessage(String text) async {
+    String plainText = _extractPlainText(text.trim());
+    await tts.speak(plainText);
+  }guage.english,
             )
           : GoogleMlKit.nlp.onDeviceTranslator(
               sourceLanguage: TranslateLanguage.english,
