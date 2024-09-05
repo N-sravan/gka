@@ -40,8 +40,6 @@ import 'chat_bubble.dart';
 import 'helpers/notification_helper.dart';
 import 'home/view/home_view.dart';
 import 'locator.dart';
-import 'login/view/farmer_login_view.dart';
-import 'login/view/role_selection_view.dart';
 
 var initializationSettingsAndroid = const AndroidInitializationSettings(
     '@mipmap/ic_launcher'); // <- default icon name is @mipmap/ic_launcher
@@ -63,8 +61,7 @@ int prevChatLength = 0;
 // String AppState.instance.triggeredWord = "";
 PermissionStatus? notificationStatus;
 
-ValueNotifier<SpeechStatus> speechStatus =
-    ValueNotifier<SpeechStatus>(SpeechStatus.idle);
+ValueNotifier<SpeechStatus> speechStatus = ValueNotifier<SpeechStatus>(SpeechStatus.idle);
 
 enum SpeechStatus { listening, speaking, idle }
 
@@ -402,8 +399,7 @@ void onStart(ServiceInstance service) async {
   String sessionId = const Uuid().v4();
 
   /// OPTIONAL when use custom notification
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
   if (service is AndroidServiceInstance) {
     service.on('setAsForeground').listen((event) {
@@ -497,8 +493,7 @@ Future<void> initializeSpeechToText(String sessionId) async {
       // await startListeningBg();
     },
   );
-  print(
-      "wewewewewew AppState.instance.triggeredWord ::  ${AppState.instance.triggeredWord}");
+  print("wewewewewew AppState.instance.triggeredWord ::  ${AppState.instance.triggeredWord}");
   print("wewewewewew session $sessionId");
   if (available && AppState.instance.triggeredWord == "") {
     AppState.instance.triggeredWord = await startListenings(sessionId);

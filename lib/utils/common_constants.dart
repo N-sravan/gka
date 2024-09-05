@@ -75,8 +75,7 @@ const String imageUploadUrl = 'https://agriwise.vassarlabs.com/agribot/bucket/in
 const String fileUploadEndPoint = 'vector/save_vector_data_from_upload';
 const String getFilesEndPoint = 'rag/get_rag_data';
 // const String deleteFileEndPoint = 'rag/delete_rag_data';
-/*const String krishidsBaseUrl =
-    'http://agriwise.vassarlabs.com/api';*/ //-
+/*const String krishidsBaseUrl =  'http://agriwise.vassarlabs.com/api';*/ //-
 
 const String loginEndpoint =
     'https://gowater-staging.vassarlabs.com/um/api/getUserDetailsForChatbot/';

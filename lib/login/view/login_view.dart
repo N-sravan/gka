@@ -63,322 +63,289 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                       ),
                     ),
                   ),
-                  SizedBox(
+                  Container(
                     width: MediaQuery.of(context).size.width,
                     height: MediaQuery.of(context).size.height,
+                    padding: const EdgeInsets.all(constants.mediumPadding),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        Expanded(
-                          child: SingleChildScrollView(
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.all(constants.mediumPadding),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const SizedBox(
-                                    height: 120,
+                        const Expanded(
+                          flex: 1,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(
+                                    constants.smallPadding),
+                                child: Center(
+                                  child: SizedBox(
+                                    height: 66,
+                                    child: Image(
+                                      image: AssetImage(
+                                          constants.fieldRishiIcon),
+                                      fit: BoxFit.contain,
+                                    ),
                                   ),
-                                  const Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: [
-                                      Padding(
-                                        padding: EdgeInsets.all(
-                                            constants.smallPadding),
-                                        child: Center(
-                                          child: SizedBox(
-                                            height: 66,
-                                            child: Image(
-                                              image: AssetImage(
-                                                  constants.fieldRishiIcon),
-                                              fit: BoxFit.contain,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Expanded(
+                          flex: 1,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'fieldRISHI:',
+                                style: TextStyle(
+                                  fontFamily: 'OpenSans',
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                  fontSize: 30,
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                'GenAI Co-Pilot for AgriExpert Advisory...',
+                                style: TextStyle(
+                                  fontFamily: 'OpenSans',
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                  fontSize: 22,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Card(
+                          color: const Color(0XFF55A18F),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20.0),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(18),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  constants.userNameString,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                      0.0,
+                                      constants.xSmallPadding,
+                                      0.0,
+                                      constants.mediumPadding),
+                                  child: Container(
+                                    // height: 44,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(20.0),
+                                      color: Colors.white, // Input field color
+                                    ),
+                                    child: TextFormField(
+                                      keyboardType: TextInputType.text,
+                                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                                      controller: _usernameController,
+                                      style: const TextStyle(color: Colors.black),
+                                      decoration: InputDecoration(
+                                        contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
+                                        filled: true,
+                                        fillColor: Colors.transparent,
+                                        hintText: constants.enterUserName,
+                                        hintStyle: constants.grey14W500,
+                                        focusedBorder: InputBorder.none,
+                                        border: InputBorder.none,
+                                        errorStyle: const TextStyle(color: Colors.redAccent),
+                                      ),
+                                      validator: (value) {
+                                        if (value == null ||
+                                            value.isEmpty) {
+                                          return constants.emptyUsernameErrorMsg;
+                                        }
+                                        return null;
+                                      },
+                                      onSaved: (value) {
+                                        _formKey.currentState!.validate();
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                const Text(
+                                  constants.passwordString,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                      0.0,
+                                      constants.xSmallPadding,
+                                      0.0,
+                                      constants.mediumPadding),
+                                  child: Container(
+                                    // height: 44,
+                                    decoration: BoxDecoration(
+                                      borderRadius:
+                                          BorderRadius.circular(20.0),
+                                      color: Colors
+                                          .white, // Input field color
+                                    ),
+                                    child: TextFormField(
+                                      autovalidateMode:
+                                          AutovalidateMode
+                                              .onUserInteraction,
+                                      controller: _passwordController,
+                                      obscureText: !_passwordVisible,
+                                      enableSuggestions: false,
+                                      autocorrect: false,
+                                      style: const TextStyle(
+                                          color: Colors.black),
+                                      decoration: InputDecoration(
+                                        filled: true,
+                                        fillColor: Colors.transparent,
+                                        hintText:
+                                            constants.enterPassword,
+                                        hintStyle:
+                                            constants.grey14W500,
+                                        suffixIcon: IconButton(
+                                          icon: Icon(
+                                            _passwordVisible
+                                                ? Icons.visibility
+                                                : Icons
+                                                    .visibility_off,
+                                            color: Colors.grey,
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              _passwordVisible =
+                                                  !_passwordVisible;
+                                            });
+                                          },
+                                        ),
+                                        enabledBorder:
+                                            InputBorder.none,
+                                        focusedBorder:
+                                            InputBorder.none,
+                                        errorBorder:
+                                            const UnderlineInputBorder(
+                                                borderSide:
+                                                    BorderSide.none),
+                                        errorStyle: const TextStyle(
+                                            color: Colors.redAccent),
+                                      ),
+                                      validator: (value) {
+                                        if (value == null ||
+                                            value.isEmpty) {
+                                          return constants
+                                              .emptyPasswordErrorMsg;
+                                        }
+                                        return null;
+                                      },
+                                      onSaved: (value) {
+                                        _formKey.currentState!
+                                            .validate();
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 40),
+                                model.isLoading
+                                    ? const Center(
+                                        child:
+                                            CircularProgressIndicator(
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : SizedBox(
+                                        width: double.infinity,
+                                        height:
+                                            constants.buttonHeight,
+                                        child: ElevatedButton(
+                                          onPressed: () async {
+                                            if (_formKey.currentState!
+                                                .validate()) {
+                                              // Data entered in the form is valid, continue to login
+                                              String userId =
+                                                  _usernameController
+                                                      .text;
+                                              String password =
+                                                  _passwordController
+                                                      .text;
+                                              if (userId.isNotEmpty &&
+                                                  password
+                                                      .isNotEmpty) {
+                                                bool? result =
+                                                    await viewModel
+                                                        .authenticate(
+                                                            userId,
+                                                            password,
+                                                            context);
+                                                if (result) {
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder:
+                                                          (context) =>
+                                                              ChatWindow(
+                                                        isFromHistory:
+                                                            false,
+                                                        sessionId: AppState
+                                                            .instance
+                                                            .sessionId,
+                                                      ),
+                                                    ),
+                                                  );
+                                                  /* Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder:
+                                                          (context) => HomeScreenWidget()
+                                                    ),
+                                                  );*/
+                                                  print(
+                                                      "authentication success - ${AppState.instance.sessionId}");
+                                                }
+                                              }
+                                            }
+                                          },
+                                          style: ElevatedButton
+                                              .styleFrom(
+                                            primary: Colors.white,
+                                            // Button color
+                                            onPrimary:
+                                                Color(0XFF5999F2),
+                                            // Button text color
+                                            shape:
+                                                RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius
+                                                      .circular(20.0),
+                                            ),
+                                          ),
+                                          child: const Text(
+                                            constants.loginString,
+                                            style: TextStyle(
+                                              color:
+                                                  Color(0XFF55A18F),
+                                              fontSize: 16,
                                             ),
                                           ),
                                         ),
                                       ),
-                                    ],
-                                  ),
-                                  const Padding(
-                                    padding: EdgeInsets.fromLTRB(8,16,8,8),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'fieldRISHI:',
-                                          style: TextStyle(
-                                            fontFamily: 'OpenSans',
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.black,
-                                            fontSize: 30,
-                                          ),
-                                        ),
-                                        SizedBox(height: 4),
-                                        Text(
-                                          'GenAI Co-Pilot for AgriExpert Advisory...',
-                                          style: TextStyle(
-                                            fontFamily: 'OpenSans',
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.black,
-                                            fontSize: 22,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 50.0),
-                                    child: SizedBox(
-                                      height: MediaQuery.sizeOf(context).height/2.4,
-                                      // color: Colors.blue,
-                                      child: Card(
-                                        color: const Color(0XFF55A18F),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(20.0),
-                                        ),
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(18),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              const Text(
-                                                constants.userNameString,
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 16,
-                                                ),
-                                              ),
-                                              Padding(
-                                                padding: const EdgeInsets.fromLTRB(
-                                                    0.0,
-                                                    constants.xSmallPadding,
-                                                    0.0,
-                                                    constants.mediumPadding),
-                                                child: Container(
-                                                  // height: 44,
-                                                  decoration: BoxDecoration(
-                                                    borderRadius:
-                                                        BorderRadius.circular(20.0),
-                                                    color: Colors
-                                                        .white, // Input field color
-                                                  ),
-                                                  child: TextFormField(
-                                                    keyboardType:
-                                                        TextInputType.text,
-                                                    autovalidateMode:
-                                                        AutovalidateMode
-                                                            .onUserInteraction,
-                                                    controller: _usernameController,
-                                                    style: const TextStyle(
-                                                        color: Colors.black),
-                                                    decoration: InputDecoration(
-                                                      contentPadding:
-                                                          const EdgeInsets
-                                                              .symmetric(
-                                                              vertical: 14,
-                                                              horizontal: 14),
-                                                      filled: true,
-                                                      fillColor: Colors.transparent,
-                                                      hintText:
-                                                          constants.enterUserName,
-                                                      hintStyle:
-                                                          constants.grey14W500,
-                                                      focusedBorder:
-                                                          InputBorder.none,
-                                                      border: InputBorder.none,
-                                                      errorStyle: const TextStyle(
-                                                          color: Colors.redAccent),
-                                                    ),
-                                                    validator: (value) {
-                                                      if (value == null ||
-                                                          value.isEmpty) {
-                                                        return constants
-                                                            .emptyUsernameErrorMsg;
-                                                      }
-                                                      return null;
-                                                    },
-                                                    onSaved: (value) {
-                                                      _formKey.currentState!
-                                                          .validate();
-                                                    },
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              const Text(
-                                                constants.passwordString,
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 16,
-                                                ),
-                                              ),
-                                              Padding(
-                                                padding: const EdgeInsets.fromLTRB(
-                                                    0.0,
-                                                    constants.xSmallPadding,
-                                                    0.0,
-                                                    constants.mediumPadding),
-                                                child: Container(
-                                                  // height: 44,
-                                                  decoration: BoxDecoration(
-                                                    borderRadius:
-                                                        BorderRadius.circular(20.0),
-                                                    color: Colors
-                                                        .white, // Input field color
-                                                  ),
-                                                  child: TextFormField(
-                                                    autovalidateMode:
-                                                        AutovalidateMode
-                                                            .onUserInteraction,
-                                                    controller: _passwordController,
-                                                    obscureText: !_passwordVisible,
-                                                    enableSuggestions: false,
-                                                    autocorrect: false,
-                                                    style: const TextStyle(
-                                                        color: Colors.black),
-                                                    decoration: InputDecoration(
-                                                      filled: true,
-                                                      fillColor: Colors.transparent,
-                                                      hintText:
-                                                          constants.enterPassword,
-                                                      hintStyle:
-                                                          constants.grey14W500,
-                                                      suffixIcon: IconButton(
-                                                        icon: Icon(
-                                                          _passwordVisible
-                                                              ? Icons.visibility
-                                                              : Icons
-                                                                  .visibility_off,
-                                                          color: Colors.grey,
-                                                        ),
-                                                        onPressed: () {
-                                                          setState(() {
-                                                            _passwordVisible =
-                                                                !_passwordVisible;
-                                                          });
-                                                        },
-                                                      ),
-                                                      enabledBorder:
-                                                          InputBorder.none,
-                                                      focusedBorder:
-                                                          InputBorder.none,
-                                                      errorBorder:
-                                                          const UnderlineInputBorder(
-                                                              borderSide:
-                                                                  BorderSide.none),
-                                                      errorStyle: const TextStyle(
-                                                          color: Colors.redAccent),
-                                                    ),
-                                                    validator: (value) {
-                                                      if (value == null ||
-                                                          value.isEmpty) {
-                                                        return constants
-                                                            .emptyPasswordErrorMsg;
-                                                      }
-                                                      return null;
-                                                    },
-                                                    onSaved: (value) {
-                                                      _formKey.currentState!
-                                                          .validate();
-                                                    },
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(height: 40),
-                                              model.isLoading
-                                                  ? const Center(
-                                                      child:
-                                                          CircularProgressIndicator(
-                                                        color: Colors.white,
-                                                      ),
-                                                    )
-                                                  : SizedBox(
-                                                      width: double.infinity,
-                                                      height:
-                                                          constants.buttonHeight,
-                                                      child: ElevatedButton(
-                                                        onPressed: () async {
-                                                          if (_formKey.currentState!
-                                                              .validate()) {
-                                                            // Data entered in the form is valid, continue to login
-                                                            String userId =
-                                                                _usernameController
-                                                                    .text;
-                                                            String password =
-                                                                _passwordController
-                                                                    .text;
-                                                            if (userId.isNotEmpty &&
-                                                                password
-                                                                    .isNotEmpty) {
-                                                              bool? result =
-                                                                  await viewModel
-                                                                      .authenticate(
-                                                                          userId,
-                                                                          password,
-                                                                          context);
-                                                              if (result) {
-                                                                Navigator.push(
-                                                                  context,
-                                                                  MaterialPageRoute(
-                                                                    builder:
-                                                                        (context) =>
-                                                                            ChatWindow(
-                                                                      isFromHistory:
-                                                                          false,
-                                                                      sessionId: AppState
-                                                                          .instance
-                                                                          .sessionId,
-                                                                    ),
-                                                                  ),
-                                                                );
-                                                                /* Navigator.push(
-                                                                  context,
-                                                                  MaterialPageRoute(
-                                                                    builder:
-                                                                        (context) => HomeScreenWidget()
-                                                                  ),
-                                                                );*/
-                                                                print(
-                                                                    "authentication success - ${AppState.instance.sessionId}");
-                                                              }
-                                                            }
-                                                          }
-                                                        },
-                                                        style: ElevatedButton
-                                                            .styleFrom(
-                                                          primary: Colors.white,
-                                                          // Button color
-                                                          onPrimary:
-                                                              Color(0XFF5999F2),
-                                                          // Button text color
-                                                          shape:
-                                                              RoundedRectangleBorder(
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(20.0),
-                                                          ),
-                                                        ),
-                                                        child: const Text(
-                                                          constants.loginString,
-                                                          style: TextStyle(
-                                                            color:
-                                                                Color(0XFF55A18F),
-                                                            fontSize: 16,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              ],
                             ),
                           ),
                         ),
+                        SizedBox(height: 20,)
                       ],
                     ),
                   ),
