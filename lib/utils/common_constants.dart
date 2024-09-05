@@ -85,8 +85,7 @@ const String saveFcmTokenEndpoint = 'fcm_tokens/save_token';
 const String deleteTokenEndpoint = 'fcm_tokens/delete_token';
 const String getAvailabeModelsEndpoint = 'get_available_models';
 const String getAvailabePromptsEndpoint = 'get_all_prompt_templates';
-const String logoutEndpoint =
-    'auth/realms/agriwiserealm/protocol/openid-connect/logout';
+const String logoutEndpoint = 'auth/realms/agriwiserealm/protocol/openid-connect/logout';
 const String csrfEndPoint = 'um/generate-csrf-token';
 const String userPermissionsEndPoint = 'um/user-permissions/';
 const String getToolsEndpoint = 'tool_inventory/get_tools';

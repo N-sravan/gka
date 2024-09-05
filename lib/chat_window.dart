@@ -691,7 +691,7 @@ class _ChatWindowState extends State<ChatWindow>
                         builder: (context, value, _) {
                           if (value) {
                             return LoadingAnimationWidget.waveDots(
-                                color: const Color(0XFF55A18F), size: 40);
+                                color: Colors.blue, size: 40);
                           }
                           return const SizedBox();
                         },
