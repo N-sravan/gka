@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import '../../../utils/common_constants.dart' as constants;
 import '../view_model/login_view_model.dart';
 
-
 class FarmerLoginScreenWidget extends StatefulWidget {
   final String role;
 
@@ -35,9 +34,9 @@ class _FarmerLoginScreenWidgetState extends State<FarmerLoginScreenWidget> {
   void autoScroll() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       RenderBox box =
-      viewModel.otpKey.currentContext!.findRenderObject() as RenderBox;
+          viewModel.otpKey.currentContext!.findRenderObject() as RenderBox;
       Offset position =
-      box.localToGlobal(Offset.zero); //this is global position
+          box.localToGlobal(Offset.zero); //this is global position
       double y = position.dy;
       scrollController.animateTo(y,
           duration: const Duration(milliseconds: 250), curve: Curves.easeInOut);
@@ -96,9 +95,9 @@ class _FarmerLoginScreenWidgetState extends State<FarmerLoginScreenWidget> {
                                     ),
                                     const SizedBox(
                                         child: Image(
-                                          image: AssetImage(constants.loginImage),
-                                          fit: BoxFit.contain,
-                                        )),
+                                      image: AssetImage(constants.loginImage),
+                                      fit: BoxFit.contain,
+                                    )),
                                   ],
                                 ),
                               ),
@@ -107,15 +106,15 @@ class _FarmerLoginScreenWidgetState extends State<FarmerLoginScreenWidget> {
                               flex: 3,
                               child: Column(
                                 mainAxisAlignment:
-                                MainAxisAlignment.spaceEvenly,
+                                    MainAxisAlignment.spaceEvenly,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Column(
                                     crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                      constants.loginString,
+                                        constants.loginString,
                                         style: constants.blackMont24W700,
                                       ),
                                       const SizedBox(
@@ -130,10 +129,10 @@ class _FarmerLoginScreenWidgetState extends State<FarmerLoginScreenWidget> {
                                     children: [
                                       Container(
                                         width:
-                                        MediaQuery.of(context).size.width,
+                                            MediaQuery.of(context).size.width,
                                         decoration: BoxDecoration(
                                           borderRadius:
-                                          BorderRadius.circular(8.0),
+                                              BorderRadius.circular(8.0),
                                           border: Border.all(
                                               color: const Color(0xff00A94E),
                                               width: 1),
@@ -154,8 +153,8 @@ class _FarmerLoginScreenWidgetState extends State<FarmerLoginScreenWidget> {
                                           decoration: InputDecoration(
                                             filled: true,
                                             fillColor: Colors.transparent,
-                                            hintText: constants
-                                                .enterMobileNumber,
+                                            hintText:
+                                                constants.enterMobileNumber,
                                             hintStyle: constants.grey14W400,
                                             border: InputBorder.none,
                                             focusedBorder: InputBorder.none,
@@ -169,14 +168,14 @@ class _FarmerLoginScreenWidgetState extends State<FarmerLoginScreenWidget> {
                                                   style: constants.black14W400),
                                             ),
                                             prefixIconConstraints:
-                                            const BoxConstraints(
+                                                const BoxConstraints(
                                               minWidth: 0,
                                             ),
                                             // prefix: Text('+91 '),
                                             prefixStyle: constants.black14W400,
                                             contentPadding:
-                                            const EdgeInsets.symmetric(
-                                                vertical: 14),
+                                                const EdgeInsets.symmetric(
+                                                    vertical: 14),
                                           ),
                                           validator: (value) {
                                             viewModel.mobileNo = value;
@@ -217,77 +216,78 @@ class _FarmerLoginScreenWidgetState extends State<FarmerLoginScreenWidget> {
                                   ),
                                   viewModel.getOtp
                                       ? Column(
-                                    key: viewModel.otpKey,
-                                    children: [
-                                      Material(
-                                        type: MaterialType.transparency,
-                                        elevation: 0,
-                                        child: PinCodeTextField(
-                                          appContext: context,
-                                          pastedTextStyle:
-                                          constants.black14W400,
-                                          length: 4,
-                                          autoDisposeControllers: false,
-                                          backgroundColor:
-                                          Colors.transparent,
-                                          blinkWhenObscuring: false,
-                                          // animationType: AnimationType.fade,
-                                          validator: (v) {
-                                            v = v ?? "";
-                                            if (v.isEmpty) {
-                                              return constants.invalidEntry;
-                                            } else {
-                                              return null;
-                                            }
-                                          },
-                                          pinTheme: PinTheme(
-                                              shape:
-                                              PinCodeFieldShape.box,
-                                              borderRadius:
-                                              BorderRadius.circular(
-                                                  8),
-                                              fieldHeight: 56,
-                                              fieldWidth: 80,
-                                              activeFillColor:
-                                              Colors.white,
-                                              selectedColor: constants
-                                                  .inputFieldColor,
-                                              inactiveFillColor:
-                                              Colors.white,
-                                              selectedFillColor:
-                                              Colors.white,
-                                              activeColor: constants
-                                                  .inputFieldColor,
-                                              inactiveColor: constants
-                                                  .inputFieldColor),
-                                          cursorColor: constants
-                                              .continueButtonColor,
-                                          enableActiveFill: true,
-                                          keyboardType:
-                                          TextInputType.number,
-                                          inputFormatters: <TextInputFormatter>[
-                                            FilteringTextInputFormatter
-                                                .digitsOnly
+                                          key: viewModel.otpKey,
+                                          children: [
+                                            Material(
+                                              type: MaterialType.transparency,
+                                              elevation: 0,
+                                              child: PinCodeTextField(
+                                                appContext: context,
+                                                pastedTextStyle:
+                                                    constants.black14W400,
+                                                length: 4,
+                                                autoDisposeControllers: false,
+                                                backgroundColor:
+                                                    Colors.transparent,
+                                                blinkWhenObscuring: false,
+                                                // animationType: AnimationType.fade,
+                                                validator: (v) {
+                                                  v = v ?? "";
+                                                  if (v.isEmpty) {
+                                                    return constants
+                                                        .invalidEntry;
+                                                  } else {
+                                                    return null;
+                                                  }
+                                                },
+                                                pinTheme: PinTheme(
+                                                    shape:
+                                                        PinCodeFieldShape.box,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8),
+                                                    fieldHeight: 56,
+                                                    fieldWidth: 80,
+                                                    activeFillColor:
+                                                        Colors.white,
+                                                    selectedColor: constants
+                                                        .inputFieldColor,
+                                                    inactiveFillColor:
+                                                        Colors.white,
+                                                    selectedFillColor:
+                                                        Colors.white,
+                                                    activeColor: constants
+                                                        .inputFieldColor,
+                                                    inactiveColor: constants
+                                                        .inputFieldColor),
+                                                cursorColor: constants
+                                                    .continueButtonColor,
+                                                enableActiveFill: true,
+                                                keyboardType:
+                                                    TextInputType.number,
+                                                inputFormatters: <TextInputFormatter>[
+                                                  FilteringTextInputFormatter
+                                                      .digitsOnly
+                                                ],
+                                                boxShadows: const [
+                                                  BoxShadow(
+                                                    offset: Offset(0, 0),
+                                                    color: Color(0xff00A94E),
+                                                    blurRadius: 1,
+                                                  )
+                                                ],
+                                                onCompleted: (v) {},
+                                                onChanged: (value) {
+                                                  viewModel
+                                                      .updatedOTPValue(value);
+                                                },
+                                                beforeTextPaste: (text) {
+                                                  return true;
+                                                },
+                                              ),
+                                            ),
                                           ],
-                                          boxShadows: const [
-                                            BoxShadow(
-                                              offset: Offset(0, 0),
-                                              color: Color(0xff00A94E),
-                                              blurRadius: 1,
-                                            )
-                                          ],
-                                          onCompleted: (v) {},
-                                          onChanged: (value) {
-                                            viewModel
-                                                .updatedOTPValue(value);
-                                          },
-                                          beforeTextPaste: (text) {
-                                            return true;
-                                          },
-                                        ),
-                                      ),
-                                    ],
-                                  )
+                                        )
                                       : const SizedBox(),
                                   Align(
                                     alignment: Alignment.bottomCenter,
@@ -307,9 +307,9 @@ class _FarmerLoginScreenWidgetState extends State<FarmerLoginScreenWidget> {
                                                   .validateOTP(context);
                                               if (success != null &&
                                                   success == true) {
-                                                Navigator.pushNamed(
-                                                    context, constants.homeRoute);
-                                              /*  Navigator.push(
+                                                Navigator.pushNamed(context,
+                                                    constants.homeRoute);
+                                                /*  Navigator.push(
                                                     context,
                                                     MaterialPageRoute(
                                                         builder: (context) =>
@@ -318,22 +318,26 @@ class _FarmerLoginScreenWidgetState extends State<FarmerLoginScreenWidget> {
                                                 Fluttertoast.showToast(
                                                     msg: 'Enter Valid OTP',
                                                     toastLength:
-                                                    Toast.LENGTH_LONG);
+                                                        Toast.LENGTH_LONG);
                                               }
                                             }
                                           }
                                         },
                                         style: ElevatedButton.styleFrom(
-                                          fixedSize: Size(MediaQuery.of(context).size.height,
+                                          fixedSize: Size(
+                                              MediaQuery.of(context)
+                                                  .size
+                                                  .height,
                                               constants.splashButtonHeight),
                                           shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                            BorderRadius.circular(constants.borderRadius),
+                                            borderRadius: BorderRadius.circular(
+                                                constants.borderRadius),
                                           ),
-                                          backgroundColor: constants.splashButtonBg,
+                                          backgroundColor:
+                                              constants.splashButtonBg,
                                         ),
                                         child: Text(
-                                         constants.verifyOtpString,
+                                          constants.verifyOtpString,
                                           style: constants.whiteMont14W600,
                                         ),
                                       ),

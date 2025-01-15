@@ -113,7 +113,7 @@ const String recordingKeySpace = 'CHAT_BOT_GOOGLE';
 
 //check this before generating apk
 const String projectId = apwrimsUUID;
-const String keyspace = prodKeySpace;
+const String keyspace = recordingKeySpace;
 String appTitle = '';
 String baseUrl = '';
 
@@ -791,8 +791,7 @@ const String forgotPasswordString = 'Forgot Password?';
 const String emptyEmailErrorMsg = 'Email cannot be empty';
 const String emptyMobileNumberErrorMsg = 'Mobile number cannot be empty';
 const String invalidMobileNumberErrorMsg = 'Enter valid Mobile number';
-const String loginDesc =
-    'Please enter the registered Mobile number or Please input New Mobile number';
+const String loginDesc = 'Please enter the registered Mobile number or Please input New Mobile number';
 const String generateOTP = 'Generate OTP';
 const String invalidEntry = 'Invalid Entry';
 

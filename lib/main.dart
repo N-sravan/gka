@@ -206,30 +206,6 @@ Future<void> showNotification() async {
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
   FlutterLocalNotificationsPlugin();
 
-  void onDidReceiveNotificationResponse(
-      NotificationResponse notificationResponse) async {
-    final String? payload = notificationResponse.payload;
-    if (notificationResponse.payload != null) {
-      print('notification payload: $payload');
-    }
-    /*await Navigator.push(
-      context,
-      MaterialPageRoute<void>(builder: (context) => SecondScreen(payload)),
-    );*/
-  }
-
-  void notificationTapBackground(
-      NotificationResponse notificationResponse) async {
-    final String? payload = notificationResponse.payload;
-    if (notificationResponse.payload != null) {
-      print('notification payload: $payload');
-    }
-    /*await Navigator.push(
-      context,
-      MaterialPageRoute<void>(builder: (context) => SecondScreen(payload)),
-    );*/
-  }
-
   if (platform.Platform.isAndroid || platform.Platform.isAndroid) {
     /*   await flutterLocalNotificationsPlugin.initialize(
       const InitializationSettings(
@@ -243,15 +219,6 @@ Future<void> showNotification() async {
       onDidReceiveBackgroundNotificationResponse: notificationTapBackground,*/
     );
   }
-
-/*  final BigTextStyleInformation bigTextStyleInformation =
-      const BigTextStyleInformation(
-    'Tap to view details',
-    htmlFormatBigText: true,
-    htmlFormatContentTitle: true,
-    htmlFormatSummaryText: true,
-  );*/
-
   await ref.orderByKey().limitToLast(1).once().then((event) async {
     DataSnapshot snapshot = event.snapshot;
     if (snapshot.value != null) {
@@ -265,7 +232,6 @@ Future<void> showNotification() async {
   });
   print("wewewewewew::$responseMessage");
   if (responseMessage.isNotEmpty) {
-    // Format responseMessage to add indentation for lines
     var lines = responseMessage.split('\n');
     var formattedMessage = lines.map((line) {
       const int maxLength = 40;
@@ -329,7 +295,6 @@ void complexTask3(Map<String, dynamic> data) {
 Future<void> initializeService() async {
   final service = FlutterBackgroundService();
 
-  /// OPTIONAL, using custom notification channel id
   const AndroidNotificationChannel channel = AndroidNotificationChannel(
     'my_foreground',
     'MY FOREGROUND SERVICE',
@@ -356,13 +321,10 @@ Future<void> initializeService() async {
 
   await service.configure(
     androidConfiguration: AndroidConfiguration(
-      // this will be executed when app is in foreground or background in separated isolate
       onStart: onStart,
       autoStart: true,
       isForegroundMode: true,
       notificationChannelId: 'my_foreground',
-      // initialNotificationTitle: 'AWESOME SERVICE',
-      // initialNotificationContent: 'Initializing',
       foregroundServiceNotificationId: 888,
     ),
     iosConfiguration: IosConfiguration(
@@ -388,7 +350,6 @@ Future<bool> onIosBackground(ServiceInstance service) async {
 
 @pragma('vm:entry-point')
 void onStart(ServiceInstance service) async {
-  // Only available for flutter 3.0.0 and later
   DartPluginRegistrant.ensureInitialized();
 
   SharedPreferences preferences = await SharedPreferences.getInstance();
@@ -396,7 +357,6 @@ void onStart(ServiceInstance service) async {
 
   String sessionId = const Uuid().v4();
 
-  /// OPTIONAL when use custom notification
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
   FlutterLocalNotificationsPlugin();
 
@@ -414,7 +374,6 @@ void onStart(ServiceInstance service) async {
     service.stopSelf();
   });
 
-  // bring to foreground
   Timer.periodic(const Duration(seconds: 10), (timer) async {
     if (service is AndroidServiceInstance) {
       if (await service.isForegroundService()) {
@@ -551,12 +510,11 @@ Future<void> initializeSpeechToTextBg() async {
   }
 }
 
-bool isSpeaking = false; // Variable to track TTS speaking status
+bool isSpeaking = false;
 
 Future<String> startListenings(String sessionId) async {
   int i = 0;
-  DatabaseReference ref = FirebaseDatabase.instance
-      .ref("CHAT_BOT_CHANGELOG/${constants.projectId}/${sessionId}");
+  DatabaseReference ref = FirebaseDatabase.instance.ref("CHAT_BOT_CHANGELOG/${constants.projectId}/${sessionId}");
   SpeechRecognitionResult result;
 
   await speechToText.listen(
@@ -635,22 +593,16 @@ Future<String> startListenings(String sessionId) async {
 }
 
 Future<void> startListeningToYes(String sessionId, String word) async {
-  print("startListeningToYes");
-  print("wewewewewew trigger word :: ${AppState.instance.triggeredWord}");
   await speechToText.stop();
-  print("wewewewewew speechToText.isListening:: ${speechToText.isListening}");
-  DatabaseReference ref = FirebaseDatabase.instance
-      .ref("CHAT_BOT_CHANGELOG/${constants.projectId}/${sessionId}");
+  DatabaseReference ref = FirebaseDatabase.instance.ref("CHAT_BOT_CHANGELOG/${constants.projectId}/${sessionId}");
   SpeechRecognitionResult result;
 
   await speechToText.listen(
       partialResults: false,
       onResult: (data) async {
         result = data;
-        print("wewewewewew 111111-input::${result.recognizedWords}");
         if (result.recognizedWords.isNotEmpty &&
             result.recognizedWords.toLowerCase() == "yes") {
-          print("wewewewewew 111111-yes::${result.recognizedWords}");
           await speechToText.stop();
           await ref.push().set({
             "isUser": true,
@@ -664,8 +616,6 @@ Future<void> startListeningToYes(String sessionId, String word) async {
             "changelog": 'No Change in $AppState.instance.triggeredWord Data'
           });*/
           Future.delayed(const Duration(seconds: 2), () async {
-            print(
-                "wewewewewe AppState.instance.triggeredWord after completion::${AppState.instance.triggeredWord}");
             await ref.orderByKey().limitToLast(1).once().then((event) async {
               DataSnapshot snapshot = event.snapshot;
               print("values::${snapshot.value}");
@@ -729,19 +679,15 @@ Future<void> startListeningBg() async {
     partialResults: false,
     onResult: (data) async {
       result = data;
-      print("wewewewewew-recognizedWords - ${result.recognizedWords}");
       if (result.recognizedWords.isNotEmpty &&
           result.recognizedWords.toLowerCase() == 'yes') {
-        print("wewewewewew entered");
         await ref.orderByKey().limitToLast(1).once().then((event) async {
           DataSnapshot snapshot = event.snapshot;
-          print("wewewewewew snapshot $snapshot");
           if (snapshot.value != null) {
             dynamic values = snapshot.value;
             values.forEach((key, value) async {
               if (value['isUser'] == false) {
                 String responseMessage = value['message'] ?? '';
-                print("wewewewewew response message :: $responseMessage");
                 await tts.speak(responseMessage);
               }
             });
@@ -753,13 +699,11 @@ Future<void> startListeningBg() async {
   );
 }
 
-// Function to speak text using TTS
 Future<void> speak(String text) async {
   isSpeaking = true;
   await tts.speak(text);
   isSpeaking = false;
 }
-
 
 speakText(String text) async {
   print("Speak text");

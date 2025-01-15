@@ -219,7 +219,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                         ? MainAxisAlignment.end
                         : MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                    children: <Widget>[
                       if (!widget.isUser)
                         const Padding(
                           padding: EdgeInsets.only(left: 4.0),
@@ -244,12 +244,9 @@ class _ChatBubbleState extends State<ChatBubble> {
                                 if (hasContent)
                                   DecoratedBox(
                                     decoration: BoxDecoration(
-                                      color: widget.isUser
-                                          ? const Color(0xffE2E3E4)
-                                              .withOpacity(0.6)
-                                          : const Color(0xFF2FAB2D)
-                                              .withOpacity(0.15),
-                                      // : Colors.green[500],
+                                      color: widget.isUser ? const Color(0xffE2E3E4).withOpacity(0.6)
+                                          // : const Color(0xFF2FAB2D).withOpacity(0.15),
+                                      : Colors.blue[900],
                                       borderRadius: widget.isUser
                                           ? const BorderRadius.only(
                                               topLeft: Radius.circular(16),
@@ -386,11 +383,11 @@ class _ChatBubbleState extends State<ChatBubble> {
   }
 
   _userProfileView() {
-    return SizedBox(
+    return const SizedBox(
       // height: 40,
       child: Column(
         children: [
-          const Padding(
+           Padding(
             padding: EdgeInsets.only(left: 4.0),
             child: SizedBox(
               height: 32,
@@ -401,7 +398,7 @@ class _ChatBubbleState extends State<ChatBubble> {
               ),
             ),
           ),
-          (widget.chainOfThoughts != null && widget.chainOfThoughts!.isNotEmpty)
+         /* (widget.chainOfThoughts != null && widget.chainOfThoughts!.isNotEmpty)
               ? ValueListenableBuilder(
                   builder: (context, value, _) {
                     return IconButton(
@@ -414,7 +411,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                   },
                   valueListenable: show,
                 )
-              : const SizedBox(),
+              : const SizedBox(),*/
         ],
       ),
     );
@@ -558,9 +555,9 @@ class _ChatBubbleState extends State<ChatBubble> {
   _textView() {
     return SelectableText(
       widget.text.trim(),
-      style: const TextStyle(
-        // color: !widget.isUser ? const Color(0xffFFFFFF) : const Color(0xff1E1E1E),
-        color: Color(0xff1E1E1E),
+      style: TextStyle(
+        color: !widget.isUser ? const Color(0xffFFFFFF) : const Color(0xff1E1E1E),
+        // color: Color(0xff1E1E1E),
       ),
     );
   }

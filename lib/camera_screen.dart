@@ -53,9 +53,9 @@ class _CameraWidgetState extends State<CameraWidget> {
       icon: Transform.rotate(
         // angle: -24.5,
         angle: 0,
-        child: const Icon(
+        child: Icon(
           Icons.attach_file,
-          color: Colors.grey,
+          color: Colors.blue[900],
         ),
       ),
     );

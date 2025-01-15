@@ -334,12 +334,12 @@ class _ChatWindowState extends State<ChatWindow>
         appBar: AppBar(
           iconTheme: const IconThemeData(color: Colors.black),
           backgroundColor: Colors.white,
-          titleSpacing: 0,
+          titleSpacing: -2,
           title: Image.asset(
-            'assets/images/aquamind_title.png',
-            height: 38,
+            'assets/images/aquamind_logo.jpeg',
+            height: 80,
           ),
-          actions: [
+          /* actions: [
             Container(
               margin: const EdgeInsets.only(right: 16.0),
               // Adjust spacing as needed
@@ -389,7 +389,7 @@ class _ChatWindowState extends State<ChatWindow>
                 },
               ),
             ),
-          ],
+          ],*/
         ),
         body: Stack(
           children: [
@@ -691,7 +691,7 @@ class _ChatWindowState extends State<ChatWindow>
                         builder: (context, value, _) {
                           if (value) {
                             return LoadingAnimationWidget.waveDots(
-                                color: Colors.blue, size: 40);
+                                color: Colors.blue[900]!, size: 40);
                           }
                           return const SizedBox();
                         },
@@ -729,7 +729,7 @@ class _ChatWindowState extends State<ChatWindow>
     );
   }
 
-  Widget bottomBar() {
+  /* Widget bottomBar() {
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
       child: Row(
@@ -746,13 +746,28 @@ class _ChatWindowState extends State<ChatWindow>
         ],
       ),
     );
+  }*/
+  Widget bottomBar() {
+    return Container(
+      // padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+      padding: const EdgeInsets.all(4),
+      child: Row(
+        children: [
+          Expanded(
+            child: _chatInput(),
+          ),
+          CameraWidget(saveCapturedPhoto: saveCapturedPhoto),
+          _speechButton(),
+        ],
+      ),
+    );
   }
 
   _sendButton() {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        capturedPhoto == null
+        /*    capturedPhoto == null
             ? CameraWidget(saveCapturedPhoto: saveCapturedPhoto)
             : Padding(
                 padding: const EdgeInsets.only(top: 4.0, bottom: 4),
@@ -777,13 +792,16 @@ class _ChatWindowState extends State<ChatWindow>
                     ),
                   ),
                 ),
-              ),
+              ),*/
         ValueListenableBuilder(
           valueListenable: showLoader,
           builder: (context, value, _) {
             return IconButton(
-                icon: Icon(Icons.send,
-                    color: showLoader.value ? Colors.grey : Colors.blue),
+                icon: Transform.rotate(
+                  angle: 24.6,
+                  child: Icon(Icons.send,
+                      color: showLoader.value ? Colors.grey : Colors.blue[900]),
+                ),
                 onPressed: showLoader.value
                     ? null
                     : () async {
@@ -795,8 +813,7 @@ class _ChatWindowState extends State<ChatWindow>
                         } else {
                           String? imageUrl = '';
                           if (capturedPhoto != null) {
-                            imageUrl =
-                                await uploadMedia(context, capturedPhoto!.path);
+                            imageUrl = await uploadMedia(context, capturedPhoto!.path);
                           }
                           await insertDataIntoDb(imageUrl, chatController.text);
                         }
@@ -808,25 +825,22 @@ class _ChatWindowState extends State<ChatWindow>
   }
 
   _speechButton() {
-    return Positioned(
-      left: 2,
-      child: Row(
-        children: [
-          ValueListenableBuilder(
-            valueListenable: listeningActive,
-            builder: (context, value, _) {
-              return IconButton(
-                onPressed: !value ? _startListening : _stopListening,
-                icon: Icon(
-                  !value ? Icons.mic_off : Icons.mic,
-                  color: Colors.grey,
-                ),
-                tooltip: 'Listen',
-              );
-            },
-          ),
-        ],
-      ),
+    return Row(
+      children: [
+        ValueListenableBuilder(
+          valueListenable: listeningActive,
+          builder: (context, value, _) {
+            return IconButton(
+              onPressed: !value ? _startListening : _stopListening,
+              icon: Icon(
+                !value ? Icons.mic_off : Icons.mic,
+                color: Colors.blue[900],
+              ),
+              tooltip: 'Listen',
+            );
+          },
+        ),
+      ],
     );
   }
 
@@ -837,27 +851,32 @@ class _ChatWindowState extends State<ChatWindow>
       minLines: 1,
       textCapitalization: TextCapitalization.sentences,
       decoration: InputDecoration(
-        hintText: 'Ask AI anything...',
+        fillColor: Colors.grey.withOpacity(0.2),
+        filled: true,
+        hintText: 'Enter your message...',
         hintStyle: constants.lightGrey2_14W400,
         border: OutlineInputBorder(
-          borderSide: const BorderSide(
-            color: Color(0xFF4BA164),
+          borderSide: BorderSide.none,
+          /* borderSide: BorderSide(
+            // color: Color(0xFF4BA164),
+            color: Colors.grey.withOpacity(0.2),
             width: 2,
-          ),
+          ),*/
           borderRadius: BorderRadius.circular(20),
         ),
-        contentPadding: const EdgeInsets.fromLTRB(50, 4, 10, 4),
+        contentPadding: const EdgeInsets.fromLTRB(12, 4, 10, 4),
         suffixIcon: _sendButton(),
       ),
     );
   }
 
   void updateChatControllerForSpeech(String text) {
-    if (text.toLowerCase().contains('ki')) {
-      text = text.replaceAll('ki', 'key');
+    print("text::${text}");
+    if (text.contains('PU 002')) {
+      text = text.replaceAll('PU 002', 'PU-002');
     }
-    if (text.toLowerCase().contains('effect')) {
-      text = text.replaceAll('effect', 'affect');
+    if (text.contains('H A 101') || text.contains('HA 101')) {
+      text = text.replaceAll('H A 101', 'HA-101');
     }
     chatController.text = text;
     setState(() {});
