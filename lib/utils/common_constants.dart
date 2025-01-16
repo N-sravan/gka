@@ -115,7 +115,7 @@ const String recordingKeySpace = 'CHAT_BOT_GOOGLE';
 
 //check this before generating apk
 const String projectId = fieldRishiUUID;
-const String keyspace = recordingKeySpace;
+const String keyspace = prodKeySpace;
 String appTitle = '';
 String baseUrl = '';
 
@@ -842,7 +842,6 @@ const String genAiBaseUrl = "https://nawrims.vassarlabs.com/vassar_mind/";
 
 
 //firebase options
-
 const FirebaseOptions gowaterOptions = FirebaseOptions(
     apiKey: 'AIzaSyB-MGSrm6VQ4dA9gMg50c1R1DjoFjp6scg',
     appId: '1:462188079667:android:8f12adc9f75aff61c3d146',

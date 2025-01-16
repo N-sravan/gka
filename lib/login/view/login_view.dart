@@ -319,9 +319,9 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                           },
                                           style: ElevatedButton
                                               .styleFrom(
-                                            primary: Colors.white,
+                                            backgroundColor: Colors.white,
                                             // Button color
-                                            onPrimary:
+                                            foregroundColor:
                                                 Color(0XFF5999F2),
                                             // Button text color
                                             shape:
