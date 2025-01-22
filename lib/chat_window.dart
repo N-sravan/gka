@@ -545,7 +545,8 @@ class _ChatWindowState extends State<ChatWindow>
                                       showLoader.value = false;
                                     });
 
-                                    tts.speak(
+                                    // tts.speak(messageList[messageList.length - 1].text);
+                                    _speakMessage(
                                         messageList[messageList.length - 1]
                                             .text);
                                   }
@@ -757,6 +758,25 @@ class _ChatWindowState extends State<ChatWindow>
     );
   }
 
+  _speakMessage(String text) async {
+    String plainText = _extractPlainText(text.trim());
+    await tts.speak(plainText);
+  }
+
+  //make changes here
+  String _extractPlainText(String text) {
+    // Remove double asterisks for bold text
+    final RegExp boldRegex = RegExp(r'\*\*(.*?)\*\*');
+    String result =
+    text.replaceAllMapped(boldRegex, (match) => match.group(1) ?? '');
+
+    // Remove single asterisks
+    final RegExp singleAsteriskRegex = RegExp(r'\*');
+    result = result.replaceAll(singleAsteriskRegex, '');
+
+    return result;
+  }
+
   _sendButton() {
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -962,8 +982,8 @@ class _ChatWindowState extends State<ChatWindow>
 
     String timeStamp = DateTime.now().millisecondsSinceEpoch.toString();
 
-    print(
-        "wewewew data:: ${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
+    print("wewewew data:: ${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
+    print("wewewew language:: ${AppState.instance.language.toLowerCase()}");
 
     await ref.child(timeStamp).set({
       "is_user": true,

@@ -130,7 +130,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                             child: CircleAvatar(
                               radius: 50,
                               backgroundImage:
-                                  AssetImage('assets/images/male_bot.jfif'),
+                                  AssetImage('assets/images/user_profile_pic.png'),
                             ),
                           ),
                         ),
@@ -165,7 +165,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                                     ),
                                     child: Padding(
                                       padding: const EdgeInsets.only(
-                                          left: 10, right: 10, bottom: 10),
+                                          left: 10, right: 10),
                                       child: Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
@@ -181,7 +181,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                                             _tableView(),
                                           const SizedBox(height: 10),
                                           if (widget.text.isNotEmpty)
-                                            _textView(),
+                                            _formattedTextView(),
                                         ],
                                       ),
                                     ),
@@ -456,16 +456,56 @@ class _ChatBubbleState extends State<ChatBubble> {
     );
   }
 
-  _textView() {
-    final text = widget.text.trim();
+  _formattedTextView() {
+    // Trim the text and handle single quotes
+    String trimmedText = widget.text.trim().replaceAll("'", "");
+    if (trimmedText.startsWith("'")) {
+      trimmedText = trimmedText.substring(1);
+    }
+    if (trimmedText.endsWith("'")) {
+      trimmedText = trimmedText.substring(0, trimmedText.length - 1);
+    }
+    if (trimmedText.endsWith('"')) {
+      trimmedText = trimmedText.substring(0, trimmedText.length - 1);
+    }
+    // Split the text by line breaks (\\n)
+    List<String> lines = trimmedText.split('\\n');
 
-    return RichText(
-      text: TextSpan(
-        children: _parseText(text),
-        style: const TextStyle(
-          color: Color(0xff1E1E1E), // Default text color
-          fontSize: 16.0,
-        ),
+    // Process each line to apply bold formatting and replace '*' with '•'
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: lines.map((line) {
+        // Apply bold formatting first
+        final boldTextLine = _parseText(line);
+
+        // Replace '*' with '•' in the bold formatted text
+        final bulletPointText = boldTextLine.map((span) {
+          String text = span.text ?? '';
+          return TextSpan(
+            text: text.replaceAll('*', '•'),
+            style: span.style,
+          );
+        }).toList();
+
+        return RichText(
+          text: TextSpan(
+            children: bulletPointText,
+            style: const TextStyle(
+              color: Color(0xff1E1E1E),
+              fontSize: 14.0, // adjust as needed
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  _textView() {
+    return SelectableText(
+      widget.text.trim(),
+      style: const TextStyle(
+        // color: !widget.isUser ? const Color(0xffFFFFFF) : const Color(0xff1E1E1E),
+        color: Color(0xff1E1E1E),
       ),
     );
   }
