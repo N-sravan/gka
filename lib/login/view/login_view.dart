@@ -29,13 +29,17 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
     super.initState();
     viewModel = Provider.of<LoginViewModel>(context, listen: false);
 
-    switch (constants.projectId) {
-      case constants.fieldRishiUUID:
+
+    _usernameController.text = "tapranauser";
+    _passwordController.text = "fieldwise@123";
+
+/*    switch (constants.projectId) {
+      // case constants.fieldRishiUUID:
         _usernameController.text = "tapranauser";
         _passwordController.text = "fieldwise@123";
         appIcon = constants.appIcon;
-        break;
-    }
+        // break;
+    }*/
     WidgetsBinding.instance.addPostFrameCallback((_) {
       networkUtils.startTrackingConnection();
     });
@@ -77,14 +81,13 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
                               Padding(
-                                padding: EdgeInsets.all(
-                                    constants.smallPadding),
+                                padding: EdgeInsets.all(constants.smallPadding),
                                 child: Center(
                                   child: SizedBox(
                                     height: 66,
                                     child: Image(
-                                      image: AssetImage(
-                                          constants.fieldRishiIcon),
+                                      image:
+                                          AssetImage(constants.fieldRishiIcon),
                                       fit: BoxFit.contain,
                                     ),
                                   ),
@@ -151,23 +154,28 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                     ),
                                     child: TextFormField(
                                       keyboardType: TextInputType.text,
-                                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                                      autovalidateMode:
+                                          AutovalidateMode.onUserInteraction,
                                       controller: _usernameController,
-                                      style: const TextStyle(color: Colors.black),
+                                      style:
+                                          const TextStyle(color: Colors.black),
                                       decoration: InputDecoration(
-                                        contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                                vertical: 14, horizontal: 14),
                                         filled: true,
                                         fillColor: Colors.transparent,
                                         hintText: constants.enterUserName,
                                         hintStyle: constants.grey14W500,
                                         focusedBorder: InputBorder.none,
                                         border: InputBorder.none,
-                                        errorStyle: const TextStyle(color: Colors.redAccent),
+                                        errorStyle: const TextStyle(
+                                            color: Colors.redAccent),
                                       ),
                                       validator: (value) {
-                                        if (value == null ||
-                                            value.isEmpty) {
-                                          return constants.emptyUsernameErrorMsg;
+                                        if (value == null || value.isEmpty) {
+                                          return constants
+                                              .emptyUsernameErrorMsg;
                                         }
                                         return null;
                                       },
@@ -194,65 +202,52 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                   child: Container(
                                     // height: 44,
                                     decoration: BoxDecoration(
-                                      borderRadius:
-                                          BorderRadius.circular(20.0),
-                                      color: Colors
-                                          .white, // Input field color
+                                      borderRadius: BorderRadius.circular(20.0),
+                                      color: Colors.white, // Input field color
                                     ),
                                     child: TextFormField(
                                       autovalidateMode:
-                                          AutovalidateMode
-                                              .onUserInteraction,
+                                          AutovalidateMode.onUserInteraction,
                                       controller: _passwordController,
                                       obscureText: !_passwordVisible,
                                       enableSuggestions: false,
                                       autocorrect: false,
-                                      style: const TextStyle(
-                                          color: Colors.black),
+                                      style:
+                                          const TextStyle(color: Colors.black),
                                       decoration: InputDecoration(
                                         filled: true,
                                         fillColor: Colors.transparent,
-                                        hintText:
-                                            constants.enterPassword,
-                                        hintStyle:
-                                            constants.grey14W500,
+                                        hintText: constants.enterPassword,
+                                        hintStyle: constants.grey14W500,
                                         suffixIcon: IconButton(
                                           icon: Icon(
                                             _passwordVisible
                                                 ? Icons.visibility
-                                                : Icons
-                                                    .visibility_off,
+                                                : Icons.visibility_off,
                                             color: Colors.grey,
                                           ),
                                           onPressed: () {
                                             setState(() {
-                                              _passwordVisible =
-                                                  !_passwordVisible;
+                                              _passwordVisible = !_passwordVisible;
                                             });
                                           },
                                         ),
-                                        enabledBorder:
-                                            InputBorder.none,
-                                        focusedBorder:
-                                            InputBorder.none,
-                                        errorBorder:
-                                            const UnderlineInputBorder(
-                                                borderSide:
-                                                    BorderSide.none),
+                                        enabledBorder: InputBorder.none,
+                                        focusedBorder: InputBorder.none,
+                                        errorBorder: const UnderlineInputBorder(
+                                            borderSide: BorderSide.none),
                                         errorStyle: const TextStyle(
                                             color: Colors.redAccent),
                                       ),
                                       validator: (value) {
-                                        if (value == null ||
-                                            value.isEmpty) {
+                                        if (value == null || value.isEmpty) {
                                           return constants
                                               .emptyPasswordErrorMsg;
                                         }
                                         return null;
                                       },
                                       onSaved: (value) {
-                                        _formKey.currentState!
-                                            .validate();
+                                        _formKey.currentState!.validate();
                                       },
                                     ),
                                   ),
@@ -260,47 +255,36 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                 const SizedBox(height: 40),
                                 model.isLoading
                                     ? const Center(
-                                        child:
-                                            CircularProgressIndicator(
+                                        child: CircularProgressIndicator(
                                           color: Colors.white,
                                         ),
                                       )
                                     : SizedBox(
                                         width: double.infinity,
-                                        height:
-                                            constants.buttonHeight,
+                                        height: constants.buttonHeight,
                                         child: ElevatedButton(
                                           onPressed: () async {
                                             if (_formKey.currentState!
                                                 .validate()) {
                                               // Data entered in the form is valid, continue to login
                                               String userId =
-                                                  _usernameController
-                                                      .text;
+                                                  _usernameController.text;
                                               String password =
-                                                  _passwordController
-                                                      .text;
+                                                  _passwordController.text;
                                               if (userId.isNotEmpty &&
-                                                  password
-                                                      .isNotEmpty) {
-                                                bool? result =
-                                                    await viewModel
-                                                        .authenticate(
-                                                            userId,
-                                                            password,
-                                                            context);
+                                                  password.isNotEmpty) {
+                                                bool? result = await viewModel
+                                                    .authenticate(userId,
+                                                        password, context);
                                                 if (result) {
                                                   Navigator.push(
                                                     context,
                                                     MaterialPageRoute(
-                                                      builder:
-                                                          (context) =>
-                                                              ChatWindow(
-                                                        isFromHistory:
-                                                            false,
+                                                      builder: (context) =>
+                                                          ChatWindow(
+                                                        isFromHistory: false,
                                                         sessionId: AppState
-                                                            .instance
-                                                            .sessionId,
+                                                            .instance.sessionId,
                                                       ),
                                                     ),
                                                   );
@@ -317,25 +301,21 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                               }
                                             }
                                           },
-                                          style: ElevatedButton
-                                              .styleFrom(
+                                          style: ElevatedButton.styleFrom(
                                             backgroundColor: Colors.white,
                                             // Button color
                                             foregroundColor:
-                                                Color(0XFF5999F2),
+                                                const Color(0XFF5999F2),
                                             // Button text color
-                                            shape:
-                                                RoundedRectangleBorder(
+                                            shape: RoundedRectangleBorder(
                                               borderRadius:
-                                                  BorderRadius
-                                                      .circular(20.0),
+                                                  BorderRadius.circular(20.0),
                                             ),
                                           ),
                                           child: const Text(
                                             constants.loginString,
                                             style: TextStyle(
-                                              color:
-                                                  Color(0XFF55A18F),
+                                              color: Color(0XFF55A18F),
                                               fontSize: 16,
                                             ),
                                           ),
@@ -345,7 +325,7 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                             ),
                           ),
                         ),
-                        SizedBox(height: 20,)
+                        const SizedBox(height: 20)
                       ],
                     ),
                   ),

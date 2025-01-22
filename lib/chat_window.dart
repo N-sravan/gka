@@ -341,7 +341,8 @@ class _ChatWindowState extends State<ChatWindow>
           ),
           actions: [
             Container(
-              margin: const EdgeInsets.only(right: 16.0), // Adjust spacing as needed
+              margin: const EdgeInsets.only(right: 16.0),
+              // Adjust spacing as needed
               child: FlutterSwitch(
                 width: 60.0,
                 height: 30.0,
@@ -355,7 +356,7 @@ class _ChatWindowState extends State<ChatWindow>
                 activeText: 'ENG',
                 activeTextColor: Colors.white,
                 inactiveTextColor: Colors.white,
-                inactiveText: 'हिंदी',
+                inactiveText: 'తెలుగు',
                 showOnOff: true,
                 onToggle: (val) async {
                   setState(() {
@@ -369,17 +370,28 @@ class _ChatWindowState extends State<ChatWindow>
                         "name": "en-us-x-iom-local",
                         "locale": "en-US"
                       };
-                      Fluttertoast.showToast(msg: "Switched to ${AppState.instance.language}");
+                      Fluttertoast.showToast(
+                          msg: "Switched to ${AppState.instance.language}");
                     } else {
-                      AppState.instance.language = 'Hindi';
+                      /*  AppState.instance.language = 'Hindi';
                       langId = 'hi-IN';
                       dataNotFoundMsg = 'जानकारी नहीं मिली';
                       language = 'hindi';
                       currentVoice = {
                         "name": "hi-in-x-hid-network",
                         "locale": "hi-IN"
+                      };*/
+                      AppState.instance.language = 'Telugu';
+                      langId = 'te-IN';
+                      dataNotFoundMsg = 'సమాచారం దొరకలేదు';
+                      language = 'telugu';
+                      currentVoice = {
+                        "name": "te-in-x-tef-local",
+                        "locale": "te-IN"
                       };
-                      Fluttertoast.showToast(msg: "Switched to ${AppState.instance.language}");
+
+                      Fluttertoast.showToast(
+                          msg: "Switched to ${AppState.instance.language}");
                     }
                   });
                   await _initSpeech();

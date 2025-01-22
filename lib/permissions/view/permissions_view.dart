@@ -72,11 +72,11 @@ class _PermissionsScreenWidgetState extends State<PermissionsScreenWidget> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
+                      const Text(
                         'Voice Updates Permission',
                         style: TextStyle(fontSize: 16),
                       ),
@@ -100,7 +100,7 @@ class _PermissionsScreenWidgetState extends State<PermissionsScreenWidget> {
                         builder: (context) =>
                             HomeScreenWidget(data: widget.data)));*/
               },
-              child: Text('Continue'),
+              child: const Text('Continue'),
             ),
           ],
         ),
@@ -148,7 +148,7 @@ class _PermissionsScreenWidgetState extends State<PermissionsScreenWidget> {
     );
   }
 
- /* void startWorkManager() {
+  /* void startWorkManager() {
     print("wewewewewewew startWorkManager");
     Workmanager().registerPeriodicTask(
       "speechTask",

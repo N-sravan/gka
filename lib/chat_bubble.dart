@@ -104,7 +104,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                   widget.isUser ? Alignment.centerRight : Alignment.centerLeft,
               child: Column(
                 children: [
-                  if (widget.isUser && hasChainOfThoughts)
+             /*     if (widget.isUser && hasChainOfThoughts)
                     ValueListenableBuilder(
                       builder: (context, value, _) {
                         return (show.value &&
@@ -114,7 +114,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                             : const SizedBox();
                       },
                       valueListenable: show,
-                    ),
+                    ),*/
                   Row(
                     mainAxisAlignment: widget.isUser
                         ? MainAxisAlignment.end
@@ -186,10 +186,10 @@ class _ChatBubbleState extends State<ChatBubble> {
                                       ),
                                     ),
                                   ),
-                                if (!widget.isUser &&
+                            /*    if (!widget.isUser &&
                                     widget.followUpQuestions != null &&
                                     widget.followUpQuestions!.isNotEmpty)
-                                  _followUpQuestionsView(),
+                                  _followUpQuestionsView(),*/
                                 /*  if (!widget.isUser &&
                                   widget.logMessage!.isNotEmpty)
                                 _infoView(),
@@ -457,14 +457,40 @@ class _ChatBubbleState extends State<ChatBubble> {
   }
 
   _textView() {
-    return SelectableText(
-      widget.text.trim(),
-      style: const TextStyle(
-        // color: !widget.isUser ? const Color(0xffFFFFFF) : const Color(0xff1E1E1E),
-        color: Color(0xff1E1E1E),
+    final text = widget.text.trim();
+
+    return RichText(
+      text: TextSpan(
+        children: _parseText(text),
+        style: const TextStyle(
+          color: Color(0xff1E1E1E), // Default text color
+          fontSize: 16.0,
+        ),
       ),
     );
   }
+
+  List<TextSpan> _parseText(String text) {
+    // Split text by new lines
+    final lines = text.split('\n');
+
+    return lines.map((line) {
+      if (line.trim().startsWith('*')) {
+        // If line starts with '*', make it bold
+        return TextSpan(
+          text: '${line.trim()}\n',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        );
+      } else {
+        // Regular text
+        return TextSpan(
+          text: '$line\n',
+          style: const TextStyle(fontWeight: FontWeight.normal),
+        );
+      }
+    }).toList();
+  }
+
 
   Future _pushFollowUpQuestionInFirebase(String data) async {
     DatabaseReference ref = FirebaseDatabase.instance.ref(
