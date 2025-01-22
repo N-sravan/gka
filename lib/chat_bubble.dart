@@ -107,7 +107,7 @@ class _ChatBubbleState extends State<ChatBubble> {
         widget.isUser ? Alignment.centerRight : Alignment.centerLeft,
         child: Column(
           children: [
-            if (widget.isUser && hasChainOfThoughts)
+           /* if (widget.isUser && hasChainOfThoughts)
               ValueListenableBuilder(
                 builder: (context, value, _) {
                   return (show.value &&
@@ -117,7 +117,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                       : const SizedBox();
                 },
                 valueListenable: show,
-              ),
+              ),*/
             Row(
               mainAxisAlignment: widget.isUser
                   ? MainAxisAlignment.end

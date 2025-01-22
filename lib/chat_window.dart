@@ -190,7 +190,11 @@ class _ChatWindowState extends State<ChatWindow>
 
     // print("Available voices ${await textToSpeech.getVoiceByLang('ta-IN')}");
     print("Available languages ${await tts.getLanguages}");
-    currentVoice = {"name": "en-us-x-iom-local", "locale": "en-US"};
+    if (AppState.instance.isEnglish) {
+      currentVoice = {"name": "en-us-x-iom-local", "locale": "en-US"};
+    } else {
+      currentVoice = {"name": "te-in-x-tef-local", "locale": "te-IN"};
+    }
     await tts.setLanguage(langId);
     await tts.setSpeechRate(0.5);
     await tts.setVoice(currentVoice);
@@ -348,21 +352,26 @@ class _ChatWindowState extends State<ChatWindow>
                 child: IconButton(
                     onPressed: () async {
                       setState(() {
-                        AppState.instance.isEnglish = !AppState.instance.isEnglish;
+                        AppState.instance.isEnglish =
+                            !AppState.instance.isEnglish;
                         if (!AppState.instance.isEnglish) {
-                          AppState.instance.language = 'Hindi';
-                          langId = 'hi-IN';
-                          dataNotFoundMsg = 'जानकारी नहीं मिली';
-                          language = 'hindi';
-                          Fluttertoast.showToast(msg: "Switched to ${AppState.instance.language}");
-
+                          AppState.instance.language = 'Telugu';
+                          langId = 'te-IN';
+                          // dataNotFoundMsg = 'जानकारी नहीं मिली';
+                          language = 'telugu';
+                          currentVoice = {
+                            "name": "te-in-x-tef-local",
+                            "locale": "te-IN"
+                          };
+                          Fluttertoast.showToast(
+                              msg: "Switched to ${AppState.instance.language}");
                         } else {
                           AppState.instance.language = 'English';
                           langId = 'en-US';
                           dataNotFoundMsg = 'Data Not found';
                           language = 'english';
-                          Fluttertoast.showToast(msg: "Switched to ${AppState.instance.language}");
-
+                          Fluttertoast.showToast(
+                              msg: "Switched to ${AppState.instance.language}");
                         }
                       });
                       await _initSpeech();
@@ -517,9 +526,11 @@ class _ChatWindowState extends State<ChatWindow>
                                       showLoader.value = false;
                                     });
 
-                                    _speakMessage(messageList[messageList.length - 1].text);
+                                    _speakMessage(
+                                        messageList[messageList.length - 1]
+                                            .text);
 
-                                   /* tts.speak(
+                                    /* tts.speak(
                                         messageList[messageList.length - 1]
                                             .text);*/
                                   }
@@ -801,7 +812,8 @@ class _ChatWindowState extends State<ChatWindow>
   String _extractPlainText(String text) {
     // Remove double asterisks for bold text
     final RegExp boldRegex = RegExp(r'\*\*(.*?)\*\*');
-    String result = text.replaceAllMapped(boldRegex, (match) => match.group(1) ?? '');
+    String result =
+        text.replaceAllMapped(boldRegex, (match) => match.group(1) ?? '');
 
     // Remove single asterisks
     final RegExp singleAsteriskRegex = RegExp(r'\*');

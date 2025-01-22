@@ -29,6 +29,9 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
     super.initState();
     viewModel = Provider.of<LoginViewModel>(context, listen: false);
 
+    _usernameController.text = "tapranauser";
+    _passwordController.text = "fieldwise@123";
+
     switch (constants.projectId) {
       case constants.fieldRishiUUID:
         _usernameController.text = "tapranauser";

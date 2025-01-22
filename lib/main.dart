@@ -143,6 +143,11 @@ Future<void> setProjectSpecificValues() async {
     constants.baseUrl = constants.apwrimsBaseUrl;
     await Firebase.initializeApp(options: constants.apwrimsOptions);
   }
+  if (constants.projectId == constants.miCadaUUID) {
+    constants.appTitle = constants.miCadaString;
+    constants.baseUrl = constants.miCadaBaseUrl;
+    await Firebase.initializeApp(options: constants.fieldRishiOptions);
+  }
   /* if (constants.projectId == constants.gowaterUUID) {
     constants.appTitle = constants.kuidfctring;
     constants.baseUrl = constants.kuidfcBaseUrl;
