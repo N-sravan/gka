@@ -287,11 +287,11 @@ class _ChatBubbleState extends State<ChatBubble> {
   }
 
   _userProfileView() {
-    return SizedBox(
+    return const SizedBox(
       // height: 40,
       child: Column(
         children: [
-          const Padding(
+           Padding(
             padding: EdgeInsets.only(left: 4.0),
             child: SizedBox(
               height: 32,
@@ -302,7 +302,7 @@ class _ChatBubbleState extends State<ChatBubble> {
               ),
             ),
           ),
-          (widget.chainOfThoughts != null && widget.chainOfThoughts!.isNotEmpty)
+        /*  (widget.chainOfThoughts != null && widget.chainOfThoughts!.isNotEmpty)
               ? ValueListenableBuilder(
                   builder: (context, value, _) {
                     return IconButton(
@@ -315,7 +315,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                   },
                   valueListenable: show,
                 )
-              : const SizedBox(),
+              : const SizedBox(),*/
         ],
       ),
     );
@@ -468,6 +468,8 @@ class _ChatBubbleState extends State<ChatBubble> {
     if (trimmedText.endsWith('"')) {
       trimmedText = trimmedText.substring(0, trimmedText.length - 1);
     }
+
+    trimmedText.replaceAll('\u200c', '');
     // Split the text by line breaks (\\n)
     List<String> lines = trimmedText.split('\\n');
 
@@ -511,6 +513,7 @@ class _ChatBubbleState extends State<ChatBubble> {
   }
 
   List<TextSpan> _parseText(String text) {
+    text.replaceAll('\u200c', '');
     // Split text by new lines
     final lines = text.split('\n');
 

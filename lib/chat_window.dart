@@ -763,12 +763,10 @@ class _ChatWindowState extends State<ChatWindow>
     await tts.speak(plainText);
   }
 
-  //make changes here
   String _extractPlainText(String text) {
     // Remove double asterisks for bold text
     final RegExp boldRegex = RegExp(r'\*\*(.*?)\*\*');
-    String result =
-    text.replaceAllMapped(boldRegex, (match) => match.group(1) ?? '');
+    String result = text.replaceAllMapped(boldRegex, (match) => match.group(1) ?? '');
 
     // Remove single asterisks
     final RegExp singleAsteriskRegex = RegExp(r'\*');
@@ -887,11 +885,24 @@ class _ChatWindowState extends State<ChatWindow>
   }
 
   void updateChatControllerForSpeech(String text) {
-    if (text.toLowerCase().contains('ki')) {
-      text = text.replaceAll('ki', 'key');
+    if (text.toLowerCase().contains('తప్పురాన')) {
+      text = text.replaceAll('తప్పురాన', 'తప్రానా');
     }
-    if (text.toLowerCase().contains('effect')) {
-      text = text.replaceAll('effect', 'affect');
+    if (text.toLowerCase().contains('తప్పురానా')) {
+      text = text.replaceAll('తప్పురానా', 'తప్రానా');
+    }
+    if (text.toLowerCase().contains('తప్పురాణా')) {
+      text = text.replaceAll('తప్పురాణా', 'తప్రానా');
+    }
+
+    if (text.toLowerCase().contains('తప్రాణా')) {
+      text = text.replaceAll('తప్రాణా', 'తప్రానా');
+    }
+    if (text.toLowerCase().contains('తప్పరానా')) {
+      text = text.replaceAll('తప్పరానా', 'తప్రానా');
+    }
+    if (text.toLowerCase().contains('తత్రాణా')) {
+      text = text.replaceAll('తత్రాణా', 'తప్రానా');
     }
     chatController.text = text;
     setState(() {});
