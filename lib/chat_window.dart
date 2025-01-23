@@ -774,7 +774,10 @@ class _ChatWindowState extends State<ChatWindow>
     final RegExp singleAsteriskRegex = RegExp(r'\*');
     result = result.replaceAll(singleAsteriskRegex, '');
 
-    return result;
+    // Remove newlines
+    result = result.replaceAll('\\n', ' ');
+    print("result ::$result");
+    return result.trim();
   }
 
   _sendButton() {
