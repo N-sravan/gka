@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
+import 'package:aws_s3_upload/aws_s3_upload.dart';
 import 'package:gka/utils/secure_storage_util.dart';
 import 'package:flutter_switch/flutter_switch.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -176,6 +177,7 @@ class _ChatWindowState extends State<ChatWindow>
   bool _speechEnabled = false;
   ValueNotifier<bool> listeningActive = ValueNotifier<bool>(false);
   ValueNotifier<bool> showLoader = ValueNotifier<bool>(false);
+
   // TextToSpeech textToSpeech = TextToSpeech();
 
   _initSpeech() async {
@@ -766,7 +768,8 @@ class _ChatWindowState extends State<ChatWindow>
   String _extractPlainText(String text) {
     // Remove double asterisks for bold text
     final RegExp boldRegex = RegExp(r'\*\*(.*?)\*\*');
-    String result = text.replaceAllMapped(boldRegex, (match) => match.group(1) ?? '');
+    String result =
+        text.replaceAllMapped(boldRegex, (match) => match.group(1) ?? '');
 
     // Remove single asterisks
     final RegExp singleAsteriskRegex = RegExp(r'\*');
@@ -827,8 +830,8 @@ class _ChatWindowState extends State<ChatWindow>
                         } else {
                           String? imageUrl = '';
                           if (capturedPhoto != null) {
-                            imageUrl =
-                                await uploadMedia(context, capturedPhoto!.path);
+                            // imageUrl = await uploadMedia(context, capturedPhoto!.path);
+                            imageUrl = await uploadMediaToS3(capturedPhoto);
                           }
                           await insertDataIntoDb(imageUrl, chatController.text);
                         }
@@ -961,6 +964,27 @@ class _ChatWindowState extends State<ChatWindow>
     return null;
   }
 
+  Future<String> uploadMediaToS3(File? file) async {
+    String imageUrl = "";
+    try {
+      String? value = await AwsS3.uploadFile(
+        accessKey: constants.accessKey,
+        secretKey: constants.secretKey,
+        file: File(file!.path),
+        bucket: constants.bucket,
+        region: constants.region,
+        destDir: constants.s3Filefolder,
+      );
+      if (value != null) {
+        imageUrl = value;
+      }
+    } catch (e) {
+      return imageUrl;
+    }
+    print("IMAGE URLL : $imageUrl");
+    return imageUrl;
+  }
+
   showSessionDialog() {
     return showDialog(
       context: context,
@@ -996,7 +1020,8 @@ class _ChatWindowState extends State<ChatWindow>
 
     String timeStamp = DateTime.now().millisecondsSinceEpoch.toString();
 
-    print("wewewew data:: ${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
+    print(
+        "wewewew data:: ${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
     print("wewewew language:: ${AppState.instance.language.toLowerCase()}");
 
     await ref.child(timeStamp).set({

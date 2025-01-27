@@ -15,7 +15,7 @@ class ApiProvider {
 
   static ApiProvider get instance => _instance ??= ApiProvider._();
 
-  Future<dynamic?> uploadMedia(data, path, mediaType) async {
+  Future<dynamic> uploadMedia(data, path, mediaType) async {
     String submissionUrl = '';
     if (mediaType == 'file') {
       submissionUrl = constants.baseUrl + constants.uploadDocumentEndpoint;
@@ -27,7 +27,7 @@ class ApiProvider {
       "endpoints": constants.headerMultipart
     };
 
-    print("SUBMISSION URL::${submissionUrl}");
+    print("SUBMISSION URL::$submissionUrl");
     var request = http.MultipartRequest('POST', Uri.parse(submissionUrl));
     File compressedFile;
     final bytes = File(path).readAsBytesSync().lengthInBytes;
