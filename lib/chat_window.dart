@@ -968,8 +968,8 @@ class _ChatWindowState extends State<ChatWindow>
     String imageUrl = "";
     try {
       String? value = await AwsS3.uploadFile(
-        accessKey: constants.accessKey,
-        secretKey: constants.secretKey,
+        accessKey: constants.access,
+        secretKey: constants.secret,
         file: File(file!.path),
         bucket: constants.bucket,
         region: constants.region,

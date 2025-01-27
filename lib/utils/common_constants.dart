@@ -43,8 +43,8 @@ const String hiveEncryptionKey = 'hiveKey';
 
 
 //AWS S3 constants
-const String accessKey = 'AKIAJNVL3G7MZO7M5TXA';
-const String secretKey = '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';
+const String access = 'AKIAJNVL3G7MZO7M5TXA';
+const String secret= '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';
 const String bucket = 'uniapp-test';
 const String region = 'us-west-2';
 const String s3Filefolder = 'chatbot/$projectId/';
