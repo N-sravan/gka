@@ -85,6 +85,7 @@ class _ChatWindowState extends State<ChatWindow>
   ];
 
   List<String> langLoaderMsgList = [];
+  List<String> llmOptionsList = ['chatgpt-4o', 'gemma2:9b', 'deepseek-r1'];
 
   Map<String, String> currentVoice = {
     "name": "en-us-x-iom-local",
@@ -104,6 +105,7 @@ class _ChatWindowState extends State<ChatWindow>
   String langId = '';
   String title = '';
   String dataNotFoundMsg = '';
+  String? llmSelected;
   late DatabaseReference ref;
 
   @override
@@ -741,21 +743,83 @@ class _ChatWindowState extends State<ChatWindow>
     );
   }
 
+  _speechButton() {
+    return ValueListenableBuilder(
+      valueListenable: listeningActive,
+      builder: (context, value, _) {
+        return IconButton(
+          onPressed: !value ? _startListening : _stopListening,
+          icon: Icon(
+            !value ? Icons.mic_off : Icons.mic,
+            color: Colors.grey,
+          ),
+          tooltip: 'Listen',
+        );
+      },
+    );
+  }
+
+  _chatInput() {
+    return Column(
+      children: [
+        TextFormField(
+          controller: chatController,
+          maxLines: null,
+          minLines: 1,
+          textCapitalization: TextCapitalization.sentences,
+          decoration: InputDecoration(
+            hintText: 'Ask AI anything...',
+            hintStyle: constants.lightGrey2_14W400,
+            border: OutlineInputBorder(
+              borderSide: const BorderSide(
+                color: Color(0xFF4BA164),
+                width: 2,
+              ),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+            prefixIcon: _speechButton(),
+            suffixIcon: _sendButton(),
+          ),
+        ),
+        _dropdownInsideField(),
+      ],
+    );
+  }
+
   Widget bottomBar() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-      child: Row(
+      padding: const EdgeInsets.all(8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Stack(
-              alignment: Alignment.centerLeft,
-              children: [
-                _chatInput(),
-                _speechButton(),
-              ],
-            ),
-          ),
+          _chatInput(),
+          // _dropdownInsideField(),
         ],
+      ),
+    );
+  }
+
+
+  Widget _dropdownInsideField() {
+    return Positioned(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10), // Align with input field
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            hint: Text('Select LLM', style: constants.grey12W400),
+            value: llmSelected,
+            isExpanded: true,
+            onChanged: (newValue) {
+              setState(() {
+                llmSelected = newValue!;
+              });
+            },
+            items: llmOptionsList
+                .map((model) => DropdownMenuItem(value: model, child: Text(model)))
+                .toList(),
+          ),
+        ),
       ),
     );
   }
@@ -842,10 +906,11 @@ class _ChatWindowState extends State<ChatWindow>
     );
   }
 
-  _speechButton() {
+ /* _speechButton() {
     return Positioned(
       left: 2,
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ValueListenableBuilder(
             valueListenable: listeningActive,
@@ -862,8 +927,7 @@ class _ChatWindowState extends State<ChatWindow>
           ),
         ],
       ),
-    );
-  }
+    );  }
 
   _chatInput() {
     return TextFormField(
@@ -885,7 +949,7 @@ class _ChatWindowState extends State<ChatWindow>
         suffixIcon: _sendButton(),
       ),
     );
-  }
+  }*/
 
   void updateChatControllerForSpeech(String text) {
     if (text.toLowerCase().contains('తప్పురాన')) {
@@ -968,8 +1032,8 @@ class _ChatWindowState extends State<ChatWindow>
     String imageUrl = "";
     try {
       String? value = await AwsS3.uploadFile(
-        accessKey: constants.access,
-        secretKey: constants.secret,
+        accessKey: constants.accessKey,
+        secretKey: constants.secretKey,
         file: File(file!.path),
         bucket: constants.bucket,
         region: constants.region,
@@ -979,6 +1043,7 @@ class _ChatWindowState extends State<ChatWindow>
         imageUrl = value;
       }
     } catch (e) {
+      Fluttertoast.showToast(msg:constants.genericErrorMsg);
       return imageUrl;
     }
     print("IMAGE URLL : $imageUrl");
@@ -1020,20 +1085,20 @@ class _ChatWindowState extends State<ChatWindow>
 
     String timeStamp = DateTime.now().millisecondsSinceEpoch.toString();
 
-    print(
-        "wewewew data:: ${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
-    print("wewewew language:: ${AppState.instance.language.toLowerCase()}");
-
     await ref.child(timeStamp).set({
       "is_user": true,
       "message": text,
       "image_url": imageUrl ?? '',
       "language": AppState.instance.language.toLowerCase(),
+      "llm" : llmSelected ?? 'chatgpt-4o',
       "model_uuid": AppState.instance.modelUUID,
       "mode": '',
       "token": AppState.instance.token,
       "sm_enabled": true,
     });
+
+    print("wewewew llm:: $llmSelected");
+
 
     chatController.clear();
     capturedPhoto = null;

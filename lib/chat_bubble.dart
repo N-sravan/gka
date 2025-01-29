@@ -521,13 +521,13 @@ class _ChatBubbleState extends State<ChatBubble> {
       if (line.trim().startsWith('*')) {
         // If line starts with '*', make it bold
         return TextSpan(
-          text: '${line.trim()}\n',
+          text: line.trim(),
           style: const TextStyle(fontWeight: FontWeight.bold),
         );
       } else {
         // Regular text
         return TextSpan(
-          text: '$line\n',
+          text: line,
           style: const TextStyle(fontWeight: FontWeight.normal),
         );
       }
@@ -541,8 +541,7 @@ class _ChatBubbleState extends State<ChatBubble> {
 
     String timeStamp = DateTime.now().millisecondsSinceEpoch.toString();
 
-    print(
-        "wewewew data:: ${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
+    print("wewewew data:: ${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
     await ref.child(timeStamp).set({
       "is_user": true,
       "message": data,
