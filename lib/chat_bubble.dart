@@ -1,15 +1,18 @@
 import 'dart:math';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/utils/app_state.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
+import 'package:latlong2/latlong.dart';
 
 class ChatBubble extends StatefulWidget {
   ChatBubble({
     Key? key,
     required this.text,
     required this.isUser,
+    required this.isMapView,
     this.logMessage,
     this.imageUrl,
     this.tableColumnData,
@@ -27,6 +30,7 @@ class ChatBubble extends StatefulWidget {
 
   final String text;
   final bool isUser;
+  final bool isMapView;
   final String? imageUrl;
   final List<dynamic>? tableColumnData;
   final List<dynamic>? tableRowData;
@@ -49,6 +53,7 @@ class _ChatBubbleState extends State<ChatBubble> {
   // bool isExpanded = false;
   ValueNotifier<bool> show = ValueNotifier<bool>(true);
   Map<String, bool> _expanded = {};
+  LatLng mapCenter = LatLng(17.40086, 78.34050);
   List<Color> colors = [
     const Color(0xFFCFE2FF).withOpacity(0.5), //blue
     const Color(0xFFFFF3CD).withOpacity(0.5), //yellow
@@ -104,7 +109,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                   widget.isUser ? Alignment.centerRight : Alignment.centerLeft,
               child: Column(
                 children: [
-             /*     if (widget.isUser && hasChainOfThoughts)
+                  /*     if (widget.isUser && hasChainOfThoughts)
                     ValueListenableBuilder(
                       builder: (context, value, _) {
                         return (show.value &&
@@ -129,8 +134,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                             width: 36,
                             child: CircleAvatar(
                               radius: 50,
-                              backgroundImage:
-                                  AssetImage('assets/images/user_profile_pic.png'),
+                              backgroundImage: AssetImage('assets/images/male_bot.jfif'),
                             ),
                           ),
                         ),
@@ -182,11 +186,12 @@ class _ChatBubbleState extends State<ChatBubble> {
                                           const SizedBox(height: 10),
                                           if (widget.text.isNotEmpty)
                                             _formattedTextView(),
+                                          // if (widget.isMapView && !widget.isUser) _mapView(),
                                         ],
                                       ),
                                     ),
                                   ),
-                            /*    if (!widget.isUser &&
+                                /*    if (!widget.isUser &&
                                     widget.followUpQuestions != null &&
                                     widget.followUpQuestions!.isNotEmpty)
                                   _followUpQuestionsView(),*/
@@ -291,7 +296,7 @@ class _ChatBubbleState extends State<ChatBubble> {
       // height: 40,
       child: Column(
         children: [
-           Padding(
+          Padding(
             padding: EdgeInsets.only(left: 4.0),
             child: SizedBox(
               height: 32,
@@ -302,7 +307,7 @@ class _ChatBubbleState extends State<ChatBubble> {
               ),
             ),
           ),
-        /*  (widget.chainOfThoughts != null && widget.chainOfThoughts!.isNotEmpty)
+          /*  (widget.chainOfThoughts != null && widget.chainOfThoughts!.isNotEmpty)
               ? ValueListenableBuilder(
                   builder: (context, value, _) {
                     return IconButton(
@@ -431,7 +436,8 @@ class _ChatBubbleState extends State<ChatBubble> {
           },
           child: Padding(
             padding: const EdgeInsets.only(bottom: 4.0),
-            child: Image.network(
+            child: Image.asset(widget.imageUrl ?? ''),
+            /* child: Image.network(
               widget.imageUrl!,
               fit: BoxFit.contain,
               loadingBuilder: (BuildContext context, Widget child,
@@ -449,7 +455,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                   );
                 }
               },
-            ),
+            ),*/
           ),
         ),
       ],
@@ -484,7 +490,7 @@ class _ChatBubbleState extends State<ChatBubble> {
         final bulletPointText = boldTextLine.map((span) {
           String text = span.text ?? '';
           return TextSpan(
-            text: text.replaceAll('*', '•'),
+            text: text.replaceAll('*', ''),
             style: span.style,
           );
         }).toList();
@@ -521,19 +527,18 @@ class _ChatBubbleState extends State<ChatBubble> {
       if (line.trim().startsWith('*')) {
         // If line starts with '*', make it bold
         return TextSpan(
-          text: line.trim(),
+          text: '${line.trim()}\n',
           style: const TextStyle(fontWeight: FontWeight.bold),
         );
       } else {
         // Regular text
         return TextSpan(
-          text: line,
+          text: '${line.trim()}\n',
           style: const TextStyle(fontWeight: FontWeight.normal),
         );
       }
     }).toList();
   }
-
 
   Future _pushFollowUpQuestionInFirebase(String data) async {
     DatabaseReference ref = FirebaseDatabase.instance.ref(
@@ -541,7 +546,8 @@ class _ChatBubbleState extends State<ChatBubble> {
 
     String timeStamp = DateTime.now().millisecondsSinceEpoch.toString();
 
-    print("wewewew data:: ${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
+    print(
+        "wewewew data:: ${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
     await ref.child(timeStamp).set({
       "is_user": true,
       "message": data,
@@ -688,6 +694,39 @@ class _ChatBubbleState extends State<ChatBubble> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _mapView() {
+    return Container(
+      height: 200,
+      margin: const EdgeInsets.only(top: 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.black26),
+      ),
+      child: FlutterMap(
+        options: MapOptions(
+          center: mapCenter,
+          zoom: 15.0,
+        ),
+        children: [
+          TileLayer(
+            urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            subdomains: const ['a', 'b', 'c'],
+          ),
+          MarkerLayer(
+            markers: [
+              Marker(
+                  builder: (context) => const Icon(Icons.location_pin,
+                      color: Colors.red, size: 40),
+                  width: 40.0,
+                  height: 40.0,
+                  point: mapCenter),
+            ],
+          ),
+        ],
       ),
     );
   }

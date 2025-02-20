@@ -143,7 +143,7 @@ Future<void> setProjectSpecificValues() async {
   if (constants.projectId == constants.miCadaUUID) {
     constants.appTitle = constants.miCadaString;
     constants.baseUrl = constants.miCadaBaseUrl;
-    await Firebase.initializeApp(options: constants.fieldRishiOptions);
+    await Firebase.initializeApp(options: constants.micadaOptions);
   }
   /* if (constants.projectId == constants.gowaterUUID) {
     constants.appTitle = constants.kuidfctring;

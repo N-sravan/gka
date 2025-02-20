@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 import 'dart:ui';
 import 'package:aws_s3_upload/aws_s3_upload.dart';
 import 'package:gka/utils/secure_storage_util.dart';
@@ -9,7 +8,6 @@ import 'package:flutter_switch/flutter_switch.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_background_service_android/flutter_background_service_android.dart';
-import 'package:avatar_glow/avatar_glow.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:gka/text_to_speech.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -60,7 +58,6 @@ class _ChatWindowState extends State<ChatWindow>
   int prevChatLength = 0;
   int prevChatLengthHistory = 0;
   int c = 0;
-
   int responseCount = 1;
   String sessionId = "";
   String queryString = "";
@@ -107,6 +104,17 @@ class _ChatWindowState extends State<ChatWindow>
   String dataNotFoundMsg = '';
   String? llmSelected;
   late DatabaseReference ref;
+
+/*  Map<String, String> data = {
+    'Which zone had the highest number of leakages in the last 2 months and What is the pipe ID with the most leakages':
+        'Zone 1 had the highest number of leakages in the last 2 months and the pipe id with the most leakages is HARPIPE01001023.',
+    'Which zone had the highest number of leakages in the last two months and What is the pipe ID with the most leakages':
+        'Zone 1 had the highest number of leakages in the last 2 months and the pipe id with the most leakages is HARPIPE01001023.',
+    'How many No Water complaints were received in total':
+        'A total of 5 \'No Water\' complaints were received.',
+    'How many domestic connections are there in zone 5':
+        'There are 2233 domestic connections in Zone 5.'
+  };*/
 
   @override
   void initState() {
@@ -180,7 +188,7 @@ class _ChatWindowState extends State<ChatWindow>
   ValueNotifier<bool> listeningActive = ValueNotifier<bool>(false);
   ValueNotifier<bool> showLoader = ValueNotifier<bool>(false);
 
-  // TextToSpeech textToSpeech = TextToSpeech();
+  //TextToSpeech textToSpeech = TextToSpeech();
 
   _initSpeech() async {
     _speechEnabled = await _speechToText.initialize(
@@ -286,7 +294,6 @@ class _ChatWindowState extends State<ChatWindow>
   }
 
   Future<void> _onSpeechResult(SpeechRecognitionResult result) async {
-    print("_onSpeechResult ${result.recognizedWords}");
     updateChatControllerForSpeech(result.recognizedWords);
     bool active = _speechToText.isListening;
     listeningActive.value = active;
@@ -341,7 +348,7 @@ class _ChatWindowState extends State<ChatWindow>
           backgroundColor: const Color(0XFF55A18F),
           titleSpacing: 0,
           title: Image.asset(
-            'assets/images/appbar_heading.png',
+            'assets/images/aquagpt.png',
           ),
           actions: [
             Container(
@@ -448,6 +455,7 @@ class _ChatWindowState extends State<ChatWindow>
                                       maps.clear();
                                       cotMapping.clear();
                                       messageList.add(ChatBubble(
+                                        isMapView: true,
                                         expandChainOfThought: false,
                                         text: datalast['message'] ?? '',
                                         isUser: datalast['is_user'],
@@ -502,6 +510,7 @@ class _ChatWindowState extends State<ChatWindow>
                                       }
                                       // messageList.last.expandChainOfThought = false;
                                       messageList.add(ChatBubble(
+                                        isMapView: true,
                                         expandChainOfThought: false,
                                         text: datalast['message'] ?? '',
                                         isUser: datalast['is_user'],
@@ -655,6 +664,7 @@ class _ChatWindowState extends State<ChatWindow>
                                       mappedData[i]['cots']);
                                   image = mappedData[i]['image_url'] ?? '';
                                   bool cotExpand = false;
+
                                   questions = List<String>.from(
                                       mappedData[i]['followQns']);
                                   if (i == (mappedData.length - 1) &&
@@ -669,6 +679,7 @@ class _ChatWindowState extends State<ChatWindow>
                                     imageUrl: image,
                                     expandChainOfThought: cotExpand,
                                     followUpQuestions: questions,
+                                    isMapView: false,
                                   ));
                                 }
 
@@ -729,8 +740,7 @@ class _ChatWindowState extends State<ChatWindow>
                       height: 150,
                       width: 200,
                       child: Image(
-                        image:
-                        AssetImage('assets/images/appbar_heading.png'),
+                        image: AssetImage('assets/images/appbar_heading.png'),
                         fit: BoxFit.contain,
                       ),
                     ),
@@ -777,12 +787,13 @@ class _ChatWindowState extends State<ChatWindow>
               ),
               borderRadius: BorderRadius.circular(20),
             ),
-            contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+            contentPadding:
+                const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
             prefixIcon: _speechButton(),
             suffixIcon: _sendButton(),
           ),
         ),
-        _dropdownInsideField(),
+        // _dropdownInsideField(),
       ],
     );
   }
@@ -800,11 +811,11 @@ class _ChatWindowState extends State<ChatWindow>
     );
   }
 
-
   Widget _dropdownInsideField() {
     return Positioned(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10), // Align with input field
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        // Align with input field
         child: DropdownButtonHideUnderline(
           child: DropdownButton<String>(
             hint: Text('Select LLM', style: constants.grey12W400),
@@ -816,7 +827,8 @@ class _ChatWindowState extends State<ChatWindow>
               });
             },
             items: llmOptionsList
-                .map((model) => DropdownMenuItem(value: model, child: Text(model)))
+                .map((model) =>
+                    DropdownMenuItem(value: model, child: Text(model)))
                 .toList(),
           ),
         ),
@@ -906,7 +918,7 @@ class _ChatWindowState extends State<ChatWindow>
     );
   }
 
- /* _speechButton() {
+  /* _speechButton() {
     return Positioned(
       left: 2,
       child: Column(
@@ -952,24 +964,37 @@ class _ChatWindowState extends State<ChatWindow>
   }*/
 
   void updateChatControllerForSpeech(String text) {
-    if (text.toLowerCase().contains('తప్పురాన')) {
-      text = text.replaceAll('తప్పురాన', 'తప్రానా');
+    print("121212121 text:: $text");
+    if (text.startsWith('how')) {
+      text = text.replaceAll('how', 'How');
     }
-    if (text.toLowerCase().contains('తప్పురానా')) {
-      text = text.replaceAll('తప్పురానా', 'తప్రానా');
+    if (text.contains('which')) {
+      text = text.replaceAll('which', 'Which');
     }
-    if (text.toLowerCase().contains('తప్పురాణా')) {
-      text = text.replaceAll('తప్పురాణా', 'తప్రానా');
+    if (text.contains('John')) {
+      text = text.replaceAll('John', 'zone');
     }
 
-    if (text.toLowerCase().contains('తప్రాణా')) {
-      text = text.replaceAll('తప్రాణా', 'తప్రానా');
+    if (text.contains('what')) {
+      text = text.replaceAll('what', 'What');
     }
-    if (text.toLowerCase().contains('తప్పరానా')) {
-      text = text.replaceAll('తప్పరానా', 'తప్రానా');
+    if (text.contains('no water')) {
+      text = text.replaceAll('no water', 'No Water');
     }
-    if (text.toLowerCase().contains('తత్రాణా')) {
-      text = text.replaceAll('తత్రాణా', 'తప్రానా');
+    if (text.contains('Balli Mela')) {
+      text = text.replaceAll('Balli Mela', 'Balimela');
+    }
+    if (text.contains('Reservoir')) {
+      text = text.replaceAll('Reservoir', 'reservoir');
+    }
+    // if (text.toLowerCase().contains('this')) {
+    //   text = text.replaceAll('this', 'these');
+    // }
+    if (text.contains('could')) {
+      text = text.replaceAll('could', 'Could');
+    }
+    if (text.contains('life')) {
+      text = text.replaceAll('life', 'live');
     }
     chatController.text = text;
     setState(() {});
@@ -1043,7 +1068,7 @@ class _ChatWindowState extends State<ChatWindow>
         imageUrl = value;
       }
     } catch (e) {
-      Fluttertoast.showToast(msg:constants.genericErrorMsg);
+      Fluttertoast.showToast(msg: constants.genericErrorMsg);
       return imageUrl;
     }
     print("IMAGE URLL : $imageUrl");
@@ -1090,18 +1115,29 @@ class _ChatWindowState extends State<ChatWindow>
       "message": text,
       "image_url": imageUrl ?? '',
       "language": AppState.instance.language.toLowerCase(),
-      "llm" : llmSelected ?? 'chatgpt-4o',
+      "llm": 'chatgpt-4o',
       "model_uuid": AppState.instance.modelUUID,
       "mode": '',
       "token": AppState.instance.token,
       "sm_enabled": true,
     });
 
-    print("wewewew llm:: $llmSelected");
-
-
     chatController.clear();
     capturedPhoto = null;
+
+ /*   await Future.delayed(const Duration(seconds: 3));
+
+    String timeStampUpdated = DateTime.now().millisecondsSinceEpoch.toString();
+    String image = '';
+
+    if (text == 'Give inflow trend of Hirakud reservoir for next week') {
+      image = 'assets/images/hirakud.png';
+    }
+
+    await ref
+        .child(timeStampUpdated)
+        .set({"is_user": false, "message": data[text], "image_url": image});*/
+
     setState(() {});
   }
 
@@ -1154,7 +1190,6 @@ class _ChatWindowState extends State<ChatWindow>
   }
 
   Future<void> initializeSpeechToText(String sessionId) async {
-    print(("startListeningToHello: starting listening"));
     await Firebase.initializeApp(
         options: const FirebaseOptions(
       apiKey: 'AIzaSyD4kQrxxhyhqQwRjhnKRVJPgpT9jkuadUo',

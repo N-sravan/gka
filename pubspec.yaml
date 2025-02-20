@@ -64,6 +64,10 @@ dependencies:
   pin_code_fields: ^8.0.1
   flutter_launcher_icons: ^0.13.1
   flutter_switch: ^0.3.2
+  flutter_map: ^4.0.0
+  geolocator: ^9.0.2
+#  latlng: ^2.0.7
+  latlong2: ">=0.8.0 <0.10.0"
 
 # flutter pub get
 # flutter pub run flutter_launcher_icons:main

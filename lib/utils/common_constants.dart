@@ -41,13 +41,12 @@ const String preferenceUserDistrict = 'userDistrict';
 const String preferenceUserDistrictUUID = 'districtUUID';
 const String hiveEncryptionKey = 'hiveKey';
 
-
 //AWS S3 constants
-const String access = 'AKIAJNVL3G7MZO7M5TXA';
-const String secret= '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';
+const String accessKey = 'AKIAJNVL3G7MZO7M5TXA';
+const String secretKey = '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';
 const String bucket = 'uniapp-test';
 const String region = 'us-west-2';
-const String s3Filefolder = 'chatbot/$projectId/';
+const String s3Filefolder = 'chatbot/$projectId';
 
 // HeaderKeys
 const String accept = 'Accept';
@@ -80,7 +79,8 @@ const String miCadaBaseUrl = 'https://nawrims.vassarlabs.com/micada_mind/';
 // const String baseUrl = 'https://agriwise.vassarlabs.com/';
 // const String krishidsBaseUrl = 'http://acerkrishidss.vassarlabs.com/staging/api';
 // const String krishidsBaseUrl = 'https://agriwise.vassarlabs.com/staging/api';
-const String imageUploadUrl = 'https://agriwise.vassarlabs.com/agribot/bucket/insert_file';
+const String imageUploadUrl =
+    'https://agriwise.vassarlabs.com/agribot/bucket/insert_file';
 const String fileUploadEndPoint = 'vector/save_vector_data_from_upload';
 const String getFilesEndPoint = 'rag/get_rag_data';
 // const String deleteFileEndPoint = 'rag/delete_rag_data';
@@ -121,7 +121,7 @@ const String kuidfcUUID = '62d3dc99-5bc3-4303-8be1-d4fa1f7deee5';
 const String miCadaUUID = 'cb7e28bc-5c32-4d88-a600-592e9c57e3f9';
 const String prodKeySpace = 'CHAT_BOT_ONDEMAND_QUERY_DATA';
 const String testKeySpace = 'CHAT_BOT_TEST';
-const String recordingKeySpace = 'CHAT_BOT_GOOGLE';
+const String recordingKeySpace = 'CHAT_BOT_GOOGLE_TEST';
 
 //check this before generating apk
 const String projectId = miCadaUUID;
@@ -851,7 +851,6 @@ enum CropNameVerifyRadioOptions { agree, disagree }
 const String genAiBaseUrl = "https://nawrims.vassarlabs.com/vassar_mind/";
 // const String ngrok = "https://d637-196-12-47-4.ngrok-free.app/";
 
-
 //firebase options
 const FirebaseOptions gowaterOptions = FirebaseOptions(
     apiKey: 'AIzaSyB-MGSrm6VQ4dA9gMg50c1R1DjoFjp6scg',
@@ -882,7 +881,6 @@ const FirebaseOptions kuidfcOptions = FirebaseOptions(
   iosBundleId: 'com.vassar.kuidfc',
 );
 
-
 const FirebaseOptions fieldRishiOptions = FirebaseOptions(
   apiKey: 'AIzaSyB3ItstCC27ZMjtlta7Vq52K606YebXHX4',
   appId: '1:915537810859:android:f803660609065bf23ceeee',
@@ -891,4 +889,14 @@ const FirebaseOptions fieldRishiOptions = FirebaseOptions(
   storageBucket: 'kerala-aims.appspot.com',
   databaseURL: 'https://kerala-aims-default-rtdb.firebaseio.com',
   iosBundleId: 'com.vassar.aims',
+);
+
+const FirebaseOptions micadaOptions = FirebaseOptions(
+  apiKey: 'AIzaSyAPf6jSiS9vJmTH-s4fl-lE40HeuiV_LmU',
+  appId: '1:735995332969:ios:8039a5e69ca426c58055f8',
+  messagingSenderId: '735995332969',
+  projectId: 'haryana-aims',
+  storageBucket: 'haryana-aims.firebasestorage.app',
+  databaseURL: 'https://haryana-aims-default-rtdb.firebaseio.com',
+  iosBundleId: 'com.vassar.aimsharyana',
 );
