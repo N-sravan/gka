@@ -88,13 +88,9 @@ class _ChatBubbleState extends State<ChatBubble> {
 
   @override
   Widget build(BuildContext context) {
-    bool hasContent = widget.text.isNotEmpty ||
-        (widget.imageUrl != null && widget.imageUrl!.isNotEmpty) ||
-        (widget.followUpQuestions != null &&
-            widget.followUpQuestions!.isNotEmpty);
+    bool hasContent = widget.text.isNotEmpty || (widget.imageUrl != null && widget.imageUrl!.isNotEmpty) || (widget.followUpQuestions != null && widget.followUpQuestions!.isNotEmpty);
 
-    bool hasChainOfThoughts =
-        widget.chainOfThoughts != null && widget.chainOfThoughts!.isNotEmpty;
+    bool hasChainOfThoughts = widget.chainOfThoughts != null && widget.chainOfThoughts!.isNotEmpty;
 
     return (hasContent)
         ? Padding(
@@ -109,7 +105,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                   widget.isUser ? Alignment.centerRight : Alignment.centerLeft,
               child: Column(
                 children: [
-                  /*     if (widget.isUser && hasChainOfThoughts)
+                  if (widget.isUser && hasChainOfThoughts)
                     ValueListenableBuilder(
                       builder: (context, value, _) {
                         return (show.value &&
@@ -119,7 +115,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                             : const SizedBox();
                       },
                       valueListenable: show,
-                    ),*/
+                    ),
                   Row(
                     mainAxisAlignment: widget.isUser
                         ? MainAxisAlignment.end
@@ -134,7 +130,9 @@ class _ChatBubbleState extends State<ChatBubble> {
                             width: 36,
                             child: CircleAvatar(
                               radius: 50,
-                              backgroundImage: AssetImage('assets/images/male_bot.jfif'),
+                              // backgroundImage: AssetImage('assets/images/male_bot.jfif'),
+                              backgroundImage:
+                                  AssetImage('assets/images/male_bot.jfif'),
                             ),
                           ),
                         ),
@@ -292,11 +290,11 @@ class _ChatBubbleState extends State<ChatBubble> {
   }
 
   _userProfileView() {
-    return const SizedBox(
+    return SizedBox(
       // height: 40,
       child: Column(
         children: [
-          Padding(
+          const Padding(
             padding: EdgeInsets.only(left: 4.0),
             child: SizedBox(
               height: 32,
@@ -307,7 +305,7 @@ class _ChatBubbleState extends State<ChatBubble> {
               ),
             ),
           ),
-          /*  (widget.chainOfThoughts != null && widget.chainOfThoughts!.isNotEmpty)
+          (widget.chainOfThoughts != null && widget.chainOfThoughts!.isNotEmpty)
               ? ValueListenableBuilder(
                   builder: (context, value, _) {
                     return IconButton(
@@ -320,7 +318,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                   },
                   valueListenable: show,
                 )
-              : const SizedBox(),*/
+              : const SizedBox(),
         ],
       ),
     );
@@ -436,8 +434,8 @@ class _ChatBubbleState extends State<ChatBubble> {
           },
           child: Padding(
             padding: const EdgeInsets.only(bottom: 4.0),
-            child: Image.asset(widget.imageUrl ?? ''),
-            /* child: Image.network(
+            // child: Image.asset(widget.imageUrl ?? ''),
+            child: Image.network(
               widget.imageUrl!,
               fit: BoxFit.contain,
               loadingBuilder: (BuildContext context, Widget child,
@@ -455,7 +453,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                   );
                 }
               },
-            ),*/
+            ),
           ),
         ),
       ],
@@ -548,6 +546,7 @@ class _ChatBubbleState extends State<ChatBubble> {
 
     print(
         "wewewew data:: ${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
+
     await ref.child(timeStamp).set({
       "is_user": true,
       "message": data,
@@ -655,7 +654,8 @@ class _ChatBubbleState extends State<ChatBubble> {
                       child: GestureDetector(
                         onTap: () {
                           setState(() {
-                            _expanded[entry.key] = !_expanded[entry.key]!;
+                            _expanded[entry.key] =
+                                !(_expanded[entry.key] ?? false);
                           });
                         },
                         child: Container(

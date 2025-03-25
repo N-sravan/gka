@@ -4,7 +4,6 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:aws_s3_upload/aws_s3_upload.dart';
 import 'package:gka/utils/secure_storage_util.dart';
-import 'package:flutter_switch/flutter_switch.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_background_service_android/flutter_background_service_android.dart';
@@ -70,6 +69,7 @@ class _ChatWindowState extends State<ChatWindow>
   FlutterTts tts = FlutterTts();
   String highlightedText = "";
   String remainingText = "";
+  bool isllmDropdown = false;
 
   List<String> loaderMsgList = [
     'Please wait',
@@ -83,6 +83,7 @@ class _ChatWindowState extends State<ChatWindow>
 
   List<String> langLoaderMsgList = [];
   List<String> llmOptionsList = ['chatgpt-4o', 'gemma2:9b', 'deepseek-r1'];
+  List<String> langList = ['English', 'Telugu', 'Hindi'];
 
   Map<String, String> currentVoice = {
     "name": "en-us-x-iom-local",
@@ -103,17 +104,14 @@ class _ChatWindowState extends State<ChatWindow>
   String title = '';
   String dataNotFoundMsg = '';
   String? llmSelected;
+  String? langSelected;
   late DatabaseReference ref;
 
 /*  Map<String, String> data = {
-    'Which zone had the highest number of leakages in the last 2 months and What is the pipe ID with the most leakages':
-        'Zone 1 had the highest number of leakages in the last 2 months and the pipe id with the most leakages is HARPIPE01001023.',
-    'Which zone had the highest number of leakages in the last two months and What is the pipe ID with the most leakages':
-        'Zone 1 had the highest number of leakages in the last 2 months and the pipe id with the most leakages is HARPIPE01001023.',
-    'How many No Water complaints were received in total':
-        'A total of 5 \'No Water\' complaints were received.',
-    'How many domestic connections are there in zone 5':
-        'There are 2233 domestic connections in Zone 5.'
+    'Which zone had the highest number of leakages in the last 2 months and What is the pipe ID with the most leakages': 'Zone 1 had the highest number of leakages in the last 2 months and the pipe id with the most leakages is HARPIPE01001023.',
+    'Which zone had the highest number of leakages in the last two months and What is the pipe ID with the most leakages': 'Zone 1 had the highest number of leakages in the last 2 months and the pipe id with the most leakages is HARPIPE01001023.',
+    'How many No Water complaints were received in total': 'A total of 5 \'No Water\' complaints were received.',
+    'How many domestic connections are there in zone 5': 'There are 2233 domestic connections in Zone 5.'
   };*/
 
   @override
@@ -226,9 +224,10 @@ class _ChatWindowState extends State<ChatWindow>
           localeId: langId,
           partialResults: true,
           onResult: _onSpeechResult,
-          pauseFor: const Duration(seconds: 5),
-          listenFor: const Duration(seconds: 40),
-          cancelOnError: true);
+          pauseFor: const Duration(seconds: 3),
+          listenFor: const Duration(seconds: 30),
+          cancelOnError: true
+      );
     } catch (e) {
       print('EXCEPTIONKJSKFJK An exception occurred: $e');
     }
@@ -254,8 +253,9 @@ class _ChatWindowState extends State<ChatWindow>
           partialResults: false,
           // onResult: _onSpeechResultForAutoMode,
           pauseFor: const Duration(seconds: 5),
-          listenFor: const Duration(seconds: 35),
-          cancelOnError: true);
+          listenFor: const Duration(seconds: 45),
+          cancelOnError: true
+      );
     } catch (e) {
       print('EXCEPTIONKJSKFJK An exception occurred: $e');
     }
@@ -346,11 +346,11 @@ class _ChatWindowState extends State<ChatWindow>
         appBar: AppBar(
           iconTheme: const IconThemeData(color: Colors.white),
           backgroundColor: const Color(0XFF55A18F),
-          titleSpacing: 0,
+          titleSpacing: 2,
           title: Image.asset(
-            'assets/images/aquagpt.png',
+            'assets/images/appbar_heading.png',
           ),
-          actions: [
+          /*actions: [
             Container(
               margin: const EdgeInsets.only(right: 16.0),
               // Adjust spacing as needed
@@ -384,7 +384,8 @@ class _ChatWindowState extends State<ChatWindow>
                       Fluttertoast.showToast(
                           msg: "Switched to ${AppState.instance.language}");
                     } else {
-                      /*  AppState.instance.language = 'Hindi';
+                      */
+          /*AppState.instance.language = 'Hindi';
                       langId = 'hi-IN';
                       dataNotFoundMsg = 'जानकारी नहीं मिली';
                       language = 'hindi';
@@ -392,6 +393,7 @@ class _ChatWindowState extends State<ChatWindow>
                         "name": "hi-in-x-hid-network",
                         "locale": "hi-IN"
                       };*/
+          /*
                       AppState.instance.language = 'Telugu';
                       langId = 'te-IN';
                       dataNotFoundMsg = 'సమాచారం దొరకలేదు';
@@ -409,7 +411,7 @@ class _ChatWindowState extends State<ChatWindow>
                 },
               ),
             ),
-          ],
+          ],*/
         ),
         body: Stack(
           children: [
@@ -420,18 +422,12 @@ class _ChatWindowState extends State<ChatWindow>
                   !AppState.instance.isListeningMode
                       ? Expanded(
                           child: StreamBuilder(
-                            stream: FirebaseDatabase.instance
-                                .ref(
-                                    "${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}")
-                                .onValue,
+                            stream: FirebaseDatabase.instance.ref("${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}").onValue,
                             builder: (context, AsyncSnapshot snapshot) {
                               if (snapshot.hasData && snapshot.data != null) {
                                 List<ChatBubble> messageList = [];
                                 List<ChatBubble> tempList = [];
-                                var data = (snapshot.data! as DatabaseEvent)
-                                        .snapshot
-                                        .value ??
-                                    {};
+                                var data = (snapshot.data! as DatabaseEvent).snapshot.value ?? {};
                                 data = data as Map<dynamic, dynamic>;
                                 Map<String, String> dataTsMapping = {};
                                 dataTimer?.cancel();
@@ -500,8 +496,7 @@ class _ChatWindowState extends State<ChatWindow>
                                               null) {
                                         if (!datalast['is_valid_token'] ||
                                             datalast['is_limit_exceeded']) {
-                                          Fluttertoast.showToast(
-                                              msg: "Session Expired");
+                                          Fluttertoast.showToast(msg: "Session Expired");
                                           WidgetsBinding.instance
                                               .addPostFrameCallback((_) {
                                             Navigator.pop(context);
@@ -794,6 +789,14 @@ class _ChatWindowState extends State<ChatWindow>
           ),
         ),
         // _dropdownInsideField(),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Expanded(child: _dropdownInsideField(!isllmDropdown)),
+            const SizedBox(width: 8), // Spacing between dropdowns
+            Expanded(child: _dropdownInsideField(isllmDropdown)),
+          ],
+        ),
       ],
     );
   }
@@ -811,26 +814,63 @@ class _ChatWindowState extends State<ChatWindow>
     );
   }
 
-  Widget _dropdownInsideField() {
-    return Positioned(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-        // Align with input field
-        child: DropdownButtonHideUnderline(
-          child: DropdownButton<String>(
-            hint: Text('Select LLM', style: constants.grey12W400),
-            value: llmSelected,
-            isExpanded: true,
-            onChanged: (newValue) {
-              setState(() {
+  Widget _dropdownInsideField(bool isLlm) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      // Align with input field
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          hint: Text(isLlm ? 'Select LLM' : 'Select Language',
+              style: constants.grey12W400),
+          value: isLlm ? llmSelected : langSelected,
+          isExpanded: true,
+          onChanged: (newValue) async {
+            setState(() {
+              if (isLlm) {
                 llmSelected = newValue!;
-              });
-            },
-            items: llmOptionsList
-                .map((model) =>
-                    DropdownMenuItem(value: model, child: Text(model)))
-                .toList(),
-          ),
+              } else {
+                langSelected = newValue!;
+                AppState.instance.language = langSelected ?? '';
+              }
+            });
+
+            if (!isLlm) {
+              if (AppState.instance.language.toLowerCase() == 'telugu') {
+                AppState.instance.language = 'Telugu';
+                langId = 'te-IN';
+                dataNotFoundMsg = 'సమాచారం దొరకలేదు';
+                language = 'telugu';
+                currentVoice = {"name": "te-in-x-tef-local", "locale": "te-IN"};
+              }
+              if (AppState.instance.language.toLowerCase() == 'hindi') {
+                AppState.instance.language = 'Hindi';
+                langId = 'hi-IN';
+                dataNotFoundMsg = 'जानकारी नहीं मिली';
+                language = 'hindi';
+                currentVoice = {
+                  "name": "hi-in-x-hid-network",
+                  "locale": "hi-IN"
+                };
+              }
+              if (AppState.instance.language.toLowerCase() == 'english') {
+                AppState.instance.language = 'English';
+                langId = 'en-US';
+                dataNotFoundMsg = 'Data Not found';
+                language = 'english';
+                currentVoice = {"name": "en-us-x-iom-local", "locale": "en-US"};
+              }
+              print("12345 current voice :: ${currentVoice}");
+              await tts.setVoice(currentVoice);
+              await tts.setLanguage(langId);
+              await tts.setSpeechRate(0.5);
+              Fluttertoast.showToast(
+                  msg: "Switched to ${AppState.instance.language}");
+            }
+          },
+          items: (isLlm ? llmOptionsList : langList)
+              .map(
+                  (model) => DropdownMenuItem(value: model, child: Text(model)))
+              .toList(),
         ),
       ),
     );
@@ -965,36 +1005,23 @@ class _ChatWindowState extends State<ChatWindow>
 
   void updateChatControllerForSpeech(String text) {
     print("121212121 text:: $text");
-    if (text.startsWith('how')) {
-      text = text.replaceAll('how', 'How');
+    if (text.contains('తప్రాణా')) {
+      text = text.replaceAll('తప్రాణా', 'తప్రానా');
     }
-    if (text.contains('which')) {
-      text = text.replaceAll('which', 'Which');
+    if (text.contains('తప్పానా')) {
+      text = text.replaceAll('తప్పానా', 'తప్రానా');
     }
-    if (text.contains('John')) {
-      text = text.replaceAll('John', 'zone');
+    if (text.contains('తప్రాన')) {
+      text = text.replaceAll('తప్రాన', 'తప్రానా');
     }
-
-    if (text.contains('what')) {
-      text = text.replaceAll('what', 'What');
+    if (text.contains('తప్రాణ')) {
+      text = text.replaceAll('తప్రాణ', 'తప్రానా');
     }
-    if (text.contains('no water')) {
-      text = text.replaceAll('no water', 'No Water');
+    if (text.contains('తప్పురానా')) {
+      text = text.replaceAll('తప్పురానా', 'తప్రానా');
     }
-    if (text.contains('Balli Mela')) {
-      text = text.replaceAll('Balli Mela', 'Balimela');
-    }
-    if (text.contains('Reservoir')) {
-      text = text.replaceAll('Reservoir', 'reservoir');
-    }
-    // if (text.toLowerCase().contains('this')) {
-    //   text = text.replaceAll('this', 'these');
-    // }
-    if (text.contains('could')) {
-      text = text.replaceAll('could', 'Could');
-    }
-    if (text.contains('life')) {
-      text = text.replaceAll('life', 'live');
+    if (text.contains('తప్పు రానా')) {
+      text = text.replaceAll('తప్పు రానా', 'తప్రానా');
     }
     chatController.text = text;
     setState(() {});
@@ -1115,6 +1142,7 @@ class _ChatWindowState extends State<ChatWindow>
       "message": text,
       "image_url": imageUrl ?? '',
       "language": AppState.instance.language.toLowerCase(),
+      // "llm": 'deepseek-v2:latest',
       "llm": 'chatgpt-4o',
       "model_uuid": AppState.instance.modelUUID,
       "mode": '',
@@ -1125,7 +1153,7 @@ class _ChatWindowState extends State<ChatWindow>
     chatController.clear();
     capturedPhoto = null;
 
- /*   await Future.delayed(const Duration(seconds: 3));
+    /*   await Future.delayed(const Duration(seconds: 3));
 
     String timeStampUpdated = DateTime.now().millisecondsSinceEpoch.toString();
     String image = '';
@@ -1212,9 +1240,10 @@ class _ChatWindowState extends State<ChatWindow>
         // await startListeningBg();
       },
     );
-    print(
-        "wewewewewew AppState.instance.triggeredWord ::  ${AppState.instance.triggeredWord}");
+
+    print("wewewewewew AppState.instance.triggeredWord ::  ${AppState.instance.triggeredWord}");
     print("wewewewewew session $sessionId");
+
     if (available && AppState.instance.triggeredWord == "") {
       // AppState.instance.triggeredWord = await startListenings(sessionId);
     }
@@ -1400,8 +1429,7 @@ Future<void> startListeningToYes(String sessionId, String word) async {
   print("wewewewewew trigger word :: ${AppState.instance.triggeredWord}");
   await speechToText.stop();
   print("wewewewewew speechToText.isListening:: ${speechToText.isListening}");
-  DatabaseReference ref = FirebaseDatabase.instance.ref(
-      "CHAT_BOT_CHANGELOG/${constants.projectId}/${AppState.instance.userId}/${sessionId}");
+  DatabaseReference ref = FirebaseDatabase.instance.ref("CHAT_BOT_CHANGELOG/${constants.projectId}/${AppState.instance.userId}/$sessionId");
   SpeechRecognitionResult result;
 
   await speechToText.listen(
@@ -1425,8 +1453,7 @@ Future<void> startListeningToYes(String sessionId, String word) async {
               "changelog": 'No Change in $AppState.instance.triggeredWord Data'
             });*/
           Future.delayed(const Duration(seconds: 2), () async {
-            print(
-                "wewewewewe AppState.instance.triggeredWord after completion::${AppState.instance.triggeredWord}");
+            print("wewewewewe AppState.instance.triggeredWord after completion::${AppState.instance.triggeredWord}");
             await ref.orderByKey().limitToLast(1).once().then((event) async {
               DataSnapshot snapshot = event.snapshot;
               print("values::${snapshot.value}");
