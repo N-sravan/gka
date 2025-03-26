@@ -214,7 +214,6 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                       // If switching to Always listening mode
                       // autoSessionId = const Uuid().v4();
                       await tts.stop();
-                      await initializeService();
                     } else {
                       listeningActive.value = false;
                       await tts.stop();
