@@ -16,6 +16,7 @@ import 'package:gka/chat/view/drawer_widget.dart';
 import 'package:gka/services/api_provider.dart';
 import 'package:gka/utils/app_state.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io' as platform;
 import 'package:uuid/uuid.dart';
@@ -51,6 +52,7 @@ class ChatWindow extends StatefulWidget {
 class _ChatWindowState extends State<ChatWindow>
     with AutomaticKeepAliveClientMixin {
   var scrollControllerListView = ScrollController();
+  final SupabaseClient supabase = Supabase.instance.client;
   int start = 0;
   int end = 0;
   String? _newVoiceText;
@@ -58,7 +60,6 @@ class _ChatWindowState extends State<ChatWindow>
   int prevChatLengthHistory = 0;
   int c = 0;
   int responseCount = 1;
-  String sessionId = "";
   String queryString = "";
   TextEditingController chatController = TextEditingController();
   bool speechToTextOn = false;
@@ -198,7 +199,7 @@ class _ChatWindowState extends State<ChatWindow>
         print("FLKJFJLJF STATUS ${status}");
       },
     );
-    // print("Available voices ${await textToSpeech.getVoiceByLang('hi-IN')}");
+
     print("Available languages ${await tts.getLanguages}");
     await tts.setLanguage(langId);
     await tts.setSpeechRate(0.5);
@@ -226,8 +227,7 @@ class _ChatWindowState extends State<ChatWindow>
           onResult: _onSpeechResult,
           pauseFor: const Duration(seconds: 3),
           listenFor: const Duration(seconds: 30),
-          cancelOnError: true
-      );
+          cancelOnError: true);
     } catch (e) {
       print('EXCEPTIONKJSKFJK An exception occurred: $e');
     }
@@ -254,8 +254,7 @@ class _ChatWindowState extends State<ChatWindow>
           // onResult: _onSpeechResultForAutoMode,
           pauseFor: const Duration(seconds: 5),
           listenFor: const Duration(seconds: 45),
-          cancelOnError: true
-      );
+          cancelOnError: true);
     } catch (e) {
       print('EXCEPTIONKJSKFJK An exception occurred: $e');
     }
@@ -419,289 +418,118 @@ class _ChatWindowState extends State<ChatWindow>
               color: Colors.grey[100],
               child: Column(
                 children: [
-                  !AppState.instance.isListeningMode
-                      ? Expanded(
-                          child: StreamBuilder(
-                            stream: FirebaseDatabase.instance.ref("${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}").onValue,
-                            builder: (context, AsyncSnapshot snapshot) {
-                              if (snapshot.hasData && snapshot.data != null) {
-                                List<ChatBubble> messageList = [];
-                                List<ChatBubble> tempList = [];
-                                var data = (snapshot.data! as DatabaseEvent).snapshot.value ?? {};
-                                data = data as Map<dynamic, dynamic>;
-                                Map<String, String> dataTsMapping = {};
-                                dataTimer?.cancel();
-                                loadingTimer?.cancel();
-                                var sortedByKeyMap = Map.fromEntries(data
-                                    .entries
-                                    .toList()
-                                  ..sort((e1, e2) => e1.key.compareTo(e2.key)));
+                  Expanded(
+                    child: StreamBuilder<List<Map<String, dynamic>>>(
+                      stream: supabase
+                          .from(constants.projectId)
+                          .stream(primaryKey: [
+                        'user_uuid',
+                        'session_uuid',
+                      ]).eq('session_uuid', AppState.instance.sessionId),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return const Center(
+                              child: CircularProgressIndicator());
+                        }
+                        final messages = snapshot.data!;
+                        List<ChatBubble> messageList = [];
+                        Map<String, String> dataTsMapping = {};
+                        List<String> followUpQuestionsList = [];
+                        Map<String, String> cotMapping = {};
+                        Map<String, String> maps = {};
 
-                                List<String> thoughtsList = [];
-                                List<String> followUpQuestionsList = [];
-                                Map<String, String> cotMapping = {};
-                                Map<String, String> maps = {};
+                        for (var messageEntry in messages) {
+                          final messageData = messageEntry['data'];
+                          final isUser = messageData['is_user'] ?? false;
+                          final message = messageData['message'] ?? '';
+                          final imageUrl = messageData['image_url'] ?? '';
+                          final tableColumnData = messageData['sql_df_columns'];
+                          final tableRowData =
+                              messageData['sql_df_values'] != null
+                                  ? jsonDecode(messageData['sql_df_values'])
+                                  : null;
+                          final logMessage = messageData['log'] ?? '';
+                          final token = messageData['token'] ?? '';
 
-                                sortedByKeyMap.forEach((key, value) async {
-                                  if (key != "cart") {
-                                    final datalast =
-                                        Map<String, dynamic>.from(value);
-                                    if (datalast['is_user']) {
-                                      thoughtsList.clear();
-                                      maps.clear();
-                                      cotMapping.clear();
-                                      messageList.add(ChatBubble(
-                                        isMapView: true,
-                                        expandChainOfThought: false,
-                                        text: datalast['message'] ?? '',
-                                        isUser: datalast['is_user'],
-                                        imageUrl: datalast['image_url'] ?? '',
-                                        tableColumnData:
-                                            datalast['sql_df_columns'],
-                                        tableRowData:
-                                            datalast['sql_df_values'] != null
-                                                ? jsonDecode(
-                                                    datalast['sql_df_values'])
-                                                : null,
-                                        logMessage: datalast['log'] ?? '',
-                                        hasErrorLog: false,
-                                        timestampMapping: dataTsMapping,
-                                        chainOfThoughts: {},
-                                        token: datalast['token'] ?? '',
-                                        followUpQuestions: [],
-                                      ));
-                                    } else {
-                                      if (datalast['chain_of_thought'] !=
-                                          null) {
-                                        (datalast['chain_of_thought'] as Map)
-                                            .forEach((key, value) {
-                                          maps[key.toString()] =
-                                              value.toString();
-                                        });
-                                        cotMapping.addAll(maps);
-                                      }
-                                      if (datalast['follow_up_questions'] !=
-                                          null) {
-                                        List<Object?> followUpQuestions =
-                                            datalast['follow_up_questions'];
-                                        followUpQuestionsList =
-                                            followUpQuestions
-                                                .map((item) => item.toString())
-                                                .toList();
-                                      }
-                                      // print("follow:$followUpQuestionsList");
+                          if (!isUser) {
+                            if (messageData['chain_of_thought'] != null) {
+                              (messageData['chain_of_thought'] as Map)
+                                  .forEach((key, value) {
+                                maps[key.toString()] = value.toString();
+                              });
+                              cotMapping.addAll(maps);
+                            }
+                            if (messageData['follow_up_questions'] != null) {
+                              List<Object?> followUpQuestions =
+                                  messageData['follow_up_questions'];
+                              followUpQuestionsList = followUpQuestions
+                                  .map((item) => item.toString())
+                                  .toList();
+                            }
+                          }
 
-                                      if (datalast['is_valid_token'] != null &&
-                                          datalast['is_limit_exceeded'] !=
-                                              null) {
-                                        if (!datalast['is_valid_token'] ||
-                                            datalast['is_limit_exceeded']) {
-                                          Fluttertoast.showToast(msg: "Session Expired");
-                                          WidgetsBinding.instance
-                                              .addPostFrameCallback((_) {
-                                            Navigator.pop(context);
-                                          });
-                                        }
-                                      }
-                                      // messageList.last.expandChainOfThought = false;
-                                      messageList.add(ChatBubble(
-                                        isMapView: true,
-                                        expandChainOfThought: false,
-                                        text: datalast['message'] ?? '',
-                                        isUser: datalast['is_user'],
-                                        imageUrl: datalast['image_url'] ?? '',
-                                        tableColumnData:
-                                            datalast['sql_df_columns'],
-                                        tableRowData:
-                                            datalast['sql_df_values'] != null
-                                                ? jsonDecode(
-                                                    datalast['sql_df_values'])
-                                                : null,
-                                        logMessage: datalast['log'] ?? '',
-                                        hasErrorLog: false,
-                                        timestampMapping: dataTsMapping,
-                                        chainOfThoughts:
-                                            Map<String, String>.from(
-                                                cotMapping),
-                                        followUpQuestions:
-                                            followUpQuestionsList,
-                                        token: datalast['token'] ?? '',
-                                      ));
-                                    }
-                                  }
-                                });
+                          messageList.add(ChatBubble(
+                            text: message,
+                            isUser: isUser,
+                            imageUrl: imageUrl,
+                            tableColumnData: tableColumnData,
+                            tableRowData: tableRowData,
+                            logMessage: logMessage,
+                            hasErrorLog: false,
+                            timestampMapping: dataTsMapping,
+                            chainOfThoughts:
+                                Map<String, String>.from(cotMapping),
+                            followUpQuestions: followUpQuestionsList,
+                            token: token,
+                            isMapView: false,
+                            expandChainOfThought: false,
+                          ));
+                        }
 
-                                if (widget.isFromHistory != null &&
-                                    widget.isFromHistory == true &&
-                                    c == 0) {
-                                  if (messageList.isNotEmpty &&
-                                      !messageList[messageList.length - 1]
-                                          .isUser &&
-                                      messageList.length > prevChatLength) {
-                                    c++;
-                                  }
-                                } else {
-                                  if (messageList.isNotEmpty &&
-                                      !messageList[messageList.length - 1]
-                                          .isUser &&
-                                      messageList[messageList.length - 1]
-                                          .text
-                                          .isNotEmpty &&
-                                      messageList.length > prevChatLength) {
-                                    WidgetsBinding.instance
-                                        .addPostFrameCallback((_) {
-                                      showLoader.value = false;
-                                    });
+                        if (messageList.isNotEmpty) {
+                          messageList.last.expandChainOfThought = true;
+                        }
 
-                                    // tts.speak(messageList[messageList.length - 1].text);
-                                    _speakMessage(
-                                        messageList[messageList.length - 1]
-                                            .text);
-                                  }
-                                  prevChatLength = messageList.length;
-                                  if (messageList.isNotEmpty &&
-                                      messageList[messageList.length - 1]
-                                          .isUser) {
-                                    WidgetsBinding.instance
-                                        .addPostFrameCallback((_) {
-                                      showLoader.value = true;
-                                      tts.stop();
-                                    });
-                                  }
+                        // Show loader when user sends a message and waits for a response
+                        if (messageList.isNotEmpty) {
+                          if (messageList.isNotEmpty &&
+                              !messageList[messageList.length - 1].isUser &&
+                              messageList[messageList.length - 1]
+                                  .text
+                                  .isNotEmpty &&
+                              messageList.length > prevChatLength) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              showLoader.value = false;
+                            });
 
-                                  /*  loadingTimer =
-                                        Timer(const Duration(seconds: 4), () {
-                                      int randomIndex =
-                                          Random().nextInt(loaderMsgList.length);
-                                      if (showLoader.value) {
-                                        tts.speak(loaderMsgList[randomIndex]);
-                                      }
-                                    });*/
+                            _speakMessage(
+                                messageList[messageList.length - 1].text);
+                          }
 
-                                  dataTimer = Timer(
-                                      const Duration(seconds: 180), () async {
-                                    if (showLoader.value) {
-                                      DatabaseReference ref =
-                                          FirebaseDatabase.instance.ref(
-                                              "${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
-                                      WidgetsBinding.instance
-                                          .addPostFrameCallback((_) async {
-                                        showLoader.value = false;
-                                        String timeStamp = DateTime.now()
-                                            .millisecondsSinceEpoch
-                                            .toString();
-                                        await ref.child(timeStamp).set({
-                                          "is_user": false,
-                                          "message": dataNotFoundMsg,
-                                        });
-                                      });
-                                      await tts.speak(dataNotFoundMsg);
-                                    }
-                                  });
-                                }
-
-                                if (messageList.isNotEmpty) {
-                                  messageList.last.expandChainOfThought = true;
-                                }
-                                List<Map<String, dynamic>> mappedData = [];
-                                Map<String, dynamic>? currentQuestion = {};
-
-                                for (int i = 0; i < messageList.length; i++) {
-                                  if (messageList[i].isUser) {
-                                    currentQuestion = {
-                                      'isUser': messageList[i].isUser,
-                                      'text': messageList[i].text,
-                                      'image_url':
-                                          messageList[i].imageUrl ?? '',
-                                      'cots': {},
-                                      'followQns': [],
-                                    };
-                                    mappedData.add(currentQuestion);
-                                  } else {
-                                    if (currentQuestion != null) {
-                                      if (messageList[i].chainOfThoughts !=
-                                              null &&
-                                          messageList[i]
-                                              .chainOfThoughts!
-                                              .isNotEmpty) {
-                                        currentQuestion['cots'] =
-                                            messageList[i].chainOfThoughts;
-                                      }
-                                    }
-                                    if (currentQuestion != null &&
-                                        messageList[i].text!.isNotEmpty) {
-                                      Map<String, dynamic> data = {
-                                        'isUser': messageList[i].isUser,
-                                        'text': messageList[i].text.toString(),
-                                        'image_url':
-                                            messageList[i].imageUrl ?? '',
-                                        'cots':
-                                            messageList[i].chainOfThoughts ??
-                                                '',
-                                        'followQns':
-                                            messageList[i].followUpQuestions
-                                      };
-                                      mappedData.add(data);
-                                    }
-                                  }
-                                }
-
-                                String message;
-                                String image;
-                                bool currentIsUser;
-                                Map<String, String> cotsMap = {};
-                                List<String> questions = [];
-
-                                for (int i = 0; i < mappedData.length; i++) {
-                                  currentIsUser = mappedData[i]['isUser'];
-                                  message = mappedData[i]['text'];
-                                  cotsMap = Map<String, String>.from(
-                                      mappedData[i]['cots']);
-                                  image = mappedData[i]['image_url'] ?? '';
-                                  bool cotExpand = false;
-
-                                  questions = List<String>.from(
-                                      mappedData[i]['followQns']);
-                                  if (i == (mappedData.length - 1) &&
-                                      currentIsUser) {
-                                    cotExpand = true;
-                                  }
-
-                                  tempList.add(ChatBubble(
-                                    text: message,
-                                    isUser: currentIsUser,
-                                    chainOfThoughts: cotsMap,
-                                    imageUrl: image,
-                                    expandChainOfThought: cotExpand,
-                                    followUpQuestions: questions,
-                                    isMapView: false,
-                                  ));
-                                }
-
-                                return ListView.builder(
-                                  reverse: true,
-                                  physics:
-                                      const AlwaysScrollableScrollPhysics(),
-                                  controller: scrollControllerListView,
-                                  addAutomaticKeepAlives: true,
-                                  itemBuilder: (context, index) {
-                                    if (index < tempList.length) {
-                                      return Padding(
-                                        padding: const EdgeInsets.all(4.0),
-                                        child: tempList[
-                                            tempList.length - 1 - index],
-                                      );
-                                    }
-                                    return null;
-                                  },
-                                  itemCount: tempList.length,
-                                );
-                              }
-                              return const SizedBox();
-                            },
-                          ),
-                        )
-                      : const SizedBox(),
+                          prevChatLength = messageList.length;
+                          if (messageList.isNotEmpty &&
+                              messageList[messageList.length - 1].isUser) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              showLoader.value = true;
+                              tts.stop();
+                            });
+                          }
+                        }
+                        return ListView.builder(
+                          reverse: true,
+                          controller: scrollControllerListView,
+                          itemCount: messageList.length,
+                          itemBuilder: (context, index) {
+                            return Padding(
+                              padding: const EdgeInsets.all(4.0),
+                              child:
+                                  messageList[messageList.length - 1 - index],
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
                   Padding(
                     padding: const EdgeInsets.only(left: 50.0),
                     child: Align(
@@ -718,12 +546,10 @@ class _ChatWindowState extends State<ChatWindow>
                       ),
                     ),
                   ),
-                  !AppState.instance.isListeningMode
-                      ? Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: bottomBar(),
-                        )
-                      : const SizedBox(),
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: bottomBar(),
+                  )
                 ],
               ),
             ),
@@ -1132,40 +958,37 @@ class _ChatWindowState extends State<ChatWindow>
   }
 
   Future<void> insertDataIntoDb(String? imageUrl, String text) async {
-    DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${widget.sessionId}");
-
-    String timeStamp = DateTime.now().millisecondsSinceEpoch.toString();
-
-    await ref.child(timeStamp).set({
-      "is_user": true,
-      "message": text,
-      "image_url": imageUrl ?? '',
-      "language": AppState.instance.language.toLowerCase(),
-      // "llm": 'deepseek-v2:latest',
-      "llm": 'chatgpt-4o',
-      "model_uuid": AppState.instance.modelUUID,
-      "mode": '',
-      "token": AppState.instance.token,
-      "sm_enabled": true,
-    });
-
-    chatController.clear();
-    capturedPhoto = null;
-
-    /*   await Future.delayed(const Duration(seconds: 3));
-
-    String timeStampUpdated = DateTime.now().millisecondsSinceEpoch.toString();
-    String image = '';
-
-    if (text == 'Give inflow trend of Hirakud reservoir for next week') {
-      image = 'assets/images/hirakud.png';
+    try {
+      Map<String, dynamic> dataPayload = {
+        "is_user": true,
+        "message": "Hi",
+        "language": "english",
+        "llm": "chatgpt-4o",
+        "token":
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjlmOGU1OGEtMDA0Yi00OTc4LWI5ZmYtMzI1NjU5NTYxYjE3IiwiZXhwIjoxNzM2Nzc4NzA1fQ.0Sy08vJFBnOt4NHdiX-GjufH1tJePnLHk20eVq9Fboc",
+        "sm_enabled": false,
+        "image_url": "",
+        "super_question_agent": true,
+        "mode": "",
+        "pre_configure": false
+      };
+      print(
+          "XXXXXXX Pushed data into db - 'user_uuid': ${AppState.instance.userId}\n"
+          "'session_uuid': ${AppState.instance.sessionId},\n"
+          "'data': $dataPayload,");
+      await Supabase.instance.client.from(constants.projectId).insert({
+        'user_uuid': AppState.instance.userId,
+        'session_uuid': widget.sessionId.toString(),
+        'data': dataPayload,
+        'insert_ts': DateTime.now().millisecondsSinceEpoch,
+        'update_ts': DateTime.now().millisecondsSinceEpoch,
+      });
+      chatController.clear();
+      capturedPhoto = null;
+      // Fluttertoast.showToast(msg: "Message sent");
+    } catch (error) {
+      Fluttertoast.showToast(msg: "Error sending message");
     }
-
-    await ref
-        .child(timeStampUpdated)
-        .set({"is_user": false, "message": data[text], "image_url": image});*/
-
     setState(() {});
   }
 
@@ -1241,7 +1064,8 @@ class _ChatWindowState extends State<ChatWindow>
       },
     );
 
-    print("wewewewewew AppState.instance.triggeredWord ::  ${AppState.instance.triggeredWord}");
+    print(
+        "wewewewewew AppState.instance.triggeredWord ::  ${AppState.instance.triggeredWord}");
     print("wewewewewew session $sessionId");
 
     if (available && AppState.instance.triggeredWord == "") {
@@ -1429,7 +1253,8 @@ Future<void> startListeningToYes(String sessionId, String word) async {
   print("wewewewewew trigger word :: ${AppState.instance.triggeredWord}");
   await speechToText.stop();
   print("wewewewewew speechToText.isListening:: ${speechToText.isListening}");
-  DatabaseReference ref = FirebaseDatabase.instance.ref("CHAT_BOT_CHANGELOG/${constants.projectId}/${AppState.instance.userId}/$sessionId");
+  DatabaseReference ref = FirebaseDatabase.instance.ref(
+      "CHAT_BOT_CHANGELOG/${constants.projectId}/${AppState.instance.userId}/$sessionId");
   SpeechRecognitionResult result;
 
   await speechToText.listen(
@@ -1453,7 +1278,8 @@ Future<void> startListeningToYes(String sessionId, String word) async {
               "changelog": 'No Change in $AppState.instance.triggeredWord Data'
             });*/
           Future.delayed(const Duration(seconds: 2), () async {
-            print("wewewewewe AppState.instance.triggeredWord after completion::${AppState.instance.triggeredWord}");
+            print(
+                "wewewewewe AppState.instance.triggeredWord after completion::${AppState.instance.triggeredWord}");
             await ref.orderByKey().limitToLast(1).once().then((event) async {
               DataSnapshot snapshot = event.snapshot;
               print("values::${snapshot.value}");

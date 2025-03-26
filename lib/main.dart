@@ -32,6 +32,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '../../login/model/department_user_permission_response.dart' as response;
 import 'dart:developer' as developer;
@@ -61,7 +62,8 @@ int prevChatLength = 0;
 // String AppState.instance.triggeredWord = "";
 PermissionStatus? notificationStatus;
 
-ValueNotifier<SpeechStatus> speechStatus = ValueNotifier<SpeechStatus>(SpeechStatus.idle);
+ValueNotifier<SpeechStatus> speechStatus =
+    ValueNotifier<SpeechStatus>(SpeechStatus.idle);
 
 enum SpeechStatus { listening, speaking, idle }
 
@@ -73,6 +75,8 @@ void main() async {
 
   await setProjectSpecificValues();
 
+  await _initSupabase();
+
   /*  SystemChrome.setPreferredOrientations([
     DeviceOrientation.landscapeRight, // Set landscape orientation
     DeviceOrientation.landscapeLeft,
@@ -83,6 +87,7 @@ void main() async {
   setupLocator();
 
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: []);
+
 /*  SystemChrome.setPreferredOrientations([
     DeviceOrientation.landscapeRight,
     DeviceOrientation.landscapeLeft,
@@ -149,6 +154,14 @@ Future<void> setProjectSpecificValues() async {
     constants.appTitle = constants.kuidfctring;
     constants.baseUrl = constants.kuidfcBaseUrl;
   }*/
+}
+
+_initSupabase() async {
+  await Supabase.initialize(
+    url: 'https://nawrims.vassarlabs.com/supabase',
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNzIyNTM3MDAwLAogICJleHAiOiAxODgwMzAzNDAwCn0.YqyV3WH6Y39UnjAuGoJZCqPtRKOGzICweUE59mG83So',
+  );
 }
 
 Future<bool> requestPermissions() async {
@@ -404,7 +417,8 @@ void onStart(ServiceInstance service) async {
   String sessionId = const Uuid().v4();
 
   /// OPTIONAL when use custom notification
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
   if (service is AndroidServiceInstance) {
     service.on('setAsForeground').listen((event) {
@@ -498,7 +512,8 @@ Future<void> initializeSpeechToText(String sessionId) async {
       // await startListeningBg();
     },
   );
-  print("wewewewewew AppState.instance.triggeredWord ::  ${AppState.instance.triggeredWord}");
+  print(
+      "wewewewewew AppState.instance.triggeredWord ::  ${AppState.instance.triggeredWord}");
   print("wewewewewew session $sessionId");
   if (available && AppState.instance.triggeredWord == "") {
     AppState.instance.triggeredWord = await startListenings(sessionId);
@@ -969,10 +984,10 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(
               builder: (context) => LoginScreenWidget(role: data ?? ''),
             );
-          // } else if (settings.name == constants.farmerLoginRoute) {
-          //   return MaterialPageRoute(
-          //     builder: (context) => FarmerLoginScreenWidget(role: data ?? ''),
-          //   );
+            // } else if (settings.name == constants.farmerLoginRoute) {
+            //   return MaterialPageRoute(
+            //     builder: (context) => FarmerLoginScreenWidget(role: data ?? ''),
+            //   );
           } else if (settings.name == constants.departmentLoginRoute) {
             return MaterialPageRoute(
               builder: (context) => LoginScreenWidget(role: data ?? ''),

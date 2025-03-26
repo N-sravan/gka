@@ -45,7 +45,7 @@ class AppState {
   bool isVoiceUpdateEnabled = false;
   bool isExternalLLM = false;
   String modelName = "chatgpt-3.5";
-  String modelUUID = "43c31fae-3469-4c87-a73d-8648e9c78663";
+  String modelUUID = "43c31fae-3469-4c87-a73d-8648e9c78f3663";
   late String locUUID;
   late String locType;
   late String locName;
