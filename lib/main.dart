@@ -19,7 +19,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:gka/login/repository/login_repo.dart';
 import 'package:gka/login/view/login_view.dart';
 import 'package:gka/login/view_model/login_view_model.dart';
-import 'package:gka/permissions/view_model/permissions_view_model.dart';
 import 'package:gka/splash/view/splash_view.dart';
 import 'package:gka/splash/view_model/splash_view_model.dart';
 import 'package:provider/provider.dart';
@@ -86,9 +85,6 @@ void main() async {
         ),
         ChangeNotifierProvider(
           create: (_) => SplashViewModel(),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => PermissionsViewModel(),
         ),
         ChangeNotifierProvider(
           create: (_) => HomeViewModel(repo: locator<HomeRepository>()),
