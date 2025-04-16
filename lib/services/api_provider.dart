@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_native_image/flutter_native_image.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
+import '../login/model/user_permission_response_model.dart';
 import '../utils/app_state.dart';
 import '../utils/common_constants.dart' as constants;
 import '../login/model/department_user_permission_response.dart';
@@ -76,23 +77,31 @@ class ApiProvider {
     return null;
   }
 
-  @override
-  Future<DepartmentUserPermissionsResponse>
-      fetchUserPermissionsForDepartmentLogin(BuildContext context) async {
-    Map<String, String> authHeaders = {
-      constants.headerContentType: constants.headerJson,
-      'Authorization': 'Bearer ${AppState.instance.token}',
-      'Csrf-Token': AppState.instance.csrfToken
-    };
-    String authUrl =
-        "${constants.baseUrl}${constants.userPermissionsEndPoint}${AppState.instance.userId}";
-    http.Response response = await http.get(
-      Uri.parse(authUrl),
-      headers: authHeaders,
-    );
-    Map<String, dynamic> responseMap = jsonDecode(response.body);
-    DepartmentUserPermissionsResponse userPermissionsResult =
-        DepartmentUserPermissionsResponse.fromJson(responseMap);
-    return userPermissionsResult;
-  }
+    Future<UserPermissionsResponse?> fetchUserPermissions(
+        BuildContext context) async {
+      // ApiServiceProvider apiServiceProvider = ApiServiceProvider();
+      Map<String, String> authHeaders = {
+        constants.headerContentType: constants.headerJson,
+        'Authorization': 'Bearer ${AppState.instance.token}',
+      };
+      // authHeaders.addAll(apiServiceProvider.headers);
+      String authUrl = constants.userPermissionsEndPoint;
+      http.Response response = await http.get(
+        Uri.parse(authUrl),
+        headers: authHeaders,
+      );
+      if (response.statusCode == 200) {
+        Map<String, dynamic> responseMap = jsonDecode(response.body);
+        if (responseMap["result"]) {
+          AppState.instance.userPermissions = responseMap["response"]["rolePermissions"] ?? {};
+          AppState.instance.userMetaDataMap =
+              responseMap["response"]["meta"] ?? {};
+          UserPermissionsResponse userPermissionsResult =
+              UserPermissionsResponse.fromJson(responseMap);
+          return userPermissionsResult;
+        }
+        return null;
+      }
+      return null;
+    }
 }

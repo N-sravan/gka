@@ -9,16 +9,25 @@ import 'package:permission_handler/permission_handler.dart'
     as permission_handler;
 import '../../../utils/shared_preference_util.dart';
 import '../../shared/loading_view_model.dart';
+import '../../utils/network_utils.dart';
 import '../../utils/secure_storage_util.dart';
 import '../../utils/util.dart';
 
 class SplashViewModel extends LoadingViewModel {
+  bool noInternet = false;
   checkPermissionsAndNavigate(BuildContext context) async {
-    Navigator.push(
+    if (await networkUtils.hasActiveInternet()) {
+      await _checkIfUserIsLoggedIn(context);
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreenWidget()),
+      );
+    }
+    /* Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const LoginScreenWidget()),
-    );
-    // await _checkIfUserIsLoggedIn(context);
+    );*/
   }
 
   /// Navigator function based on route argument
@@ -44,6 +53,8 @@ class SplashViewModel extends LoadingViewModel {
         .readSecureData(constants.preferenceSessionId);
     dynamic token = await SecuredStorageUtil.instance
         .readSecureData(constants.preferenceToken);
+    dynamic refreshToken = await SecuredStorageUtil.instance
+        .readSecureData(constants.preferenceRefreshToken);
 
     if (userId != null && userId.isNotEmpty && isLoggedIn) {
       AppState.instance.userId = userId!;
@@ -52,7 +63,10 @@ class SplashViewModel extends LoadingViewModel {
       AppState.instance.sessionId = sessionId;
       AppState.instance.language = 'english';
       AppState.instance.isEnglish = true;
-      _startSplashTimerAndNavigate(context, '/login');
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => ChatWindow(sessionId: AppState.instance.sessionId,)),
+      );
     } else {
       // User isn't logged in
       _startSplashTimerAndNavigate(context, '/login');

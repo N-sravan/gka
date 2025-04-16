@@ -37,6 +37,9 @@ class AppState {
   Map<String, String> cropUUIDColorMapping = {};
   Map<String, String> cropUUIDNameMapping = {};
   Map<String, dynamic> plotUUIDAndStatusMap = {};
+  Map<String, dynamic> csrfTokenUserDetails = {};
+  Map<String, dynamic> userPermissions = {};
+  Map<String, dynamic> userMetaDataMap = {};
   late String? hiveEncryptionKey;
   late String userData;
   String triggeredWord = '';

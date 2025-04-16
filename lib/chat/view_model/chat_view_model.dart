@@ -6,6 +6,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:gka/chat/model/chat_history_model.dart';
 import 'package:gka/chat/model/get_documents_response.dart';
 import 'package:gka/chat/model/get_users_response.dart';
 import 'package:gka/chat_bubble.dart';
@@ -106,6 +107,7 @@ class ChatViewModel extends LoadingViewModel {
   Map<String, String> promptTemplateIntentMapping = {};
   Map<String, List<FileResponse>> documentIdTextMapping = {};
   List<User> usersList = [];
+  List<ChatData> chatDataList = [];
   Map<String, String> toolNameDescriptionMapping = {};
   Map<String, String> modelNameUuidMapping = {};
   Map<String, String> messageTimestampMapping = {};
@@ -707,7 +709,7 @@ class ChatViewModel extends LoadingViewModel {
                 "decreased_limit": int.parse(text),
               };
         ActivityStatusResponse activityStatusResponse =
-            await repo.submitActivityStatus(params,isIncreased);
+            await repo.submitActivityStatus(params, isIncreased);
         if (activityStatusResponse != null) {
           if (activityStatusResponse.statusCode == 200) {
             return true;
@@ -743,5 +745,60 @@ class ChatViewModel extends LoadingViewModel {
 
   updateActivityStatus(String? newValue) {
     userActivity = newValue!;
+  }
+
+  Future? getChatHistory(BuildContext context) async {
+    if (await networkUtils.hasActiveInternet()) {
+      isLoading = true;
+      try {
+        ChatHistoryModel chatHistoryModel = await repo.fetchChatHistory(context);
+        chatDataList.clear();
+        if (chatHistoryModel.status == 200) {
+          if (chatHistoryModel.data.isNotEmpty) {
+            for (var item in chatHistoryModel.data) {
+              final fixedData = item.message
+                  .replaceAll("'", '"')
+                  .replaceAll('True', 'true')
+                  .replaceAll('False', 'false');
+
+              final parsedData = jsonDecode(fixedData);
+
+
+              final chatData = ChatData(
+                isUser: parsedData['is_user'],
+                message: parsedData['message'],
+              );
+              chatDataList.add(chatData);
+            }
+            isLoading = false;
+            notifyListeners();
+          } else {
+            isLoading = false;
+            notifyListeners();
+          }
+        } else {
+          isLoading = false;
+          notifyListeners();
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text(constants.genericErrorMsg),
+          ));
+        }
+      } catch (e) {
+        isLoading = false;
+        notifyListeners();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(constants.genericErrorMsg),
+        ));
+        Util. instance
+            .logMessage('Chat View Model', 'Error while authenticating $e');
+      }
+    } else {
+      isLoading = false;
+      notifyListeners();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(constants.noNetworkAvailability),
+      ));
+    }
+    return null;
   }
 }

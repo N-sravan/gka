@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/material.dart';
 import 'package:gka/chat/model/activity_status_response.dart';
+import 'package:gka/chat/model/chat_history_model.dart';
 import 'package:gka/chat/model/get_documents_response.dart';
 import 'package:gka/chat/model/get_users_response.dart';
 import 'package:http/http.dart' as http;
@@ -35,6 +36,8 @@ abstract class ChatRepository {
   Future<AvailabeModelResponse> fetchModels(BuildContext context);
 
   Future<GetDocumentsResponseModel> fetchDocuments(BuildContext context);
+
+  Future<ChatHistoryModel> fetchChatHistory(BuildContext context);
 
   Future<UserResponseModel> fetchUsers(BuildContext context);
 
@@ -285,6 +288,27 @@ class ChatRepositoryImpl extends ChatRepository {
     GetDocumentsResponseModel getDocumentsResponseModel =
         GetDocumentsResponseModel.fromJson(responseMap);
     return getDocumentsResponseModel;
+  }
+
+  @override
+  Future<ChatHistoryModel> fetchChatHistory(BuildContext context) async {
+    Map<String, String> authHeaders = {
+      constants.headerContentType: constants.headerJson
+    };
+
+    Map<String, dynamic> params = {
+      "user_id": AppState.instance.userId,
+      "session_id": AppState.instance.sessionId
+    };
+    String authUrl = 'https://apaims2.0.vassarlabs.com/chatbot/chat/get-chat-history';
+    // String authUrl = 'http://192.168.18.40:8000/chat/get-chat-history';
+    String data = jsonEncode(params);
+    var response = await http.post(Uri.parse(authUrl), headers: authHeaders, body: data);
+
+    Map<String, dynamic> responseMap = jsonDecode(response.body);
+
+    ChatHistoryModel chatHistoryModel = ChatHistoryModel.fromJson(responseMap);
+    return chatHistoryModel;
   }
 
   @override

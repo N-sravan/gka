@@ -40,6 +40,7 @@ const String preferenceUserStateUUID = 'stateUUID';
 const String preferenceUserDistrict = 'userDistrict';
 const String preferenceUserDistrictUUID = 'districtUUID';
 const String hiveEncryptionKey = 'hiveKey';
+const String preferenceCsrfTokenUserDetails = 'csrfTokenUserDetails';
 
 //AWS S3 constants
 const String accessKey = 'AKIAJNVL3G7MZO7M5TXA';
@@ -86,8 +87,8 @@ const String getFilesEndPoint = 'rag/get_rag_data';
 // const String deleteFileEndPoint = 'rag/delete_rag_data';
 /*const String krishidsBaseUrl =  'http://agriwise.vassarlabs.com/api';*/ //-
 
-const String loginEndpoint =
-    'https://gowater-staging.vassarlabs.com/um/api/getUserDetailsForChatbot/';
+const String loginEndpoint = 'https://gowater-staging.vassarlabs.com/um/api/getUserDetailsForChatbot/';
+const String loginEndpointForAcessToken = 'https://apaims2.0.vassarlabs.com/um/authenticate-user';
 const String loginEndpointForTN =
     'https://tnwrims.vassarlabs.com/um/api/getUserDetailsForChatbot/';
 const String saveFcmTokenEndpoint = 'fcm_tokens/save_token';
@@ -96,8 +97,10 @@ const String getAvailabeModelsEndpoint = 'get_available_models';
 const String getAvailabePromptsEndpoint = 'get_all_prompt_templates';
 const String logoutEndpoint =
     'auth/realms/agriwiserealm/protocol/openid-connect/logout';
-const String csrfEndPoint = 'um/generate-csrf-token';
-const String userPermissionsEndPoint = 'um/user-permissions/';
+const String csrfEnd = 'um/generate-csrf-token';
+const String csrfEndPoint = 'https://apaims2.0.vassarlabs.com/um/generate-csrf-token';
+const String userPermissions = 'um/user-permissions/';
+const String userPermissionsEndPoint = 'https://apaims2.0.vassarlabs.com/um/user-permissions';
 const String getToolsEndpoint = 'tool_inventory/get_tools';
 const String updatePromptTemplateEndpoint = 'update_prompt_template';
 const String createPromptTemplateEndpoint = 'create_prompt_template';

@@ -67,7 +67,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final permissionsGranted = await requestPermissions();
 
-  await _initSupabase();
+  // await _initSupabase();
 
 
   setupLocator();

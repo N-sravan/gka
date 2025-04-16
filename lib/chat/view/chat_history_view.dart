@@ -24,13 +24,18 @@ class _ChatHistoryViewState extends State<ChatHistoryView> {
   void initState() {
     super.initState();
     viewModel = Provider.of<ChatViewModel>(context, listen: false);
-    WidgetsBinding.instance.addPostFrameCallback((_) {});
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await viewModel.getChatHistory(context);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Consumer<ChatViewModel>(
       builder: (_, model, child) {
+        if (model.isLoading) {
+          return child ?? const SizedBox();
+        }
         return WillPopScope(
           onWillPop: () async {
             return true;
@@ -42,77 +47,53 @@ class _ChatHistoryViewState extends State<ChatHistoryView> {
               elevation: 0,
               title: Text('Chat History', style: constants.black16W500),
             ),
-            body: Container(
-              color: Colors.grey[100],
-              child: Column(
-                children: [
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: StreamBuilder(
-                        stream: FirebaseDatabase.instance.ref("${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/").onValue,
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return const Padding(
-                              padding: EdgeInsets.all(120.0),
-                              child: Center(
-                                  child: CircularProgressIndicator(
-                                strokeWidth: 5,
-                                color: Colors.black,
-                              )),
-                            );
-                          }
-                          if (snapshot.hasError) {
-                            return Text('Error: ${snapshot.error}');
-                          }
-                          if (snapshot.hasData && snapshot.data == null) {
-                            return const Padding(
-                                padding: EdgeInsets.all(8.0),
-                                child: Center(
-                                  child: Text('No Past History'),
-                                ));
-                          }
-                          var data = (snapshot.data!).snapshot.value ?? {};
-                          print("DATAFJLDLFHGLD $data");
-                          data = data as Map<dynamic, dynamic>;
-
-                          var sortedByKeyMap = Map.fromEntries(
-                              data.entries.toList()
-                                ..sort((e1, e2) => e1.key.compareTo(e2.key)));
-                          String sessionId = '';
-                          String title = '';
-                          Map<String, String> sessionTitleMapping = {};
-                          sortedByKeyMap.forEach((key, value) {
-                            sessionId = key;
-                            if (value != null) {
-                              final datalast = Map<String, dynamic>.from(value);
-                              if (datalast != null) {
-                                bool titleValue = false;
-                                datalast.forEach((key, value) {
-                                  if (value['isUser'] &&
-                                      value['message'] != null &&
-                                      value['message'].isNotEmpty &&
-                                      !titleValue) {
-                                    title = value['message'];
-                                    titleValue = true;
-                                  }
-                                });
-                              }
-                              sessionTitleMapping[sessionId] = title;
-                            }
-                          });
-                          return Column(
-                            children: generateListTiles(sessionTitleMapping),
-                          );
-                        },
-                      ),
+            body: viewModel.chatDataList.isNotEmpty
+                ? Expanded(
+                    child: ListView.builder(
+                      itemCount: viewModel.chatDataList.length,
+                      itemBuilder: (context, index) {
+                        final chat = viewModel.chatDataList[index];
+                        return ChatBubble(
+                          text: chat.message,
+                          isUser: chat.isUser,
+                          isMapView: false,
+                          imageUrl: null,
+                          tableColumnData: null,
+                          tableRowData: null,
+                          logMessage: null,
+                          errorLog: null,
+                          hasErrorLog: false,
+                          timestampMapping: null,
+                          sessionId: null,
+                          chainOfThoughts: null,
+                          followUpQuestions: [],
+                          token: null,
+                          expandChainOfThought: false,
+                          sessionExpired: false,
+                        );
+                      },
+                    ),
+                  )
+                : const Expanded(
+                    child: Center(
+                      child: Text('No Chat history!'),
                     ),
                   ),
-                ],
-              ),
-            ),
           ),
         );
       },
+      child: Scaffold(
+        appBar: AppBar(
+          elevation: constants.appBarElevation,
+          backgroundColor: Colors.black,
+        ),
+        body: Container(
+          width: MediaQuery.of(context).size.width,
+          height: MediaQuery.of(context).size.height,
+          color: Colors.white,
+          child: constants.indicator,
+        ),
+      ),
     );
   }
 

@@ -15,6 +15,9 @@ abstract class LoginRepository {
   Future<SessionDetails?> authentication(
       Map<String, String> params, BuildContext context);
 
+  Future<LoginResult> authenticate(
+      Map<String, String> params, BuildContext context);
+
   Future fetchCsrfToken(BuildContext context);
 
   Future<int?> saveFcmToken(BuildContext context);
@@ -22,6 +25,28 @@ abstract class LoginRepository {
 
 /// Concrete class implementation for the login repository
 class LoginRepositoryImpl extends LoginRepository {
+  @override
+  Future<LoginResult> authenticate(
+      Map<String, String> params, BuildContext context) async {
+    String credentials = '${params['username']}:${params['password']}';
+
+    String encoded = base64Encode(utf8.encode(credentials));
+    Map<String, String> authHeaders = {
+      constants.headerContentType: constants.headerJson,
+      'Authorization': 'Basic $encoded'
+    };
+    String authUrl = constants.loginEndpointForAcessToken;
+    http.Response response = await http.post(
+      Uri.parse(authUrl),
+      headers: authHeaders,
+    );
+    Map<String, dynamic> responseMap = jsonDecode(response.body);
+
+    LoginResult loginResult = LoginResult.fromJson(responseMap['response']);
+    loginResult.statusCode = response.statusCode;
+    return loginResult;
+  }
+
   @override
   Future<int?> saveFcmToken(BuildContext context) async {
     Map<String, dynamic> params = {
@@ -56,7 +81,7 @@ class LoginRepositoryImpl extends LoginRepository {
       constants.headerContentType: constants.headerJson,
       'Authorization': 'Bearer ${AppState.instance.token}'
     };
-    String authUrl = constants.baseUrl + constants.csrfEndPoint;
+    String authUrl = constants.csrfEndPoint;
     http.Response response = await http.get(
       Uri.parse(authUrl),
       headers: authHeaders,
@@ -84,7 +109,8 @@ class LoginRepositoryImpl extends LoginRepository {
 
     Map<String, dynamic> responseMap = jsonDecode(response.body);
 
-    SessionDetails sessionDetails = SessionDetails.fromJson(responseMap['session_details']);
+    SessionDetails sessionDetails =
+        SessionDetails.fromJson(responseMap['session_details']);
     return sessionDetails;
   }
 }

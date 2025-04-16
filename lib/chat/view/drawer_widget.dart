@@ -33,22 +33,12 @@ class _DrawerWidgetState extends State<DrawerWidget> {
   bool isHindi = false;
   bool isListeningMode = false;
 
-  // bool AppState.instance.isListeningMode = false;
   Timer? periodicTimer;
 
   // late ChatViewModel viewModel;
 
   @override
   void initState() {
-    AppState.instance.mode = 'dashboard';
-    mode = AppState.instance.mode;
-/*    if (mode.isNotEmpty) {
-      if (mode == 'data_interaction_chat') {
-        isDisplay = true;
-      } else {
-        isDisplay = false;
-      }
-    }*/
     // viewModel = Provider.of<ChatViewModel>(context, listen: false);
     super.initState();
   }
@@ -56,6 +46,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
   @override
   Widget build(BuildContext context) {
     return Drawer(
+      backgroundColor: Colors.white,
       child: Column(
         children: [
           Expanded(
@@ -66,7 +57,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                   height: constants.appDrawerHeaderHeight,
                   child: DrawerHeader(
                     decoration: const BoxDecoration(
-                      color: Color(0XFF55A18F),
+                      color: Colors.blue,
                     ),
                     child: Align(
                       alignment: Alignment.bottomLeft,
@@ -97,182 +88,24 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                   ),
                 ),
                 ListTile(
-                  title: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Notifications",
-                        style: constants.appBarListTileTextStyle,
-                      ),
-                      const Icon(Icons.notifications),
-                    ],
-                  ),
-                  onTap: () {
-                    // Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const NotificationsView(),
-                      ),
-                    );
-                  },
-                ),
-                AppState.instance.role == 'fieldwise super admin'
-                    ? ListTile(
-                        trailing: const Icon(Icons.upload_file),
-                        title: Row(
-                          children: [
-                            Text(
-                              "User Management",
-                              style: constants.appBarListTileTextStyle,
-                            ),
-                          ],
-                        ),
-                        onTap: () {
-                          // Navigator.pop(context);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const UserManagementView(),
-                            ),
-                          );
-                        },
-                      )
-                    : const SizedBox(),
-                AppState.instance.role == 'fieldwise super admin'
-                    ? ListTile(
-                        trailing: const Icon(Icons.upload_file),
-                        title: Row(
-                          children: [
-                            Text(
-                              "Knowledge Bank Management",
-                              style: constants.appBarListTileTextStyle,
-                            ),
-                          ],
-                        ),
-                        onTap: () {
-                          // Navigator.pop(context);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const DocumentsView(),
-                            ),
-                          );
-                        },
-                      )
-                    : const SizedBox(),
-                ListTile(
-                  trailing: const Icon(Icons.manage_accounts),
+                  trailing: const Icon(Icons.history),
                   title: Row(
                     children: [
                       Text(
-                        "Prompt Management",
+                        "Chat History",
                         style: constants.appBarListTileTextStyle,
                       ),
                     ],
                   ),
                   onTap: () {
-                    // Navigator.pop(context);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const PromptManagementView(),
+                        builder: (context) => const ChatHistoryView(),
                       ),
                     );
                   },
                 ),
-                ListTile(
-                  trailing: Transform.scale(
-                      scale: 0.60,
-                      child: Switch(
-                        inactiveThumbColor: Colors.black,
-                        activeColor: Colors.green,
-                        value: isListeningMode,
-                        onChanged: (bool value) {
-                          setState(() {
-                            isListeningMode = !isListeningMode;
-                          });
-                        },
-                      )),
-                  onTap: () async {
-                    AppState.instance.isListeningMode = isListeningMode;
-                    print(
-                        "AppState.instance.isListeningMode::${AppState.instance.isListeningMode}");
-                    Navigator.pop(context);
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ChatWindow(
-                          isFromHistory: false,
-                          // isFirstTime: widget.isFirstTime!,
-                          sessionId: widget.sessionId!,
-                        ),
-                      ),
-                    );
-                    if (AppState.instance.isListeningMode) {
-                      // If switching to Always listening mode
-                      // autoSessionId = const Uuid().v4();
-                      await tts.stop();
-                    } else {
-                      listeningActive.value = false;
-                      await tts.stop();
-                      final service = FlutterBackgroundService();
-                      var isRunning = await service.isRunning();
-                      if (isRunning) {
-                        service.invoke("stopService");
-                      }
-                      // await _speechToText.stop(); // Stop speech recognition
-                      if (periodicTimer != null && periodicTimer!.isActive) {
-                        periodicTimer?.cancel();
-                      }
-                    }
-                  },
-                  title: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Conversational Mode",
-                        style: constants.appBarListTileTextStyle,
-                      ),
-                    ],
-                  ),
-                ),
-/*
-                ListTile(
-                  trailing: Transform.scale(
-                    scale: 0.60, // Reduce the size of the switch
-                    child: Switch(
-                      inactiveThumbColor: Colors.black,
-                      activeColor: Colors.green,
-                      value: !AppState.instance.isEnglish,
-                      onChanged: (bool value) {
-                        setState(() {
-                          AppState.instance.isEnglish =
-                              !AppState.instance.isEnglish;
-                          AppState.instance.language = 'hindi';
-                          print("lang::${AppState.instance.language}");
-                          Navigator.pop(context);
-                          Navigator.pop(context);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ChatWindow(
-                                isFromHistory: false,
-                                sessionId: widget.sessionId,
-                              ),
-                            ),
-                          );
-                        });
-                      },
-                    ),
-                  ),
-                  title: Text(
-                    "Hindi Language",
-                    style: constants.appBarListTileTextStyle,
-                  ),
-                ),
-*/
               ],
             ),
           ),

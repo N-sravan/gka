@@ -150,8 +150,8 @@ class _ChatBubbleState extends State<ChatBubble> {
                                       color: widget.isUser
                                           ? const Color(0xffE2E3E4)
                                               .withOpacity(0.6)
-                                          : const Color(0xFF2FAB2D)
-                                              .withOpacity(0.15),
+                                          : const Color(0xFFcff4fc)
+                                              .withOpacity(0.5),
                                       // : Colors.green[500],
                                       borderRadius: widget.isUser
                                           ? const BorderRadius.only(

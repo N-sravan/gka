@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:gka/login/model/session_details_response_model.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:uuid/uuid.dart';
+import '../../chat_window.dart';
 import '../../services/api_provider.dart';
 import '../../utils/app_state.dart';
 import '../../utils/navigation_util.dart';
@@ -15,11 +15,13 @@ import '../../utils/network_utils.dart';
 import '../../utils/secure_storage_util.dart';
 import '../../utils/shared_preference_util.dart';
 import '../../utils/util.dart';
+import '../model/ap_login_response_model.dart';
 import '../model/department_user_permission_response.dart' as dept;
 import '../model/department_user_permission_response.dart';
 import '../model/kerala_login_response_model.dart';
 import '../model/login_api_response_model.dart' as login;
 import '../model/login_api_response_model.dart';
+import '../model/user_permission_response_model.dart';
 import '../repository/login_repo.dart';
 
 class LoginViewModel extends LoadingViewModel {
@@ -67,8 +69,8 @@ class LoginViewModel extends LoadingViewModel {
     return false;
   }
 
-  _setLoginSharedPreferences(String userName, String userId, String token,
-      String sessionId, String role) async {
+  _setLoginSharedPreferences(
+      String userName, String userId, String token, String refreshToken) async {
     await SharedPreferenceUtil.instance.setPreferenceValue(
         constants.preferenceIsLoggedIn, true, constants.preferenceTypeBool);
     await SecuredStorageUtil.instance
@@ -76,20 +78,19 @@ class LoginViewModel extends LoadingViewModel {
     await SecuredStorageUtil.instance
         .writeSecureData(constants.preferenceUserId, userId);
     await SecuredStorageUtil.instance
-        .writeSecureData(constants.preferenceSessionId, sessionId);
+        .writeSecureData(constants.preferenceRefreshToken, refreshToken);
     await SecuredStorageUtil.instance
         .writeSecureData(constants.preferenceToken, token);
     // await SecuredStorageUtil.instance.writeSecureData(constants.preferenceLanguage, 'english');
     await SecuredStorageUtil.instance.writeSecureData(
         constants.preferenceLastLoginTime,
         DateTime.now().millisecondsSinceEpoch.toString());
-    AppState.instance.sessionId = sessionId;
     AppState.instance.userName = userName;
     AppState.instance.userId = userId;
     AppState.instance.token = token;
     AppState.instance.language = 'english';
     AppState.instance.isEnglish = true;
-    AppState.instance.role = role;
+    AppState.instance.refreshToken = refreshToken;
   }
 
   Future<bool?> sendFcmToken(BuildContext context) async {
@@ -160,7 +161,7 @@ class LoginViewModel extends LoadingViewModel {
   }
 
   _setUserPermissionsSharedPreferences(
-      String email, String mobileNo, String firstName, String roleName) async {
+      String email, String mobileNo, String firstName) async {
     await SecuredStorageUtil.instance
         .writeSecureData(constants.preferenceUserEmail, email);
     await SecuredStorageUtil.instance
@@ -170,7 +171,7 @@ class LoginViewModel extends LoadingViewModel {
     AppState.instance.userEmail = email;
     AppState.instance.userMobileNo = mobileNo;
     AppState.instance.userName = firstName;
-    AppState.instance.userAssignedRole = roleName;
+    // AppState.instance.userAssignedRole = roleName;
   }
 
   roleSelection(String role, BuildContext context) {
@@ -234,8 +235,113 @@ class LoginViewModel extends LoadingViewModel {
     return false; // Invalid mobile number
   }
 
-  Future<bool> authenticate(
+  Future<void> authenticate(
       String userName, String password, BuildContext context) async {
+    /// Checking for active internet connection
+    if (await networkUtils.hasActiveInternet()) {
+      // if (!await restrictLoginAttempts()) {
+      late LoginResult loginResult;
+      isLoading = true;
+      try {
+        /// Creating login request parameters
+        Map<String, String> params = {
+          constants.userName: userName,
+          constants.password: password,
+        };
+
+        /// Calling the login API
+        loginResult = await repo.authenticate(params, context);
+
+        if (loginResult.statusCode == 200 && loginResult.accessToken != null) {
+          /// Login is successful
+          Map<String, dynamic> decodedToken =
+              JwtDecoder.decode(loginResult.accessToken!);
+          String userId = decodedToken["sub"];
+          await _setLoginSharedPreferences(userName, userId,
+              loginResult.accessToken!, loginResult.refreshToken!);
+          Map csrfResponse = await repo.fetchCsrfToken(context);
+          if (csrfResponse["statusCode"] == 200) {
+            await _setCSRFSharedPreferences(
+                csrfResponse["response"]["tokens"]["csrf"]);
+            AppState.instance.csrfTokenUserDetails =
+                csrfResponse["response"]["userDetails"];
+            await SecuredStorageUtil.instance.writeSecureData(
+                constants.preferenceCsrfTokenUserDetails,
+                jsonEncode(AppState.instance.csrfTokenUserDetails));
+            UserPermissionsResponse? userPermissionsResponse;
+            userPermissionsResponse =
+                await ApiProvider.instance.fetchUserPermissions(context);
+            if (userPermissionsResponse != null &&
+                userPermissionsResponse.statusCode == 200) {
+             /* String? userRole = '';
+              if (userPermissionsResponse.response!.rolePermissions != null) {
+                if (userPermissionsResponse
+                    .response!.rolePermissions!.krishidss !=
+                    null) {
+                  userRole = userPermissionsResponse.response!.rolePermissions!.krishidss!.roleName;
+                }
+              }*/
+              await _setUserPermissionsSharedPreferences(
+                  userPermissionsResponse.response!.meta!.email!,
+                  userPermissionsResponse.response!.meta!.mobileNo!,
+                  userPermissionsResponse.response!.meta!.firstName!);
+
+
+              isLoading = false;
+              notifyListeners();
+              AppState.instance.sessionId = Uuid().v4();
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ChatWindow(
+                    isFromHistory: false,
+                    sessionId: AppState.instance.sessionId,
+                  ),
+                ),
+              );
+            } else {
+              isLoading = false;
+              notifyListeners();
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(constants.genericErrorMsg),
+              ));
+            }
+          } else {
+            isLoading = false;
+            notifyListeners();
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(constants.genericErrorMsg),
+            ));
+          }
+        } else {
+          /// Login is unsuccessful
+          isLoading = false;
+          notifyListeners();
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(constants.genericErrorMsg),
+          ));
+        }
+      } catch (e) {
+        isLoading = false;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(constants.genericErrorMsg),
+        ));
+        Util.instance
+            .logMessage('Login Model', 'Error while authenticating $e');
+      }
+      /*} else {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(constants.toManyLoginAttempts),
+        ));
+      }*/
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(constants.noNetworkAvailability),
+      ));
+    }
+  }
+
+/*Future<bool> authenticate(String userName, String password, BuildContext context) async {
     /// Checking for active internet connection
     if (await networkUtils.hasActiveInternet()) {
       // if (!await restrictLoginAttempts()) {
@@ -283,5 +389,5 @@ class LoginViewModel extends LoadingViewModel {
       ));
     }
     return false;
-  }
+  }*/
 }

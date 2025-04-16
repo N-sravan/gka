@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 import 'package:aws_s3_upload/aws_s3_upload.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:gka/utils/secure_storage_util.dart';
 import 'package:gka/text_to_speech.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -12,6 +13,8 @@ import 'package:gka/services/api_provider.dart';
 import 'package:gka/utils/app_state.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
+import 'package:web_socket_channel/io.dart';
 import 'dart:io' as platform;
 import '../utils/common_constants.dart' as constants;
 import 'package:flutter/material.dart';
@@ -43,9 +46,11 @@ class ChatWindow extends StatefulWidget {
 
 class _ChatWindowState extends State<ChatWindow> {
   var scrollControllerListView = ScrollController();
-  final SupabaseClient supabase = Supabase.instance.client;
+
+  // final SupabaseClient supabase = Supabase.instance.client;
   int start = 0;
   int end = 0;
+  bool hasSpoken = false;
   String? _newVoiceText;
   int prevChatLength = 0;
   int prevChatLengthHistory = 0;
@@ -62,6 +67,9 @@ class _ChatWindowState extends State<ChatWindow> {
   String highlightedText = "";
   String remainingText = "";
   bool isllmDropdown = false;
+  final List<Map<String, dynamic>> _messages = [];
+  String url = '';
+  late final channel;
 
   List<String> loaderMsgList = [
     'Please wait',
@@ -110,6 +118,7 @@ class _ChatWindowState extends State<ChatWindow> {
   void initState() {
     super.initState();
     AppState.instance.isEnglish = true;
+    AppState.instance.language = 'english';
     switch (constants.projectId) {
       case constants.fieldRishiUUID:
         title = constants.appTitle;
@@ -163,6 +172,7 @@ class _ChatWindowState extends State<ChatWindow> {
         break;
     }
     _initSpeech();
+    _initWsConnection();
   }
 
   @override
@@ -197,6 +207,34 @@ class _ChatWindowState extends State<ChatWindow> {
     await tts.setVoice(currentVoice);
     print("language::${AppState.instance.language.toLowerCase()}");
     print("lang Id::$langId");
+    print("user id::${AppState.instance.userId}");
+    print("session id::${AppState.instance.sessionId}");
+  }
+
+  _initWsConnection() async {
+    _initDeviceId().then((_) {
+      channel = IOWebSocketChannel.connect(url);
+      channel.stream.listen((data) {
+        try {
+          final decoded = jsonDecode(data);
+          final result = decoded['message'];
+          final isUser = decoded['is_user'];
+          print("Received result: $result");
+
+          setState(() {
+            _messages.add({
+              'text': result,
+              'is_user': isUser,
+            });
+            showLoader.value = false;
+          });
+        } catch (e) {
+          print("Error decoding JSON: $e");
+          Fluttertoast.showToast(msg: 'Something went wrong');
+          showLoader.value = false;
+        }
+      });
+    });
   }
 
   /// Each time to start a speech recognition session
@@ -224,34 +262,6 @@ class _ChatWindowState extends State<ChatWindow> {
     }
 
     print("_onSpeechResult_startListening aferfdf ${_speechToText.lastStatus}");
-    bool active = _speechToText.isListening;
-    tts.stop();
-    listeningActive.value = active;
-  }
-
-  _startListeningForAutoMode() async {
-    var locales = await _speechToText.locales();
-    for (int i = 0; i < locales.length; i++) {
-      print("LOCALESDSD $i   ${locales[i].name}");
-    }
-
-    print("_onSpeechResult_startListening_auto_mode");
-    SpeechRecognitionResult result;
-    try {
-      await _speechToText.listen(
-          onSoundLevelChange: onSoundLevelChange,
-          /*localeId: selectedLocale.localeId,*/
-          partialResults: false,
-          // onResult: _onSpeechResultForAutoMode,
-          pauseFor: const Duration(seconds: 5),
-          listenFor: const Duration(seconds: 45),
-          cancelOnError: true);
-    } catch (e) {
-      print('EXCEPTIONKJSKFJK An exception occurred: $e');
-    }
-
-    print(
-        "_onSpeechResult_startListening_auto_mode aferfdf ${_speechToText.lastStatus}");
     bool active = _speechToText.isListening;
     tts.stop();
     listeningActive.value = active;
@@ -304,173 +314,131 @@ class _ChatWindowState extends State<ChatWindow> {
       },
       child: Scaffold(
         drawer: DrawerWidget(
-          // isFirstTime: widget.isFirstTime,
           sessionId: widget.sessionId!,
         ),
         appBar: AppBar(
-          iconTheme: const IconThemeData(color: Colors.white),
-          backgroundColor: const Color(0XFF55A18F),
           titleSpacing: 2,
-          title: Image.asset(
-            'assets/images/appbar_heading.png',
+          title: Row(
+            children: [
+              Image.asset(
+                'assets/images/apaims_logo.png',
+                height: 32, // Adjust height as needed
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'APAIMS Chatbot',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+            ],
           ),
         ),
-        body: Stack(
+        body: Column(
           children: [
-            Container(
-              color: Colors.grey[100],
-              child: Column(
-                children: [
-                  Expanded(
-                    child: StreamBuilder<List<Map<String, dynamic>>>(
-                      stream: supabase
-                          .from(constants.projectId)
-                          .stream(primaryKey: [
-                        'user_uuid',
-                        'session_uuid',
-                      ]).eq('session_uuid', AppState.instance.sessionId),
-                      builder: (context, snapshot) {
-                        if (!snapshot.hasData) {
-                          return const Center(
-                              child: CircularProgressIndicator());
-                        }
-                        final messages = snapshot.data!;
-                        List<ChatBubble> messageList = [];
-                        Map<String, String> dataTsMapping = {};
-                        List<String> followUpQuestionsList = [];
-                        Map<String, String> cotMapping = {};
-                        Map<String, String> maps = {};
+            Expanded(
+              child: ValueListenableBuilder<bool>(
+                valueListenable: showLoader,
+                builder: (context, isLoading, _) {
+                  return ListView.builder(
+                    controller: scrollControllerListView,
+                    reverse: true,
+                    padding: const EdgeInsets.all(10),
+                    itemCount: _messages.length + (isLoading ? 1 : 0),
+                    itemBuilder: (_, index) {
+                      if (isLoading && index == 0) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          showLoader.value = true;
+                          tts.stop();
+                        });
+                        return const SizedBox();
+                      }
 
-                        for (var messageEntry in messages) {
-                          final messageData = messageEntry['data'];
-                          final isUser = messageData['is_user'] ?? false;
-                          final message = messageData['message'] ?? '';
-                          final imageUrl = messageData['image_url'] ?? '';
-                          final tableColumnData = messageData['sql_df_columns'];
-                          final tableRowData =
-                              messageData['sql_df_values'] != null
-                                  ? jsonDecode(messageData['sql_df_values'])
-                                  : null;
-                          final logMessage = messageData['log'] ?? '';
-                          final token = messageData['token'] ?? '';
+                      final adjustedIndex = isLoading
+                          ? _messages.length - index
+                          : _messages.length - 1 - index;
 
-                          if (!isUser) {
-                            if (messageData['chain_of_thought'] != null) {
-                              (messageData['chain_of_thought'] as Map)
-                                  .forEach((key, value) {
-                                maps[key.toString()] = value.toString();
-                              });
-                              cotMapping.addAll(maps);
-                            }
-                            if (messageData['follow_up_questions'] != null) {
-                              List<Object?> followUpQuestions =
-                                  messageData['follow_up_questions'];
-                              followUpQuestionsList = followUpQuestions
-                                  .map((item) => item.toString())
-                                  .toList();
-                            }
-                          }
+                      if (adjustedIndex < 0 || adjustedIndex >= _messages.length) {
+                        return const SizedBox();
+                      }
 
-                          messageList.add(ChatBubble(
-                            text: message,
-                            isUser: isUser,
-                            imageUrl: imageUrl,
-                            tableColumnData: tableColumnData,
-                            tableRowData: tableRowData,
-                            logMessage: logMessage,
-                            hasErrorLog: false,
-                            timestampMapping: dataTsMapping,
-                            chainOfThoughts:
-                                Map<String, String>.from(cotMapping),
-                            followUpQuestions: followUpQuestionsList,
-                            token: token,
-                            isMapView: false,
-                            expandChainOfThought: false,
-                          ));
-                        }
+                      final msg = _messages[adjustedIndex];
 
-                        if (messageList.isNotEmpty) {
-                          messageList.last.expandChainOfThought = true;
-                        }
+                      // SPEAK LOGIC (for each new bot message)
+                      if (_messages.isNotEmpty &&
+                          !_messages.last['is_user'] &&
+                          _messages.last['text'].toString().isNotEmpty &&
+                          _messages.length > prevChatLength) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          showLoader.value = false;
+                          tts.speak(_messages.last['text']);
+                        });
+                      }
 
-                        // Show loader when user sends a message and waits for a response
-                        if (messageList.isNotEmpty) {
-                          if (messageList.isNotEmpty &&
-                              !messageList[messageList.length - 1].isUser &&
-                              messageList[messageList.length - 1]
-                                  .text
-                                  .isNotEmpty &&
-                              messageList.length > prevChatLength) {
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              showLoader.value = false;
-                            });
+                      // STOP if user message came in
+                      if (_messages.isNotEmpty && _messages.last['is_user']) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          showLoader.value = true;
+                          tts.stop();
+                        });
+                      }
 
-                            _speakMessage(
-                                messageList[messageList.length - 1].text);
-                          }
+                      // ✅ Always update this at the end
+                      prevChatLength = _messages.length;
 
-                          prevChatLength = messageList.length;
-                          if (messageList.isNotEmpty &&
-                              messageList[messageList.length - 1].isUser) {
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              showLoader.value = true;
-                              tts.stop();
-                            });
-                          }
-                        }
-                        return ListView.builder(
-                          reverse: true,
-                          controller: scrollControllerListView,
-                          itemCount: messageList.length,
-                          itemBuilder: (context, index) {
-                            return Padding(
-                              padding: const EdgeInsets.all(4.0),
-                              child:
-                                  messageList[messageList.length - 1 - index],
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 50.0),
-                    child: Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: ValueListenableBuilder(
-                        valueListenable: showLoader,
-                        builder: (context, value, _) {
-                          if (value) {
-                            return LoadingAnimationWidget.waveDots(
-                                color: const Color(0XFF55A18F), size: 40);
-                          }
-                          return const SizedBox();
-                        },
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: bottomBar(),
-                  )
-                ],
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: ChatBubble(
+                          text: msg['text'] ?? '',
+                          isUser: msg['is_user'],
+                          imageUrl: msg['image_url'] ?? '',
+                          tableColumnData: msg['sql_df_columns'],
+                          tableRowData: msg['sql_df_values'] != null
+                              ? jsonDecode(msg['sql_df_values'])
+                              : null,
+                          logMessage: msg['log'] ?? '',
+                          hasErrorLog: false,
+                          timestampMapping: {},
+                          chainOfThoughts: Map<String, String>.from(
+                            msg['chain_of_thought'] ?? {},
+                          ),
+                          followUpQuestions:
+                          (msg['follow_up_questions'] as List<dynamic>?)
+                              ?.map((e) => e.toString())
+                              .toList() ??
+                              [],
+                          token: msg['token'] ?? '',
+                          isMapView: false,
+                          expandChainOfThought: adjustedIndex == _messages.length - 1,
+                        ),
+                      );
+                    },
+                  );
+                },
               ),
             ),
-            /*const Positioned.fill(
-                child: IgnorePointer(
-                  ignoring: false,
-                  child: Center(
-                    child: SizedBox(
-                      height: 150,
-                      width: 200,
-                      child: Image(
-                        image: AssetImage('assets/images/appbar_heading.png'),
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ),
+            Padding(
+              padding: const EdgeInsets.only(left: 40.0),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: ValueListenableBuilder(
+                  valueListenable: showLoader,
+                  builder: (context, value, _) {
+                    if (value) {
+                      return LoadingAnimationWidget.waveDots(
+                          color: Colors.blue, size: 40);
+                    }
+                    return const SizedBox();
+                  },
                 ),
-              ),*/
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: bottomBar(),
+            )
           ],
         ),
       ),
@@ -517,15 +485,14 @@ class _ChatWindowState extends State<ChatWindow> {
             suffixIcon: _sendButton(),
           ),
         ),
-        // _dropdownInsideField(),
-        Row(
+        /* Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             Expanded(child: _dropdownInsideField(!isllmDropdown)),
             const SizedBox(width: 8), // Spacing between dropdowns
             Expanded(child: _dropdownInsideField(isllmDropdown)),
           ],
-        ),
+        ),*/
       ],
     );
   }
@@ -661,9 +628,7 @@ class _ChatWindowState extends State<ChatWindow> {
           builder: (context, value, _) {
             return IconButton(
                 icon: Icon(Icons.send,
-                    color: showLoader.value
-                        ? Colors.grey
-                        : const Color(0XFF55A18F)),
+                    color: showLoader.value ? Colors.grey : Colors.blue),
                 onPressed: showLoader.value
                     ? null
                     : () async {
@@ -678,7 +643,7 @@ class _ChatWindowState extends State<ChatWindow> {
                             // imageUrl = await uploadMedia(context, capturedPhoto!.path);
                             imageUrl = await uploadMediaToS3(capturedPhoto);
                           }
-                          await insertDataIntoDb(imageUrl, chatController.text);
+                          _sendMessage(chatController.text);
                         }
                       });
           },
@@ -688,25 +653,6 @@ class _ChatWindowState extends State<ChatWindow> {
   }
 
   void updateChatControllerForSpeech(String text) {
-    print("121212121 text:: $text");
-    if (text.contains('తప్రాణా')) {
-      text = text.replaceAll('తప్రాణా', 'తప్రానా');
-    }
-    if (text.contains('తప్పానా')) {
-      text = text.replaceAll('తప్పానా', 'తప్రానా');
-    }
-    if (text.contains('తప్రాన')) {
-      text = text.replaceAll('తప్రాన', 'తప్రానా');
-    }
-    if (text.contains('తప్రాణ')) {
-      text = text.replaceAll('తప్రాణ', 'తప్రానా');
-    }
-    if (text.contains('తప్పురానా')) {
-      text = text.replaceAll('తప్పురానా', 'తప్రానా');
-    }
-    if (text.contains('తప్పు రానా')) {
-      text = text.replaceAll('తప్పు రానా', 'తప్రానా');
-    }
     chatController.text = text;
     setState(() {});
   }
@@ -815,39 +761,51 @@ class _ChatWindowState extends State<ChatWindow> {
     );
   }
 
-  Future<void> insertDataIntoDb(String? imageUrl, String text) async {
-    try {
-      Map<String, dynamic> dataPayload = {
-        "is_user": true,
-        "message": "Hi",
-        "language": "english",
-        "llm": "chatgpt-4o",
-        "token":
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjlmOGU1OGEtMDA0Yi00OTc4LWI5ZmYtMzI1NjU5NTYxYjE3IiwiZXhwIjoxNzM2Nzc4NzA1fQ.0Sy08vJFBnOt4NHdiX-GjufH1tJePnLHk20eVq9Fboc",
-        "sm_enabled": false,
-        "image_url": "",
-        "super_question_agent": true,
-        "mode": "",
-        "pre_configure": false
-      };
-      print(
-          "XXXXXXX Pushed data into db - 'user_uuid': ${AppState.instance.userId}\n"
-          "'session_uuid': ${AppState.instance.sessionId},\n"
-          "'data': $dataPayload,");
-      await Supabase.instance.client.from(constants.projectId).insert({
-        'user_uuid': AppState.instance.userId,
-        'session_uuid': widget.sessionId.toString(),
-        'data': dataPayload,
-        'insert_ts': DateTime.now().millisecondsSinceEpoch,
-        'update_ts': DateTime.now().millisecondsSinceEpoch,
+  Future<void> _initDeviceId() async {
+    final deviceInfo = DeviceInfoPlugin();
+    String deviceId = const Uuid().v4();
+
+    // url = 'ws://192.168.18.40:8000/ws/chat/$deviceId';
+    url = 'wss://apaims2.0.vassarlabs.com/chatbot/ws/chat/$deviceId';
+    print("12345 Generated Device ID: $deviceId");
+    print("12345 Web socket URL: $url");
+  }
+
+  void _sendMessage(String message) {
+    final messageJson = jsonEncode({
+      'message': message,
+      'user_id': AppState.instance.userId,
+      'session_id': AppState.instance.sessionId,
+      'is_user': true,
+    });
+
+    print("12345 Input data::$messageJson");
+
+    channel.sink.add(messageJson);
+
+    setState(() {
+      _messages.add({
+        'text': message,
+        'is_user': true,
       });
       chatController.clear();
-      capturedPhoto = null;
-      // Fluttertoast.showToast(msg: "Message sent");
-    } catch (error) {
-      Fluttertoast.showToast(msg: "Error sending message");
+      showLoader.value = true;
+    });
+  }
+
+  void _speakLastBotMessage() {
+    if (hasSpoken) return;
+
+    for (int i = _messages.length - 1; i >= 0; i--) {
+      if (_messages[i]['is_user'] == false) {
+        String message = _messages[i]['text'] ?? '';
+        if (message.isNotEmpty) {
+          tts.speak(message);
+          print("last message: $message");
+          hasSpoken = true;
+        }
+        break;
+      }
     }
-    setState(() {});
   }
 }
-

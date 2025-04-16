@@ -37,13 +37,13 @@ class UserPermissionsResponse {
 
 class Response {
   Meta? meta;
-  Permissions? permissions;
+  Permissions? rolePermissions;
 
   Response({this.meta});
 
   Response.fromJson(Map<String, dynamic> json) {
     meta = json['meta'] != null ? new Meta.fromJson(json['meta']) : null;
-    permissions = json['permissions'] != null ? Permissions.fromJson(json['permissions']) : null;
+    rolePermissions = json['rolePermissions'] != null ? Permissions.fromJson(json['rolePermissions']) : null;
   }
 
   Map<String, dynamic> toJson() {
