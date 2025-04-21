@@ -1,9 +1,9 @@
 import 'dart:math';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/utils/app_state.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 import 'package:latlong2/latlong.dart';
 
@@ -539,8 +539,7 @@ class _ChatBubbleState extends State<ChatBubble> {
   }
 
   Future _pushFollowUpQuestionInFirebase(String data) async {
-    DatabaseReference ref = FirebaseDatabase.instance.ref(
-        "${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${AppState.instance.sessionId}");
+    DatabaseReference ref = FirebaseDatabase.instance.ref("${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${AppState.instance.sessionId}");
 
     String timeStamp = DateTime.now().millisecondsSinceEpoch.toString();
 

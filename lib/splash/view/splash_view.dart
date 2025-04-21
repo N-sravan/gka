@@ -30,42 +30,12 @@ class _SplashScreenWidgetState extends State<SplashScreenWidget> {
   Widget build(BuildContext context) {
     return Consumer<SplashViewModel>(
       builder: (_, model, child) {
-        if (model.isLoading) {
-          return child!;
-        }
-
-        return viewModel.noInternet
-            ? Scaffold(
-                body: SizedBox(
-                  height: MediaQuery.of(context).size.height,
-                  width: MediaQuery.of(context).size.width,
-                  child: Padding(
-                    padding: const EdgeInsets.all(constants.mediumPadding),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "You are Offline",
-                          style: constants.red12W500,
-                        ),
-                        const SizedBox(height: constants.verticalSpace10),
-                        Text(
-                          "You are not connected to the internet. Please connect to the internet and try again",
-                          style: constants.black16W500,
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              )
-            : const Center(
+        return const Scaffold(
+            body: Center(
                 child: Image(
-                  image: AssetImage(constants.appIcon),
-                  width: constants.splashIconWidth,
-                  height: constants.splashIconHeight,
-                ),
-              );
+                    image: AssetImage(constants.appIcon),
+                    width: constants.splashIconWidth,
+                    height: constants.splashIconHeight)));
       },
     );
   }

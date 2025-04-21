@@ -7,6 +7,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/chat/model/chat_history_model.dart';
+import 'package:gka/chat/model/chat_message_history.dart';
 import 'package:gka/chat/model/get_documents_response.dart';
 import 'package:gka/chat/model/get_users_response.dart';
 import 'package:gka/chat_bubble.dart';
@@ -31,6 +32,7 @@ import '../model/activity_status_response.dart';
 import '../model/get_prompts_response.dart';
 import '../model/get_tools_response_model.dart';
 import '../model/prompt_submission_response.dart';
+import '../model/user_session_model.dart';
 import '../repo/chat_repo.dart';
 
 class ChatViewModel extends LoadingViewModel {
@@ -108,6 +110,7 @@ class ChatViewModel extends LoadingViewModel {
   Map<String, List<FileResponse>> documentIdTextMapping = {};
   List<User> usersList = [];
   List<ChatData> chatDataList = [];
+  Map<String, String> sessionIdDataMapping = {};
   Map<String, String> toolNameDescriptionMapping = {};
   Map<String, String> modelNameUuidMapping = {};
   Map<String, String> messageTimestampMapping = {};
@@ -529,6 +532,78 @@ class ChatViewModel extends LoadingViewModel {
     return false;
   }
 
+  Future<bool> deleteSession(BuildContext context, String sessionId) async {
+    /// Checking for active internet connection
+    if (await networkUtils.hasActiveInternet()) {
+      isLoading = true;
+      try {
+        bool? result = await repo.deleteSession(context, sessionId);
+        if (result == true) {
+          await repo.fetchUserSessions(context);
+          isLoading = false;
+          notifyListeners();
+          return true;
+        } else {
+          isLoading = false;
+          notifyListeners();
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Something went wrong,Please try later'),
+          ));
+        }
+      } catch (e) {
+        isLoading = false;
+        notifyListeners();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(constants.genericErrorMsg),
+        ));
+        Util.instance.logMessage('Chat View Model', 'Error : $e');
+      }
+    } else {
+      isLoading = false;
+      notifyListeners();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(constants.noNetworkAvailability),
+      ));
+    }
+    return false;
+  }
+
+  Future<bool> updateSessionId(BuildContext context, String sessionId,String newId) async {
+    /// Checking for active internet connection
+    if (await networkUtils.hasActiveInternet()) {
+      isLoading = true;
+      try {
+        bool? result = await repo.updateSession(context, sessionId,newId);
+        if (result == true) {
+          await repo.fetchUserSessions(context);
+          isLoading = false;
+          notifyListeners();
+          return true;
+        } else {
+          isLoading = false;
+          notifyListeners();
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Something went wrong,Please try later'),
+          ));
+        }
+      } catch (e) {
+        isLoading = false;
+        notifyListeners();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(constants.genericErrorMsg),
+        ));
+        Util.instance.logMessage('Chat View Model', 'Error : $e');
+      }
+    } else {
+      isLoading = false;
+      notifyListeners();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(constants.noNetworkAvailability),
+      ));
+    }
+    return false;
+  }
+
   Future<bool> deleteChunk(BuildContext context, String chunkId) async {
     /// Checking for active internet connection
     if (await networkUtils.hasActiveInternet()) {
@@ -747,26 +822,20 @@ class ChatViewModel extends LoadingViewModel {
     userActivity = newValue!;
   }
 
-  Future? getChatHistory(BuildContext context) async {
+ /* Future? getChatHistoryForSession(
+      String sessionId, BuildContext context) async {
     if (await networkUtils.hasActiveInternet()) {
       isLoading = true;
       try {
-        ChatHistoryModel chatHistoryModel = await repo.fetchChatHistory(context);
+        ChatHistoryModel chatHistoryModel =
+            await repo.fetchChatHistory(sessionId, context);
         chatDataList.clear();
         if (chatHistoryModel.status == 200) {
           if (chatHistoryModel.data.isNotEmpty) {
-            for (var item in chatHistoryModel.data) {
-              final fixedData = item.message
-                  .replaceAll("'", '"')
-                  .replaceAll('True', 'true')
-                  .replaceAll('False', 'false');
-
-              final parsedData = jsonDecode(fixedData);
-
-
-              final chatData = ChatData(
-                isUser: parsedData['is_user'],
-                message: parsedData['message'],
+            for (SessionHistoryModel item in chatHistoryModel.data) {
+              ChatData chatData = ChatData(
+                isUser: item.data['is_user'],
+                message: item.data['message'],
               );
               chatDataList.add(chatData);
             }
@@ -789,8 +858,55 @@ class ChatViewModel extends LoadingViewModel {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text(constants.genericErrorMsg),
         ));
-        Util. instance
-            .logMessage('Chat View Model', 'Error while authenticating $e');
+        Util.instance.logMessage('Chat View Model', 'Error $e');
+      }
+    } else {
+      isLoading = false;
+      notifyListeners();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(constants.noNetworkAvailability),
+      ));
+    }
+    return null;
+  }*/
+
+  Future? getMessageHistoryForSession(String sessionId, BuildContext context) async {
+    if (await networkUtils.hasActiveInternet()) {
+      isLoading = true;
+      try {
+        List<ChatMessageHistory> chatMessageHistoryList =
+            await repo.fetchMessageHistory(sessionId, context);
+        chatDataList.clear();
+        if (chatMessageHistoryList != null &&
+            chatMessageHistoryList.isNotEmpty) {
+          if (chatMessageHistoryList.isNotEmpty) {
+            for (ChatMessageHistory item in chatMessageHistoryList) {
+              ChatData chatData = ChatData(
+                isUser: item.sender == "User" ? true : false,
+                message: item.text,
+              );
+              chatDataList.add(chatData);
+            }
+            isLoading = false;
+            notifyListeners();
+          } else {
+            isLoading = false;
+            notifyListeners();
+          }
+        } else {
+          isLoading = false;
+          notifyListeners();
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text(constants.genericErrorMsg),
+          ));
+        }
+      } catch (e) {
+        isLoading = false;
+        notifyListeners();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(constants.genericErrorMsg),
+        ));
+        Util.instance.logMessage('Chat View Model', 'Error $e');
       }
     } else {
       isLoading = false;
@@ -801,4 +917,97 @@ class ChatViewModel extends LoadingViewModel {
     }
     return null;
   }
+
+  Future? getSessionsForUser(BuildContext context) async {
+    if (await networkUtils.hasActiveInternet()) {
+      isLoading = true;
+      try {
+        UserSessionModel userSessionModel = await repo.fetchUserSessions(context);
+        sessionIdDataMapping.clear();
+        if (userSessionModel.status == 200) {
+          if (userSessionModel.data.isNotEmpty) {
+            userSessionModel.data.sort((a, b) => DateTime.parse(b.insertTs)
+                .compareTo(DateTime.parse(a.insertTs)));
+            for (var item in userSessionModel.data) {
+              sessionIdDataMapping[item.sessionId] = item.insertTs;
+            }
+            print("sessionIdDataMapping::${sessionIdDataMapping}");
+            isLoading = false;
+            notifyListeners();
+          } else {
+            isLoading = false;
+            notifyListeners();
+          }
+        } else {
+          isLoading = false;
+          notifyListeners();
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text(constants.genericErrorMsg),
+          ));
+        }
+      } catch (e) {
+        isLoading = false;
+        notifyListeners();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(constants.genericErrorMsg),
+        ));
+        Util.instance.logMessage('Chat View Model', 'Error $e');
+      }
+    } else {
+      isLoading = false;
+      notifyListeners();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(constants.noNetworkAvailability),
+      ));
+    }
+  }
+
+  Future? getSessionHistory(String sessionId, BuildContext context) async {
+    if (await networkUtils.hasActiveInternet()) {
+      isLoading = true;
+      try {
+        List<ChatMessageHistory> chatMessageHistoryList =
+        await repo.fetchMessageHistory(sessionId, context);
+        chatDataList.clear();
+        if (chatMessageHistoryList != null &&
+            chatMessageHistoryList.isNotEmpty) {
+          if (chatMessageHistoryList.isNotEmpty) {
+            for (ChatMessageHistory item in chatMessageHistoryList) {
+              ChatData chatData = ChatData(
+                isUser: item.sender == User ? true : false,
+                message: item.text,
+              );
+              chatDataList.add(chatData);
+            }
+            isLoading = false;
+            notifyListeners();
+          } else {
+            isLoading = false;
+            notifyListeners();
+          }
+        } else {
+          isLoading = false;
+          notifyListeners();
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text(constants.genericErrorMsg),
+          ));
+        }
+      } catch (e) {
+        isLoading = false;
+        notifyListeners();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(constants.genericErrorMsg),
+        ));
+        Util.instance.logMessage('Chat View Model', 'Error $e');
+      }
+    } else {
+      isLoading = false;
+      notifyListeners();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(constants.noNetworkAvailability),
+      ));
+    }
+    return null;
+  }
+
 }

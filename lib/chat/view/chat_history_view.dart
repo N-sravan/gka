@@ -25,7 +25,9 @@ class _ChatHistoryViewState extends State<ChatHistoryView> {
     super.initState();
     viewModel = Provider.of<ChatViewModel>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await viewModel.getChatHistory(context);
+      if (widget.sessionId != null && widget.sessionId!.isNotEmpty) {
+        await viewModel.getMessageHistoryForSession(widget.sessionId!, context);
+      }
     });
   }
 
@@ -48,37 +50,33 @@ class _ChatHistoryViewState extends State<ChatHistoryView> {
               title: Text('Chat History', style: constants.black16W500),
             ),
             body: viewModel.chatDataList.isNotEmpty
-                ? Expanded(
-                    child: ListView.builder(
-                      itemCount: viewModel.chatDataList.length,
-                      itemBuilder: (context, index) {
-                        final chat = viewModel.chatDataList[index];
-                        return ChatBubble(
-                          text: chat.message,
-                          isUser: chat.isUser,
-                          isMapView: false,
-                          imageUrl: null,
-                          tableColumnData: null,
-                          tableRowData: null,
-                          logMessage: null,
-                          errorLog: null,
-                          hasErrorLog: false,
-                          timestampMapping: null,
-                          sessionId: null,
-                          chainOfThoughts: null,
-                          followUpQuestions: [],
-                          token: null,
-                          expandChainOfThought: false,
-                          sessionExpired: false,
-                        );
-                      },
-                    ),
-                  )
-                : const Expanded(
-                    child: Center(
-                      child: Text('No Chat history!'),
-                    ),
-                  ),
+                ? ListView.builder(
+                  itemCount: viewModel.chatDataList.length,
+                  itemBuilder: (context, index) {
+                    final chat = viewModel.chatDataList[index];
+                    return ChatBubble(
+                      text: chat.message ?? '',
+                      isUser: chat.isUser,
+                      isMapView: false,
+                      imageUrl: null,
+                      tableColumnData: null,
+                      tableRowData: null,
+                      logMessage: null,
+                      errorLog: null,
+                      hasErrorLog: false,
+                      timestampMapping: null,
+                      sessionId: null,
+                      chainOfThoughts: null,
+                      followUpQuestions: [],
+                      token: null,
+                      expandChainOfThought: false,
+                      sessionExpired: false,
+                    );
+                  },
+                )
+                : const Center(
+                  child: Text('No Chat history!'),
+                ),
           ),
         );
       },
@@ -112,15 +110,12 @@ class _ChatHistoryViewState extends State<ChatHistoryView> {
             child: ListTile(
               title: Text(value),
               onTap: () {
-                print("key session id from chat history::$key");
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => ChatWindow(
                       sessionId: key,
-                      // isFirstTime: true,
                       isFromHistory: true,
-                      // finishSession: (finishSession) {}, // Adjust accordingly
                     ),
                   ),
                 );

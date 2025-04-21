@@ -273,7 +273,7 @@ class LoginViewModel extends LoadingViewModel {
                 await ApiProvider.instance.fetchUserPermissions(context);
             if (userPermissionsResponse != null &&
                 userPermissionsResponse.statusCode == 200) {
-             /* String? userRole = '';
+              /* String? userRole = '';
               if (userPermissionsResponse.response!.rolePermissions != null) {
                 if (userPermissionsResponse
                     .response!.rolePermissions!.krishidss !=
@@ -286,10 +286,11 @@ class LoginViewModel extends LoadingViewModel {
                   userPermissionsResponse.response!.meta!.mobileNo!,
                   userPermissionsResponse.response!.meta!.firstName!);
 
+              // bool? result = await sendSessionId(context);
 
+              AppState.instance.sessionId = DateTime.now().millisecondsSinceEpoch.toString();
               isLoading = false;
               notifyListeners();
-              AppState.instance.sessionId = Uuid().v4();
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -341,34 +342,17 @@ class LoginViewModel extends LoadingViewModel {
     }
   }
 
-/*Future<bool> authenticate(String userName, String password, BuildContext context) async {
-    /// Checking for active internet connection
+  Future<bool?> sendSessionId(BuildContext context) async {
     if (await networkUtils.hasActiveInternet()) {
-      // if (!await restrictLoginAttempts()) {
-      late SessionDetails? sessionDetails;
       isLoading = true;
       try {
-        Map<String, String> params = {
-          constants.userName: userName,
-          constants.password: password,
-        };
-
-        sessionDetails = await repo.authentication(params, context);
-
-        if (sessionDetails != null &&
-            sessionDetails.token!.isNotEmpty &&
-            sessionDetails.sessionId!.isNotEmpty) {
-          await _setLoginSharedPreferences(
-              userName,
-              sessionDetails.userId,
-              sessionDetails.token!,
-              sessionDetails.sessionId!,
-              sessionDetails.userType!);
+        int? statusCode = await repo.sendSessionId(context);
+        if (statusCode == 200) {
+          Fluttertoast.showToast(msg: 'Session Created Successfully!');
           isLoading = false;
-          print("wewewew sessionId::${sessionDetails.sessionId}");
+          notifyListeners();
           return true;
         } else {
-          /// Login is unsuccessful
           isLoading = false;
           notifyListeners();
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -377,17 +361,19 @@ class LoginViewModel extends LoadingViewModel {
         }
       } catch (e) {
         isLoading = false;
+        notifyListeners();
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text(constants.genericErrorMsg),
         ));
-        Util.instance
-            .logMessage('Login Model', 'Error while authenticating $e');
+        Util.instance.logMessage('Chat View Model', 'Error $e');
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      isLoading = false;
+      notifyListeners();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text(constants.noNetworkAvailability),
       ));
     }
     return false;
-  }*/
+  }
 }

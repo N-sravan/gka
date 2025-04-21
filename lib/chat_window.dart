@@ -11,6 +11,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:gka/chat/view/drawer_widget.dart';
 import 'package:gka/services/api_provider.dart';
 import 'package:gka/utils/app_state.dart';
+import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
@@ -212,29 +213,46 @@ class _ChatWindowState extends State<ChatWindow> {
   }
 
   _initWsConnection() async {
-    _initDeviceId().then((_) {
+    await _initDeviceId();
+    try {
       channel = IOWebSocketChannel.connect(url);
-      channel.stream.listen((data) {
-        try {
-          final decoded = jsonDecode(data);
-          final result = decoded['message'];
-          final isUser = decoded['is_user'];
-          print("Received result: $result");
+      channel.stream.listen(
+        (data) {
+          try {
+            final decoded = jsonDecode(data);
+            final result = decoded['message'];
+            final isUser = decoded['is_user'];
+            print("Received result: $result");
 
-          setState(() {
-            _messages.add({
-              'text': result,
-              'is_user': isUser,
+            setState(() {
+              _messages.add({
+                'text': result,
+                'is_user': isUser,
+              });
+              showLoader.value = false;
             });
+          } catch (e) {
+            print("Error decoding JSON: $e");
+            Fluttertoast.showToast(msg: 'Something went wrong');
             showLoader.value = false;
-          });
-        } catch (e) {
-          print("Error decoding JSON: $e");
-          Fluttertoast.showToast(msg: 'Something went wrong');
+          }
+        },
+        onError: (error) {
+          print("WebSocket stream error: $error");
+          Fluttertoast.showToast(msg: 'WebSocket connection error');
           showLoader.value = false;
-        }
-      });
-    });
+        },
+        onDone: () {
+          print("WebSocket connection closed");
+          Fluttertoast.showToast(msg: 'WebSocket connection closed');
+          showLoader.value = false;
+        },
+      );
+    } catch (e) {
+      print("Failed to connect to WebSocket: $e");
+      Fluttertoast.showToast(msg: 'Failed to connect to server');
+      showLoader.value = false;
+    }
   }
 
   /// Each time to start a speech recognition session
@@ -360,7 +378,8 @@ class _ChatWindowState extends State<ChatWindow> {
                           ? _messages.length - index
                           : _messages.length - 1 - index;
 
-                      if (adjustedIndex < 0 || adjustedIndex >= _messages.length) {
+                      if (adjustedIndex < 0 ||
+                          adjustedIndex >= _messages.length) {
                         return const SizedBox();
                       }
 
@@ -373,7 +392,7 @@ class _ChatWindowState extends State<ChatWindow> {
                           _messages.length > prevChatLength) {
                         WidgetsBinding.instance.addPostFrameCallback((_) {
                           showLoader.value = false;
-                          tts.speak(_messages.last['text']);
+                          _speakMessage(_messages.last['text']);
                         });
                       }
 
@@ -385,7 +404,6 @@ class _ChatWindowState extends State<ChatWindow> {
                         });
                       }
 
-                      // ✅ Always update this at the end
                       prevChatLength = _messages.length;
 
                       return Padding(
@@ -405,13 +423,14 @@ class _ChatWindowState extends State<ChatWindow> {
                             msg['chain_of_thought'] ?? {},
                           ),
                           followUpQuestions:
-                          (msg['follow_up_questions'] as List<dynamic>?)
-                              ?.map((e) => e.toString())
-                              .toList() ??
-                              [],
+                              (msg['follow_up_questions'] as List<dynamic>?)
+                                      ?.map((e) => e.toString())
+                                      .toList() ??
+                                  [],
                           token: msg['token'] ?? '',
                           isMapView: false,
-                          expandChainOfThought: adjustedIndex == _messages.length - 1,
+                          expandChainOfThought:
+                              adjustedIndex == _messages.length - 1,
                         ),
                       );
                     },
@@ -481,7 +500,7 @@ class _ChatWindowState extends State<ChatWindow> {
             ),
             contentPadding:
                 const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-            prefixIcon: _speechButton(),
+            // prefixIcon: _speechButton(),
             suffixIcon: _sendButton(),
           ),
         ),
@@ -499,7 +518,7 @@ class _ChatWindowState extends State<ChatWindow> {
 
   Widget bottomBar() {
     return Container(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -597,7 +616,7 @@ class _ChatWindowState extends State<ChatWindow> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        capturedPhoto == null
+        /* capturedPhoto == null
             ? CameraWidget(saveCapturedPhoto: saveCapturedPhoto)
             : Padding(
                 padding: const EdgeInsets.only(top: 4.0, bottom: 4),
@@ -622,7 +641,7 @@ class _ChatWindowState extends State<ChatWindow> {
                     ),
                   ),
                 ),
-              ),
+              ),*/
         ValueListenableBuilder(
           valueListenable: showLoader,
           builder: (context, value, _) {
@@ -762,7 +781,6 @@ class _ChatWindowState extends State<ChatWindow> {
   }
 
   Future<void> _initDeviceId() async {
-    final deviceInfo = DeviceInfoPlugin();
     String deviceId = const Uuid().v4();
 
     // url = 'ws://192.168.18.40:8000/ws/chat/$deviceId';
@@ -772,10 +790,11 @@ class _ChatWindowState extends State<ChatWindow> {
   }
 
   void _sendMessage(String message) {
+    String formattedId = formatSession();
     final messageJson = jsonEncode({
       'message': message,
       'user_id': AppState.instance.userId,
-      'session_id': AppState.instance.sessionId,
+      'session_id': formattedId,
       'is_user': true,
     });
 
@@ -807,5 +826,12 @@ class _ChatWindowState extends State<ChatWindow> {
         break;
       }
     }
+  }
+
+  String formatSession() {
+    final dateTime = DateTime.fromMillisecondsSinceEpoch(int.parse(AppState.instance.sessionId));
+    // final formatted = DateFormat('MMM dd,HH:mm:ss').format(dateTime);
+    final formatted = DateFormat('MMM dd-HH_mm_ss').format(dateTime);
+    return 'Session $formatted';
   }
 }

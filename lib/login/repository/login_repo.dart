@@ -5,6 +5,7 @@ import 'package:gka/login/model/session_details_response_model.dart';
 import 'package:gka/login/model/ap_login_response_model.dart';
 import 'package:gka/login/model/kerala_login_response_model.dart';
 import 'package:http/http.dart' as http;
+import 'package:uuid/uuid.dart';
 import '../../shared/token_response.dart';
 import '../../utils/app_state.dart';
 import '../model/login_api_response_model.dart';
@@ -19,6 +20,8 @@ abstract class LoginRepository {
       Map<String, String> params, BuildContext context);
 
   Future fetchCsrfToken(BuildContext context);
+
+  Future<int?> sendSessionId(BuildContext context);
 
   Future<int?> saveFcmToken(BuildContext context);
 }
@@ -112,5 +115,27 @@ class LoginRepositoryImpl extends LoginRepository {
     SessionDetails sessionDetails =
         SessionDetails.fromJson(responseMap['session_details']);
     return sessionDetails;
+  }
+
+  @override
+  Future<int?> sendSessionId(BuildContext context) async {
+    Map<String, String> authHeaders = {
+      constants.headerContentType: constants.headerJson
+    };
+
+    AppState.instance.sessionId = Uuid().v4();
+    Map<String, dynamic> params = {
+      "user_id": AppState.instance.userId,
+      "session_id": AppState.instance.sessionId,
+    };
+    String authUrl =
+        'https://apaims2.0.vassarlabs.com/chatbot/chat/create-session';
+    String data = jsonEncode(params);
+    var response =
+        await http.post(Uri.parse(authUrl), headers: authHeaders, body: data);
+
+    Map<String, dynamic> responseMap = jsonDecode(response.body);
+
+    return responseMap['statuscode'];
   }
 }

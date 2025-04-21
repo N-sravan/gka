@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/material.dart';
 import 'package:gka/chat/model/activity_status_response.dart';
 import 'package:gka/chat/model/chat_history_model.dart';
+import 'package:gka/chat/model/chat_message_history.dart';
 import 'package:gka/chat/model/get_documents_response.dart';
 import 'package:gka/chat/model/get_users_response.dart';
 import 'package:http/http.dart' as http;
@@ -13,6 +13,7 @@ import 'package:gka/utils/common_constants.dart' as constants;
 import '../model/get_prompts_response.dart';
 import '../model/get_tools_response_model.dart';
 import '../model/prompt_submission_response.dart';
+import '../model/user_session_model.dart';
 
 /// Abstract class for the login repository
 abstract class ChatRepository {
@@ -37,11 +38,23 @@ abstract class ChatRepository {
 
   Future<GetDocumentsResponseModel> fetchDocuments(BuildContext context);
 
-  Future<ChatHistoryModel> fetchChatHistory(BuildContext context);
+  Future<ChatHistoryModel> fetchChatHistory(
+      String sessionId, BuildContext context);
 
   Future<UserResponseModel> fetchUsers(BuildContext context);
 
+  Future<List<ChatMessageHistory>> fetchMessageHistory(
+      String sessionId, BuildContext context);
+
+  Future<List<ChatMessageHistory>> fetchSessionHistory(BuildContext context);
+
+  Future<UserSessionModel> fetchUserSessions(BuildContext context);
+
   Future<bool> deleteDocument(BuildContext context, String docId);
+
+  Future<bool> deleteSession(BuildContext context, String sessionId);
+
+  Future<bool> updateSession(BuildContext context, String sessionId, String newId);
 
   Future<bool> deleteChunk(BuildContext context, String chunkId);
 
@@ -291,19 +304,22 @@ class ChatRepositoryImpl extends ChatRepository {
   }
 
   @override
-  Future<ChatHistoryModel> fetchChatHistory(BuildContext context) async {
+  Future<ChatHistoryModel> fetchChatHistory(
+      String sessionId, BuildContext context) async {
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
     };
 
     Map<String, dynamic> params = {
       "user_id": AppState.instance.userId,
-      "session_id": AppState.instance.sessionId
+      "session_id": sessionId
     };
-    String authUrl = 'https://apaims2.0.vassarlabs.com/chatbot/chat/get-chat-history';
+    String authUrl =
+        'https://apaims2.0.vassarlabs.com/chatbot/chat/get-chat-history';
     // String authUrl = 'http://192.168.18.40:8000/chat/get-chat-history';
-    String data = jsonEncode(params);
-    var response = await http.post(Uri.parse(authUrl), headers: authHeaders, body: data);
+    Object data = jsonEncode(params);
+    var response =
+        await http.post(Uri.parse(authUrl), headers: authHeaders, body: data);
 
     Map<String, dynamic> responseMap = jsonDecode(response.body);
 
@@ -349,6 +365,57 @@ class ChatRepositoryImpl extends ChatRepository {
     Map<String, dynamic> responseMap = jsonDecode(response.body);
 
     if (responseMap['statusCode'] == 200) {
+      return true;
+    }
+    return false;
+  }
+
+  @override
+  Future<bool> deleteSession(BuildContext context, String sessionId) async {
+    Map<String, dynamic> params = {
+      "user_id": AppState.instance.userId,
+      "session_ids": [sessionId]
+    };
+    Map<String, String> authHeaders = {
+      constants.headerContentType: constants.headerJson
+    };
+    String authUrl = constants.deleteSessionEndpoint;
+    String requestBody = jsonEncode(params);
+
+    http.Response response = await http.post(
+      Uri.parse(authUrl),
+      headers: authHeaders,
+      body: requestBody,
+    );
+    Map<String, dynamic> responseMap = jsonDecode(response.body);
+
+    if (responseMap['statuscode'] == 200) {
+      return true;
+    }
+    return false;
+  }
+
+  @override
+  Future<bool> updateSession(BuildContext context, String sessionId,String newId) async {
+    Map<String, dynamic> params = {
+      "user_id": AppState.instance.userId,
+      "session_id": sessionId,
+      "new_session_id" : newId
+    };
+    Map<String, String> authHeaders = {
+      constants.headerContentType: constants.headerJson
+    };
+    String authUrl = constants.updateSessionEndpoint;
+    String requestBody = jsonEncode(params);
+
+    http.Response response = await http.post(
+      Uri.parse(authUrl),
+      headers: authHeaders,
+      body: requestBody,
+    );
+    Map<String, dynamic> responseMap = jsonDecode(response.body);
+
+    if (responseMap['status_code'] == 200) {
       return true;
     }
     return false;
@@ -401,5 +468,81 @@ class ChatRepositoryImpl extends ChatRepository {
         ActivityStatusResponse.fromJson(responseMap);
 
     return activityStatusResponse;
+  }
+
+  @override
+  Future<List<ChatMessageHistory>> fetchMessageHistory(
+      String sessionId, BuildContext context) async {
+    Map<String, String> authHeaders = {
+      constants.headerContentType: constants.headerJson,
+      'x-api-key': 'sk-wB4MAe1kOlMMRmdX0KfpwhwMNP8HaKjLnNdsiIdCtxc',
+    };
+
+    String encodedSessionId = Uri.encodeComponent(sessionId);
+    String flowId = 'd38adaab-877c-4a47-a35c-047affbf1102';
+
+    String authUrl =
+        "https://agentsbuilder.apaims2.0.vassarlabs.com/api/v1/monitor/messages?session_id=$encodedSessionId&flow_id=$flowId";
+
+    // String authUrl = Uri.encodeFull('https://agentsbuilder.apaims2.0.vassarlabs.com/api/v1/monitor/messages?session_id=$sessionId&flow_id=$flowId');
+
+    var response = await http.get(Uri.parse(authUrl), headers: authHeaders);
+
+    if (response.statusCode == 200) {
+      List<dynamic> responseList = jsonDecode(response.body);
+
+      return responseList
+          .map((json) => ChatMessageHistory.fromJson(json))
+          .toList();
+    } else {
+      throw Exception('Failed to load message history: ${response.statusCode}');
+    }
+  }
+
+  @override
+  Future<List<ChatMessageHistory>> fetchSessionHistory(
+      BuildContext context) async {
+    Map<String, String> authHeaders = {
+      constants.headerContentType: constants.headerJson,
+    };
+
+    String authUrl =
+        'https://agentsbuilder.apaims2.0.vassarlabs.com/api/v1/monitor/messages?flow_id=34621397-d485-4d1b-ba04-480d3039a1c3';
+
+    var response = await http.get(Uri.parse(authUrl), headers: authHeaders);
+
+    if (response.statusCode == 200) {
+      List<dynamic> responseList = jsonDecode(response.body);
+
+      return responseList
+          .map((json) => ChatMessageHistory.fromJson(json))
+          .toList();
+    } else {
+      throw Exception('Failed to load message history: ${response.statusCode}');
+    }
+  }
+
+  @override
+  Future<UserSessionModel> fetchUserSessions(BuildContext context) async {
+    Map<String, String> authHeaders = {
+      constants.headerContentType: constants.headerJson
+    };
+    Map<String, dynamic> params = {
+      "user_id": AppState.instance.userId,
+    };
+    String authUrl =
+        'https://apaims2.0.vassarlabs.com/chatbot/chat/get-sessions';
+    String data = jsonEncode(params);
+    var response =
+        await http.post(Uri.parse(authUrl), headers: authHeaders, body: data);
+
+    Map<String, dynamic> responseMap = jsonDecode(response.body);
+
+    UserSessionModel userSessionModel = UserSessionModel.fromJson(responseMap);
+    /* List<SessionHistoryModel> filteredData = userSessionModel.data
+        .where((session) =>
+            session.data != null && session.data.toString().trim().isNotEmpty)
+        .toList();*/
+    return userSessionModel;
   }
 }

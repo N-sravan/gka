@@ -14,20 +14,12 @@ import '../../utils/secure_storage_util.dart';
 import '../../utils/util.dart';
 
 class SplashViewModel extends LoadingViewModel {
-  bool noInternet = false;
+
   checkPermissionsAndNavigate(BuildContext context) async {
-    if (await networkUtils.hasActiveInternet()) {
-      await _checkIfUserIsLoggedIn(context);
-    } else {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginScreenWidget()),
-      );
-    }
-    /* Navigator.push(
+    Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const LoginScreenWidget()),
-    );*/
+    );
   }
 
   /// Navigator function based on route argument
@@ -65,7 +57,10 @@ class SplashViewModel extends LoadingViewModel {
       AppState.instance.isEnglish = true;
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => ChatWindow(sessionId: AppState.instance.sessionId,)),
+        MaterialPageRoute(
+            builder: (context) => ChatWindow(
+                  sessionId: AppState.instance.sessionId,
+                )),
       );
     } else {
       // User isn't logged in
