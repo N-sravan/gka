@@ -539,7 +539,7 @@ class ChatViewModel extends LoadingViewModel {
       try {
         bool? result = await repo.deleteSession(context, sessionId);
         if (result == true) {
-          await repo.fetchUserSessions(context);
+          await getSessionsForUser(context);
           isLoading = false;
           notifyListeners();
           return true;
@@ -568,14 +568,15 @@ class ChatViewModel extends LoadingViewModel {
     return false;
   }
 
-  Future<bool> updateSessionId(BuildContext context, String sessionId,String newId) async {
+  Future<bool> updateSessionId(
+      BuildContext context, String sessionId, String newId) async {
     /// Checking for active internet connection
     if (await networkUtils.hasActiveInternet()) {
       isLoading = true;
       try {
-        bool? result = await repo.updateSession(context, sessionId,newId);
+        bool? result = await repo.updateSession(context, sessionId, newId);
         if (result == true) {
-          await repo.fetchUserSessions(context);
+          await getSessionsForUser(context);
           isLoading = false;
           notifyListeners();
           return true;
@@ -822,7 +823,7 @@ class ChatViewModel extends LoadingViewModel {
     userActivity = newValue!;
   }
 
- /* Future? getChatHistoryForSession(
+  /* Future? getChatHistoryForSession(
       String sessionId, BuildContext context) async {
     if (await networkUtils.hasActiveInternet()) {
       isLoading = true;
@@ -870,7 +871,8 @@ class ChatViewModel extends LoadingViewModel {
     return null;
   }*/
 
-  Future? getMessageHistoryForSession(String sessionId, BuildContext context) async {
+  Future? getMessageHistoryForSession(
+      String sessionId, BuildContext context) async {
     if (await networkUtils.hasActiveInternet()) {
       isLoading = true;
       try {
@@ -929,6 +931,7 @@ class ChatViewModel extends LoadingViewModel {
             userSessionModel.data.sort((a, b) => DateTime.parse(b.insertTs)
                 .compareTo(DateTime.parse(a.insertTs)));
             for (var item in userSessionModel.data) {
+              // String formattedId = parseFormattedSession(item.sessionId);
               sessionIdDataMapping[item.sessionId] = item.insertTs;
             }
             print("sessionIdDataMapping::${sessionIdDataMapping}");
@@ -967,7 +970,7 @@ class ChatViewModel extends LoadingViewModel {
       isLoading = true;
       try {
         List<ChatMessageHistory> chatMessageHistoryList =
-        await repo.fetchMessageHistory(sessionId, context);
+            await repo.fetchMessageHistory(sessionId, context);
         chatDataList.clear();
         if (chatMessageHistoryList != null &&
             chatMessageHistoryList.isNotEmpty) {
@@ -1010,4 +1013,10 @@ class ChatViewModel extends LoadingViewModel {
     return null;
   }
 
+  String parseFormattedSession(String session) {
+    final raw = session.replaceFirst('Session ', '');
+    final normalized = raw.replaceFirst('-', ' ').replaceAll('_', ':');
+    String format = DateFormat('MMM dd HH:mm:ss').parse(normalized).toString();
+    return format;
+  }
 }

@@ -94,37 +94,4 @@ class _ChatHistoryViewState extends State<ChatHistoryView> {
       ),
     );
   }
-
-  List<Widget> generateListTiles(Map<String, String> sessionTitleMapping) {
-    List<Widget> listTiles = [];
-    Map<String, String> data = sessionTitleMapping;
-    data.forEach((key, value) {
-      listTiles.add(
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10.0),
-            ),
-            child: ListTile(
-              title: Text(value),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ChatWindow(
-                      sessionId: key,
-                      isFromHistory: true,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-      );
-    });
-    return listTiles;
-  }
 }

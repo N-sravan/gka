@@ -4,12 +4,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/utils/app_state.dart';
 import 'package:provider/provider.dart';
 import '../../../utils/common_constants.dart' as constants;
-import '../../chat_window.dart';
-import '../../main.dart';
 import '../view_model/chat_view_model.dart';
 import 'chat_history_view.dart';
-import 'documents_view.dart';
-import 'notifications_view.dart';
 
 class DrawerWidget extends StatefulWidget {
   const DrawerWidget({
@@ -82,7 +78,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                                 height: constants.mediumPadding,
                               ),
                               Text(
-                                'Hello ${AppState.instance.userName ?? ""}',
+                                'Hello ${AppState.instance.userName}',
                                 style: constants.appBarHeaderTextStyle,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -220,7 +216,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                                   title: Text(
                                     key,
                                     style: const TextStyle(
-                                      fontSize: 14.0,
+                                      fontSize: 13.0,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.black,
                                     ),

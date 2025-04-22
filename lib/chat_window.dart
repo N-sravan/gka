@@ -385,7 +385,7 @@ class _ChatWindowState extends State<ChatWindow> {
 
                       final msg = _messages[adjustedIndex];
 
-                      // SPEAK LOGIC (for each new bot message)
+                  /*    // SPEAK LOGIC (for each new bot message)
                       if (_messages.isNotEmpty &&
                           !_messages.last['is_user'] &&
                           _messages.last['text'].toString().isNotEmpty &&
@@ -394,7 +394,7 @@ class _ChatWindowState extends State<ChatWindow> {
                           showLoader.value = false;
                           _speakMessage(_messages.last['text']);
                         });
-                      }
+                      }*/
 
                       // STOP if user message came in
                       if (_messages.isNotEmpty && _messages.last['is_user']) {

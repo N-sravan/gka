@@ -415,7 +415,7 @@ class ChatRepositoryImpl extends ChatRepository {
     );
     Map<String, dynamic> responseMap = jsonDecode(response.body);
 
-    if (responseMap['status_code'] == 200) {
+    if (responseMap['statuscode'] == 200) {
       return true;
     }
     return false;
