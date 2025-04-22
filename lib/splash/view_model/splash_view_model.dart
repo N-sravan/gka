@@ -1,6 +1,6 @@
 import 'dart:async';
+import 'package:gka/chat/view/chat_view.dart';
 import 'package:gka/login/view/login_view.dart';
-import 'package:gka/utils/navigation_util.dart';
 import '../../chat_window.dart';
 import 'package:flutter/material.dart';
 import '../../../utils/app_state.dart';
@@ -58,8 +58,8 @@ class SplashViewModel extends LoadingViewModel {
       Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => ChatWindow(
-                  sessionId: AppState.instance.sessionId,
+            builder: (context) => ChatView(
+                  sessionId: AppState.instance.sessionId,isFromHistory: false,
                 )),
       );
     } else {

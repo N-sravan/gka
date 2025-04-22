@@ -22,8 +22,10 @@ import 'package:gka/utils/common_constants.dart' as constants;
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:uuid/uuid.dart';
+import 'package:web_socket_channel/io.dart';
 import '../../home/model/available_models.dart' as model;
 import '../../login/model/login_api_response_model.dart' as login;
+import '../../main.dart';
 import '../../message_bubble.dart';
 import '../../services/api_provider.dart';
 import '../../utils/network_utils.dart';
@@ -118,6 +120,39 @@ class ChatViewModel extends LoadingViewModel {
   List<String>? toolUUIDs = [];
   List<FileResponse>? documentsList = [];
   DateFormat formatter = DateFormat("dd-MM-yyyy");
+  bool _speechEnabled = false;
+  ValueNotifier<bool> showLoader = ValueNotifier<bool>(false);
+
+  int start = 0;
+  int end = 0;
+  bool hasSpoken = false;
+  String? _newVoiceText;
+  int prevChatLengthHistory = 0;
+  int c = 0;
+  String highlightedText = "";
+  String remainingText = "";
+  bool isllmDropdown = false;
+  final List<Map<String, dynamic>> messages = [];
+  String url = '';
+  IOWebSocketChannel? channel;
+  late ChatViewModel viewModel;
+
+  List<String> langLoaderMsgList = [];
+  List<String> llmOptionsList = ['chatgpt-4o', 'gemma2:9b', 'deepseek-r1'];
+  List<String> langList = ['English', 'Telugu', 'Hindi'];
+
+  Map<String, String> currentVoice = {
+    "name": "en-us-x-iom-local",
+    "locale": "en-US"
+  };
+  String language = '';
+  String langId = '';
+  String title = '';
+  String dataNotFoundMsg = '';
+  String? llmSelected;
+  String? langSelected;
+  late DatabaseReference ref;
+
 
   clearData() {
     promptTemplateIntentMapping.clear();
@@ -871,13 +906,13 @@ class ChatViewModel extends LoadingViewModel {
     return null;
   }*/
 
-  Future? getMessageHistoryForSession(
+  Future<bool>? getMessageHistoryForSession(
       String sessionId, BuildContext context) async {
     if (await networkUtils.hasActiveInternet()) {
       isLoading = true;
       try {
         List<ChatMessageHistory> chatMessageHistoryList =
-            await repo.fetchMessageHistory(sessionId, context);
+            await repo.fetchMessageHistory(sessionId);
         chatDataList.clear();
         if (chatMessageHistoryList != null &&
             chatMessageHistoryList.isNotEmpty) {
@@ -888,6 +923,10 @@ class ChatViewModel extends LoadingViewModel {
                 message: item.text,
               );
               chatDataList.add(chatData);
+              messages.add({
+                'text': item.text,
+                'is_user': item.sender == "User" ? true : false,
+              });
             }
             isLoading = false;
             notifyListeners();
@@ -895,6 +934,7 @@ class ChatViewModel extends LoadingViewModel {
             isLoading = false;
             notifyListeners();
           }
+          return true;
         } else {
           isLoading = false;
           notifyListeners();
@@ -917,14 +957,14 @@ class ChatViewModel extends LoadingViewModel {
         content: Text(constants.noNetworkAvailability),
       ));
     }
-    return null;
+    return false;
   }
 
   Future? getSessionsForUser(BuildContext context) async {
     if (await networkUtils.hasActiveInternet()) {
       isLoading = true;
       try {
-        UserSessionModel userSessionModel = await repo.fetchUserSessions(context);
+        UserSessionModel userSessionModel = await repo.fetchUserSessions();
         sessionIdDataMapping.clear();
         if (userSessionModel.status == 200) {
           if (userSessionModel.data.isNotEmpty) {
@@ -970,7 +1010,7 @@ class ChatViewModel extends LoadingViewModel {
       isLoading = true;
       try {
         List<ChatMessageHistory> chatMessageHistoryList =
-            await repo.fetchMessageHistory(sessionId, context);
+            await repo.fetchMessageHistory(sessionId);
         chatDataList.clear();
         if (chatMessageHistoryList != null &&
             chatMessageHistoryList.isNotEmpty) {
@@ -1018,5 +1058,112 @@ class ChatViewModel extends LoadingViewModel {
     final normalized = raw.replaceFirst('-', ' ').replaceAll('_', ':');
     String format = DateFormat('MMM dd HH:mm:ss').parse(normalized).toString();
     return format;
+  }
+
+  initSpeech() async {
+    _speechEnabled = await _speechToText.initialize(
+      onError: (error) {
+        print("FLKJFJLJF ERROR");
+        stopListening();
+      },
+      onStatus: (status) {
+        print("FLKJFJLJF STATUS ${status}");
+      },
+    );
+
+    // print("Available languages ${await tts.getLanguages}");
+    await tts.setLanguage(langId);
+    await tts.setSpeechRate(0.5);
+    await tts.setVoice(currentVoice);
+    print("user id::${AppState.instance.userId}");
+    print("session id::${AppState.instance.sessionId}");
+  }
+  bool get isConnected => channel != null && channel!.closeCode == null;
+  initWebsocketConnection() async {
+    if (isConnected) {
+      print("WebSocket already connected");
+      return;
+    }
+    await initDeviceId();
+    try {
+      channel = IOWebSocketChannel.connect(url);
+      channel!.stream.listen(
+        (data) {
+          try {
+            final decoded = jsonDecode(data);
+            final result = decoded['message'];
+            final isUser = decoded['is_user'];
+            print("Received result: $result");
+
+            messages.add({
+              'text': result,
+              'is_user': isUser,
+            });
+            showLoader.value = false;
+          } catch (e) {
+            print("Error decoding JSON: $e");
+            Fluttertoast.showToast(msg: 'Something went wrong');
+            showLoader.value = false;
+          }
+        },
+        onError: (error) {
+          print("WebSocket stream error: $error");
+          Fluttertoast.showToast(msg: 'WebSocket connection error');
+          showLoader.value = false;
+        },
+        onDone: () {
+          print("WebSocket connection closed");
+          Fluttertoast.showToast(msg: 'WebSocket connection closed');
+          showLoader.value = false;
+        },
+      );
+    } catch (e) {
+      print("Failed to connect to WebSocket: $e");
+      Fluttertoast.showToast(msg: 'Failed to connect to server');
+      showLoader.value = false;
+    }
+  }
+
+  Future<void> initDeviceId() async {
+    String deviceId = const Uuid().v4();
+
+    url = 'wss://apaims2.0.vassarlabs.com/chatbot/ws/chat/$deviceId';
+    print("12345 Generated Device ID: $deviceId");
+    print("12345 Web socket URL: $url");
+  }
+
+  void stopListening() async {
+    bool active = _speechToText.isListening;
+    listeningActive.value = active;
+    notifyListeners();
+  }
+
+  void sendMessage(String message) {
+    String formattedId = formatSession();
+    final messageJson = jsonEncode({
+      'message': message,
+      'user_id': AppState.instance.userId,
+      'session_id': formattedId,
+      'is_user': true,
+    });
+
+    print("12345 Input data::$messageJson");
+
+    channel!.sink.add(messageJson);
+
+    messages.add({
+      'text': message,
+      'is_user': true,
+    });
+    chatController.clear();
+    showLoader.value = true;
+  }
+
+  String formatSession() {
+    final dateTime = DateTime.fromMillisecondsSinceEpoch(
+        int.parse(AppState.instance.sessionId));
+    // final formatted = DateFormat('MMM dd,HH:mm:ss').format(dateTime);
+    final formatted = DateFormat('MMM dd-HH_mm_ss').format(dateTime);
+    return 'Session $formatted';
   }
 }

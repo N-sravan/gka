@@ -1,20 +1,29 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_native_image/flutter_native_image.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:gka/shared/loading_view_model.dart';
 import 'package:http/http.dart' as http;
+import '../chat/model/chat_history_model.dart';
+import '../chat/model/chat_message_history.dart';
+import '../chat/repo/chat_repo.dart';
 import '../login/model/user_permission_response_model.dart';
 import '../utils/app_state.dart';
 import '../utils/common_constants.dart' as constants;
 import '../login/model/department_user_permission_response.dart';
+import '../utils/network_utils.dart';
+import '../utils/util.dart';
 
-class ApiProvider {
+class ApiProvider extends LoadingViewModel {
   static ApiProvider? _instance;
 
   ApiProvider._();
 
   static ApiProvider get instance => _instance ??= ApiProvider._();
+
+
 
   Future<dynamic> uploadMedia(data, path, mediaType) async {
     String submissionUrl = '';
@@ -104,4 +113,32 @@ class ApiProvider {
       }
       return null;
     }
+
+  Future<List<ChatMessageHistory>> fetchMessageHistory(
+      String sessionId, BuildContext context) async {
+    Map<String, String> authHeaders = {
+      constants.headerContentType: constants.headerJson,
+      'x-api-key': 'sk-wB4MAe1kOlMMRmdX0KfpwhwMNP8HaKjLnNdsiIdCtxc',
+    };
+
+    String encodedSessionId = Uri.encodeComponent(sessionId);
+    String flowId = 'd38adaab-877c-4a47-a35c-047affbf1102';
+
+    String authUrl =
+        "https://agentsbuilder.apaims2.0.vassarlabs.com/api/v1/monitor/messages?session_id=$encodedSessionId&flow_id=$flowId";
+
+    // String authUrl = Uri.encodeFull('https://agentsbuilder.apaims2.0.vassarlabs.com/api/v1/monitor/messages?session_id=$sessionId&flow_id=$flowId');
+
+    var response = await http.get(Uri.parse(authUrl), headers: authHeaders);
+
+    if (response.statusCode == 200) {
+      List<dynamic> responseList = jsonDecode(response.body);
+
+      return responseList
+          .map((json) => ChatMessageHistory.fromJson(json))
+          .toList();
+    } else {
+      throw Exception('Failed to load message history: ${response.statusCode}');
+    }
+  }
 }

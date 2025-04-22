@@ -1,9 +1,11 @@
+/*
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 import 'package:aws_s3_upload/aws_s3_upload.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:gka/chat/view_model/chat_view_model.dart';
 import 'package:gka/utils/secure_storage_util.dart';
 import 'package:gka/text_to_speech.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -26,20 +28,24 @@ import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'dart:developer' as developer;
 import 'camera_screen.dart';
+import 'chat/model/chat_history_model.dart';
+import 'chat/model/chat_message_history.dart';
 import 'message_bubble.dart';
 import 'utils/network_utils.dart';
 
 Timer? periodicTimer;
 
 class ChatWindow extends StatefulWidget {
-  const ChatWindow({
+  ChatWindow({
     Key? key,
-    this.isFromHistory,
+    required this.isFromHistory,
     this.sessionId,
+    this.historyMessages,
   }) : super(key: key);
 
   final bool? isFromHistory;
   final String? sessionId;
+  List<Map<String, dynamic>>? historyMessages;
 
   @override
   State<ChatWindow> createState() => _ChatWindowState();
@@ -107,25 +113,32 @@ class _ChatWindowState extends State<ChatWindow> {
   String? llmSelected;
   String? langSelected;
   late DatabaseReference ref;
+  late ChatViewModel viewModel;
 
+*/
 /*  Map<String, String> data = {
     'Which zone had the highest number of leakages in the last 2 months and What is the pipe ID with the most leakages': 'Zone 1 had the highest number of leakages in the last 2 months and the pipe id with the most leakages is HARPIPE01001023.',
     'Which zone had the highest number of leakages in the last two months and What is the pipe ID with the most leakages': 'Zone 1 had the highest number of leakages in the last 2 months and the pipe id with the most leakages is HARPIPE01001023.',
     'How many No Water complaints were received in total': 'A total of 5 \'No Water\' complaints were received.',
     'How many domestic connections are there in zone 5': 'There are 2233 domestic connections in Zone 5.'
-  };*/
+  };*//*
+
 
   @override
   void initState() {
     super.initState();
     AppState.instance.isEnglish = true;
     AppState.instance.language = 'english';
-    switch (constants.projectId) {
+    _initSpeech();
+    _initWsConnection();
+
+    */
+/*switch (constants.projectId) {
       case constants.fieldRishiUUID:
         title = constants.appTitle;
         break;
     }
-    switch (AppState.instance.language.toLowerCase()) {
+   switch (AppState.instance.language.toLowerCase()) {
       case 'english':
         dataNotFoundMsg = 'Data Not Found';
         loaderMsgList = [
@@ -171,9 +184,8 @@ class _ChatWindowState extends State<ChatWindow> {
         dataNotFoundMsg = 'जानकारी नहीं मिली';
         language = 'hindi';
         break;
-    }
-    _initSpeech();
-    _initWsConnection();
+    }*//*
+
   }
 
   @override
@@ -202,12 +214,10 @@ class _ChatWindowState extends State<ChatWindow> {
       },
     );
 
-    print("Available languages ${await tts.getLanguages}");
+    // print("Available languages ${await tts.getLanguages}");
     await tts.setLanguage(langId);
     await tts.setSpeechRate(0.5);
     await tts.setVoice(currentVoice);
-    print("language::${AppState.instance.language.toLowerCase()}");
-    print("lang Id::$langId");
     print("user id::${AppState.instance.userId}");
     print("session id::${AppState.instance.sessionId}");
   }
@@ -268,7 +278,9 @@ class _ChatWindowState extends State<ChatWindow> {
     try {
       await _speechToText.listen(
           onSoundLevelChange: onSoundLevelChange,
-          /*localeId: selectedLocale.localeId,*/
+          */
+/*localeId: selectedLocale.localeId,*//*
+
           localeId: langId,
           partialResults: true,
           onResult: _onSpeechResult,
@@ -331,9 +343,7 @@ class _ChatWindowState extends State<ChatWindow> {
         return false;
       },
       child: Scaffold(
-        drawer: DrawerWidget(
-          sessionId: widget.sessionId!,
-        ),
+        drawer: widget.isFromHistory! ? null : const DrawerWidget(),
         appBar: AppBar(
           titleSpacing: 2,
           title: Row(
@@ -382,10 +392,10 @@ class _ChatWindowState extends State<ChatWindow> {
                           adjustedIndex >= _messages.length) {
                         return const SizedBox();
                       }
-
                       final msg = _messages[adjustedIndex];
 
-                  /*    // SPEAK LOGIC (for each new bot message)
+                      */
+/*    // SPEAK LOGIC (for each new bot message)
                       if (_messages.isNotEmpty &&
                           !_messages.last['is_user'] &&
                           _messages.last['text'].toString().isNotEmpty &&
@@ -394,7 +404,8 @@ class _ChatWindowState extends State<ChatWindow> {
                           showLoader.value = false;
                           _speakMessage(_messages.last['text']);
                         });
-                      }*/
+                      }*//*
+
 
                       // STOP if user message came in
                       if (_messages.isNotEmpty && _messages.last['is_user']) {
@@ -504,14 +515,16 @@ class _ChatWindowState extends State<ChatWindow> {
             suffixIcon: _sendButton(),
           ),
         ),
-        /* Row(
+        */
+/* Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             Expanded(child: _dropdownInsideField(!isllmDropdown)),
             const SizedBox(width: 8), // Spacing between dropdowns
             Expanded(child: _dropdownInsideField(isllmDropdown)),
           ],
-        ),*/
+        ),*//*
+
       ],
     );
   }
@@ -616,7 +629,8 @@ class _ChatWindowState extends State<ChatWindow> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        /* capturedPhoto == null
+        */
+/* capturedPhoto == null
             ? CameraWidget(saveCapturedPhoto: saveCapturedPhoto)
             : Padding(
                 padding: const EdgeInsets.only(top: 4.0, bottom: 4),
@@ -641,7 +655,8 @@ class _ChatWindowState extends State<ChatWindow> {
                     ),
                   ),
                 ),
-              ),*/
+              ),*//*
+
         ValueListenableBuilder(
           valueListenable: showLoader,
           builder: (context, value, _) {
@@ -829,9 +844,11 @@ class _ChatWindowState extends State<ChatWindow> {
   }
 
   String formatSession() {
-    final dateTime = DateTime.fromMillisecondsSinceEpoch(int.parse(AppState.instance.sessionId));
+    final dateTime = DateTime.fromMillisecondsSinceEpoch(
+        int.parse(AppState.instance.sessionId));
     // final formatted = DateFormat('MMM dd,HH:mm:ss').format(dateTime);
     final formatted = DateFormat('MMM dd-HH_mm_ss').format(dateTime);
     return 'Session $formatted';
   }
 }
+*/

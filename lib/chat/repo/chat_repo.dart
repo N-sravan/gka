@@ -43,18 +43,18 @@ abstract class ChatRepository {
 
   Future<UserResponseModel> fetchUsers(BuildContext context);
 
-  Future<List<ChatMessageHistory>> fetchMessageHistory(
-      String sessionId, BuildContext context);
+  Future<List<ChatMessageHistory>> fetchMessageHistory(String sessionId);
 
-  Future<List<ChatMessageHistory>> fetchSessionHistory(BuildContext context);
+  Future<List<ChatMessageHistory>> fetchSessionHistory();
 
-  Future<UserSessionModel> fetchUserSessions(BuildContext context);
+  Future<UserSessionModel> fetchUserSessions();
 
   Future<bool> deleteDocument(BuildContext context, String docId);
 
   Future<bool> deleteSession(BuildContext context, String sessionId);
 
-  Future<bool> updateSession(BuildContext context, String sessionId, String newId);
+  Future<bool> updateSession(
+      BuildContext context, String sessionId, String newId);
 
   Future<bool> deleteChunk(BuildContext context, String chunkId);
 
@@ -396,11 +396,12 @@ class ChatRepositoryImpl extends ChatRepository {
   }
 
   @override
-  Future<bool> updateSession(BuildContext context, String sessionId,String newId) async {
+  Future<bool> updateSession(
+      BuildContext context, String sessionId, String newId) async {
     Map<String, dynamic> params = {
       "user_id": AppState.instance.userId,
       "session_id": sessionId,
-      "new_session_id" : newId
+      "new_session_id": newId
     };
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
@@ -471,8 +472,7 @@ class ChatRepositoryImpl extends ChatRepository {
   }
 
   @override
-  Future<List<ChatMessageHistory>> fetchMessageHistory(
-      String sessionId, BuildContext context) async {
+  Future<List<ChatMessageHistory>> fetchMessageHistory(String sessionId) async {
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson,
       'x-api-key': 'sk-wB4MAe1kOlMMRmdX0KfpwhwMNP8HaKjLnNdsiIdCtxc',
@@ -500,8 +500,7 @@ class ChatRepositoryImpl extends ChatRepository {
   }
 
   @override
-  Future<List<ChatMessageHistory>> fetchSessionHistory(
-      BuildContext context) async {
+  Future<List<ChatMessageHistory>> fetchSessionHistory() async {
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson,
     };
@@ -523,7 +522,7 @@ class ChatRepositoryImpl extends ChatRepository {
   }
 
   @override
-  Future<UserSessionModel> fetchUserSessions(BuildContext context) async {
+  Future<UserSessionModel> fetchUserSessions() async {
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
     };

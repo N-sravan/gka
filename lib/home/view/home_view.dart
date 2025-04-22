@@ -4,6 +4,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/home/view_model/home_view_model.dart';
 import 'package:gka/utils/app_state.dart';
 import 'package:provider/provider.dart';
+import '../../chat/view/chat_view.dart';
 import '../../chat_window.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 import '../../login/model/login_api_response_model.dart' as response;
@@ -441,7 +442,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => ChatWindow(
+                                builder: (context) => ChatView(
                                   isFromHistory: false,
                                   sessionId: AppState.instance.sessionId,
                                 ),

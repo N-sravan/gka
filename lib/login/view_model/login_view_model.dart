@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:gka/chat/view/chat_view.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:uuid/uuid.dart';
@@ -294,7 +295,7 @@ class LoginViewModel extends LoadingViewModel {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => ChatWindow(
+                  builder: (_) => ChatView(
                     isFromHistory: false,
                     sessionId: AppState.instance.sessionId,
                   ),
