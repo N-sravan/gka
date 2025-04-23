@@ -56,6 +56,7 @@ class _ChatViewState extends State<ChatView> {
   @override
   void dispose() {
     super.dispose();
+    viewModel.clearData();
   }
 
   @override
@@ -110,8 +111,7 @@ class _ChatViewState extends State<ChatView> {
                             controller: scrollControllerListView,
                             reverse: true,
                             padding: const EdgeInsets.all(10),
-                            itemCount:
-                                viewModel.messages.length + (isLoading ? 1 : 0),
+                            itemCount: viewModel.messages.length + (isLoading ? 1 : 0),
                             itemBuilder: (_, index) {
                               if (isLoading && index == 0) {
                                 WidgetsBinding.instance

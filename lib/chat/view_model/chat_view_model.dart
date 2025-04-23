@@ -153,10 +153,10 @@ class ChatViewModel extends LoadingViewModel {
   String? langSelected;
   late DatabaseReference ref;
 
-
   clearData() {
     promptTemplateIntentMapping.clear();
-    // documentIdMapping.clear();
+    chatDataList.clear();
+    messages.clear();
     selectedFile = null;
     isUploading = false;
   }
@@ -914,34 +914,25 @@ class ChatViewModel extends LoadingViewModel {
         List<ChatMessageHistory> chatMessageHistoryList =
             await repo.fetchMessageHistory(sessionId);
         chatDataList.clear();
+        messages.clear();
         if (chatMessageHistoryList != null &&
             chatMessageHistoryList.isNotEmpty) {
-          if (chatMessageHistoryList.isNotEmpty) {
-            for (ChatMessageHistory item in chatMessageHistoryList) {
-              ChatData chatData = ChatData(
-                isUser: item.sender == "User" ? true : false,
-                message: item.text,
-              );
-              chatDataList.add(chatData);
-              messages.add({
-                'text': item.text,
-                'is_user': item.sender == "User" ? true : false,
-              });
-            }
-            isLoading = false;
-            notifyListeners();
-          } else {
-            isLoading = false;
-            notifyListeners();
+          for (ChatMessageHistory item in chatMessageHistoryList) {
+            ChatData chatData = ChatData(
+              isUser: item.sender == "User" ? true : false,
+              message: item.text,
+            );
+            chatDataList.add(chatData);
+            messages.add({
+              'text': item.text,
+              'is_user': item.sender == "User" ? true : false,
+            });
           }
-          return true;
-        } else {
-          isLoading = false;
-          notifyListeners();
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text(constants.genericErrorMsg),
-          ));
+          ;
         }
+        isLoading = false;
+        notifyListeners();
+        return true;
       } catch (e) {
         isLoading = false;
         notifyListeners();
@@ -1078,7 +1069,9 @@ class ChatViewModel extends LoadingViewModel {
     print("user id::${AppState.instance.userId}");
     print("session id::${AppState.instance.sessionId}");
   }
+
   bool get isConnected => channel != null && channel!.closeCode == null;
+
   initWebsocketConnection() async {
     if (isConnected) {
       print("WebSocket already connected");
