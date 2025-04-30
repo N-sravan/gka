@@ -258,8 +258,8 @@ class _ChatViewState extends State<ChatView> {
                           Fluttertoast.showToast(
                               msg: "Please enter your question.");
                         } else {
-                          // viewModel.sendMessage(viewModel.chatController.text);
-                          viewModel.sendMessageStream(viewModel.chatController.text,widget.sessionId);
+                          viewModel.sendMessage(viewModel.chatController.text);
+                          // viewModel.sendMessageStream(viewModel.chatController.text,widget.sessionId);
                         }
                       });
           },

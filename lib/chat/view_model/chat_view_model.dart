@@ -920,22 +920,33 @@ class ChatViewModel extends LoadingViewModel {
       isLoading = true;
       try {
         List<ChatMessageHistory> chatMessageHistoryList =
-            await repo.fetchMessageHistory(sessionId);
+        await repo.fetchMessageHistory(sessionId);
         chatDataList.clear();
         messages.clear();
-        if (chatMessageHistoryList.isNotEmpty) {
+        chatMessageHistoryList.sort((a, b) {
+          // Compare timestamps first
+          int cmp = a.timestamp.compareTo(b.timestamp);
+          if (cmp != 0) return cmp;
+
+          // If timestamps are the same, prioritize "User" before others
+          if (a.sender == "User" && b.sender != "User") return -1;
+          if (a.sender != "User" && b.sender == "User") return 1;
+
+          return 0;
+        });
+        if (chatMessageHistoryList != null &&
+            chatMessageHistoryList.isNotEmpty) {
           for (ChatMessageHistory item in chatMessageHistoryList) {
             ChatData chatData = ChatData(
-              isUser: item.role == "userMessage" ? true : false,
-              message: item.content,
+              isUser: item.sender == "User" ? true : false,
+              message: item.text,
             );
             chatDataList.add(chatData);
             messages.add({
-              'text': item.content,
-              'is_user': item.role == "userMessage" ? true : false,
+              'text': item.text,
+              'is_user': item.sender == "User" ? true : false,
             });
           }
-          ;
         }
         isLoading = false;
         notifyListeners();
@@ -970,13 +981,13 @@ class ChatViewModel extends LoadingViewModel {
         if (chatMessageHistoryList.isNotEmpty) {
           for (ChatMessageHistory item in chatMessageHistoryList) {
             ChatData chatData = ChatData(
-              isUser: item.role == "userMessage" ? true : false,
-              message: item.content,
+              isUser: item.sender == "User" ? true : false,
+              message: item.text,
             );
             chatDataList.add(chatData);
             messages.add({
-              'text': item.content,
-              'is_user': item.role == "userMessage" ? true : false,
+              'text': item.text,
+              'is_user': item.sender == "User" ? true : false,
             });
           }
           ;
@@ -1059,8 +1070,8 @@ class ChatViewModel extends LoadingViewModel {
           if (chatMessageHistoryList.isNotEmpty) {
             for (ChatMessageHistory item in chatMessageHistoryList) {
               ChatData chatData = ChatData(
-                isUser: item.role == "userMessage" ? true : false,
-                message: item.content,
+                isUser: item.sender == "User" ? true : false,
+                message: item.text,
               );
               chatDataList.add(chatData);
             }
@@ -1182,12 +1193,11 @@ class ChatViewModel extends LoadingViewModel {
     notifyListeners();
   }
 
-  /*void sendMessage(String message) {
-    String formattedId = formatSession();
+  void sendMessage(String message) {
     final messageJson = jsonEncode({
       'message': message,
       'user_id': AppState.instance.userId,
-      'session_id': formattedId,
+      'session_id': AppState.instance.sessionId,
       'is_user': true,
     });
 
@@ -1201,7 +1211,7 @@ class ChatViewModel extends LoadingViewModel {
     });
     chatController.clear();
     showLoader.value = true;
-  }*/
+  }
 
   Future<void> sendMessageStream(String userMessage, String? sessionId) async {
     messages.add({

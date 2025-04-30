@@ -10,7 +10,6 @@ import 'package:gka/utils/app_state.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter_background_service_android/flutter_background_service_android.dart';
@@ -36,11 +35,6 @@ import 'helpers/notification_helper.dart';
 import 'home/view/home_view.dart';
 import 'locator.dart';
 
-var initializationSettingsAndroid = const AndroidInitializationSettings(
-    '@mipmap/ic_launcher'); // <- default icon name is @mipmap/ic_launcher
-var initializationSettingsIOS = const DarwinInitializationSettings();
-var initializationSettings = InitializationSettings(
-    android: initializationSettingsAndroid, iOS: initializationSettingsIOS);
 SpeechToText speechToText = SpeechToText();
 ValueNotifier<bool> listeningActive = ValueNotifier<bool>(false);
 ValueNotifier<bool> showLoader = ValueNotifier<bool>(false);

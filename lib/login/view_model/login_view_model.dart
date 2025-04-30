@@ -288,15 +288,16 @@ class LoginViewModel extends LoadingViewModel {
                   userPermissionsResponse.response!.meta!.mobileNo!,
                   userPermissionsResponse.response!.meta!.firstName!);
 
-              bool? result = await sendSessionId(context);
+              // bool? result = await sendSessionId(context);
 
-              if (result != null && result == true) {
+              String sessionId = formatSession();
+              if (sessionId.isNotEmpty) {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) => ChatView(
                       isFromHistory: false,
-                      sessionId: AppState.instance.sessionId,
+                      sessionId: sessionId,
                     ),
                   ),
                 );
