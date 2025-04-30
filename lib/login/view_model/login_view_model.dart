@@ -288,19 +288,16 @@ class LoginViewModel extends LoadingViewModel {
                   userPermissionsResponse.response!.meta!.mobileNo!,
                   userPermissionsResponse.response!.meta!.firstName!);
 
-
-
               bool? result = await sendSessionId(context);
 
-              if(result !=null && result == true) {
+              if (result != null && result == true) {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) =>
-                        ChatView(
-                          isFromHistory: false,
-                          sessionId: AppState.instance.sessionId,
-                        ),
+                    builder: (_) => ChatView(
+                      isFromHistory: false,
+                      sessionId: AppState.instance.sessionId,
+                    ),
                   ),
                 );
               }
@@ -351,7 +348,7 @@ class LoginViewModel extends LoadingViewModel {
       isLoading = true;
       try {
         String sessionId = formatSession();
-        int? statusCode = await repo.sendSessionId(context,sessionId);
+        int? statusCode = await repo.sendSessionId(context, sessionId);
         if (statusCode == 200) {
           Fluttertoast.showToast(msg: 'Session Created Successfully!');
           isLoading = false;
@@ -382,13 +379,12 @@ class LoginViewModel extends LoadingViewModel {
     return false;
   }
 
-
   String formatSession() {
-    AppState.instance.sessionId = DateTime.now().millisecondsSinceEpoch.toString();
-    final dateTime = DateTime.fromMillisecondsSinceEpoch(
-        int.parse(AppState.instance.sessionId));
-    // final formatted = DateFormat('MMM dd,HH:mm:ss').format(dateTime);
+    String generateTs = DateTime.now().millisecondsSinceEpoch.toString();
+    final dateTime = DateTime.fromMillisecondsSinceEpoch(int.parse(generateTs));
     final formatted = DateFormat('MMM dd-HH_mm_ss').format(dateTime);
-    return 'Session $formatted';
+    AppState.instance.sessionId = 'Session $formatted';
+    print("Session ID ::${AppState.instance.sessionId}");
+    return AppState.instance.sessionId;
   }
 }

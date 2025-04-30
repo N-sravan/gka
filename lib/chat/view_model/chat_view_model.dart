@@ -934,7 +934,8 @@ class ChatViewModel extends LoadingViewModel {
               'text': item.content,
               'is_user': item.role == "userMessage" ? true : false,
             });
-          };
+          }
+          ;
         }
         isLoading = false;
         notifyListeners();
@@ -1203,7 +1204,6 @@ class ChatViewModel extends LoadingViewModel {
   }*/
 
   Future<void> sendMessageStream(String userMessage, String? sessionId) async {
-    String formattedId = formatSession();
     messages.add({
       'text': userMessage,
       'is_user': true,
@@ -1215,12 +1215,12 @@ class ChatViewModel extends LoadingViewModel {
     final url = Uri.parse(baseUrl);
     Map<String, dynamic> data = {
       "question": userMessage,
-      "overrideConfig": {"sessionId": formattedId},
+      "overrideConfig": {"sessionId": AppState.instance.sessionId},
     };
 
     Object postData = jsonEncode(data);
 
-    print("post data::$data");
+    print("post data::$postData");
     try {
       final request = http.Request('POST', url)
         ..headers['Authorization'] = 'Bearer $bearerToken'
@@ -1254,13 +1254,5 @@ class ChatViewModel extends LoadingViewModel {
       Fluttertoast.showToast(msg: "Something went wrong!");
       notifyListeners();
     }
-  }
-
-  String formatSession() {
-    final dateTime = DateTime.fromMillisecondsSinceEpoch(
-        int.parse(AppState.instance.sessionId));
-    // final formatted = DateFormat('MMM dd,HH:mm:ss').format(dateTime);
-    final formatted = DateFormat('MMM dd-HH_mm_ss').format(dateTime);
-    return 'Session $formatted';
   }
 }
