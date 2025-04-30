@@ -43,9 +43,9 @@ class TextToSpeechService {
     print(await flutterTts.getLanguages);
 
     if (isAndroid) {
-      flutterTts.setInitHandler(() {
+      /*flutterTts.setInitHandler(() {
         print("TTS Initialized");
-      });
+      });*/
     }
     _newVoiceText = text;
   }

@@ -21,7 +21,7 @@ abstract class LoginRepository {
 
   Future fetchCsrfToken(BuildContext context);
 
-  Future<int?> sendSessionId(BuildContext context);
+  Future<int?> sendSessionId(BuildContext context, String sessionId);
 
   Future<int?> saveFcmToken(BuildContext context);
 }
@@ -118,19 +118,18 @@ class LoginRepositoryImpl extends LoginRepository {
   }
 
   @override
-  Future<int?> sendSessionId(BuildContext context) async {
+  Future<int?> sendSessionId(BuildContext context, String sessionId) async {
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
     };
 
-    AppState.instance.sessionId = Uuid().v4();
     Map<String, dynamic> params = {
       "user_id": AppState.instance.userId,
-      "session_id": AppState.instance.sessionId,
+      "session_id": sessionId,
     };
     String authUrl =
         'https://apaims2.0.vassarlabs.com/chatbot/chat/create-session';
-    String data = jsonEncode(params);
+    Object data = jsonEncode(params);
     var response =
         await http.post(Uri.parse(authUrl), headers: authHeaders, body: data);
 

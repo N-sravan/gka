@@ -81,15 +81,10 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                                         shrinkWrap: true,
                                         physics:
                                             const NeverScrollableScrollPhysics(),
-                                        itemCount: viewModel
-                                            .sessionIdDataMapping.length,
+                                        itemCount: viewModel.sessionIdDataMapping.length,
                                         itemBuilder: (context, index) {
-                                          final key = viewModel
-                                              .sessionIdDataMapping.keys
-                                              .elementAt(index);
-                                          final value = viewModel
-                                                  .sessionIdDataMapping[key] ??
-                                              '';
+                                          final key = viewModel.sessionIdDataMapping.keys.elementAt(index);
+                                          final value = viewModel.sessionIdDataMapping[key] ?? '';
 
                                           return Card(
                                             margin: const EdgeInsets.symmetric(

@@ -1,103 +1,64 @@
 class ChatMessageHistory {
   final String id;
-  final String flowId;
-  final String timestamp;
-  final String sender;
-  final String senderName;
+  final String role;
+  final String chatflowId;
+  final String content;
+  final String chatType;
+  final String chatId;
+  final String memoryType;
   final String sessionId;
-  final String text;
-  final String files;
-  final bool edit;
-  final MessageProperties properties;
-  final String category;
-  final List<dynamic> contentBlocks;
+  final DateTime createdDate;
+  final List<dynamic>? sourceDocuments;
+  final List<dynamic>? usedTools;
+  final List<dynamic>? fileAnnotations;
+  final dynamic agentReasoning;
+  final List<dynamic>? fileUploads;
+  final List<dynamic>? artifacts;
+  final dynamic action;
+  final String? leadEmail;
+  final List<dynamic>? followUpPrompts;
 
   ChatMessageHistory({
     required this.id,
-    required this.flowId,
-    required this.timestamp,
-    required this.sender,
-    required this.senderName,
+    required this.role,
+    required this.chatflowId,
+    required this.content,
+    required this.chatType,
+    required this.chatId,
+    required this.memoryType,
     required this.sessionId,
-    required this.text,
-    required this.files,
-    required this.edit,
-    required this.properties,
-    required this.category,
-    required this.contentBlocks,
+    required this.createdDate,
+    this.sourceDocuments,
+    this.usedTools,
+    this.fileAnnotations,
+    this.agentReasoning,
+    this.fileUploads,
+    this.artifacts,
+    this.action,
+    this.leadEmail,
+    this.followUpPrompts,
   });
 
   factory ChatMessageHistory.fromJson(Map<String, dynamic> json) {
     return ChatMessageHistory(
       id: json['id'],
-      flowId: json['flow_id'],
-      timestamp: json['timestamp'],
-      sender: json['sender'],
-      senderName: json['sender_name'],
-      sessionId: json['session_id'],
-      text: json['text'],
-      files: json['files'],
-      edit: json['edit'],
-      properties: MessageProperties.fromJson(json['properties']),
-      category: json['category'],
-      contentBlocks: json['content_blocks'] ?? [],
-    );
-  }
-}
-
-class MessageProperties {
-  final String textColor;
-  final String backgroundColor;
-  final bool edited;
-  final Source source;
-  final String icon;
-  final bool allowMarkdown;
-  final dynamic positiveFeedback;
-  final String state;
-  final List<dynamic> targets;
-
-  MessageProperties({
-    required this.textColor,
-    required this.backgroundColor,
-    required this.edited,
-    required this.source,
-    required this.icon,
-    required this.allowMarkdown,
-    required this.positiveFeedback,
-    required this.state,
-    required this.targets,
-  });
-
-  factory MessageProperties.fromJson(Map<String, dynamic> json) {
-    return MessageProperties(
-      textColor: json['text_color'] ?? '',
-      backgroundColor: json['background_color'] ?? '',
-      edited: json['edited'],
-      source: Source.fromJson(json['source']),
-      icon: json['icon'] ?? '',
-      allowMarkdown: json['allow_markdown'],
-      positiveFeedback: json['positive_feedback'],
-      state: json['state'],
-      targets: json['targets'] ?? [],
-    );
-  }
-}
-
-class Source {
-  final String? id;
-  final String? displayName;
-  final String? source;
-
-  Source({this.id, this.displayName, this.source});
-
-  factory Source.fromJson(Map<String, dynamic>? json) {
-    if (json == null) {
-      return Source(id: null, displayName: null, source: null);
-    }
-    return Source(
-      id: json['id'],
-      displayName: json['display_name'],
-      source: json['source'],
+      role: json['role'],
+      chatflowId: json['chatflowid'],
+      content: json['content'],
+      chatType: json['chatType'],
+      chatId: json['chatId'],
+      memoryType: json['memoryType'],
+      sessionId: json['sessionId'],
+      createdDate: DateTime.parse(json['createdDate']),
+      sourceDocuments: json['sourceDocuments'],
+      usedTools: json['usedTools'],
+      fileAnnotations: json['fileAnnotations'],
+      agentReasoning: json['agentReasoning'],
+      fileUploads: json['fileUploads'],
+      artifacts: json['artifacts'],
+      action: json['action'],
+      leadEmail: json['leadEmail'],
+      followUpPrompts: json['followUpPrompts'],
     );
   }
 }

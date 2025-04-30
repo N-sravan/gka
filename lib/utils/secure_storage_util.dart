@@ -10,13 +10,10 @@ class SecuredStorageUtil {
 
   final _secureStorage = const FlutterSecureStorage();
 
-  AndroidOptions _getAndroidOptions() => const AndroidOptions(
-    encryptedSharedPreferences: true,
-  );
+  AndroidOptions _getAndroidOptions() => const AndroidOptions(encryptedSharedPreferences: true);
 
   Future<void> writeSecureData(String key, dynamic value) async {
-    await _secureStorage.write(
-        key: key, value: value, aOptions: _getAndroidOptions());
+    await _secureStorage.write(key: key, value: value, aOptions: _getAndroidOptions());
   }
 
   Future<dynamic> readSecureData(String key) async {

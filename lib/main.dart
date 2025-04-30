@@ -99,8 +99,7 @@ void main() async {
 _initSupabase() async {
   await Supabase.initialize(
     url: 'https://nawrims.vassarlabs.com/supabase',
-    anonKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNzIyNTM3MDAwLAogICJleHAiOiAxODgwMzAzNDAwCn0.YqyV3WH6Y39UnjAuGoJZCqPtRKOGzICweUE59mG83So',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNzIyNTM3MDAwLAogICJleHAiOiAxODgwMzAzNDAwCn0.YqyV3WH6Y39UnjAuGoJZCqPtRKOGzICweUE59mG83So',
   );
 }
 

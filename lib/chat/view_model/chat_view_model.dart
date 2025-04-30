@@ -123,6 +123,14 @@ class ChatViewModel extends LoadingViewModel {
   bool _speechEnabled = false;
   ValueNotifier<bool> showLoader = ValueNotifier<bool>(false);
 
+  String tempStreamingText = '';
+
+  // API constants
+  static const String baseUrl =
+      'https://agentsbuilder.apaims2.0.vassarlabs.com/api/v1/prediction/4a5c8d41-51d7-4e81-85b8-377bb6a28043';
+  static const String bearerToken =
+      '2r9MjMpyFar4ySZh_KfGWzMcmqoUnQOnA9lMoFTG8Bg';
+
   int start = 0;
   int end = 0;
   bool hasSpoken = false;
@@ -915,17 +923,59 @@ class ChatViewModel extends LoadingViewModel {
             await repo.fetchMessageHistory(sessionId);
         chatDataList.clear();
         messages.clear();
-        if (chatMessageHistoryList != null &&
-            chatMessageHistoryList.isNotEmpty) {
+        if (chatMessageHistoryList.isNotEmpty) {
           for (ChatMessageHistory item in chatMessageHistoryList) {
             ChatData chatData = ChatData(
-              isUser: item.sender == "User" ? true : false,
-              message: item.text,
+              isUser: item.role == "userMessage" ? true : false,
+              message: item.content,
             );
             chatDataList.add(chatData);
             messages.add({
-              'text': item.text,
-              'is_user': item.sender == "User" ? true : false,
+              'text': item.content,
+              'is_user': item.role == "userMessage" ? true : false,
+            });
+          };
+        }
+        isLoading = false;
+        notifyListeners();
+        return true;
+      } catch (e) {
+        isLoading = false;
+        notifyListeners();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(constants.genericErrorMsg),
+        ));
+        Util.instance.logMessage('Chat View Model', 'Error $e');
+      }
+    } else {
+      isLoading = false;
+      notifyListeners();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(constants.noNetworkAvailability),
+      ));
+    }
+    return false;
+  }
+
+  Future<bool>? getStreamResponse(
+      String sessionId, BuildContext context) async {
+    if (await networkUtils.hasActiveInternet()) {
+      isLoading = true;
+      try {
+        List<ChatMessageHistory> chatMessageHistoryList =
+            await repo.fetchMessageHistory(sessionId);
+        chatDataList.clear();
+        messages.clear();
+        if (chatMessageHistoryList.isNotEmpty) {
+          for (ChatMessageHistory item in chatMessageHistoryList) {
+            ChatData chatData = ChatData(
+              isUser: item.role == "userMessage" ? true : false,
+              message: item.content,
+            );
+            chatDataList.add(chatData);
+            messages.add({
+              'text': item.content,
+              'is_user': item.role == "userMessage" ? true : false,
             });
           }
           ;
@@ -1008,8 +1058,8 @@ class ChatViewModel extends LoadingViewModel {
           if (chatMessageHistoryList.isNotEmpty) {
             for (ChatMessageHistory item in chatMessageHistoryList) {
               ChatData chatData = ChatData(
-                isUser: item.sender == User ? true : false,
-                message: item.text,
+                isUser: item.role == "userMessage" ? true : false,
+                message: item.content,
               );
               chatDataList.add(chatData);
             }
@@ -1131,7 +1181,7 @@ class ChatViewModel extends LoadingViewModel {
     notifyListeners();
   }
 
-  void sendMessage(String message) {
+  /*void sendMessage(String message) {
     String formattedId = formatSession();
     final messageJson = jsonEncode({
       'message': message,
@@ -1150,6 +1200,60 @@ class ChatViewModel extends LoadingViewModel {
     });
     chatController.clear();
     showLoader.value = true;
+  }*/
+
+  Future<void> sendMessageStream(String userMessage, String? sessionId) async {
+    String formattedId = formatSession();
+    messages.add({
+      'text': userMessage,
+      'is_user': true,
+    });
+    chatController.clear();
+    showLoader.value = true;
+    notifyListeners();
+
+    final url = Uri.parse(baseUrl);
+    Map<String, dynamic> data = {
+      "question": userMessage,
+      "overrideConfig": {"sessionId": formattedId},
+    };
+
+    Object postData = jsonEncode(data);
+
+    print("post data::$data");
+    try {
+      final request = http.Request('POST', url)
+        ..headers['Authorization'] = 'Bearer $bearerToken'
+        ..headers['Content-Type'] = 'application/json'
+        ..body = jsonEncode(data);
+
+      final streamedResponse = await request.send();
+      final stream = streamedResponse.stream.transform(utf8.decoder);
+
+      await for (var chunk in stream) {
+        if (chunk.trim().isEmpty) continue;
+
+        final data = jsonDecode(chunk);
+
+        if (data['text'] != null) {
+          messages.add({
+            'text': data['text'],
+            'is_user': false,
+          });
+          notifyListeners();
+        }
+
+        if (data['isStreamValid'] == false) {
+          showLoader.value = false;
+          notifyListeners();
+          break;
+        }
+      }
+    } catch (e) {
+      showLoader.value = false;
+      Fluttertoast.showToast(msg: "Something went wrong!");
+      notifyListeners();
+    }
   }
 
   String formatSession() {

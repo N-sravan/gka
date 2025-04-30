@@ -474,15 +474,18 @@ class ChatRepositoryImpl extends ChatRepository {
   @override
   Future<List<ChatMessageHistory>> fetchMessageHistory(String sessionId) async {
     Map<String, String> authHeaders = {
+      'Authorization': 'Bearer 2r9MjMpyFar4ySZh_KfGWzMcmqoUnQOnA9lMoFTG8Bg',
+      'Accept': '*/*',
+    };
+/*    Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson,
       'x-api-key': 'sk-wB4MAe1kOlMMRmdX0KfpwhwMNP8HaKjLnNdsiIdCtxc',
-    };
+    };*/
 
     String encodedSessionId = Uri.encodeComponent(sessionId);
-    String flowId = 'd38adaab-877c-4a47-a35c-047affbf1102';
-
+    String flowId = '4a5c8d41-51d7-4e81-85b8-377bb6a28043';
     String authUrl =
-        "https://agentsbuilder.apaims2.0.vassarlabs.com/api/v1/monitor/messages?session_id=$encodedSessionId&flow_id=$flowId";
+        "https://agentsbuilder.apaims2.0.vassarlabs.com/api/v1/chatmessage/$flowId?sessionId=$encodedSessionId";
 
     // String authUrl = Uri.encodeFull('https://agentsbuilder.apaims2.0.vassarlabs.com/api/v1/monitor/messages?session_id=$sessionId&flow_id=$flowId');
 

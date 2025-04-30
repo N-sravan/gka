@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/chat/view/chat_view.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
+import 'package:intl/intl.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:uuid/uuid.dart';
 import '../../chat_window.dart';
@@ -287,20 +288,22 @@ class LoginViewModel extends LoadingViewModel {
                   userPermissionsResponse.response!.meta!.mobileNo!,
                   userPermissionsResponse.response!.meta!.firstName!);
 
-              // bool? result = await sendSessionId(context);
 
-              AppState.instance.sessionId = DateTime.now().millisecondsSinceEpoch.toString();
-              isLoading = false;
-              notifyListeners();
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ChatView(
-                    isFromHistory: false,
-                    sessionId: AppState.instance.sessionId,
+
+              bool? result = await sendSessionId(context);
+
+              if(result !=null && result == true) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        ChatView(
+                          isFromHistory: false,
+                          sessionId: AppState.instance.sessionId,
+                        ),
                   ),
-                ),
-              );
+                );
+              }
             } else {
               isLoading = false;
               notifyListeners();
@@ -347,7 +350,8 @@ class LoginViewModel extends LoadingViewModel {
     if (await networkUtils.hasActiveInternet()) {
       isLoading = true;
       try {
-        int? statusCode = await repo.sendSessionId(context);
+        String sessionId = formatSession();
+        int? statusCode = await repo.sendSessionId(context,sessionId);
         if (statusCode == 200) {
           Fluttertoast.showToast(msg: 'Session Created Successfully!');
           isLoading = false;
@@ -376,5 +380,15 @@ class LoginViewModel extends LoadingViewModel {
       ));
     }
     return false;
+  }
+
+
+  String formatSession() {
+    AppState.instance.sessionId = DateTime.now().millisecondsSinceEpoch.toString();
+    final dateTime = DateTime.fromMillisecondsSinceEpoch(
+        int.parse(AppState.instance.sessionId));
+    // final formatted = DateFormat('MMM dd,HH:mm:ss').format(dateTime);
+    final formatted = DateFormat('MMM dd-HH_mm_ss').format(dateTime);
+    return 'Session $formatted';
   }
 }

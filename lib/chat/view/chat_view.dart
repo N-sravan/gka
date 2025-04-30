@@ -5,16 +5,10 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import '../../chat_bubble.dart';
 import '/utils/common_constants.dart' as constants;
-import 'dart:io';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:gka/chat/view_model/chat_view_model.dart';
-import 'package:gka/login/model/department_user_permission_response.dart'
-    as response;
+import 'package:gka/login/model/department_user_permission_response.dart' as response;
 import 'package:provider/provider.dart';
-import '../../chat_window.dart';
-import '../../message_bubble.dart';
-import '../../text_to_speech.dart';
 import '../../utils/app_state.dart';
 import 'drawer_widget.dart';
 
@@ -35,7 +29,6 @@ class ChatView extends StatefulWidget {
 class _ChatViewState extends State<ChatView> {
   var scrollControllerListView = ScrollController();
   late ChatViewModel viewModel;
-
 
   @override
   void initState() {
@@ -111,7 +104,8 @@ class _ChatViewState extends State<ChatView> {
                             controller: scrollControllerListView,
                             reverse: true,
                             padding: const EdgeInsets.all(10),
-                            itemCount: viewModel.messages.length + (isLoading ? 1 : 0),
+                            itemCount:
+                                viewModel.messages.length + (isLoading ? 1 : 0),
                             itemBuilder: (_, index) {
                               if (isLoading && index == 0) {
                                 WidgetsBinding.instance
@@ -264,7 +258,8 @@ class _ChatViewState extends State<ChatView> {
                           Fluttertoast.showToast(
                               msg: "Please enter your question.");
                         } else {
-                          viewModel.sendMessage(viewModel.chatController.text);
+                          // viewModel.sendMessage(viewModel.chatController.text);
+                          viewModel.sendMessageStream(viewModel.chatController.text,widget.sessionId);
                         }
                       });
           },
