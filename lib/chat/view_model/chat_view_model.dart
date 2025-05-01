@@ -920,7 +920,7 @@ class ChatViewModel extends LoadingViewModel {
       isLoading = true;
       try {
         List<ChatMessageHistory> chatMessageHistoryList =
-        await repo.fetchMessageHistory(sessionId);
+            await repo.fetchMessageHistory(sessionId);
         chatDataList.clear();
         messages.clear();
         chatMessageHistoryList.sort((a, b) {
@@ -937,14 +937,19 @@ class ChatViewModel extends LoadingViewModel {
         if (chatMessageHistoryList != null &&
             chatMessageHistoryList.isNotEmpty) {
           for (ChatMessageHistory item in chatMessageHistoryList) {
+            String text = item.text
+                .replaceAll(RegExp(r'<think>.*?</think>', dotAll: true), '')
+                .trim();
+
             ChatData chatData = ChatData(
               isUser: item.sender == "User" ? true : false,
-              message: item.text,
+              message: text,
             );
             chatDataList.add(chatData);
             messages.add({
-              'text': item.text,
+              'text': text,
               'is_user': item.sender == "User" ? true : false,
+              'timestamp': item.timestamp
             });
           }
         }
@@ -988,6 +993,7 @@ class ChatViewModel extends LoadingViewModel {
             messages.add({
               'text': item.text,
               'is_user': item.sender == "User" ? true : false,
+              'timestamp': item.timestamp
             });
           }
           ;
@@ -1146,9 +1152,16 @@ class ChatViewModel extends LoadingViewModel {
         (data) {
           try {
             final decoded = jsonDecode(data);
-            final result = decoded['message'];
+            var result = decoded['message'];
             final isUser = decoded['is_user'];
             print("Received result: $result");
+
+            // Remove <think>...</think> content
+            result = result
+                .replaceAll(RegExp(r'<think>.*?</think>', dotAll: true), '')
+                .trim();
+
+            print("Formatted result: $result");
 
             messages.add({
               'text': result,

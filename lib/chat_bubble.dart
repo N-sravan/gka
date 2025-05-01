@@ -5,6 +5,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/utils/app_state.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
+import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 
 class ChatBubble extends StatefulWidget {
@@ -13,6 +14,7 @@ class ChatBubble extends StatefulWidget {
     required this.text,
     required this.isUser,
     required this.isMapView,
+    this.timestamp,
     this.logMessage,
     this.imageUrl,
     this.tableColumnData,
@@ -31,6 +33,7 @@ class ChatBubble extends StatefulWidget {
   final String text;
   final bool isUser;
   final bool isMapView;
+  final String? timestamp;
   final String? imageUrl;
   final List<dynamic>? tableColumnData;
   final List<dynamic>? tableRowData;
@@ -88,9 +91,13 @@ class _ChatBubbleState extends State<ChatBubble> {
 
   @override
   Widget build(BuildContext context) {
-    bool hasContent = widget.text.isNotEmpty || (widget.imageUrl != null && widget.imageUrl!.isNotEmpty) || (widget.followUpQuestions != null && widget.followUpQuestions!.isNotEmpty);
+    bool hasContent = widget.text.isNotEmpty ||
+        (widget.imageUrl != null && widget.imageUrl!.isNotEmpty) ||
+        (widget.followUpQuestions != null &&
+            widget.followUpQuestions!.isNotEmpty);
 
-    bool hasChainOfThoughts = widget.chainOfThoughts != null && widget.chainOfThoughts!.isNotEmpty;
+    bool hasChainOfThoughts =
+        widget.chainOfThoughts != null && widget.chainOfThoughts!.isNotEmpty;
 
     return (hasContent)
         ? Padding(
@@ -142,7 +149,9 @@ class _ChatBubbleState extends State<ChatBubble> {
                       if (hasContent)
                         Flexible(
                           child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment: widget.isUser
+                                  ? CrossAxisAlignment.end
+                                  : CrossAxisAlignment.start,
                               children: [
                                 if (hasContent)
                                   DecoratedBox(
@@ -184,22 +193,19 @@ class _ChatBubbleState extends State<ChatBubble> {
                                           const SizedBox(height: 10),
                                           if (widget.text.isNotEmpty)
                                             _formattedTextView(),
-                                          // if (widget.isMapView && !widget.isUser) _mapView(),
                                         ],
                                       ),
                                     ),
                                   ),
-                                /*    if (!widget.isUser &&
-                                    widget.followUpQuestions != null &&
-                                    widget.followUpQuestions!.isNotEmpty)
-                                  _followUpQuestionsView(),*/
-                                /*  if (!widget.isUser &&
-                                  widget.logMessage!.isNotEmpty)
-                                _infoView(),
-                              if (widget.hasErrorLog != null &&
-                                  widget.hasErrorLog == true)
-                                _buttonsView(),*/
-                                // if (isExpanded)
+                                if (widget.timestamp != null &&
+                                    widget.timestamp!.isNotEmpty)
+                                  Text(
+                                    _formatTimestamp(),
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
                               ]),
                         ),
                       if (widget.isUser) _userProfileView(),
@@ -305,7 +311,7 @@ class _ChatBubbleState extends State<ChatBubble> {
               ),
             ),
           ),
-          (widget.chainOfThoughts != null && widget.chainOfThoughts!.isNotEmpty)
+          /*        (widget.chainOfThoughts != null && widget.chainOfThoughts!.isNotEmpty)
               ? ValueListenableBuilder(
                   builder: (context, value, _) {
                     return IconButton(
@@ -318,7 +324,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                   },
                   valueListenable: show,
                 )
-              : const SizedBox(),
+              : const SizedBox(),*/
         ],
       ),
     );
@@ -539,7 +545,8 @@ class _ChatBubbleState extends State<ChatBubble> {
   }
 
   Future _pushFollowUpQuestionInFirebase(String data) async {
-    DatabaseReference ref = FirebaseDatabase.instance.ref("${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${AppState.instance.sessionId}");
+    DatabaseReference ref = FirebaseDatabase.instance.ref(
+        "${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${AppState.instance.sessionId}");
 
     String timeStamp = DateTime.now().millisecondsSinceEpoch.toString();
 
@@ -728,5 +735,14 @@ class _ChatBubbleState extends State<ChatBubble> {
         ],
       ),
     );
+  }
+
+  String _formatTimestamp() {
+    // Remove " UTC" and parse the DateTime
+    String rawTimestamp =
+        widget.timestamp!.replaceAll(" UTC", "Z"); // "Z" denotes UTC in ISO8601
+    final dateTime = DateTime.parse(rawTimestamp)
+        .toLocal(); // toLocal() if you want local time
+    return DateFormat('MMM dd yyyy - h:mm:ss').format(dateTime);
   }
 }

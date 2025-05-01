@@ -7,7 +7,8 @@ import '../../chat_bubble.dart';
 import '/utils/common_constants.dart' as constants;
 import 'package:flutter/material.dart';
 import 'package:gka/chat/view_model/chat_view_model.dart';
-import 'package:gka/login/model/department_user_permission_response.dart' as response;
+import 'package:gka/login/model/department_user_permission_response.dart'
+    as response;
 import 'package:provider/provider.dart';
 import '../../utils/app_state.dart';
 import 'drawer_widget.dart';
@@ -143,6 +144,7 @@ class _ChatViewState extends State<ChatView> {
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 4),
                                 child: ChatBubble(
+                                  timestamp: msg['timestamp'] ?? '',
                                   text: msg['text'] ?? '',
                                   isUser: msg['is_user'],
                                   imageUrl: msg['image_url'] ?? '',
