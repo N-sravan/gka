@@ -292,6 +292,7 @@ class LoginViewModel extends LoadingViewModel {
 
               String sessionId = formatSession();
               if (sessionId.isNotEmpty) {
+                isLoading = false;
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -332,11 +333,6 @@ class LoginViewModel extends LoadingViewModel {
         Util.instance
             .logMessage('Login Model', 'Error while authenticating $e');
       }
-      /*} else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(constants.toManyLoginAttempts),
-        ));
-      }*/
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(constants.noNetworkAvailability),
