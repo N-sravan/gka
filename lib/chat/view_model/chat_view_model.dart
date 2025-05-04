@@ -126,8 +126,6 @@ class ChatViewModel extends LoadingViewModel {
   String tempStreamingText = '';
 
   // API constants
-  static const String baseUrl =
-      'https://agentsbuilder.apaims2.0.vassarlabs.com/api/v1/prediction/4a5c8d41-51d7-4e81-85b8-377bb6a28043';
   static const String bearerToken =
       '2r9MjMpyFar4ySZh_KfGWzMcmqoUnQOnA9lMoFTG8Bg';
 
@@ -1068,11 +1066,9 @@ class ChatViewModel extends LoadingViewModel {
     if (await networkUtils.hasActiveInternet()) {
       isLoading = true;
       try {
-        List<ChatMessageHistory> chatMessageHistoryList =
-            await repo.fetchMessageHistory(sessionId);
+        List<ChatMessageHistory> chatMessageHistoryList = await repo.fetchMessageHistory(sessionId);
         chatDataList.clear();
-        if (chatMessageHistoryList != null &&
-            chatMessageHistoryList.isNotEmpty) {
+        if (chatMessageHistoryList != null && chatMessageHistoryList.isNotEmpty) {
           if (chatMessageHistoryList.isNotEmpty) {
             for (ChatMessageHistory item in chatMessageHistoryList) {
               ChatData chatData = ChatData(
@@ -1117,25 +1113,6 @@ class ChatViewModel extends LoadingViewModel {
     final normalized = raw.replaceFirst('-', ' ').replaceAll('_', ':');
     String format = DateFormat('MMM dd HH:mm:ss').parse(normalized).toString();
     return format;
-  }
-
-  initSpeech() async {
-    _speechEnabled = await _speechToText.initialize(
-      onError: (error) {
-        print("FLKJFJLJF ERROR");
-        stopListening();
-      },
-      onStatus: (status) {
-        print("FLKJFJLJF STATUS ${status}");
-      },
-    );
-
-    // print("Available languages ${await tts.getLanguages}");
-    await tts.setLanguage(langId);
-    await tts.setSpeechRate(0.5);
-    await tts.setVoice(currentVoice);
-    print("user id::${AppState.instance.userId}");
-    print("session id::${AppState.instance.sessionId}");
   }
 
   bool get isConnected => channel != null && channel!.closeCode == null;
@@ -1227,6 +1204,9 @@ class ChatViewModel extends LoadingViewModel {
   }
 
   Future<void> sendMessageStream(String userMessage, String? sessionId) async {
+    String apiKey = 'sk-wB4MAe1kOlMMRmdX0KfpwhwMNP8HaKjLnNdsiIdCtxc';
+    String flowId = 'd38adaab-877c-4a47-a35c-047affbf1102';
+    String domain = 'agentsbuilder.apaims2.0.vassarlabs.com';
     messages.add({
       'text': userMessage,
       'is_user': true,
@@ -1235,19 +1215,28 @@ class ChatViewModel extends LoadingViewModel {
     showLoader.value = true;
     notifyListeners();
 
-    final url = Uri.parse(baseUrl);
-    Map<String, dynamic> data = {
+    // final url = Uri.parse(constants.chatbotBaseUrl);
+    /*    Map<String, dynamic> data = {
       "question": userMessage,
       "overrideConfig": {"sessionId": AppState.instance.sessionId},
+    };*/
+
+    Map<String, dynamic> data = {
+      'input_value': userMessage,
+      'output_type': 'chat',
+      'input_type': 'chat'
+      // 'session_id': AppState.instance.sessionId
     };
 
     Object postData = jsonEncode(data);
 
+    String url = 'https://$domain/api/v1/run/$flowId';
     print("post data::$postData");
     try {
-      final request = http.Request('POST', url)
-        ..headers['Authorization'] = 'Bearer $bearerToken'
+      final request = http.Request('POST', Uri.parse(url))
+        // ..headers['Authorization'] = 'Bearer $bearerToken'
         ..headers['Content-Type'] = 'application/json'
+        ..headers['x-api-key'] = apiKey
         ..body = jsonEncode(data);
 
       final streamedResponse = await request.send();
@@ -1257,12 +1246,15 @@ class ChatViewModel extends LoadingViewModel {
         if (chunk.trim().isEmpty) continue;
 
         final data = jsonDecode(chunk);
+        String messageText = data['outputs'][0]['outputs'][0]['results']
+            ['message']['data']['text'];
 
-        if (data['text'] != null) {
+        if (messageText.isNotEmpty) {
           messages.add({
-            'text': data['text'],
+            'text': messageText,
             'is_user': false,
           });
+          showLoader.value = false;
           notifyListeners();
         }
 

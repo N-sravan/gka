@@ -87,8 +87,10 @@ const String getFilesEndPoint = 'rag/get_rag_data';
 // const String deleteFileEndPoint = 'rag/delete_rag_data';
 /*const String krishidsBaseUrl =  'http://agriwise.vassarlabs.com/api';*/ //-
 
-const String loginEndpoint = 'https://gowater-staging.vassarlabs.com/um/api/getUserDetailsForChatbot/';
-const String loginEndpointForAcessToken = 'https://apaims2.0.vassarlabs.com/um/authenticate-user';
+const String loginEndpoint =
+    'https://gowater-staging.vassarlabs.com/um/api/getUserDetailsForChatbot/';
+const String loginEndpointForAcessToken =
+    'https://apaims2.0.vassarlabs.com/um/authenticate-user';
 const String loginEndpointForTN =
     'https://tnwrims.vassarlabs.com/um/api/getUserDetailsForChatbot/';
 const String saveFcmTokenEndpoint = 'fcm_tokens/save_token';
@@ -98,9 +100,11 @@ const String getAvailabePromptsEndpoint = 'get_all_prompt_templates';
 const String logoutEndpoint =
     'auth/realms/agriwiserealm/protocol/openid-connect/logout';
 const String csrfEnd = 'um/generate-csrf-token';
-const String csrfEndPoint = 'https://apaims2.0.vassarlabs.com/um/generate-csrf-token';
+const String csrfEndPoint =
+    'https://apaims2.0.vassarlabs.com/um/generate-csrf-token';
 const String userPermissions = 'um/user-permissions/';
-const String userPermissionsEndPoint = 'https://apaims2.0.vassarlabs.com/um/user-permissions';
+const String userPermissionsEndPoint =
+    'https://apaims2.0.vassarlabs.com/um/user-permissions';
 const String getToolsEndpoint = 'tool_inventory/get_tools';
 const String updatePromptTemplateEndpoint = 'update_prompt_template';
 const String createPromptTemplateEndpoint = 'create_prompt_template';
@@ -109,8 +113,10 @@ const String getDocumentsEndpoint = 'data_extractor/get_collection_data/';
 const String uploadDocumentEndpoint = 'data_extractor/save_data_upload/';
 const String deleteChunkEndpoint = 'data_extractor/delete_collection_data/';
 const String deleteFileEndpoint = 'data_extractor/delete-file-data/';
-const String deleteSessionEndpoint = 'https://apaims2.0.vassarlabs.com/chatbot/chat/delete-sessions';
-const String updateSessionEndpoint = 'https://apaims2.0.vassarlabs.com/chatbot/chat/update-session';
+const String deleteSessionEndpoint =
+    'https://apaims2.0.vassarlabs.com/chatbot/chat/delete-sessions';
+const String updateSessionEndpoint =
+    'https://apaims2.0.vassarlabs.com/chatbot/chat/update-session';
 const String getUsersDataEndpoint = 'auth_and_session/admin-user-management';
 const String increaseLimitEndpoint = 'auth_and_session/add-tokens';
 const String decreaseLimitEndpoint = 'auth_and_session/remove-tokens';
@@ -852,8 +858,10 @@ enum NameSortRadioOptions { ascending, descending }
 
 enum CropNameVerifyRadioOptions { agree, disagree }
 
-// const String genAiBaseUrl = "https://nawrims.vassarlabs.com/genai/";
+//baseurls
 const String genAiBaseUrl = "https://nawrims.vassarlabs.com/vassar_mind/";
+const String chatbotBaseUrl = 'https://agentsbuilder.apaims2.0.vassarlabs.com/api/v1/prediction/4a5c8d41-51d7-4e81-85b8-377bb6a28043';
+
 // const String ngrok = "https://d637-196-12-47-4.ngrok-free.app/";
 
 //firebase options

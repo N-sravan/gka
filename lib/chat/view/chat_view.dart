@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:speech_to_text/speech_recognition_result.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 import '../../chat_bubble.dart';
 import '/utils/common_constants.dart' as constants;
 import 'package:flutter/material.dart';
@@ -29,22 +31,60 @@ class ChatView extends StatefulWidget {
 
 class _ChatViewState extends State<ChatView> {
   var scrollControllerListView = ScrollController();
+  final SpeechToText _speechToText = SpeechToText();
+  ValueNotifier<bool> listeningActive = ValueNotifier<bool>(false);
+  ValueNotifier<bool> showLoader = ValueNotifier<bool>(false);
   late ChatViewModel viewModel;
+  bool _speechEnabled = false;
+  String langId = '';
+  FlutterTts tts = FlutterTts();
+
+  Map<String, String> currentVoice = {
+    "name": "en-us-x-iom-local",
+    "locale": "en-US"
+  };
 
   @override
   void initState() {
     super.initState();
     AppState.instance.isEnglish = true;
     AppState.instance.language = 'english';
-
+    _initSpeech();
     viewModel = Provider.of<ChatViewModel>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await viewModel.initSpeech();
       await viewModel.initWebsocketConnection();
       if (widget.isFromHistory != null && widget.isFromHistory == true) {
         await viewModel.getMessageHistoryForSession(widget.sessionId!, context);
       }
     });
+  }
+
+  Future<void> _initSpeech() async {
+    _speechEnabled = await _speechToText.initialize(
+      onError: (error) {
+        print("Speech recognition error: $error");
+        _stopListening();
+      },
+      onStatus: (status) {
+        print("Speech recognition status: $status");
+      },
+      debugLogging: true, // Enables detailed logging
+    );
+
+    if (_speechEnabled) {
+      // Retrieve the list of available locales
+      var locales = await _speechToText.locales();
+      // Set the desired locale, e.g., 'en-IN' for English (India)
+      langId = 'en-IN';
+      print("Selected language ID: $langId");
+
+      // Configure Text-to-Speech settings
+      await tts.setLanguage(langId);
+      await tts.setSpeechRate(0.5);
+      await tts.setVoice(currentVoice);
+    } else {
+      print("Speech recognition is not available on this device.");
+    }
   }
 
   @override
@@ -126,6 +166,17 @@ class _ChatViewState extends State<ChatView> {
                               }
 
                               final msg = viewModel.messages[adjustedIndex];
+
+                              // SPEAK LOGIC (for each new bot message)
+                              if (viewModel.messages.isNotEmpty &&
+                                  !viewModel.messages.last['is_user'] &&
+                                  viewModel.messages.last['text'].toString().isNotEmpty &&
+                                  viewModel.messages.length > viewModel.prevChatLength) {
+                                WidgetsBinding.instance.addPostFrameCallback((_) {
+                                  showLoader.value = false;
+                                  _speakMessage(viewModel.messages.last['text']);
+                                });
+                              }
 
                               // STOP if user message came in
                               if (viewModel.messages.isNotEmpty &&
@@ -234,11 +285,27 @@ class _ChatViewState extends State<ChatView> {
             ),
             contentPadding:
                 const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-            // prefixIcon: _speechButton(),
+            prefixIcon: _speechButton(),
             suffixIcon: _sendButton(),
           ),
         ),
       ],
+    );
+  }
+
+  _speechButton() {
+    return ValueListenableBuilder(
+      valueListenable: listeningActive,
+      builder: (context, value, _) {
+        return IconButton(
+          onPressed: !value ? _startListening : _stopListening,
+          icon: Icon(
+            !value ? Icons.mic_off : Icons.mic,
+            color: Colors.grey,
+          ),
+          tooltip: 'Listen',
+        );
+      },
     );
   }
 
@@ -268,5 +335,79 @@ class _ChatViewState extends State<ChatView> {
         ),
       ],
     );
+  }
+
+  /// Each time to start a speech recognition session
+  _startListening() async {
+    print("_onSpeechResult_startListening BEFORE loop");
+    var locales = await _speechToText.locales();
+    for (int i = 0; i < locales.length; i++) {
+      print("LOCALESDSD $i   ${locales[i].name}");
+    }
+
+    //for android tab english locale at 5
+    print("_onSpeechResult_startListening");
+    SpeechRecognitionResult result;
+    try {
+      await _speechToText.listen(
+          onSoundLevelChange: onSoundLevelChange,
+          localeId: langId,
+          partialResults: true,
+          onResult: _onSpeechResult,
+          pauseFor: const Duration(seconds: 3),
+          listenFor: const Duration(seconds: 30),
+          cancelOnError: true);
+    } catch (e) {
+      print('EXCEPTIONKJSKFJK An exception occurred: $e');
+    }
+
+    print("_onSpeechResult_startListening aferfdf ${_speechToText.lastStatus}");
+    bool active = _speechToText.isListening;
+    tts.stop();
+    listeningActive.value = active;
+  }
+
+  dynamic Function(double)? onSoundLevelChange(double value) {
+    print("onSoundLevelChange  $value");
+    return null;
+  }
+
+  void _stopListening() async {
+    bool active = _speechToText.isListening;
+    listeningActive.value = active;
+    setState(() {});
+  }
+
+  Future<void> _onSpeechResult(SpeechRecognitionResult result) async {
+    updateChatControllerForSpeech(result.recognizedWords);
+    bool active = _speechToText.isListening;
+    listeningActive.value = active;
+  }
+
+  void updateChatControllerForSpeech(String text) {
+    viewModel.chatController.text = text;
+    setState(() {});
+  }
+
+
+  _speakMessage(String text) async {
+    String plainText = _extractPlainText(text.trim());
+    await tts.speak(plainText);
+  }
+
+  String _extractPlainText(String text) {
+    // Remove double asterisks for bold text
+    final RegExp boldRegex = RegExp(r'\*\*(.*?)\*\*');
+    String result =
+    text.replaceAllMapped(boldRegex, (match) => match.group(1) ?? '');
+
+    // Remove single asterisks
+    final RegExp singleAsteriskRegex = RegExp(r'\*');
+    result = result.replaceAll(singleAsteriskRegex, '');
+
+    // Remove newlines
+    result = result.replaceAll('\\n', ' ');
+    print("result ::$result");
+    return result.trim();
   }
 }
