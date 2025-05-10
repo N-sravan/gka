@@ -17,6 +17,7 @@ import 'package:flutter/material.dart';
 import 'package:gka/chat/view_model/chat_view_model.dart';
 import 'package:provider/provider.dart';
 import '../../utils/app_state.dart';
+import 'agent_step.dart';
 import 'drawer_widget.dart';
 
 class ChatView extends StatefulWidget {
@@ -45,7 +46,9 @@ class _ChatViewState extends State<ChatView> {
   String language = '';
   FlutterTts tts = FlutterTts();
   final _audioRecorder = fs.FlutterSoundRecorder();
-  late StreamController<Uint8List> _audioStreamController;
+  StreamController<Uint8List> _audioStreamController =
+      StreamController<Uint8List>();
+
   WebSocketChannel? channel;
   bool _isRecording = false;
   Timer? _inactivityTimer;
@@ -62,11 +65,11 @@ class _ChatViewState extends State<ChatView> {
     AppState.instance.isEnglish = true;
     AppState.instance.language = 'english';
     langId = 'en-IN';
-    _initRecorder();
-    _initSpeech();
+    // _initRecorder();
+    // _initSpeech();
     viewModel = Provider.of<ChatViewModel>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await viewModel.initWebsocketConnection(context);
+      // await viewModel.initWebsocketConnection(context);
       if (widget.isFromHistory != null && widget.isFromHistory == true) {
         await viewModel.getMessageHistoryForSession(widget.sessionId!, context);
       }
@@ -112,26 +115,20 @@ class _ChatViewState extends State<ChatView> {
   @override
   Widget build(BuildContext context) {
     return Consumer<ChatViewModel>(
-      builder: (_, model, child) {
+      builder: (_, viewModel, child) {
         return Scaffold(
-          drawer: (widget.isFromHistory != null && widget.isFromHistory == true)
-              ? null
-              : const DrawerWidget(),
+          drawer: (widget.isFromHistory ?? false) ? null : const DrawerWidget(),
           appBar: AppBar(
-            leading:
-                (widget.isFromHistory != null && widget.isFromHistory == true)
-                    ? IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Colors.black),
-                        onPressed: () => Navigator.pop(context),
-                      )
-                    : null,
+            leading: (widget.isFromHistory ?? false)
+                ? IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.black),
+                    onPressed: () => Navigator.pop(context),
+                  )
+                : null,
             titleSpacing: 2,
             title: Row(
               children: [
-                Image.asset(
-                  'assets/images/apaims_logo.png',
-                  height: 32,
-                ),
+                Image.asset('assets/images/apaims_logo.png', height: 32),
                 const SizedBox(width: 8),
                 const Text(
                   'APAIMS Chatbot',
@@ -144,130 +141,20 @@ class _ChatViewState extends State<ChatView> {
               ],
             ),
           ),
-          body: model.isLoading
-              ? Container(
-                  width: MediaQuery.of(context).size.width,
-                  height: MediaQuery.of(context).size.height,
-                  color: Colors.white,
-                  child: constants.indicator,
-                )
-              : Column(
+          body: Column(
+            children: [
+              Expanded(
+                child: Stack(
                   children: [
-                    Expanded(
-                      child: ValueListenableBuilder<bool>(
-                        valueListenable: viewModel.showLoader,
-                        builder: (context, isLoading, _) {
-                          return ListView.builder(
-                            controller: scrollControllerListView,
-                            reverse: true,
-                            padding: const EdgeInsets.all(10),
-                            itemCount:
-                                viewModel.messages.length + (isLoading ? 1 : 0),
-                            itemBuilder: (_, index) {
-                              if (isLoading && index == 0) {
-                                WidgetsBinding.instance
-                                    .addPostFrameCallback((_) {
-                                  viewModel.showLoader.value = true;
-                                });
-                                return const SizedBox();
-                              }
-
-                              final adjustedIndex = isLoading
-                                  ? viewModel.messages.length - index
-                                  : viewModel.messages.length - 1 - index;
-
-                              if (adjustedIndex < 0 ||
-                                  adjustedIndex >= viewModel.messages.length) {
-                                return const SizedBox();
-                              }
-
-                              final msg = viewModel.messages[adjustedIndex];
-
-                              // SPEAK LOGIC (for each new bot message)
-                              if (viewModel.messages.isNotEmpty &&
-                                  !viewModel.messages.last['is_user'] &&
-                                  viewModel.messages.last['text']
-                                      .toString()
-                                      .isNotEmpty &&
-                                  viewModel.messages.length >
-                                      viewModel.prevChatLength) {
-                                WidgetsBinding.instance
-                                    .addPostFrameCallback((_) {
-                                  showLoader.value = false;
-                                  _speakMessage(
-                                      viewModel.messages.last['text']);
-                                });
-                              }
-
-                              // STOP if user message came in
-                              if (viewModel.messages.isNotEmpty &&
-                                  viewModel.messages.last['is_user']) {
-                                WidgetsBinding.instance
-                                    .addPostFrameCallback((_) {
-                                  viewModel.showLoader.value = true;
-                                  // tts.stop();
-                                });
-                              }
-
-                              viewModel.prevChatLength =
-                                  viewModel.messages.length;
-
-                              return Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 4),
-                                child: ChatBubble(
-                                  timestamp: msg['timestamp'] ?? '',
-                                  text: msg['text'] ?? '',
-                                  isUser: msg['is_user'],
-                                  imageUrl: msg['image_url'] ?? '',
-                                  tableColumnData: msg['sql_df_columns'],
-                                  tableRowData: msg['sql_df_values'] != null
-                                      ? jsonDecode(msg['sql_df_values'])
-                                      : null,
-                                  logMessage: msg['log'] ?? '',
-                                  hasErrorLog: false,
-                                  timestampMapping: {},
-                                  chainOfThoughts: Map<String, String>.from(
-                                    msg['chain_of_thought'] ?? {},
-                                  ),
-                                  followUpQuestions: (msg['follow_up_questions']
-                                              as List<dynamic>?)
-                                          ?.map((e) => e.toString())
-                                          .toList() ??
-                                      [],
-                                  token: msg['token'] ?? '',
-                                  isMapView: false,
-                                  expandChainOfThought: adjustedIndex ==
-                                      viewModel.messages.length - 1,
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 40.0),
-                      child: Align(
-                        alignment: AlignmentDirectional.centerStart,
-                        child: ValueListenableBuilder(
-                          valueListenable: viewModel.showLoader,
-                          builder: (context, value, _) {
-                            if (value) {
-                              return LoadingAnimationWidget.waveDots(
-                                  color: Colors.blue, size: 40);
-                            }
-                            return const SizedBox();
-                          },
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: bottomBar(),
-                    )
+                    _buildChatList(viewModel),
+                    _buildAgentStepsOverlay(viewModel),
                   ],
                 ),
+              ),
+              _buildStreamingControls(viewModel),
+              _buildChatInput(viewModel),
+            ],
+          ),
         );
       },
     );
@@ -280,8 +167,220 @@ class _ChatViewState extends State<ChatView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _chatInput(),
-          _dropdownInsideField(),
+          // _dropdownInsideField(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildChatList(ChatViewModel viewModel) {
+    return ListView.builder(
+      controller: scrollControllerListView,
+      reverse: true,
+      padding: const EdgeInsets.all(10),
+      itemCount:
+          viewModel.messages.length + (viewModel.isStreaming.value ? 1 : 0),
+      itemBuilder: (_, index) {
+        if (viewModel.isStreaming.value && index == 0) {
+          return ChatBubble(
+            expandContentBlocks: false,
+            timestamp: DateTime.now().toIso8601String(),
+            text: viewModel.streamingText.value,
+            isUser: false,
+            imageUrl: '',
+            tableColumnData: null,
+            tableRowData: null,
+            logMessage: '',
+            hasErrorLog: false,
+            timestampMapping: {},
+            followUpQuestions: [],
+            token: '',
+            isMapView: false,
+            isStreaming: true,
+            contentBlocks: viewModel.contentBlocksData,
+          );
+        }
+
+        final adjustedIndex = viewModel.isStreaming.value
+            ? viewModel.messages.length - index
+            : viewModel.messages.length - 1 - index;
+
+        if (adjustedIndex < 0 || adjustedIndex >= viewModel.messages.length) {
+          return const SizedBox();
+        }
+
+        final msg = viewModel.messages[adjustedIndex];
+
+        // Handle Input and Output expandable boxes in the ChatBubble widget
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: ChatBubble(
+            expandContentBlocks: false,
+            contentBlocks: msg['content_blocks'],
+            timestamp: msg['timestamp'] ?? '',
+            text: msg['text'] ?? '',
+            isUser: msg['is_user'],
+            imageUrl: msg['image_url'] ?? '',
+            tableColumnData: msg['sql_df_columns'],
+            tableRowData: msg['sql_df_values'] != null
+                ? jsonDecode(msg['sql_df_values'])
+                : null,
+            logMessage: msg['log'] ?? '',
+            hasErrorLog: false,
+            timestampMapping: {},
+            followUpQuestions: (msg['follow_up_questions'] as List<dynamic>?)
+                    ?.map((e) => e.toString())
+                    .toList() ??
+                [],
+            token: msg['token'] ?? '',
+            isMapView: false,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAgentStepsOverlay(ChatViewModel viewModel) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: viewModel.isStreaming,
+      builder: (context, isStreaming, _) {
+        if (isStreaming && viewModel.currentSteps.value.isNotEmpty) {
+          return ValueListenableBuilder<bool>(
+            valueListenable: viewModel.showAgentSteps,
+            builder: (context, showSteps, _) {
+              if (!showSteps) return const SizedBox();
+
+              return Positioned(
+                bottom: 10,
+                right: 10,
+                width: 300,
+                height: 400,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8.0),
+                        decoration: BoxDecoration(
+                          color: Colors.blue[100],
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(12),
+                            topRight: Radius.circular(12),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('Agent Steps',
+                                style: TextStyle(fontWeight: FontWeight.bold)),
+                            Row(
+                              children: [
+                                ValueListenableBuilder<bool>(
+                                  valueListenable: viewModel.expandAllSteps,
+                                  builder: (_, expanded, __) => IconButton(
+                                    icon: Icon(expanded
+                                        ? Icons.unfold_less
+                                        : Icons.unfold_more),
+                                    tooltip: expanded
+                                        ? 'Collapse All'
+                                        : 'Expand All',
+                                    onPressed: viewModel.toggleExpandAllSteps,
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.close),
+                                  onPressed: () =>
+                                      viewModel.showAgentSteps.value = false,
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: ValueListenableBuilder<bool>(
+                          valueListenable: viewModel.expandAllSteps,
+                          builder: (_, expandAll, __) => ListView.builder(
+                            padding: const EdgeInsets.all(8),
+                            itemCount: viewModel.currentSteps.value.length,
+                            itemBuilder: (context, index) {
+                              return AgentStepWidget(
+                                step: viewModel.currentSteps.value[index],
+                                shouldExpand: expandAll,
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        }
+        return const SizedBox();
+      },
+    );
+  }
+
+  Widget _buildStreamingControls(ChatViewModel viewModel) {
+    final hasContent = viewModel.messages.isNotEmpty ||
+        viewModel.currentSteps.value.isNotEmpty; // or use viewModel if needed
+
+    if (!hasContent) return const SizedBox();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      child: Row(
+        children: [
+          ValueListenableBuilder<bool>(
+            valueListenable: viewModel.showAgentSteps,
+            builder: (context, showSteps, _) {
+              return TextButton.icon(
+                icon: Icon(showSteps ? Icons.visibility_off : Icons.visibility),
+                label: Text(showSteps ? 'Hide Steps' : 'Show Steps'),
+                onPressed: viewModel.toggleAgentSteps,
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChatInput(ChatViewModel viewModel) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: TextFormField(
+        controller: viewModel.chatController,
+        maxLines: null,
+        minLines: 1,
+        textCapitalization: TextCapitalization.sentences,
+        decoration: InputDecoration(
+          hintText: 'Ask AI anything...',
+          hintStyle: constants.lightGrey2_14W400,
+          border: OutlineInputBorder(
+            borderSide: const BorderSide(color: Color(0xFF4BA164), width: 2),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+          // prefixIcon: _speechButton(),
+          suffixIcon: _sendButton(),
+        ),
       ),
     );
   }
@@ -343,15 +442,17 @@ class _ChatViewState extends State<ChatView> {
           builder: (context, value, _) {
             return IconButton(
                 icon: Icon(Icons.send,
-                    color: viewModel.showLoader.value ? Colors.grey : Colors.blue),
-                     onPressed: viewModel.showLoader.value
+                    color:
+                        viewModel.showLoader.value ? Colors.grey : Colors.blue),
+                onPressed: viewModel.showLoader.value
                     ? null
                     : () async {
                         if (viewModel.chatController.text.isEmpty) {
                           Fluttertoast.showToast(
                               msg: "Please enter your question.");
                         } else {
-                          viewModel.sendMessage(context, viewModel.chatController.text);
+                          viewModel.sendMessage(
+                              context, viewModel.chatController.text);
                           // viewModel.sendMessageStream(viewModel.chatController.text,widget.sessionId);
                         }
                       });
@@ -419,7 +520,6 @@ class _ChatViewState extends State<ChatView> {
           await _audioRecorder.isEncoderSupported(fs.Codec.pcm16WAV);
       if (!isPcmSupported) throw Exception("pcm16 codec not supported.");
 
-      _audioStreamController = StreamController<Uint8List>();
       List<int> audioBuffer = [];
 
       _audioStreamController.stream.listen((Uint8List data) async {

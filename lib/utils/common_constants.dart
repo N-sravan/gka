@@ -91,6 +91,8 @@ const String loginEndpoint =
     'https://gowater-staging.vassarlabs.com/um/api/getUserDetailsForChatbot/';
 const String loginEndpointForAcessToken =
     'https://apaims2.0.vassarlabs.com/um/authenticate-user';
+const String langflowLoginEndpoint =
+    'https://agentsbuilder.apaims2.0.vassarlabs.com/api/v1/login';
 const String loginEndpointForTN =
     'https://tnwrims.vassarlabs.com/um/api/getUserDetailsForChatbot/';
 const String saveFcmTokenEndpoint = 'fcm_tokens/save_token';
@@ -120,6 +122,7 @@ const String updateSessionEndpoint =
 const String getUsersDataEndpoint = 'auth_and_session/admin-user-management';
 const String increaseLimitEndpoint = 'auth_and_session/add-tokens';
 const String decreaseLimitEndpoint = 'auth_and_session/remove-tokens';
+const String langTranslateEndpoint = 'https://apaims2.0.vassarlabs.com/chatbot/chat/translate-text';
 
 //UUIDs & keys
 const String indiaUUID = 'd6b37905-d2d3-4275-9317-d9b6f47cd783';

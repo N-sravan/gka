@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -10,9 +9,7 @@ import 'package:gka/chat/model/chat_history_model.dart';
 import 'package:gka/chat/model/chat_message_history.dart';
 import 'package:gka/chat/model/get_documents_response.dart';
 import 'package:gka/chat/model/get_users_response.dart';
-import 'package:gka/chat_bubble.dart';
 import 'package:gka/shared/loading_view_model.dart';
-import 'package:gka/text_to_speech.dart';
 import 'package:gka/utils/app_state.dart';
 import 'package:intl/intl.dart';
 import 'dart:developer' as developer;
@@ -20,12 +17,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:gka/utils/common_constants.dart' as constants;
 import 'package:speech_to_text/speech_to_text.dart';
-import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:uuid/uuid.dart';
 import 'package:web_socket_channel/io.dart';
 import '../../home/model/available_models.dart' as model;
 import '../../login/model/login_api_response_model.dart' as login;
-import '../../main.dart';
 import '../../message_bubble.dart';
 import '../../services/api_provider.dart';
 import '../../utils/network_utils.dart';
@@ -48,8 +43,6 @@ class ChatViewModel extends LoadingViewModel {
   var scrollControllerListView = ScrollController();
   int prevChatLength = 0;
 
-  // TextToSpeech tts = TextToSpeech();
-  FlutterTts tts = FlutterTts();
   int responseCount = 1;
   String queryString = "";
   String llmType = '';
@@ -86,7 +79,6 @@ class ChatViewModel extends LoadingViewModel {
     'Gathering the data',
     'Just a moment'
   ];
-  TextToSpeechService? textToSpeechService;
   MessageBubble? textToSpeechMessageBubble;
   String summaryData = "";
   bool displayUserText = false;
@@ -122,7 +114,8 @@ class ChatViewModel extends LoadingViewModel {
   DateFormat formatter = DateFormat("dd-MM-yyyy");
   bool _speechEnabled = false;
   ValueNotifier<bool> showLoader = ValueNotifier<bool>(false);
-
+  ValueNotifier<bool> showAllStepsExpanded = ValueNotifier(false);
+  ValueNotifier<bool> expandAllSteps = ValueNotifier(false);
   String tempStreamingText = '';
 
   // API constants
@@ -157,6 +150,37 @@ class ChatViewModel extends LoadingViewModel {
   String dataNotFoundMsg = '';
   String? llmSelected;
   String? langSelected;
+
+  // UI state notifiers
+  ValueNotifier<bool> isStreaming = ValueNotifier<bool>(false);
+  ValueNotifier<String> streamingText = ValueNotifier<String>("");
+  ValueNotifier<bool> showAgentSteps = ValueNotifier<bool>(true);
+
+  // Agent steps data
+  List<Map<String, dynamic>> agentSteps = [];
+
+  // List<Map<String, dynamic>> currentSteps = [];
+  ValueNotifier<List<Map<String, dynamic>>> currentSteps = ValueNotifier([]);
+  Map<String, String> contentBlocksData = {};
+  List<Map<String, dynamic>> gatheredSteps = [];
+
+  // Debug data
+  List<String> debugSseEvents = [];
+
+  // API configuration
+  final Map<String, String> apiConfig = {
+    "baseUrl": "https://agentsbuilder.apaims2.0.vassarlabs.com",
+    "flowId": "d38adaab-877c-4a47-a35c-047affbf1102",
+    "apiKey": "sk-kzSs-5jk4A7J_8JBqvCX5iaF2miwKuexm1_FIcPLuCw"
+  };
+
+  // Update API configuration
+  void updateApiConfig({String? baseUrl, String? flowId, String? apiKey}) {
+    if (baseUrl != null) apiConfig["baseUrl"] = baseUrl;
+    if (flowId != null) apiConfig["flowId"] = flowId;
+    if (apiKey != null) apiConfig["apiKey"] = apiKey;
+  }
+
   late DatabaseReference ref;
 
   clearData() {
@@ -166,6 +190,17 @@ class ChatViewModel extends LoadingViewModel {
     messages.clear();
     selectedFile = null;
     isUploading = false;
+    agentSteps = [];
+    debugSseEvents = [];
+    isStreaming.value = false;
+    showLoader.value = false;
+    streamingText.value = "";
+    notifyListeners();
+  }
+
+  void toggleAgentSteps() {
+    showAgentSteps.value = !showAgentSteps.value;
+    notifyListeners();
   }
 
   void updateSelectedModel(String value) {
@@ -1067,9 +1102,11 @@ class ChatViewModel extends LoadingViewModel {
     if (await networkUtils.hasActiveInternet()) {
       isLoading = true;
       try {
-        List<ChatMessageHistory> chatMessageHistoryList = await repo.fetchMessageHistory(sessionId);
+        List<ChatMessageHistory> chatMessageHistoryList =
+            await repo.fetchMessageHistory(sessionId);
         chatDataList.clear();
-        if (chatMessageHistoryList != null && chatMessageHistoryList.isNotEmpty) {
+        if (chatMessageHistoryList != null &&
+            chatMessageHistoryList.isNotEmpty) {
           if (chatMessageHistoryList.isNotEmpty) {
             for (ChatMessageHistory item in chatMessageHistoryList) {
               ChatData chatData = ChatData(
@@ -1192,7 +1229,301 @@ class ChatViewModel extends LoadingViewModel {
     notifyListeners();
   }
 
+  // Send a message and process streaming response
   Future<void> sendMessage(BuildContext context, String message) async {
+    if (message.isEmpty) return;
+
+    // Add user message to conversation
+    final userMessage = {
+      'is_user': true,
+      'text': message,
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+
+    messages.add(userMessage);
+    chatController.clear();
+    showLoader.value = false;
+
+    // Start streaming process
+    isStreaming.value = true;
+    streamingText.value = "Thinking..._";
+    currentSteps.value = [];
+    showAgentSteps.value = false;
+
+    notifyListeners();
+
+    // Make API request
+    await _streamResponse(message);
+  }
+
+// Process streaming response from the API
+  Future<void> _streamResponse(String userInput) async {
+    final apiUrl = "https://apaims2.0.vassarlabs.com/chatbot/chat/query";
+    final headers = {"Content-Type": "application/json"};
+    final payload = {
+      "query": userInput,
+      "session_id": AppState.instance.sessionId,
+    };
+
+    final client = http.Client();
+    String finalText = "";
+    final List<Map<String, dynamic>> stepsForThisMessage = [];
+
+    try {
+      final request = http.Request('POST', Uri.parse(apiUrl));
+      request.headers.addAll(headers);
+      request.body = json.encode(payload);
+
+      final streamedResponse = await client.send(request);
+
+      if (streamedResponse.statusCode != 200) {
+        streamingText.value =
+            "Error: Server returned ${streamedResponse.statusCode}";
+        return;
+      }
+
+      final stream = streamedResponse.stream.transform(utf8.decoder);
+      String buffer = '';
+
+      await for (final chunk in stream) {
+        buffer += chunk;
+
+        final lines = buffer.split('\n');
+        buffer = lines.removeLast(); // Save incomplete line for next chunk
+
+        for (final line in lines) {
+          final trimmed = line.trim();
+          if (trimmed.isEmpty) continue;
+
+          debugSseEvents.add(trimmed);
+
+          try {
+            final dynamic data = json.decode(trimmed);
+            if (data is! Map<String, dynamic>) continue;
+
+            final eventType = data['event'] ?? 'data';
+            final eventData = data['data'];
+
+            if (eventType == 'add_message') {
+              Map<String, dynamic>? msgData = eventData;
+
+              if (msgData != null &&
+                  (msgData['sender_name'] == 'Agent' ||
+                      msgData['sender_name'] == 'AI')) {
+                final contentBlocks = msgData['content_blocks'] ?? [];
+                if (contentBlocks.isNotEmpty) {
+                  _processContentBlocks(contentBlocks, stepsForThisMessage);
+                }
+              }
+            }
+
+            if (eventType == 'end') {
+              final outputs = eventData['result']?['outputs'];
+              if (outputs != null && outputs is List && outputs.isNotEmpty) {
+                final outputData = outputs[0]?['outputs'];
+                if (outputData != null &&
+                    outputData is List &&
+                    outputData.isNotEmpty) {
+                  final messageData =
+                      outputData[0]?['results']?['message']?['data'];
+                  if (messageData != null) {
+                    final textContent = messageData['text'] ?? '';
+                    if (textContent.isNotEmpty) {
+                      finalText = textContent;
+                      streamingText.value = finalText;
+
+                      // Add output only now, not during add_message
+                      if (!_hasStepWithTitle(currentSteps.value, 'Output')) {
+                        currentSteps.value.add({
+                          'title': 'Output',
+                          'type': 'Output',
+                          'content': textContent,
+                        });
+                      } else {
+                        final outputIndex = currentSteps.value
+                            .indexWhere((step) => step['title'] == 'Output');
+                        if (outputIndex != -1) {
+                          currentSteps.value[outputIndex]['content'] =
+                              textContent;
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          } catch (e) {
+            debugPrint('⚠️ SSE JSON parse error: $e\nLine: $trimmed');
+          }
+        }
+      }
+      final contentBlocks = extractContentBlocks(stepsForThisMessage);
+      // Final save of message
+      if (finalText.isNotEmpty) {
+        messages.add({
+          'timestamp': DateTime.now().toIso8601String(),
+          'text': finalText,
+          'is_user': false,
+          'expandContentBlocks': true,
+          'content_blocks': contentBlocks,
+        });
+      }
+
+      print("stepsForThisMessage $stepsForThisMessage");
+      // Assign the content blocks to the previous user message
+      if (messages.length >= 2) {
+        final prevMessageIndex = messages.length - 2;
+        if (messages[prevMessageIndex]['is_user'] == true) {
+          messages[prevMessageIndex]['content_blocks'] = contentBlocks;
+        }
+      }
+      /*for (var step in stepsForThisMessage) {
+        final type = step['type'];
+        final header = step['header'];
+
+        if (type == 'text') {
+          final title = header?['title']?.toString().trim() ?? '';
+          final text = step['text']?.toString().trim() ?? '';
+
+          if (title.toLowerCase() == 'input') {
+            contentBlocksData['Input'] = text;
+          } else if (title.toLowerCase() == 'output') {
+            contentBlocksData['Output'] = text;
+          }
+        } else if (type == 'tool_use') {
+          final toolName = step['name']?.toString().trim() ?? 'UnknownTool';
+          contentBlocksData['Tool use'] = toolName;
+        }
+      }*/
+      print("contentBlocksData ::$contentBlocksData");
+
+      isStreaming.value = false;
+    } catch (e) {
+      streamingText.value = "Error: $e";
+    } finally {
+      isStreaming.value = false;
+      client.close();
+      notifyListeners();
+    }
+  }
+
+// Process content blocks from the streaming response
+  void _processContentBlocks(
+      List<dynamic> contentBlocks, List<Map<String, dynamic>> gatheredSteps) {
+    for (final block in contentBlocks) {
+      if (block is Map<String, dynamic>) {
+        final title = block['title'] ?? '';
+        final contents = block['contents'] ?? [];
+
+        if (title == 'Agent Steps') {
+          _processAgentSteps(contents, gatheredSteps);
+        } else if (title.isNotEmpty) {
+          // Process other content blocks (like Input, Output, etc.)
+          _processGenericContentBlock(title, contents);
+        }
+      }
+    }
+
+    notifyListeners();
+  }
+
+// Process agent steps specifically
+  void _processAgentSteps(
+      List<dynamic> steps, List<Map<String, dynamic>> gatheredSteps) {
+    for (final step in steps) {
+      if (step is Map<String, dynamic>) {
+        // Generate a unique key for the step to avoid duplicates
+        final stepKey = _generateStepKey(step);
+
+        // Check if this step already exists in our gathered steps collection
+        if (!_stepExistsByKey(gatheredSteps, stepKey)) {
+          // Add to our tracking collection
+          gatheredSteps.add({...step, 'key': stepKey});
+
+          String title = '';
+          String content = '';
+
+          if (step['type'] == 'text') {
+            title = step['header']?['title'];
+            content = step['text'];
+          } else {
+            title = step['type'];
+            content = step['name'];
+          }
+
+          // Create a step for UI display
+          Map<String, dynamic> uiStep = {
+            'title': title,
+            'content': content,
+            'key': stepKey,
+          };
+
+          // Add the step to current steps for display
+          currentSteps.value.add(uiStep);
+          print("currentSteps $currentSteps");
+        }
+      }
+    }
+  }
+
+// Process generic content blocks
+  void _processGenericContentBlock(String title, List<dynamic> contents) {
+    // Check if we already have this title in our steps
+    final existingIndex =
+        currentSteps.value.indexWhere((step) => step['title'] == title);
+
+    if (contents.isNotEmpty) {
+      // Extract content text from the first content item
+      String content = '';
+      if (contents[0] is Map<String, dynamic>) {
+        content = contents[0]['text'] ?? contents[0]['content'] ?? '';
+      } else if (contents[0] is String) {
+        content = contents[0];
+      }
+
+      if (existingIndex != -1) {
+        // Update existing step
+        currentSteps.value[existingIndex]['content'] = content;
+      } else {
+        // Add new step
+        currentSteps.value.add({
+          'title': title,
+          'type': 'text',
+          'content': content,
+        });
+      }
+    }
+  }
+
+// Generate unique key for a step
+  String _generateStepKey(Map<String, dynamic> step) {
+    final type = step['type'] ?? step['name'] ?? '';
+    final text = step['text'] ?? step['content'] ?? '';
+    return '$type:${text.hashCode}';
+  }
+
+// Check if step exists by key
+  bool _stepExistsByKey(List<Map<String, dynamic>> steps, String key) {
+    return steps.any((step) => step['key'] == key);
+  }
+
+// Check if step with title exists
+  bool _hasStepWithTitle(List<Map<String, dynamic>> steps, String title) {
+    return steps.any((step) => step['title'] == title);
+  }
+
+// Original _stepExists can stay as a fallback
+  bool _stepExists(
+      List<Map<String, dynamic>> steps, Map<String, dynamic> step) {
+    if (steps.isEmpty) return false;
+
+    return steps.any((existingStep) =>
+        existingStep['type'] == step['type'] &&
+        (existingStep['text'] == step['text'] ||
+            existingStep['name'] == step['name']));
+  }
+
+  /*Future<void> sendMessage(BuildContext context, String message) async {
     String translatedText = '';
     if (!AppState.instance.isEnglish) {
       Map<String, dynamic> data =
@@ -1218,7 +1549,7 @@ class ChatViewModel extends LoadingViewModel {
     chatController.clear();
     showLoader.value = true;
     notifyListeners();
-  }
+  }*/
 
   Future<void> sendMessageStream(String userMessage, String? sessionId) async {
     String apiKey = 'sk-wB4MAe1kOlMMRmdX0KfpwhwMNP8HaKjLnNdsiIdCtxc';
@@ -1286,5 +1617,31 @@ class ChatViewModel extends LoadingViewModel {
       Fluttertoast.showToast(msg: "Something went wrong!");
       notifyListeners();
     }
+  }
+
+  void toggleExpandAllSteps() {
+    showAllStepsExpanded.value = !showAllStepsExpanded.value;
+  }
+
+  Map<String, String> extractContentBlocks(List<Map<String, dynamic>> steps) {
+    final Map<String, String> data = {};
+    for (var step in steps) {
+      final type = step['type'];
+      final header = step['header'];
+
+      if (type == 'text') {
+        final title = header?['title']?.toString().trim() ?? '';
+        final text = step['text']?.toString().trim() ?? '';
+        if (title.toLowerCase() == 'input') {
+          data['Input'] = text;
+        } else if (title.toLowerCase() == 'output') {
+          data['Output'] = text;
+        }
+      } else if (type == 'tool_use') {
+        final toolName = step['name']?.toString().trim() ?? 'UnknownTool';
+        data['Tool use'] = toolName;
+      }
+    }
+    return data;
   }
 }

@@ -4,13 +4,9 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/utils/app_state.dart';
 import 'package:provider/provider.dart';
 import '../../../utils/common_constants.dart' as constants;
-import '../../chat_window.dart';
-import '../../main.dart';
 import '../view_model/chat_view_model.dart';
-import 'chat_history_view.dart';
 import 'chat_view.dart';
-import 'documents_view.dart';
-import 'notifications_view.dart';
+
 
 class DrawerWidget extends StatefulWidget {
   const DrawerWidget({

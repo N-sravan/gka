@@ -116,6 +116,8 @@ class _ChatHistoryViewState extends State<ChatHistoryView> {
                             return Padding(
                               padding: const EdgeInsets.symmetric(vertical: 4),
                               child: ChatBubble(
+                                expandContentBlocks: false,
+                                timestamp: '',
                                 text: msg['text'] ?? '',
                                 isUser: msg['is_user'],
                                 imageUrl: msg['image_url'] ?? '',
@@ -126,9 +128,6 @@ class _ChatHistoryViewState extends State<ChatHistoryView> {
                                 logMessage: msg['log'] ?? '',
                                 hasErrorLog: false,
                                 timestampMapping: {},
-                                chainOfThoughts: Map<String, String>.from(
-                                  msg['chain_of_thought'] ?? {},
-                                ),
                                 followUpQuestions: (msg['follow_up_questions']
                                             as List<dynamic>?)
                                         ?.map((e) => e.toString())
@@ -136,8 +135,6 @@ class _ChatHistoryViewState extends State<ChatHistoryView> {
                                     [],
                                 token: msg['token'] ?? '',
                                 isMapView: false,
-                                expandChainOfThought:
-                                    adjustedIndex == _messages.length - 1,
                               ),
                             );
                           },
