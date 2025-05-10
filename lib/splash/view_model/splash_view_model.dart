@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'package:gka/chat/view/chat_view.dart';
 import 'package:gka/login/view/login_view.dart';
+import '../../chat/view/chat_view.dart';
 import '../../chat_window.dart';
 import 'package:flutter/material.dart';
 import '../../../utils/app_state.dart';

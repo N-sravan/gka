@@ -145,7 +145,7 @@ class ChatViewModel extends LoadingViewModel {
 
   List<String> langLoaderMsgList = [];
   List<String> llmOptionsList = ['chatgpt-4o', 'gemma2:9b', 'deepseek-r1'];
-  List<String> langList = ['English', 'Telugu', 'Hindi'];
+  List<String> langList = ['English', 'Telugu'];
 
   Map<String, String> currentVoice = {
     "name": "en-us-x-iom-local",
@@ -161,6 +161,7 @@ class ChatViewModel extends LoadingViewModel {
 
   clearData() {
     promptTemplateIntentMapping.clear();
+    chatController.clear();
     chatDataList.clear();
     messages.clear();
     selectedFile = null;
@@ -1117,7 +1118,7 @@ class ChatViewModel extends LoadingViewModel {
 
   bool get isConnected => channel != null && channel!.closeCode == null;
 
-  initWebsocketConnection() async {
+  initWebsocketConnection(BuildContext context) async {
     if (isConnected) {
       print("WebSocket already connected");
       return;
@@ -1126,7 +1127,7 @@ class ChatViewModel extends LoadingViewModel {
     try {
       channel = IOWebSocketChannel.connect(url);
       channel!.stream.listen(
-        (data) {
+        (data) async {
           try {
             final decoded = jsonDecode(data);
             var result = decoded['message'];
@@ -1139,9 +1140,17 @@ class ChatViewModel extends LoadingViewModel {
                 .trim();
 
             print("Formatted result: $result");
-
+            String translatedText = '';
+            if (!AppState.instance.isEnglish) {
+              Map<String, dynamic> data = await repo.translateText(
+                  context, result, 'english', 'telugu');
+              if (data['statuscode'] == 200) {
+                translatedText = data['response'];
+              }
+            }
+            print("Translated Text : $translatedText");
             messages.add({
-              'text': result,
+              'text': AppState.instance.isEnglish ? result : translatedText,
               'is_user': isUser,
             });
             showLoader.value = false;
@@ -1183,24 +1192,32 @@ class ChatViewModel extends LoadingViewModel {
     notifyListeners();
   }
 
-  void sendMessage(String message) {
+  Future<void> sendMessage(BuildContext context, String message) async {
+    String translatedText = '';
+    if (!AppState.instance.isEnglish) {
+      Map<String, dynamic> data =
+          await repo.translateText(context, message, 'telugu', 'english');
+      if (data['statuscode'] == 200) {
+        translatedText = data['response'];
+      }
+    }
+    print("Translated Text : $message");
     final messageJson = jsonEncode({
-      'message': message,
+      'message': AppState.instance.isEnglish ? message : translatedText,
       'user_id': AppState.instance.userId,
       'session_id': AppState.instance.sessionId,
       'is_user': true,
     });
 
-    print("12345 Input data::$messageJson");
-
+    print("Input data::$messageJson");
     channel!.sink.add(messageJson);
-
     messages.add({
       'text': message,
       'is_user': true,
     });
     chatController.clear();
     showLoader.value = true;
+    notifyListeners();
   }
 
   Future<void> sendMessageStream(String userMessage, String? sessionId) async {

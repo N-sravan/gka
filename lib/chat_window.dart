@@ -1,3 +1,4 @@
+/*
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -413,6 +414,7 @@ class _ChatWindowState extends State<ChatWindow> {
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: ChatBubble(
+                          timestamp: DateTime.now().toString(),
                           text: msg['text'] ?? '',
                           isUser: msg['is_user'],
                           imageUrl: msg['image_url'] ?? '',
@@ -840,3 +842,4 @@ class _ChatWindowState extends State<ChatWindow> {
     return 'Session $formatted';
   }
 }
+*/

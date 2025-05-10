@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:gka/chat/view/chat_view.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:gka/chat/view/chat_view.dart';
+import 'package:gka/login/langflow_login_response_model.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 import 'package:intl/intl.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
@@ -18,11 +19,6 @@ import '../../utils/secure_storage_util.dart';
 import '../../utils/shared_preference_util.dart';
 import '../../utils/util.dart';
 import '../model/ap_login_response_model.dart';
-import '../model/department_user_permission_response.dart' as dept;
-import '../model/department_user_permission_response.dart';
-import '../model/kerala_login_response_model.dart';
-import '../model/login_api_response_model.dart' as login;
-import '../model/login_api_response_model.dart';
 import '../model/user_permission_response_model.dart';
 import '../repository/login_repo.dart';
 
@@ -316,6 +312,66 @@ class LoginViewModel extends LoadingViewModel {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content: Text(constants.genericErrorMsg),
             ));
+          }
+        } else {
+          /// Login is unsuccessful
+          isLoading = false;
+          notifyListeners();
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(constants.genericErrorMsg),
+          ));
+        }
+      } catch (e) {
+        isLoading = false;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(constants.genericErrorMsg),
+        ));
+        Util.instance
+            .logMessage('Login Model', 'Error while authenticating $e');
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(constants.noNetworkAvailability),
+      ));
+    }
+  }
+
+  Future<void> langflowAuthenticate(
+      String userName, String password, BuildContext context) async {
+    /// Checking for active internet connection
+    if (await networkUtils.hasActiveInternet()) {
+      // if (!await restrictLoginAttempts()) {
+      late LangflowLoginModel langflowLoginModel;
+      isLoading = true;
+      try {
+        /// Creating login request parameters
+        Map<String, String> params = {
+          constants.userName: userName,
+          constants.password: password,
+        };
+
+        /// Calling the login API
+        langflowLoginModel = await repo.langflowAuthenticate(params, context);
+
+        if (langflowLoginModel.accessToken != null) {
+          /// Login is successful
+          Map<String, dynamic> decodedToken =
+          JwtDecoder.decode(langflowLoginModel.accessToken!);
+          String userId = decodedToken["sub"];
+          await _setLoginSharedPreferences(userName, userId,
+              langflowLoginModel.accessToken!, langflowLoginModel.refreshToken!);
+          String sessionId = formatSession();
+          if (sessionId.isNotEmpty) {
+            isLoading = false;
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ChatView(
+                  isFromHistory: false,
+                  sessionId: sessionId,
+                ),
+              ),
+            );
           }
         } else {
           /// Login is unsuccessful

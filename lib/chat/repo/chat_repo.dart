@@ -53,8 +53,9 @@ abstract class ChatRepository {
 
   Future<bool> deleteSession(BuildContext context, String sessionId);
 
-  Future<bool> updateSession(
-      BuildContext context, String sessionId, String newId);
+  Future<bool> updateSession(BuildContext context, String sessionId, String newId);
+
+  Future<Map<String, dynamic>> translateText(BuildContext context, String text, String sourceLang, String destLang);
 
   Future<bool> deleteChunk(BuildContext context, String chunkId);
 
@@ -420,6 +421,30 @@ class ChatRepositoryImpl extends ChatRepository {
       return true;
     }
     return false;
+  }
+
+  @override
+  Future<Map<String, dynamic>> translateText(BuildContext context, String text,
+      String sourceLang, String destLang) async {
+    Map<String, dynamic> params = {
+      "text": text,
+      "from_lang": sourceLang,
+      "to_lang": destLang
+    };
+    Map<String, String> authHeaders = {
+      constants.headerContentType: constants.headerJson
+    };
+    String authUrl = constants.langTranslateEndpoint;
+    String requestBody = jsonEncode(params);
+
+    http.Response response = await http.post(
+      Uri.parse(authUrl),
+      headers: authHeaders,
+      body: requestBody,
+    );
+    Map<String, dynamic> responseMap = jsonDecode(response.body);
+
+    return responseMap;
   }
 
   @override

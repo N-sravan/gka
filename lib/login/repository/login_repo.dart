@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/material.dart';
+import 'package:gka/login/langflow_login_response_model.dart';
 import 'package:gka/login/model/session_details_response_model.dart';
 import 'package:gka/login/model/ap_login_response_model.dart';
 import 'package:gka/login/model/kerala_login_response_model.dart';
@@ -19,6 +20,9 @@ abstract class LoginRepository {
   Future<LoginResult> authenticate(
       Map<String, String> params, BuildContext context);
 
+  Future<LangflowLoginModel> langflowAuthenticate(
+      Map<String, String> params, BuildContext context);
+
   Future fetchCsrfToken(BuildContext context);
 
   Future<int?> sendSessionId(BuildContext context, String sessionId);
@@ -26,7 +30,6 @@ abstract class LoginRepository {
   Future<int?> saveFcmToken(BuildContext context);
 }
 
-/// Concrete class implementation for the login repository
 class LoginRepositoryImpl extends LoginRepository {
   @override
   Future<LoginResult> authenticate(
@@ -48,6 +51,29 @@ class LoginRepositoryImpl extends LoginRepository {
     LoginResult loginResult = LoginResult.fromJson(responseMap['response']);
     loginResult.statusCode = response.statusCode;
     return loginResult;
+  }
+
+  Future<LangflowLoginModel> langflowAuthenticate(
+      Map<String, String> params, BuildContext context) async {
+    Map<String, String> authHeaders = {
+      constants.headerContentType: constants.headerContentTypeFormUrl,
+      'Authorization':
+          'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyMjU1YWRjNy0xMjA2LTQwMmUtOWIyYS0zZTQ3MTljZDdmMmQiLCJ0eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ2NTE5MjY2fQ.7s-k0BmSxE0xDjhI8JpGvU12W6pGOhuVIA-Rtlfzys8',
+    };
+
+    String authUrl = constants.langflowLoginEndpoint;
+
+    http.Response response = await http.post(
+      Uri.parse(authUrl),
+      headers: authHeaders,
+      body: params,
+    );
+
+    Map<String, dynamic> responseMap = jsonDecode(response.body);
+
+    LangflowLoginModel langflowLoginModel =
+        LangflowLoginModel.fromJson(responseMap);
+    return langflowLoginModel;
   }
 
   @override

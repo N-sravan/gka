@@ -122,14 +122,9 @@ class MyApp extends StatelessWidget {
         title: 'ChatBot Weather',
         // home: const MyHomePage(title: 'ChatBot Weather'),
         initialRoute: constants.initialRoute,
-        /*routes: {
-          '/splash': (context) => const SplashScreenWidget(),
-          '/login': (context) => const LoginScreenWidget(),
-        },*/
         routes: {
           constants.initialRoute: (context) => const SplashScreenWidget(),
           constants.roleRoute: (context) => const LoginScreenWidget(),
-          // constants.loginRoute: (context) => const LoginScreenWidget(),
           constants.homeRoute: (context) => const HomeScreenWidget(),
         },
         onGenerateRoute: (settings) {
@@ -138,10 +133,6 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(
               builder: (context) => LoginScreenWidget(role: data ?? ''),
             );
-            // } else if (settings.name == constants.farmerLoginRoute) {
-            //   return MaterialPageRoute(
-            //     builder: (context) => FarmerLoginScreenWidget(role: data ?? ''),
-            //   );
           } else if (settings.name == constants.departmentLoginRoute) {
             return MaterialPageRoute(
               builder: (context) => LoginScreenWidget(role: data ?? ''),
