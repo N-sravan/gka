@@ -160,7 +160,7 @@ class ChatViewModel extends LoadingViewModel {
   List<Map<String, dynamic>> agentSteps = [];
 
   // List<Map<String, dynamic>> currentSteps = [];
-  ValueNotifier<List<Map<String, dynamic>>> currentSteps = ValueNotifier([]);
+  List<Map<String, dynamic>> currentSteps = [];
   Map<String, String> contentBlocksData = {};
   List<Map<String, dynamic>> gatheredSteps = [];
 
@@ -1247,7 +1247,7 @@ class ChatViewModel extends LoadingViewModel {
     // Start streaming process
     isStreaming.value = true;
     streamingText.value = "Thinking..._";
-    currentSteps.value = [];
+    currentSteps = [];
     showAgentSteps.value = false;
 
     notifyListeners();
@@ -1258,7 +1258,98 @@ class ChatViewModel extends LoadingViewModel {
 
 // Process streaming response from the API
   Future<void> _streamResponse(String userInput) async {
-    final apiUrl = "https://apaims2.0.vassarlabs.com/chatbot/chat/query";
+    final apiUrl =
+        "https://agentsbuilder.apaims2.0.vassarlabs.com/api/v1/run/d38adaab-877c-4a47-a35c-047affbf1102?stream=false";
+    final headers = {
+      "Content-Type": "application/json",
+      "accept": "application/json", // Because stream is false
+      "x-api-key": "sk-kzSs-5jk4A7J_8JBqvCX5iaF2miwKuexm1_FIcPLuCw",
+    };
+    final payload = {
+      "input_value": userInput,
+      "session_id": AppState.instance.sessionId,
+      "input_type": "chat",
+      "output_type": "chat",
+      "tweaks": null,
+    };
+
+    try {
+      isStreaming.value = true;
+
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: headers,
+        body: json.encode(payload),
+      );
+
+      if (response.statusCode != 200) {
+        streamingText.value = "Error: Server returned ${response.statusCode}";
+        return;
+      }
+
+      final decoded = json.decode(response.body);
+
+      final outputs = decoded['outputs'];
+      if (outputs != null && outputs is List && outputs.isNotEmpty) {
+        final outputData = outputs[0];
+        final outputsList = outputData['outputs'];
+
+        if (outputsList != null &&
+            outputsList is List &&
+            outputsList.isNotEmpty) {
+          final resultData = outputsList[0]?['results']?['message']?['data'];
+          final contentBlocks =
+              outputsList[0]?['results']?['message']?['content_blocks'];
+
+          String finalText = resultData?['text'] ?? '';
+          if (finalText.isNotEmpty) {
+            streamingText.value = finalText;
+
+            // Extract steps for UI if any
+            final List<Map<String, dynamic>> stepsForThisMessage = [];
+            if (contentBlocks != null && contentBlocks is List) {
+              _processContentBlocks(contentBlocks, stepsForThisMessage);
+            }
+
+            final contentBlocksMap = extractContentBlocks(currentSteps);
+            // Add final message
+            messages.add({
+              'timestamp': DateTime.now().toIso8601String(),
+              'text': finalText,
+              'is_user': false,
+              'expandContentBlocks': true,
+              'content_blocks': contentBlocksMap ?? {},
+            });
+
+            // Assign content blocks to previous user message
+            if (messages.length >= 2) {
+              final prevMessageIndex = messages.length - 2;
+              if (messages[prevMessageIndex]['is_user'] == true) {
+                messages[prevMessageIndex]['content_blocks'] = contentBlocksMap;
+              }
+            }
+
+            // Optional: update currentSteps with Output
+            if (!_hasStepWithTitle(currentSteps, 'Output')) {
+              currentSteps.add({
+                'title': 'Output',
+                'type': 'Output',
+                'content': finalText,
+              });
+            }
+          }
+        }
+      }
+    } catch (e) {
+      streamingText.value = "Error: $e";
+    } finally {
+      isStreaming.value = false;
+      notifyListeners();
+    }
+  }
+
+  /*Future<void> _streamResponse(String userInput) async {
+     final apiUrl = "https://apaims2.0.vassarlabs.com/chatbot/chat/query";
     final headers = {"Content-Type": "application/json"};
     final payload = {
       "query": userInput,
@@ -1268,7 +1359,6 @@ class ChatViewModel extends LoadingViewModel {
     final client = http.Client();
     String finalText = "";
     final List<Map<String, dynamic>> stepsForThisMessage = [];
-
     try {
       final request = http.Request('POST', Uri.parse(apiUrl));
       request.headers.addAll(headers);
@@ -1377,7 +1467,7 @@ class ChatViewModel extends LoadingViewModel {
           messages[prevMessageIndex]['content_blocks'] = contentBlocks;
         }
       }
-      /*for (var step in stepsForThisMessage) {
+      */ /*for (var step in stepsForThisMessage) {
         final type = step['type'];
         final header = step['header'];
 
@@ -1394,7 +1484,7 @@ class ChatViewModel extends LoadingViewModel {
           final toolName = step['name']?.toString().trim() ?? 'UnknownTool';
           contentBlocksData['Tool use'] = toolName;
         }
-      }*/
+      }*/ /*
       print("contentBlocksData ::$contentBlocksData");
 
       isStreaming.value = false;
@@ -1405,7 +1495,7 @@ class ChatViewModel extends LoadingViewModel {
       client.close();
       notifyListeners();
     }
-  }
+  }*/
 
 // Process content blocks from the streaming response
   void _processContentBlocks(
@@ -1439,27 +1529,23 @@ class ChatViewModel extends LoadingViewModel {
         if (!_stepExistsByKey(gatheredSteps, stepKey)) {
           // Add to our tracking collection
           gatheredSteps.add({...step, 'key': stepKey});
-
-          String title = '';
-          String content = '';
+          Map<String, dynamic> uiStep = {};
 
           if (step['type'] == 'text') {
-            title = step['header']?['title'];
-            content = step['text'];
-          } else {
-            title = step['type'];
-            content = step['name'];
+            uiStep['title'] = step['header']?['title'];
+            uiStep['content'] = step['text'];
+          }
+          if (step['type'] == 'tool_use' && step.containsKey('tool_input')) {
+            uiStep['title'] = 'Tool Input';
+            uiStep['content'] = step['tool_input'];
+          }
+          if (step['type'] == 'tool_use' && step.containsKey('output')) {
+            uiStep['title'] = 'Tool Output';
+            uiStep['content'] = step['output'];
           }
 
-          // Create a step for UI display
-          Map<String, dynamic> uiStep = {
-            'title': title,
-            'content': content,
-            'key': stepKey,
-          };
-
           // Add the step to current steps for display
-          currentSteps.value.add(uiStep);
+          currentSteps.add(uiStep);
           print("currentSteps $currentSteps");
         }
       }
@@ -1470,7 +1556,7 @@ class ChatViewModel extends LoadingViewModel {
   void _processGenericContentBlock(String title, List<dynamic> contents) {
     // Check if we already have this title in our steps
     final existingIndex =
-        currentSteps.value.indexWhere((step) => step['title'] == title);
+        currentSteps.indexWhere((step) => step['title'] == title);
 
     if (contents.isNotEmpty) {
       // Extract content text from the first content item
@@ -1483,10 +1569,10 @@ class ChatViewModel extends LoadingViewModel {
 
       if (existingIndex != -1) {
         // Update existing step
-        currentSteps.value[existingIndex]['content'] = content;
+        currentSteps[existingIndex]['content'] = content;
       } else {
         // Add new step
-        currentSteps.value.add({
+        currentSteps.add({
           'title': title,
           'type': 'text',
           'content': content,
@@ -1623,8 +1709,8 @@ class ChatViewModel extends LoadingViewModel {
     showAllStepsExpanded.value = !showAllStepsExpanded.value;
   }
 
-  Map<String, String> extractContentBlocks(List<Map<String, dynamic>> steps) {
-    final Map<String, String> data = {};
+  Map<String, dynamic>? extractContentBlocks(List<Map<String, dynamic>> steps) {
+    final Map<String, dynamic> data = {};
     for (var step in steps) {
       final type = step['type'];
       final header = step['header'];
@@ -1638,8 +1724,13 @@ class ChatViewModel extends LoadingViewModel {
           data['Output'] = text;
         }
       } else if (type == 'tool_use') {
-        final toolName = step['name']?.toString().trim() ?? 'UnknownTool';
-        data['Tool use'] = toolName;
+        if (step.containsKey('tool_input')) {
+          data['Tool Input'] = step['tool_input'];
+        }
+
+        if (step.containsKey('output')) {
+          data['Tool Output'] = step['output'];
+        }
       }
     }
     return data;

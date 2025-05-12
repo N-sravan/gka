@@ -151,7 +151,7 @@ class _ChatViewState extends State<ChatView> {
                   ],
                 ),
               ),
-              _buildStreamingControls(viewModel),
+              // _buildStreamingControls(viewModel),
               _buildChatInput(viewModel),
             ],
           ),
@@ -244,7 +244,7 @@ class _ChatViewState extends State<ChatView> {
     return ValueListenableBuilder<bool>(
       valueListenable: viewModel.isStreaming,
       builder: (context, isStreaming, _) {
-        if (isStreaming && viewModel.currentSteps.value.isNotEmpty) {
+        if (isStreaming && viewModel.currentSteps.isNotEmpty) {
           return ValueListenableBuilder<bool>(
             valueListenable: viewModel.showAgentSteps,
             builder: (context, showSteps, _) {
@@ -314,10 +314,10 @@ class _ChatViewState extends State<ChatView> {
                           valueListenable: viewModel.expandAllSteps,
                           builder: (_, expandAll, __) => ListView.builder(
                             padding: const EdgeInsets.all(8),
-                            itemCount: viewModel.currentSteps.value.length,
+                            itemCount: viewModel.currentSteps.length,
                             itemBuilder: (context, index) {
                               return AgentStepWidget(
-                                step: viewModel.currentSteps.value[index],
+                                step: viewModel.currentSteps[index],
                                 shouldExpand: expandAll,
                               );
                             },
@@ -338,7 +338,7 @@ class _ChatViewState extends State<ChatView> {
 
   Widget _buildStreamingControls(ChatViewModel viewModel) {
     final hasContent = viewModel.messages.isNotEmpty ||
-        viewModel.currentSteps.value.isNotEmpty; // or use viewModel if needed
+        viewModel.currentSteps.isNotEmpty; // or use viewModel if needed
 
     if (!hasContent) return const SizedBox();
 
@@ -378,7 +378,7 @@ class _ChatViewState extends State<ChatView> {
           ),
           contentPadding:
               const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-          // prefixIcon: _speechButton(),
+          prefixIcon: _speechButton(),
           suffixIcon: _sendButton(),
         ),
       ),

@@ -17,7 +17,7 @@ class ChatBubble extends StatefulWidget {
 
   final bool expandContentBlocks;
   final bool isStreaming;
-  final Map<String, String>? contentBlocks;
+  final Map<String, dynamic>? contentBlocks;
 
   const ChatBubble({
     Key? key,
@@ -67,8 +67,7 @@ class _ChatBubbleState extends State<ChatBubble> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isCurrentMessage = widget.timestampMapping.isNotEmpty &&
-        widget.timestamp == widget.timestampMapping.keys.last;
+    final bool isCurrentMessage = widget.timestampMapping.isNotEmpty && widget.timestamp == widget.timestampMapping.keys.last;
 
     return Padding(
         padding: EdgeInsets.fromLTRB(
