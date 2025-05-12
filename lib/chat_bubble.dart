@@ -17,7 +17,7 @@ class ChatBubble extends StatefulWidget {
 
   final bool expandContentBlocks;
   final bool isStreaming;
-  final Map<String, String>? contentBlocks;
+  final Map<String, dynamic>? contentBlocks;
 
   const ChatBubble({
     Key? key,
@@ -330,7 +330,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                                 Padding(
                                   padding: const EdgeInsets.only(top: 8.0),
                                   child: Text(
-                                    entry.value.trim(),
+                                    entry.value.toString(),
                                     style: const TextStyle(fontSize: 12),
                                   ),
                                 ),

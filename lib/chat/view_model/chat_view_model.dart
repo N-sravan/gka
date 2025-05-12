@@ -146,7 +146,6 @@ class ChatViewModel extends LoadingViewModel {
   };
   String language = '';
   String langId = '';
-  String title = '';
   String dataNotFoundMsg = '';
   String? llmSelected;
   String? langSelected;
@@ -1258,11 +1257,19 @@ class ChatViewModel extends LoadingViewModel {
 
 // Process streaming response from the API
   Future<void> _streamResponse(String userInput) async {
-    final apiUrl = "https://apaims2.0.vassarlabs.com/chatbot/chat/query";
-    final headers = {"Content-Type": "application/json"};
+    final apiUrl =
+        "https://agentsbuilder.apaims2.0.vassarlabs.com/api/v1/run/d38adaab-877c-4a47-a35c-047affbf1102?stream=true";
+    final headers = {
+      "Content-Type": "application/json",
+      "accept": "text/event-stream",
+      "x-api-key": "sk-kzSs-5jk4A7J_8JBqvCX5iaF2miwKuexm1_FIcPLuCw",
+    };
     final payload = {
-      "query": userInput,
+      "input_value": userInput,
       "session_id": AppState.instance.sessionId,
+      "input_type": "chat",
+      "output_type": "chat",
+      "tweaks": null,
     };
 
     final client = http.Client();
@@ -1289,7 +1296,7 @@ class ChatViewModel extends LoadingViewModel {
         buffer += chunk;
 
         final lines = buffer.split('\n');
-        buffer = lines.removeLast(); // Save incomplete line for next chunk
+        buffer = lines.removeLast();
 
         for (final line in lines) {
           final trimmed = line.trim();
@@ -1313,11 +1320,26 @@ class ChatViewModel extends LoadingViewModel {
                 final contentBlocks = msgData['content_blocks'] ?? [];
                 if (contentBlocks.isNotEmpty) {
                   _processContentBlocks(contentBlocks, stepsForThisMessage);
+                  for (var block in contentBlocks) {
+                    final contents = block['contents'] ?? [];
+
+                    for (var content in contents) {
+                      final header = content['header'];
+                      if (header != null && header['title'] == 'Output') {
+                        finalText = content['text'];
+                        streamingText.value = finalText;
+                        print('Output: $finalText');
+                        break;
+                      }
+                    }
+                  }
                 }
               }
             }
 
-            if (eventType == 'end') {
+            if (eventType == 'end' &&
+                streamingText.value == "Thinking..._" &&
+                finalText.isNotEmpty) {
               final outputs = eventData['result']?['outputs'];
               if (outputs != null && outputs is List && outputs.isNotEmpty) {
                 final outputData = outputs[0]?['outputs'];
@@ -1357,7 +1379,7 @@ class ChatViewModel extends LoadingViewModel {
           }
         }
       }
-      final contentBlocks = extractContentBlocks(stepsForThisMessage);
+      final contentBlocks = extractContentBlocks(currentSteps.value);
       // Final save of message
       if (finalText.isNotEmpty) {
         messages.add({
@@ -1432,35 +1454,46 @@ class ChatViewModel extends LoadingViewModel {
       List<dynamic> steps, List<Map<String, dynamic>> gatheredSteps) {
     for (final step in steps) {
       if (step is Map<String, dynamic>) {
-        // Generate a unique key for the step to avoid duplicates
         final stepKey = _generateStepKey(step);
 
-        // Check if this step already exists in our gathered steps collection
         if (!_stepExistsByKey(gatheredSteps, stepKey)) {
-          // Add to our tracking collection
           gatheredSteps.add({...step, 'key': stepKey});
+          Map<String, dynamic> uiStep = {};
 
-          String title = '';
-          String content = '';
-
-          if (step['type'] == 'text') {
-            title = step['header']?['title'];
-            content = step['text'];
+          final duration = step['duration'] ?? 0;
+          String durationStr = '';
+          if (duration >= 1000) {
+            // Convert to decimal seconds
+            durationStr = '${(duration / 1000).toStringAsFixed(1)}sec';
           } else {
-            title = step['type'];
-            content = step['name'];
+            // Keep as integer seconds
+            durationStr = '${duration}sec';
           }
 
-          // Create a step for UI display
-          Map<String, dynamic> uiStep = {
-            'title': title,
-            'content': content,
-            'key': stepKey,
-          };
+          if (step['type'] == 'text') {
+            final title = step['header']?['title'] ?? 'Text';
+            final label = '$title - (Duration $durationStr)';
+            uiStep[label] = step['text'];
+            currentSteps.value.add(uiStep);
+          }
 
-          // Add the step to current steps for display
-          currentSteps.value.add(uiStep);
-          print("currentSteps $currentSteps");
+          if (step['type'] == 'tool_use') {
+            if (step.containsKey('tool_input') && step['tool_input'] !=null && (step['tool_input'] as Map).isNotEmpty) {
+              final label = 'Tool Input - (Duration $durationStr)';
+              print("step tool input :${step['tool_input']}");
+              uiStep[label] = step['tool_input'];
+              currentSteps.value.add({...uiStep});
+            }
+
+            if (step.containsKey('output') && step['output'] !=null) {
+              uiStep = {};
+              final label = 'Tool Output - (Duration $durationStr)';
+              uiStep[label] = step['output'];
+              currentSteps.value.add(uiStep);
+            }
+          }
+
+          print("currentSteps ${currentSteps.value}");
         }
       }
     }
@@ -1623,25 +1656,17 @@ class ChatViewModel extends LoadingViewModel {
     showAllStepsExpanded.value = !showAllStepsExpanded.value;
   }
 
-  Map<String, String> extractContentBlocks(List<Map<String, dynamic>> steps) {
-    final Map<String, String> data = {};
-    for (var step in steps) {
-      final type = step['type'];
-      final header = step['header'];
+  Map<String, dynamic>? extractContentBlocks(List<Map<String, dynamic>> steps) {
+    final Map<String, dynamic> data = {};
 
-      if (type == 'text') {
-        final title = header?['title']?.toString().trim() ?? '';
-        final text = step['text']?.toString().trim() ?? '';
-        if (title.toLowerCase() == 'input') {
-          data['Input'] = text;
-        } else if (title.toLowerCase() == 'output') {
-          data['Output'] = text;
-        }
-      } else if (type == 'tool_use') {
-        final toolName = step['name']?.toString().trim() ?? 'UnknownTool';
-        data['Tool use'] = toolName;
+    for (final step in steps) {
+      if (step.isNotEmpty) {
+        final key = step.keys.first;
+        final value = step.values.first;
+        data[key] = value;
       }
     }
-    return data;
+
+    return data.isNotEmpty ? data : null;
   }
 }

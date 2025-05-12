@@ -378,7 +378,7 @@ class _ChatViewState extends State<ChatView> {
           ),
           contentPadding:
               const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-          // prefixIcon: _speechButton(),
+          prefixIcon: _speechButton(),
           suffixIcon: _sendButton(),
         ),
       ),

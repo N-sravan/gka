@@ -37,9 +37,10 @@ class _AgentStepWidgetState extends State<AgentStepWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final title = widget.step['title'] ?? 'Step';
-    final content = widget.step['content'] ?? '';
-    final type = widget.step['type'] ?? 'text';
+    final entry = widget.step.entries.first;
+    final title = entry.key;
+    final content = entry.value;
+    final type = 'text';
 
     // Customize the appearance based on step type
     Color headerColor;
@@ -110,8 +111,9 @@ class _AgentStepWidgetState extends State<AgentStepWidget> {
     );
   }
 
-  Widget _buildContentWidget(String type, String content) {
-    // Handle different content types
+  Widget _buildContentWidget(String type, dynamic content) {
+    final textContent = content is String ? content : jsonEncode(content);
+
     switch (type.toLowerCase()) {
       case 'code':
         return Container(
@@ -121,7 +123,7 @@ class _AgentStepWidgetState extends State<AgentStepWidget> {
           ),
           padding: const EdgeInsets.all(12),
           child: Text(
-            content,
+            textContent,
             style: const TextStyle(
               fontFamily: 'monospace',
               color: Colors.white,
@@ -131,9 +133,10 @@ class _AgentStepWidgetState extends State<AgentStepWidget> {
         );
       case 'json':
         try {
-          // Try to format the JSON
-          final Map<String, dynamic> jsonData = json.decode(content);
-          final prettyJson = const JsonEncoder.withIndent('  ').convert(jsonData);
+          final Map<String, dynamic> jsonData =
+          content is String ? json.decode(content) : content;
+          final prettyJson =
+          const JsonEncoder.withIndent('  ').convert(jsonData);
           return Container(
             decoration: BoxDecoration(
               color: Colors.blueGrey[50],
@@ -149,12 +152,11 @@ class _AgentStepWidgetState extends State<AgentStepWidget> {
             ),
           );
         } catch (e) {
-          // If not valid JSON, display as regular text
-          return Text(content);
+          return Text(textContent);
         }
       default:
         return Text(
-          content,
+          textContent,
           style: const TextStyle(fontSize: 13),
         );
     }
