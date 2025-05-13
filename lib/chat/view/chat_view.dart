@@ -42,12 +42,13 @@ class _ChatViewState extends State<ChatView> {
   ValueNotifier<bool> showLoader = ValueNotifier<bool>(false);
   late ChatViewModel viewModel;
   bool _speechEnabled = false;
-  String langId = '';
+  String langId = 'en-IN';
   String language = '';
   FlutterTts tts = FlutterTts();
   final _audioRecorder = fs.FlutterSoundRecorder();
   StreamController<Uint8List> _audioStreamController =
       StreamController<Uint8List>();
+  int prevChatLength = 0;
 
   WebSocketChannel? channel;
   bool _isRecording = false;
@@ -66,7 +67,7 @@ class _ChatViewState extends State<ChatView> {
     AppState.instance.language = 'english';
     langId = 'en-IN';
     // _initRecorder();
-    // _initSpeech();
+    _initSpeech();
     viewModel = Provider.of<ChatViewModel>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // await viewModel.initWebsocketConnection(context);
@@ -211,6 +212,16 @@ class _ChatViewState extends State<ChatView> {
 
         final msg = viewModel.messages[adjustedIndex];
 
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final messages = viewModel.messages;
+          if (messages.isNotEmpty &&
+              messages.length > prevChatLength &&
+              messages.last['is_user'] == false) {
+            prevChatLength = messages.length;
+            _speakMessage(messages.last['text'] ?? '');
+          }
+        });
+
         // Handle Input and Output expandable boxes in the ChatBubble widget
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
@@ -244,7 +255,7 @@ class _ChatViewState extends State<ChatView> {
     return ValueListenableBuilder<bool>(
       valueListenable: viewModel.isStreaming,
       builder: (context, isStreaming, _) {
-        if (isStreaming && viewModel.currentSteps.value.isNotEmpty) {
+        if (isStreaming && viewModel.currentSteps.isNotEmpty) {
           return ValueListenableBuilder<bool>(
             valueListenable: viewModel.showAgentSteps,
             builder: (context, showSteps, _) {
@@ -314,10 +325,10 @@ class _ChatViewState extends State<ChatView> {
                           valueListenable: viewModel.expandAllSteps,
                           builder: (_, expandAll, __) => ListView.builder(
                             padding: const EdgeInsets.all(8),
-                            itemCount: viewModel.currentSteps.value.length,
+                            itemCount: viewModel.currentSteps.length,
                             itemBuilder: (context, index) {
                               return AgentStepWidget(
-                                step: viewModel.currentSteps.value[index],
+                                step: viewModel.currentSteps[index],
                                 shouldExpand: expandAll,
                               );
                             },
@@ -338,7 +349,7 @@ class _ChatViewState extends State<ChatView> {
 
   Widget _buildStreamingControls(ChatViewModel viewModel) {
     final hasContent = viewModel.messages.isNotEmpty ||
-        viewModel.currentSteps.value.isNotEmpty; // or use viewModel if needed
+        viewModel.currentSteps.isNotEmpty; // or use viewModel if needed
 
     if (!hasContent) return const SizedBox();
 
@@ -421,7 +432,7 @@ class _ChatViewState extends State<ChatView> {
           onPressed: !value
               ? (AppState.instance.language.toLowerCase() == 'telugu')
                   ? _startListeningTelugu
-                  : _startListening
+                  : _startListeningTelugu
               : _stopListening,
           icon: Icon(
             !value ? Icons.mic_off : Icons.mic,

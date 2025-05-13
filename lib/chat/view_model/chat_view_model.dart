@@ -159,7 +159,7 @@ class ChatViewModel extends LoadingViewModel {
   List<Map<String, dynamic>> agentSteps = [];
 
   // List<Map<String, dynamic>> currentSteps = [];
-  ValueNotifier<List<Map<String, dynamic>>> currentSteps = ValueNotifier([]);
+  List<Map<String, dynamic>> currentSteps = [];
   Map<String, String> contentBlocksData = {};
   List<Map<String, dynamic>> gatheredSteps = [];
 
@@ -1246,7 +1246,7 @@ class ChatViewModel extends LoadingViewModel {
     // Start streaming process
     isStreaming.value = true;
     streamingText.value = "Thinking..._";
-    currentSteps.value = [];
+    currentSteps = [];
     showAgentSteps.value = false;
 
     notifyListeners();
@@ -1354,18 +1354,17 @@ class ChatViewModel extends LoadingViewModel {
                       finalText = textContent;
                       streamingText.value = finalText;
 
-                      // Add output only now, not during add_message
-                      if (!_hasStepWithTitle(currentSteps.value, 'Output')) {
-                        currentSteps.value.add({
+                      if (!_hasStepWithTitle(currentSteps, 'Output')) {
+                        currentSteps.add({
                           'title': 'Output',
                           'type': 'Output',
                           'content': textContent,
                         });
                       } else {
-                        final outputIndex = currentSteps.value
+                        final outputIndex = currentSteps
                             .indexWhere((step) => step['title'] == 'Output');
                         if (outputIndex != -1) {
-                          currentSteps.value[outputIndex]['content'] =
+                          currentSteps[outputIndex]['content'] =
                               textContent;
                         }
                       }
@@ -1379,7 +1378,7 @@ class ChatViewModel extends LoadingViewModel {
           }
         }
       }
-      final contentBlocks = extractContentBlocks(currentSteps.value);
+      final contentBlocks = extractContentBlocks(currentSteps);
       // Final save of message
       if (finalText.isNotEmpty) {
         messages.add({
@@ -1391,34 +1390,12 @@ class ChatViewModel extends LoadingViewModel {
         });
       }
 
-      print("stepsForThisMessage $stepsForThisMessage");
-      // Assign the content blocks to the previous user message
       if (messages.length >= 2) {
         final prevMessageIndex = messages.length - 2;
         if (messages[prevMessageIndex]['is_user'] == true) {
           messages[prevMessageIndex]['content_blocks'] = contentBlocks;
         }
       }
-      /*for (var step in stepsForThisMessage) {
-        final type = step['type'];
-        final header = step['header'];
-
-        if (type == 'text') {
-          final title = header?['title']?.toString().trim() ?? '';
-          final text = step['text']?.toString().trim() ?? '';
-
-          if (title.toLowerCase() == 'input') {
-            contentBlocksData['Input'] = text;
-          } else if (title.toLowerCase() == 'output') {
-            contentBlocksData['Output'] = text;
-          }
-        } else if (type == 'tool_use') {
-          final toolName = step['name']?.toString().trim() ?? 'UnknownTool';
-          contentBlocksData['Tool use'] = toolName;
-        }
-      }*/
-      print("contentBlocksData ::$contentBlocksData");
-
       isStreaming.value = false;
     } catch (e) {
       streamingText.value = "Error: $e";
@@ -1440,7 +1417,6 @@ class ChatViewModel extends LoadingViewModel {
         if (title == 'Agent Steps') {
           _processAgentSteps(contents, gatheredSteps);
         } else if (title.isNotEmpty) {
-          // Process other content blocks (like Input, Output, etc.)
           _processGenericContentBlock(title, contents);
         }
       }
@@ -1463,10 +1439,8 @@ class ChatViewModel extends LoadingViewModel {
           final duration = step['duration'] ?? 0;
           String durationStr = '';
           if (duration >= 1000) {
-            // Convert to decimal seconds
             durationStr = '${(duration / 1000).toStringAsFixed(1)}sec';
           } else {
-            // Keep as integer seconds
             durationStr = '${duration}sec';
           }
 
@@ -1474,26 +1448,28 @@ class ChatViewModel extends LoadingViewModel {
             final title = step['header']?['title'] ?? 'Text';
             final label = '$title - (Duration $durationStr)';
             uiStep[label] = step['text'];
-            currentSteps.value.add(uiStep);
+            currentSteps.add(uiStep);
           }
 
           if (step['type'] == 'tool_use') {
-            if (step.containsKey('tool_input') && step['tool_input'] !=null && (step['tool_input'] as Map).isNotEmpty) {
+            if (step.containsKey('tool_input') &&
+                step['tool_input'] != null &&
+                (step['tool_input'] as Map).isNotEmpty) {
               final label = 'Tool Input - (Duration $durationStr)';
               print("step tool input :${step['tool_input']}");
               uiStep[label] = step['tool_input'];
-              currentSteps.value.add({...uiStep});
+              currentSteps.add({...uiStep});
             }
 
-            if (step.containsKey('output') && step['output'] !=null) {
+            if (step.containsKey('output') && step['output'] != null) {
               uiStep = {};
               final label = 'Tool Output - (Duration $durationStr)';
               uiStep[label] = step['output'];
-              currentSteps.value.add(uiStep);
+              currentSteps.add(uiStep);
             }
           }
 
-          print("currentSteps ${currentSteps.value}");
+          print("currentSteps ${currentSteps}");
         }
       }
     }
@@ -1503,7 +1479,7 @@ class ChatViewModel extends LoadingViewModel {
   void _processGenericContentBlock(String title, List<dynamic> contents) {
     // Check if we already have this title in our steps
     final existingIndex =
-        currentSteps.value.indexWhere((step) => step['title'] == title);
+        currentSteps.indexWhere((step) => step['title'] == title);
 
     if (contents.isNotEmpty) {
       // Extract content text from the first content item
@@ -1516,10 +1492,10 @@ class ChatViewModel extends LoadingViewModel {
 
       if (existingIndex != -1) {
         // Update existing step
-        currentSteps.value[existingIndex]['content'] = content;
+        currentSteps[existingIndex]['content'] = content;
       } else {
         // Add new step
-        currentSteps.value.add({
+        currentSteps.add({
           'title': title,
           'type': 'text',
           'content': content,

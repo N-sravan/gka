@@ -132,7 +132,8 @@ class _ChatBubbleState extends State<ChatBubble> {
                                 ),
                         ),
                         child: Padding(
-                          padding: const EdgeInsets.only(left: 10, right: 10),
+                          // padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
