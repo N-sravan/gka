@@ -2,16 +2,16 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:flutter_sound/flutter_sound.dart' as fs;
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:record/record.dart' as record;
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 import '../../chat_bubble.dart';
+import 'package:http/http.dart' as http;
 import '/utils/common_constants.dart' as constants;
 import 'package:flutter/material.dart';
 import 'package:gka/chat/view_model/chat_view_model.dart';
@@ -23,7 +23,7 @@ import 'drawer_widget.dart';
 class ChatView extends StatefulWidget {
   const ChatView({
     super.key,
-    this.isFromHistory,
+    required this.isFromHistory,
     this.sessionId,
   });
 
@@ -35,22 +35,26 @@ class ChatView extends StatefulWidget {
 }
 
 class _ChatViewState extends State<ChatView> {
+  final _recorder = record.AudioRecorder();
+
+  // final fs.FlutterSoundRecorder _recorder = fs.FlutterSoundRecorder();
+  final ValueNotifier<bool> listeningActive = ValueNotifier(false);
+  late String recordedFilePath;
   var scrollControllerListView = ScrollController();
   StreamController<Uint8List> streamController = StreamController<Uint8List>();
   final SpeechToText _speechToText = SpeechToText();
-  ValueNotifier<bool> listeningActive = ValueNotifier<bool>(false);
   ValueNotifier<bool> showLoader = ValueNotifier<bool>(false);
   late ChatViewModel viewModel;
   bool _speechEnabled = false;
   String langId = 'en-IN';
   String language = '';
   FlutterTts tts = FlutterTts();
-  final _audioRecorder = fs.FlutterSoundRecorder();
-  StreamController<Uint8List> _audioStreamController =
+
+  // final _audioRecorder = fs.FlutterSoundRecorder();
+  final StreamController<Uint8List> _audioStreamController =
       StreamController<Uint8List>();
   int prevChatLength = 0;
 
-  WebSocketChannel? channel;
   bool _isRecording = false;
   Timer? _inactivityTimer;
   String? _lastRecognizedText;
@@ -105,7 +109,7 @@ class _ChatViewState extends State<ChatView> {
   @override
   void dispose() {
     super.dispose();
-    _audioRecorder.closeRecorder();
+    // _audioRecorder.closeRecorder();
     _audioStreamController.close();
     _isRecording = false;
     tts.stop();
@@ -148,11 +152,11 @@ class _ChatViewState extends State<ChatView> {
                 child: Stack(
                   children: [
                     _buildChatList(viewModel),
-                    _buildAgentStepsOverlay(viewModel),
+                    // _buildAgentStepsOverlay(viewModel),
                   ],
                 ),
               ),
-              _buildStreamingControls(viewModel),
+              // _buildStreamingControls(viewModel),
               _buildChatInput(viewModel),
             ],
           ),
@@ -216,7 +220,9 @@ class _ChatViewState extends State<ChatView> {
           final messages = viewModel.messages;
           if (messages.isNotEmpty &&
               messages.length > prevChatLength &&
-              messages.last['is_user'] == false) {
+              messages.last['is_user'] == false &&
+              widget.isFromHistory != null &&
+              widget.isFromHistory == false) {
             prevChatLength = messages.length;
             _speakMessage(messages.last['text'] ?? '');
           }
@@ -348,28 +354,33 @@ class _ChatViewState extends State<ChatView> {
   }
 
   Widget _buildStreamingControls(ChatViewModel viewModel) {
-    final hasContent = viewModel.messages.isNotEmpty ||
-        viewModel.currentSteps.isNotEmpty; // or use viewModel if needed
+    final hasContent =
+        viewModel.messages.isNotEmpty || viewModel.currentSteps.isNotEmpty;
 
-    if (!hasContent) return const SizedBox();
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      child: Row(
-        children: [
-          ValueListenableBuilder<bool>(
-            valueListenable: viewModel.showAgentSteps,
-            builder: (context, showSteps, _) {
-              return TextButton.icon(
-                icon: Icon(showSteps ? Icons.visibility_off : Icons.visibility),
-                label: Text(showSteps ? 'Hide Steps' : 'Show Steps'),
-                onPressed: viewModel.toggleAgentSteps,
-              );
-            },
-          ),
-        ],
-      ),
-    );
+    if (!hasContent) {
+      return SizedBox();
+    }
+    if (widget.isFromHistory != null && widget.isFromHistory == false) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        child: Row(
+          children: [
+            ValueListenableBuilder<bool>(
+              valueListenable: viewModel.showAgentSteps,
+              builder: (context, showSteps, _) {
+                return TextButton.icon(
+                  icon:
+                      Icon(showSteps ? Icons.visibility_off : Icons.visibility),
+                  label: Text(showSteps ? 'Hide Steps' : 'Show Steps'),
+                  onPressed: viewModel.toggleAgentSteps,
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+    return SizedBox();
   }
 
   Widget _buildChatInput(ChatViewModel viewModel) {
@@ -424,16 +435,12 @@ class _ChatViewState extends State<ChatView> {
     );
   }
 
-  _speechButton() {
+  Widget _speechButton() {
     return ValueListenableBuilder(
       valueListenable: listeningActive,
       builder: (context, value, _) {
         return IconButton(
-          onPressed: !value
-              ? (AppState.instance.language.toLowerCase() == 'telugu')
-                  ? _startListeningTelugu
-                  : _startListeningTelugu
-              : _stopListening,
+          onPressed: !value ? _startListening : _stopListening,
           icon: Icon(
             !value ? Icons.mic_off : Icons.mic,
             color: Colors.grey,
@@ -462,15 +469,52 @@ class _ChatViewState extends State<ChatView> {
                           Fluttertoast.showToast(
                               msg: "Please enter your question.");
                         } else {
-                          viewModel.sendMessage(
-                              context, viewModel.chatController.text);
-                          // viewModel.sendMessageStream(viewModel.chatController.text,widget.sessionId);
+                          // viewModel.sendMessage(context, viewModel.chatController.text);
+                          print(
+                              "userId : ${AppState.instance.userId}, sessionId :${AppState.instance.sessionId}");
+                          viewModel.sendMessageStream(
+                              viewModel.chatController.text, widget.sessionId);
                         }
                       });
           },
         ),
       ],
     );
+  }
+
+  Future<void> _initRecorder() async {
+    final status = await Permission.microphone.request();
+    if (status != PermissionStatus.granted) {
+      throw Exception('Microphone permission not granted');
+    }
+    // await _recorder.openRecorder();
+  }
+
+  Future<void> _startListening() async {
+    viewModel.updateChatControllerForSpeech('');
+    await _initRecorder();
+    Directory tempDir = await getTemporaryDirectory();
+    recordedFilePath =
+        '${tempDir.path}/audio_${DateTime.now().millisecondsSinceEpoch.toString()}.flac';
+    print("12345 file- $recordedFilePath");
+
+    await _recorder.start(
+      const record.RecordConfig(
+        encoder: record.AudioEncoder.flac,
+        sampleRate: 16000,
+        numChannels: 1,
+      ),
+      path: recordedFilePath,
+    );
+
+    listeningActive.value = true;
+  }
+
+  Future<void> _stopListening() async {
+    // await _recorder.stopRecorder();
+    await _recorder.stop();
+    listeningActive.value = false;
+    await viewModel.sendAudioToAPI(recordedFilePath);
   }
 
   /// Each time to start a speech recognition session
@@ -483,7 +527,6 @@ class _ChatViewState extends State<ChatView> {
 
     //for android tab english locale at 5
     print("_onSpeechResult_startListening langId $langId");
-    SpeechRecognitionResult result;
     try {
       await _speechToText.listen(
           onSoundLevelChange: onSoundLevelChange,
@@ -503,6 +546,7 @@ class _ChatViewState extends State<ChatView> {
     listeningActive.value = active;
   }
 
+/*
   Future<void> _initRecorder() async {
     await tts.stop();
     await _audioRecorder.openRecorder();
@@ -511,7 +555,9 @@ class _ChatViewState extends State<ChatView> {
 
     _audioRecorder.setSubscriptionDuration(const Duration(milliseconds: 100));
   }
+*/
 
+/*
   Future<void> _startListening() async {
     await tts.stop();
     try {
@@ -585,14 +631,18 @@ class _ChatViewState extends State<ChatView> {
       Fluttertoast.showToast(msg: "Error starting transcription.");
     }
   }
+*/
 
+/*
   Future<void> _stopListening() async {
     try {
-      _inactivityTimer?.cancel();
+      */
+/* _inactivityTimer?.cancel();
       if (_audioRecorder.isRecording) {
         await _audioRecorder.stopRecorder();
       }
-      await _audioStreamController.close();
+      await _audioStreamController.close();*/ /*
+
       channel?.sink.close();
       _isRecording = false;
       listeningActive.value = false;
@@ -602,6 +652,7 @@ class _ChatViewState extends State<ChatView> {
       print("Error stopping listening: $e");
     }
   }
+*/
 
   dynamic Function(double)? onSoundLevelChange(double value) {
     print("onSoundLevelChange  $value");
@@ -618,14 +669,9 @@ class _ChatViewState extends State<ChatView> {
   }*/
 
   Future<void> _onSpeechResult(SpeechRecognitionResult result) async {
-    updateChatControllerForSpeech(result.recognizedWords);
+    viewModel.updateChatControllerForSpeech(result.recognizedWords);
     bool active = _speechToText.isListening;
     listeningActive.value = active;
-  }
-
-  void updateChatControllerForSpeech(String text) {
-    viewModel.chatController.text = text;
-    setState(() {});
   }
 
   _speakMessage(String text) async {

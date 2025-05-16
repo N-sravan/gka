@@ -1,15 +1,12 @@
 class UserSessionModel {
-  final int status;
   final List<SessionHistoryModel> data;
 
   UserSessionModel({
-    required this.status,
     required this.data,
   });
 
   factory UserSessionModel.fromJson(Map<String, dynamic> json) {
     return UserSessionModel(
-      status: json['statuscode'],
       data: (json['response'] as List?)
               ?.map((item) => SessionHistoryModel.fromJson(item))
               .toList() ??

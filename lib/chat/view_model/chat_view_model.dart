@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
@@ -187,6 +189,8 @@ class ChatViewModel extends LoadingViewModel {
     chatController.clear();
     chatDataList.clear();
     messages.clear();
+    contentBlocksData.clear();
+    currentSteps.clear();
     selectedFile = null;
     isUploading = false;
     agentSteps = [];
@@ -194,7 +198,6 @@ class ChatViewModel extends LoadingViewModel {
     isStreaming.value = false;
     showLoader.value = false;
     streamingText.value = "";
-    notifyListeners();
   }
 
   void toggleAgentSteps() {
@@ -756,7 +759,6 @@ class ChatViewModel extends LoadingViewModel {
     isLoading = true;
     DatabaseReference ref = FirebaseDatabase.instance
         .ref("CHAT_BOT_ALERT/HOURLY_NOTIFICATION/${constants.projectId}");
-    int c = 0;
 
     await ref.orderByKey().limitToLast(5).once().then((event) async {
       DataSnapshot snapshot = event.snapshot;
@@ -798,16 +800,13 @@ class ChatViewModel extends LoadingViewModel {
 
   Future<bool> uploadFile(BuildContext context) async {
     if (selectedFile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No file selected')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('No file selected')));
       return false;
     } else {
       isUploading = true;
-      notifyListeners();
       bool? value = await uploadDocument(context, selectedFile!.path);
       isUploading = false;
-      notifyListeners();
       if (value != null && value) {
         Fluttertoast.showToast(msg: "Document uploaded successfully!");
         notifyListeners();
@@ -829,7 +828,7 @@ class ChatViewModel extends LoadingViewModel {
         };
         bool result =
             await ApiProvider.instance.uploadMedia(params, path, 'file');
-        if (result != null && result) {
+        if (result) {
           return true;
         }
       } catch (e) {
@@ -854,20 +853,18 @@ class ChatViewModel extends LoadingViewModel {
         isIncreased
             ? params = {
                 "user_id": AppState.instance.userId,
-                "increased_limit": int.parse(text),
+                "increased_limit": int.parse(text)
               }
             : params = {
                 "user_id": AppState.instance.userId,
-                "decreased_limit": int.parse(text),
+                "decreased_limit": int.parse(text)
               };
         ActivityStatusResponse activityStatusResponse =
             await repo.submitActivityStatus(params, isIncreased);
-        if (activityStatusResponse != null) {
-          if (activityStatusResponse.statusCode == 200) {
-            return true;
-          }
-          return false;
+        if (activityStatusResponse.statusCode == 200) {
+          return true;
         }
+        return false;
       } catch (e) {
         Fluttertoast.showToast(
             msg: constants.genericErrorMsg, toastLength: Toast.LENGTH_LONG);
@@ -957,7 +954,6 @@ class ChatViewModel extends LoadingViewModel {
         chatDataList.clear();
         messages.clear();
         chatMessageHistoryList.sort((a, b) {
-          // Compare timestamps first
           int cmp = a.timestamp.compareTo(b.timestamp);
           if (cmp != 0) return cmp;
 
@@ -1058,27 +1054,19 @@ class ChatViewModel extends LoadingViewModel {
       try {
         UserSessionModel userSessionModel = await repo.fetchUserSessions();
         sessionIdDataMapping.clear();
-        if (userSessionModel.status == 200) {
-          if (userSessionModel.data.isNotEmpty) {
-            userSessionModel.data.sort((a, b) => DateTime.parse(b.insertTs)
-                .compareTo(DateTime.parse(a.insertTs)));
-            for (var item in userSessionModel.data) {
-              // String formattedId = parseFormattedSession(item.sessionId);
-              sessionIdDataMapping[item.sessionId] = item.insertTs;
-            }
-            print("sessionIdDataMapping::${sessionIdDataMapping}");
-            isLoading = false;
-            notifyListeners();
-          } else {
-            isLoading = false;
-            notifyListeners();
+        if (userSessionModel.data.isNotEmpty) {
+          userSessionModel.data.sort((a, b) =>
+              DateTime.parse(b.insertTs).compareTo(DateTime.parse(a.insertTs)));
+          for (var item in userSessionModel.data) {
+            sessionIdDataMapping[item.sessionId] = item.insertTs;
           }
+          print("sessionIdDataMapping::${sessionIdDataMapping}");
+          print("userid::${AppState.instance.userId}");
+          isLoading = false;
+          notifyListeners();
         } else {
           isLoading = false;
           notifyListeners();
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text(constants.genericErrorMsg),
-          ));
         }
       } catch (e) {
         isLoading = false;
@@ -1228,8 +1216,8 @@ class ChatViewModel extends LoadingViewModel {
     notifyListeners();
   }
 
-  // Send a message and process streaming response
-  Future<void> sendMessage(BuildContext context, String message) async {
+// Send a message and process streaming response
+/*Future<void> sendMessage(BuildContext context, String message) async {
     if (message.isEmpty) return;
 
     // Add user message to conversation
@@ -1253,7 +1241,7 @@ class ChatViewModel extends LoadingViewModel {
 
     // Make API request
     await _streamResponse(message);
-  }
+  }*/
 
 // Process streaming response from the API
   Future<void> _streamResponse(String userInput) async {
@@ -1364,8 +1352,7 @@ class ChatViewModel extends LoadingViewModel {
                         final outputIndex = currentSteps
                             .indexWhere((step) => step['title'] == 'Output');
                         if (outputIndex != -1) {
-                          currentSteps[outputIndex]['content'] =
-                              textContent;
+                          currentSteps[outputIndex]['content'] = textContent;
                         }
                       }
                     }
@@ -1532,7 +1519,8 @@ class ChatViewModel extends LoadingViewModel {
             existingStep['name'] == step['name']));
   }
 
-  /*Future<void> sendMessage(BuildContext context, String message) async {
+/*
+  Future<void> sendMessage(BuildContext context, String message) async {
     String translatedText = '';
     if (!AppState.instance.isEnglish) {
       Map<String, dynamic> data =
@@ -1558,72 +1546,57 @@ class ChatViewModel extends LoadingViewModel {
     chatController.clear();
     showLoader.value = true;
     notifyListeners();
-  }*/
+  }
+*/
 
   Future<void> sendMessageStream(String userMessage, String? sessionId) async {
-    String apiKey = 'sk-wB4MAe1kOlMMRmdX0KfpwhwMNP8HaKjLnNdsiIdCtxc';
-    String flowId = 'd38adaab-877c-4a47-a35c-047affbf1102';
-    String domain = 'agentsbuilder.apaims2.0.vassarlabs.com';
+    String url = 'https://apaims2.0.vassarlabs.com/chatbot/chat/query';
+
     messages.add({
       'text': userMessage,
       'is_user': true,
     });
+
     chatController.clear();
     showLoader.value = true;
     notifyListeners();
 
-    // final url = Uri.parse(constants.chatbotBaseUrl);
-    /*    Map<String, dynamic> data = {
-      "question": userMessage,
-      "overrideConfig": {"sessionId": AppState.instance.sessionId},
-    };*/
-
     Map<String, dynamic> data = {
-      'input_value': userMessage,
-      'output_type': 'chat',
-      'input_type': 'chat'
-      // 'session_id': AppState.instance.sessionId
+      'query': userMessage,
+      'session_id': AppState.instance.sessionId,
+      'user_id': AppState.instance.userId,
+      'stream': false,
     };
 
-    Object postData = jsonEncode(data);
-
-    String url = 'https://$domain/api/v1/run/$flowId';
-    print("post data::$postData");
     try {
-      final request = http.Request('POST', Uri.parse(url))
-        // ..headers['Authorization'] = 'Bearer $bearerToken'
-        ..headers['Content-Type'] = 'application/json'
-        ..headers['x-api-key'] = apiKey
-        ..body = jsonEncode(data);
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(data),
+      );
 
-      final streamedResponse = await request.send();
-      final stream = streamedResponse.stream.transform(utf8.decoder);
+      if (response.body != null) {
+        final decoded = jsonDecode(response.body);
+        final messageText = decoded['message'];
 
-      await for (var chunk in stream) {
-        if (chunk.trim().isEmpty) continue;
-
-        final data = jsonDecode(chunk);
-        String messageText = data['outputs'][0]['outputs'][0]['results']
-            ['message']['data']['text'];
-
-        if (messageText.isNotEmpty) {
+        if (messageText != null && messageText.toString().isNotEmpty) {
+          await translateAndSpeakResponse(messageText);
           messages.add({
-            'text': messageText,
+            'text': messageText.toString(),
             'is_user': false,
           });
-          showLoader.value = false;
-          notifyListeners();
+          isStreaming.value = false;
+          streamingText.value = messageText;
         }
-
-        if (data['isStreamValid'] == false) {
-          showLoader.value = false;
-          notifyListeners();
-          break;
-        }
+      } else {
+        Fluttertoast.showToast(msg: "Error: ${response.statusCode}");
       }
     } catch (e) {
-      showLoader.value = false;
       Fluttertoast.showToast(msg: "Something went wrong!");
+    } finally {
+      showLoader.value = false;
       notifyListeners();
     }
   }
@@ -1644,5 +1617,195 @@ class ChatViewModel extends LoadingViewModel {
     }
 
     return data.isNotEmpty ? data : null;
+  }
+
+  void updateChatControllerForSpeech(String text) {
+    chatController.text = text;
+    notifyListeners();
+  }
+
+  Future<void> sendAudioToAPI(String path) async {
+    final bytes = await File(path).readAsBytes();
+    print('12345 Read ${bytes.length} bytes from file');
+    final base64Audio = base64Encode(bytes);
+    print("12345 base64Audio $base64Audio");
+
+    const String apiUrl =
+        "https://dhruva-api.bhashini.gov.in/services/inference/pipeline";
+    const String sourceLanguage = "te";
+    const String targetLanguage = "en";
+    const String asrServiceId = "ai4bharat/conformer-hi-gpu--t4";
+    const String nmtServiceId = "ai4bharat/indictrans-v2-all-gpu--t4";
+
+    final body = {
+      "pipelineTasks": [
+        {
+          "taskType": "asr",
+          "config": {
+            "language": {"sourceLanguage": sourceLanguage},
+            "serviceId": asrServiceId,
+            "audioFormat": "flac",
+            "samplingRate": 16000
+          }
+        },
+        {
+          "taskType": "translation",
+          "config": {
+            "language": {
+              "sourceLanguage": sourceLanguage,
+              "targetLanguage": targetLanguage
+            },
+            "serviceId": nmtServiceId
+          }
+        }
+      ],
+      "inputData": {
+        "audio": [
+          {"audioContent": base64Audio}
+        ]
+      }
+    };
+
+    try {
+      Object data = jsonEncode(body);
+      Map<String, String> headersMap = {
+        "Content-Type": "application/json",
+        "Authorization":
+            "9ehV7vDnMszVayjw4U486-9GH27LdgeB-lO85BCkPKrbN29tI9fxLlAp-05tDChA"
+      };
+
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: headersMap,
+        body: data,
+      );
+
+      if (response.statusCode == 200) {
+        final jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
+        print("API Response: $jsonResponse");
+
+        final pipelineResponse =
+            jsonResponse['pipelineResponse'] as List<dynamic>;
+
+        final translationTask = pipelineResponse.firstWhere(
+            (task) => task['taskType'] == 'translation',
+            orElse: () => null);
+
+        final sourceText = translationTask?['output']?[0]?['source'];
+        final targetText = translationTask?['output']?[0]?['target'];
+
+        sourceText != null ? updateChatControllerForSpeech(sourceText) : null;
+
+        if (targetText != null) {
+          print("Translated Text: $targetText");
+        } else {
+          print("Translation not found.");
+        }
+      } else {
+        print("API Error: ${response.body}");
+      }
+    } catch (e) {
+      print("Error sending audio: $e");
+    }
+  }
+
+  Future<void> translateAndSpeakResponse(String response) async {
+    const String apiUrl =
+        "https://dhruva-api.bhashini.gov.in/services/inference/pipeline";
+    const String sourceLanguage = "en";
+    const String targetLanguage = "hi";
+    const String ttsServiceId = "ai4bharat/indic-tts-coqui-misc-gpu--t4";
+    const String nmtServiceId = "ai4bharat/indictrans-v2-all-gpu--t4";
+
+    final body = {
+      "pipelineTasks": [
+        {
+          "taskType": "translation",
+          "config": {
+            "language": {
+              "sourceLanguage": sourceLanguage,
+              "targetLanguage": targetLanguage
+            },
+            "serviceId": nmtServiceId
+          }
+        },
+        {
+          "taskType": "tts",
+          "config": {
+            "language": {"sourceLanguage": targetLanguage},
+            "serviceId": ttsServiceId,
+            "gender": "female",
+            "samplingRate": 8000
+          }
+        }
+      ],
+      "inputData": {
+        "input": [
+          {"source": response}
+        ]
+      }
+    };
+
+    try {
+      Object data = jsonEncode(body);
+      Map<String, String> headersMap = {
+        "Content-Type": "application/json",
+        "Authorization":
+            "9ehV7vDnMszVayjw4U486-9GH27LdgeB-lO85BCkPKrbN29tI9fxLlAp-05tDChA"
+      };
+
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: headersMap,
+        body: data,
+      );
+
+      if (response.statusCode == 200) {
+        final responseBody = json.decode(response.body);
+
+        final pipelineResponse = responseBody['pipelineResponse'];
+
+        // Extract translation target text
+        final translationTask = pipelineResponse.firstWhere(
+          (task) => task['taskType'] == 'translation',
+          orElse: () => null,
+        );
+        final targetText = translationTask?['output']?[0]?['target'];
+
+        // Extract base64 audio from TTS task
+        final ttsTask = pipelineResponse.firstWhere(
+          (task) => task['taskType'] == 'tts',
+          orElse: () => null,
+        );
+
+        final List<dynamic>? audioList = ttsTask?['audio'];
+        if (audioList != null && audioList.isNotEmpty) {
+          String content = audioList[0]['audio_content'];
+          print("audio content : $content");
+        }
+        final String? base64Audio = audioList != null &&
+                audioList.isNotEmpty &&
+                audioList[0]['audio_content'] != null
+            ? audioList[0]['audio_content'].toString()
+            : null;
+
+        if (targetText != null && base64Audio != null) {
+          // Convert base64 to bytes
+          Uint8List audioBytes = base64Decode(base64Audio);
+
+          // Play audio using audioplayers
+          final player = AudioPlayer();
+          await player.play(BytesSource(audioBytes));
+
+          print('Target Text: $targetText');
+        } else {
+          print('Missing target text or audio.');
+        }
+      } else {
+        print("API Error: ${response.body}");
+      }
+    } catch (e) {
+      print("Error  audio: $e");
+    }
   }
 }

@@ -1,68 +1,29 @@
 import 'dart:async';
-import 'dart:isolate';
-import 'dart:ui';
-import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:gka/chat/repo/chat_repo.dart';
 import 'package:gka/home/repo/home_repo.dart';
 import 'package:gka/home/view_model/home_view_model.dart';
-import 'package:gka/utils/app_state.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 import 'package:gka/chat/view_model/chat_view_model.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:gka/login/repository/login_repo.dart';
 import 'package:gka/login/view/login_view.dart';
 import 'package:gka/login/view_model/login_view_model.dart';
 import 'package:gka/splash/view/splash_view.dart';
 import 'package:gka/splash/view_model/splash_view_model.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:speech_to_text/speech_recognition_result.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uuid/uuid.dart';
-import '../../login/model/department_user_permission_response.dart' as response;
-import 'dart:developer' as developer;
-import 'dart:io' as platform;
-import 'chat_bubble.dart';
-import 'helpers/notification_helper.dart';
 import 'home/view/home_view.dart';
 import 'locator.dart';
 
-SpeechToText speechToText = SpeechToText();
-ValueNotifier<bool> listeningActive = ValueNotifier<bool>(false);
-ValueNotifier<bool> showLoader = ValueNotifier<bool>(false);
-ValueNotifier<bool> speakCompleted = ValueNotifier<bool>(true);
-FlutterTts tts = FlutterTts();
-Completer<void> ttsCompleter = Completer<void>();
-// int response = 1;
-bool speechEnabled = false;
-bool shouldListen = true;
-bool isListening = false;
-String bgChatSessionId = '';
-int prevChatLength = 0;
-// String AppState.instance.triggeredWord = "";
 PermissionStatus? notificationStatus;
-
-ValueNotifier<SpeechStatus> speechStatus =
-    ValueNotifier<SpeechStatus>(SpeechStatus.idle);
-
-enum SpeechStatus { listening, speaking, idle }
-
-bool? isVoiceEnabled;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final permissionsGranted = await requestPermissions();
-
-  // await _initSupabase();
-
+  await requestPermissions();
 
   setupLocator();
 
@@ -88,13 +49,6 @@ void main() async {
     ),
   );
   // await initializeService();
-}
-
-_initSupabase() async {
-  await Supabase.initialize(
-    url: 'https://nawrims.vassarlabs.com/supabase',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNzIyNTM3MDAwLAogICJleHAiOiAxODgwMzAzNDAwCn0.YqyV3WH6Y39UnjAuGoJZCqPtRKOGzICweUE59mG83So',
-  );
 }
 
 Future<bool> requestPermissions() async {
@@ -144,4 +98,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-

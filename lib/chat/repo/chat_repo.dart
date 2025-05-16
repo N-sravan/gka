@@ -168,8 +168,7 @@ class ChatRepositoryImpl extends ChatRepository {
   }
 
   @override
-  Future<PromptSubmissionResponse> createPrompt(BuildContext context,
-      String promptMessage, String intent, String modelUUID) async {
+  Future<PromptSubmissionResponse> createPrompt(BuildContext context, String promptMessage, String intent, String modelUUID) async {
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
     };
@@ -231,8 +230,7 @@ class ChatRepositoryImpl extends ChatRepository {
   }
 
   @override
-  Future<PromptSubmissionResponse> updatePrompt(
-      BuildContext context, String promptMessage, String intent) async {
+  Future<PromptSubmissionResponse> updatePrompt(BuildContext context, String promptMessage, String intent) async {
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
     };
@@ -305,8 +303,7 @@ class ChatRepositoryImpl extends ChatRepository {
   }
 
   @override
-  Future<ChatHistoryModel> fetchChatHistory(
-      String sessionId, BuildContext context) async {
+  Future<ChatHistoryModel> fetchChatHistory(String sessionId, BuildContext context) async {
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
     };
@@ -397,8 +394,7 @@ class ChatRepositoryImpl extends ChatRepository {
   }
 
   @override
-  Future<bool> updateSession(
-      BuildContext context, String sessionId, String newId) async {
+  Future<bool> updateSession(BuildContext context, String sessionId, String newId) async {
     Map<String, dynamic> params = {
       "user_id": AppState.instance.userId,
       "session_id": sessionId,
@@ -424,8 +420,7 @@ class ChatRepositoryImpl extends ChatRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> translateText(BuildContext context, String text,
-      String sourceLang, String destLang) async {
+  Future<Map<String, dynamic>> translateText(BuildContext context, String text, String sourceLang, String destLang) async {
     Map<String, dynamic> params = {
       "text": text,
       "from_lang": sourceLang,
@@ -470,8 +465,7 @@ class ChatRepositoryImpl extends ChatRepository {
   }
 
   @override
-  Future<ActivityStatusResponse> submitActivityStatus(
-      Map<String, dynamic> body, bool isIncreased) async {
+  Future<ActivityStatusResponse> submitActivityStatus(Map<String, dynamic> body, bool isIncreased) async {
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
     };
@@ -563,8 +557,7 @@ class ChatRepositoryImpl extends ChatRepository {
     Map<String, dynamic> responseMap = jsonDecode(response.body);
 
     UserSessionModel userSessionModel = UserSessionModel.fromJson(responseMap);
-    /* List<SessionHistoryModel> filteredData = userSessionModel.data
-        .where((session) =>
+    /*List<SessionHistoryModel> filteredData = userSessionModel.data.where((session) =>
             session.data != null && session.data.toString().trim().isNotEmpty)
         .toList();*/
     return userSessionModel;
