@@ -14,7 +14,6 @@ import 'package:gka/chat/model/get_users_response.dart';
 import 'package:gka/shared/loading_view_model.dart';
 import 'package:gka/utils/app_state.dart';
 import 'package:intl/intl.dart';
-import 'dart:developer' as developer;
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:gka/utils/common_constants.dart' as constants;
@@ -22,7 +21,6 @@ import 'package:speech_to_text/speech_to_text.dart';
 import 'package:uuid/uuid.dart';
 import 'package:web_socket_channel/io.dart';
 import '../../home/model/available_models.dart' as model;
-import '../../login/model/login_api_response_model.dart' as login;
 import '../../message_bubble.dart';
 import '../../services/api_provider.dart';
 import '../../utils/network_utils.dart';
@@ -96,6 +94,7 @@ class ChatViewModel extends LoadingViewModel {
   String selectedPromptModel = '';
   String selectedPromptModelUUID = '';
   String fileUUID = '';
+  String userInputEnglish = '';
 
   final SpeechToText _speechToText = SpeechToText();
   ValueNotifier<bool> listeningActive = ValueNotifier<bool>(false);
@@ -114,7 +113,6 @@ class ChatViewModel extends LoadingViewModel {
   List<String>? toolUUIDs = [];
   List<FileResponse>? documentsList = [];
   DateFormat formatter = DateFormat("dd-MM-yyyy");
-  bool _speechEnabled = false;
   ValueNotifier<bool> showLoader = ValueNotifier<bool>(false);
   ValueNotifier<bool> showAllStepsExpanded = ValueNotifier(false);
   ValueNotifier<bool> expandAllSteps = ValueNotifier(false);
@@ -127,7 +125,6 @@ class ChatViewModel extends LoadingViewModel {
   int start = 0;
   int end = 0;
   bool hasSpoken = false;
-  String? _newVoiceText;
   int prevChatLengthHistory = 0;
   int c = 0;
   String highlightedText = "";
@@ -1549,7 +1546,8 @@ class ChatViewModel extends LoadingViewModel {
   }
 */
 
-  Future<void> sendMessageStream(String userMessage, String? sessionId) async {
+  Future<void> sendMessageStream(
+      String userMessage, String userInputEnglish) async {
     String url = 'https://apaims2.0.vassarlabs.com/chatbot/chat/query';
 
     messages.add({
@@ -1562,7 +1560,7 @@ class ChatViewModel extends LoadingViewModel {
     notifyListeners();
 
     Map<String, dynamic> data = {
-      'query': userMessage,
+      'query': userInputEnglish,
       'session_id': AppState.instance.sessionId,
       'user_id': AppState.instance.userId,
       'stream': false,
@@ -1583,12 +1581,8 @@ class ChatViewModel extends LoadingViewModel {
 
         if (messageText != null && messageText.toString().isNotEmpty) {
           await translateAndSpeakResponse(messageText);
-          messages.add({
-            'text': messageText.toString(),
-            'is_user': false,
-          });
-          isStreaming.value = false;
-          streamingText.value = messageText;
+          /*isStreaming.value = false;
+          streamingText.value = translatedResponse ?? '';*/
         }
       } else {
         Fluttertoast.showToast(msg: "Error: ${response.statusCode}");
@@ -1630,12 +1624,8 @@ class ChatViewModel extends LoadingViewModel {
     final base64Audio = base64Encode(bytes);
     print("12345 base64Audio $base64Audio");
 
-    const String apiUrl =
-        "https://dhruva-api.bhashini.gov.in/services/inference/pipeline";
     const String sourceLanguage = "te";
     const String targetLanguage = "en";
-    const String asrServiceId = "ai4bharat/conformer-hi-gpu--t4";
-    const String nmtServiceId = "ai4bharat/indictrans-v2-all-gpu--t4";
 
     final body = {
       "pipelineTasks": [
@@ -1643,7 +1633,7 @@ class ChatViewModel extends LoadingViewModel {
           "taskType": "asr",
           "config": {
             "language": {"sourceLanguage": sourceLanguage},
-            "serviceId": asrServiceId,
+            "serviceId": constants.asrServiceId,
             "audioFormat": "flac",
             "samplingRate": 16000
           }
@@ -1655,7 +1645,7 @@ class ChatViewModel extends LoadingViewModel {
               "sourceLanguage": sourceLanguage,
               "targetLanguage": targetLanguage
             },
-            "serviceId": nmtServiceId
+            "serviceId": constants.nmtServiceId
           }
         }
       ],
@@ -1670,12 +1660,11 @@ class ChatViewModel extends LoadingViewModel {
       Object data = jsonEncode(body);
       Map<String, String> headersMap = {
         "Content-Type": "application/json",
-        "Authorization":
-            "9ehV7vDnMszVayjw4U486-9GH27LdgeB-lO85BCkPKrbN29tI9fxLlAp-05tDChA"
+        "Authorization": constants.bhasiniApikey
       };
 
       final response = await http.post(
-        Uri.parse(apiUrl),
+        Uri.parse(constants.bhasiniUrl),
         headers: headersMap,
         body: data,
       );
@@ -1697,7 +1686,8 @@ class ChatViewModel extends LoadingViewModel {
         sourceText != null ? updateChatControllerForSpeech(sourceText) : null;
 
         if (targetText != null) {
-          print("Translated Text: $targetText");
+          userInputEnglish = targetText;
+          print("userInputEnglish : $userInputEnglish");
         } else {
           print("Translation not found.");
         }
@@ -1710,12 +1700,8 @@ class ChatViewModel extends LoadingViewModel {
   }
 
   Future<void> translateAndSpeakResponse(String response) async {
-    const String apiUrl =
-        "https://dhruva-api.bhashini.gov.in/services/inference/pipeline";
     const String sourceLanguage = "en";
-    const String targetLanguage = "hi";
-    const String ttsServiceId = "ai4bharat/indic-tts-coqui-misc-gpu--t4";
-    const String nmtServiceId = "ai4bharat/indictrans-v2-all-gpu--t4";
+    const String targetLanguage = "te";
 
     final body = {
       "pipelineTasks": [
@@ -1726,14 +1712,14 @@ class ChatViewModel extends LoadingViewModel {
               "sourceLanguage": sourceLanguage,
               "targetLanguage": targetLanguage
             },
-            "serviceId": nmtServiceId
+            "serviceId": constants.nmtServiceId
           }
         },
         {
           "taskType": "tts",
           "config": {
             "language": {"sourceLanguage": targetLanguage},
-            "serviceId": ttsServiceId,
+            "serviceId": constants.ttsServiceId,
             "gender": "female",
             "samplingRate": 8000
           }
@@ -1750,19 +1736,17 @@ class ChatViewModel extends LoadingViewModel {
       Object data = jsonEncode(body);
       Map<String, String> headersMap = {
         "Content-Type": "application/json",
-        "Authorization":
-            "9ehV7vDnMszVayjw4U486-9GH27LdgeB-lO85BCkPKrbN29tI9fxLlAp-05tDChA"
+        "Authorization": constants.bhasiniApikey
       };
 
       final response = await http.post(
-        Uri.parse(apiUrl),
+        Uri.parse(constants.bhasiniUrl),
         headers: headersMap,
         body: data,
       );
 
       if (response.statusCode == 200) {
-        final responseBody = json.decode(response.body);
-
+        final responseBody = json.decode(utf8.decode(response.bodyBytes));
         final pipelineResponse = responseBody['pipelineResponse'];
 
         // Extract translation target text
@@ -1780,24 +1764,26 @@ class ChatViewModel extends LoadingViewModel {
 
         final List<dynamic>? audioList = ttsTask?['audio'];
         if (audioList != null && audioList.isNotEmpty) {
-          String content = audioList[0]['audio_content'];
+          String content = audioList[0]['audioContent'];
           print("audio content : $content");
         }
         final String? base64Audio = audioList != null &&
                 audioList.isNotEmpty &&
-                audioList[0]['audio_content'] != null
-            ? audioList[0]['audio_content'].toString()
+                audioList[0]['audioContent'] != null
+            ? audioList[0]['audioContent'].toString()
             : null;
 
         if (targetText != null && base64Audio != null) {
           // Convert base64 to bytes
           Uint8List audioBytes = base64Decode(base64Audio);
-
-          // Play audio using audioplayers
           final player = AudioPlayer();
+          messages.add({
+            'text': targetText.toString(),
+            'is_user': false,
+          });
+          showLoader.value = false;
           await player.play(BytesSource(audioBytes));
-
-          print('Target Text: $targetText');
+          print('Response: $targetText');
         } else {
           print('Missing target text or audio.');
         }

@@ -855,64 +855,14 @@ const String clickFromCamera = 'Click from Camera';
 const String clickFromGallery = 'Click from Gallery';
 const String cancel = 'Cancel';
 
-enum CropSownRadioOptions { village, field }
 
-enum NameSortRadioOptions { ascending, descending }
-
-enum CropNameVerifyRadioOptions { agree, disagree }
+///Bhasini constants
+const String asrServiceId = 'ai4bharat/conformer-multilingual-dravidian-gpu--t4';
+const String nmtServiceId = 'ai4bharat/indictrans-v2-all-gpu--t4';
+const String ttsServiceId = 'Bhashini/IITM/TTS';
+const String bhasiniUrl = 'https://dhruva-api.bhashini.gov.in/services/inference/pipeline';
+const String bhasiniApikey = '9ehV7vDnMszVayjw4U486-9GH27LdgeB-lO85BCkPKrbN29tI9fxLlAp-05tDChA';
 
 //baseurls
 const String genAiBaseUrl = "https://nawrims.vassarlabs.com/vassar_mind/";
 const String chatbotBaseUrl = 'https://agentsbuilder.apaims2.0.vassarlabs.com/api/v1/prediction/4a5c8d41-51d7-4e81-85b8-377bb6a28043';
-
-// const String ngrok = "https://d637-196-12-47-4.ngrok-free.app/";
-
-//firebase options
-const FirebaseOptions gowaterOptions = FirebaseOptions(
-    apiKey: 'AIzaSyB-MGSrm6VQ4dA9gMg50c1R1DjoFjp6scg',
-    appId: '1:462188079667:android:8f12adc9f75aff61c3d146',
-    messagingSenderId: '462188079667',
-    projectId: 'gowater-99642',
-    storageBucket: 'gowater-99642.appspot.com',
-    databaseURL: 'https://gowater-99642-default-rtdb.firebaseio.com',
-    iosBundleId: 'com.vassar.gowater');
-
-const FirebaseOptions apwrimsOptions = FirebaseOptions(
-  apiKey: 'AIzaSyD8fruYZA8oA4xbj4HxoNry_NSt5g51vhc',
-  appId: '1:920228951079:android:bd82265a19119e84c20a02',
-  messagingSenderId: '920228951079',
-  projectId: 'apwrd-uni-app',
-  storageBucket: 'apwrd-uni-app.appspot.com',
-  databaseURL: 'https://apwrd-uni-app.firebaseio.com',
-  iosBundleId: 'com.vassar.polavaram',
-);
-
-const FirebaseOptions kuidfcOptions = FirebaseOptions(
-  apiKey: 'AIzaSyCuWwtL0PzdnaVcUArgFqgUVuNAo4_Cm10',
-  appId: '1:781102277554:android:1e7182778369922ce27aab',
-  messagingSenderId: '781102277554',
-  projectId: 'kuidfc-1a8dc',
-  storageBucket: 'kuidfc-1a8dc.appspot.com',
-  databaseURL: 'https://kuidfc-1a8dc-default-rtdb.firebaseio.com',
-  iosBundleId: 'com.vassar.kuidfc',
-);
-
-const FirebaseOptions fieldRishiOptions = FirebaseOptions(
-  apiKey: 'AIzaSyB3ItstCC27ZMjtlta7Vq52K606YebXHX4',
-  appId: '1:915537810859:android:f803660609065bf23ceeee',
-  messagingSenderId: '915537810859',
-  projectId: 'kerala-aims',
-  storageBucket: 'kerala-aims.appspot.com',
-  databaseURL: 'https://kerala-aims-default-rtdb.firebaseio.com',
-  iosBundleId: 'com.vassar.aims',
-);
-
-const FirebaseOptions micadaOptions = FirebaseOptions(
-  apiKey: 'AIzaSyAPf6jSiS9vJmTH-s4fl-lE40HeuiV_LmU',
-  appId: '1:735995332969:ios:8039a5e69ca426c58055f8',
-  messagingSenderId: '735995332969',
-  projectId: 'haryana-aims',
-  storageBucket: 'haryana-aims.firebasestorage.app',
-  databaseURL: 'https://haryana-aims-default-rtdb.firebaseio.com',
-  iosBundleId: 'com.vassar.aimsharyana',
-);

@@ -67,8 +67,6 @@ class _ChatBubbleState extends State<ChatBubble> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isCurrentMessage = widget.timestampMapping.isNotEmpty &&
-        widget.timestamp == widget.timestampMapping.keys.last;
 
     return Padding(
         padding: EdgeInsets.fromLTRB(
@@ -137,7 +135,6 @@ class _ChatBubbleState extends State<ChatBubble> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Display the message text
                               if (widget.text.isNotEmpty) _formattedTextView(),
                             ],
                           ),
@@ -195,16 +192,6 @@ class _ChatBubbleState extends State<ChatBubble> {
     );
   }
 
-  _textView() {
-    return SelectableText(
-      widget.text.trim(),
-      style: const TextStyle(
-        // color: !widget.isUser ? const Color(0xffFFFFFF) : const Color(0xff1E1E1E),
-        color: Color(0xff1E1E1E),
-      ),
-    );
-  }
-
   List<TextSpan> _parseText(String text) {
     text.replaceAll('\u200c', '');
     // Split text by new lines
@@ -225,17 +212,6 @@ class _ChatBubbleState extends State<ChatBubble> {
         );
       }
     }).toList();
-  }
-
-
-
-  String _formatTimestamp(String timestamp) {
-    try {
-      final dateTime = DateTime.parse(timestamp);
-      return '${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
-    } catch (e) {
-      return timestamp;
-    }
   }
 
   _userProfileView() {

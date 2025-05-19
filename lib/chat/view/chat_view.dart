@@ -43,7 +43,6 @@ class _ChatViewState extends State<ChatView> {
   var scrollControllerListView = ScrollController();
   StreamController<Uint8List> streamController = StreamController<Uint8List>();
   final SpeechToText _speechToText = SpeechToText();
-  ValueNotifier<bool> showLoader = ValueNotifier<bool>(false);
   late ChatViewModel viewModel;
   bool _speechEnabled = false;
   String langId = 'en-IN';
@@ -113,7 +112,6 @@ class _ChatViewState extends State<ChatView> {
     _audioStreamController.close();
     _isRecording = false;
     tts.stop();
-    showLoader.value = false;
     viewModel.clearData();
   }
 
@@ -165,6 +163,25 @@ class _ChatViewState extends State<ChatView> {
     );
   }
 
+  Widget _buildLoaderWidget() {
+    return Padding(
+      padding: const EdgeInsets.only(left: 50.0),
+      child: Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: ValueListenableBuilder(
+          valueListenable: viewModel.showLoader,
+          builder: (context, value, _) {
+            if (value) {
+              return LoadingAnimationWidget.waveDots(
+                  color: const Color(0XFF55A18F), size: 40);
+            }
+            return const SizedBox();
+          },
+        ),
+      ),
+    );
+  }
+
   Widget bottomBar() {
     return Container(
       padding: const EdgeInsets.all(4),
@@ -183,10 +200,14 @@ class _ChatViewState extends State<ChatView> {
       controller: scrollControllerListView,
       reverse: true,
       padding: const EdgeInsets.all(10),
-      itemCount:
-          viewModel.messages.length + (viewModel.isStreaming.value ? 1 : 0),
+      // itemCount: viewModel.messages.length + (viewModel.isStreaming.value ? 1 : 0),
+      itemCount: viewModel.messages.length,
       itemBuilder: (_, index) {
-        if (viewModel.isStreaming.value && index == 0) {
+        if (viewModel.showLoader.value) {
+          _buildLoaderWidget();
+        }
+
+        /*if (viewModel.isStreaming.value && index == 0) {
           return ChatBubble(
             expandContentBlocks: false,
             timestamp: DateTime.now().toIso8601String(),
@@ -204,7 +225,7 @@ class _ChatViewState extends State<ChatView> {
             isStreaming: true,
             contentBlocks: viewModel.contentBlocksData,
           );
-        }
+        }*/
 
         final adjustedIndex = viewModel.isStreaming.value
             ? viewModel.messages.length - index
@@ -216,19 +237,6 @@ class _ChatViewState extends State<ChatView> {
 
         final msg = viewModel.messages[adjustedIndex];
 
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          final messages = viewModel.messages;
-          if (messages.isNotEmpty &&
-              messages.length > prevChatLength &&
-              messages.last['is_user'] == false &&
-              widget.isFromHistory != null &&
-              widget.isFromHistory == false) {
-            prevChatLength = messages.length;
-            _speakMessage(messages.last['text'] ?? '');
-          }
-        });
-
-        // Handle Input and Output expandable boxes in the ChatBubble widget
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
           child: ChatBubble(
@@ -472,8 +480,12 @@ class _ChatViewState extends State<ChatView> {
                           // viewModel.sendMessage(context, viewModel.chatController.text);
                           print(
                               "userId : ${AppState.instance.userId}, sessionId :${AppState.instance.sessionId}");
-                          viewModel.sendMessageStream(
-                              viewModel.chatController.text, widget.sessionId);
+                          if (viewModel.userInputEnglish.isNotEmpty) {
+                            viewModel.sendMessageStream(
+                              viewModel.chatController.text,
+                              viewModel.userInputEnglish,
+                            );
+                          }
                         }
                       });
           },

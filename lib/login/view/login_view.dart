@@ -215,9 +215,9 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                             setState(() {
                                               viewModel.isLoading = true;
                                             });
-                                            // await viewModel.authenticate(userId, password, context);
-                                            await viewModel.langflowAuthenticate(userId, password, context);
-                                       /*     AppState.instance.sessionId = Uuid().v4();
+                                            await viewModel.authenticate(userId, password, context);
+                                            // await viewModel.langflowAuthenticate(userId, password, context);
+                                            /*     AppState.instance.sessionId = Uuid().v4();
                                             AppState.instance.userId = '5bc7e266-ef3b-4796-99ad-3b9e0bcc97f4';
                                             Navigator.push(
                                               context,
