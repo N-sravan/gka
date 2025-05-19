@@ -88,9 +88,13 @@ class _ChatBubbleState extends State<ChatBubble> {
 
   @override
   Widget build(BuildContext context) {
-    bool hasContent = widget.text.isNotEmpty || (widget.imageUrl != null && widget.imageUrl!.isNotEmpty) || (widget.followUpQuestions != null && widget.followUpQuestions!.isNotEmpty);
+    bool hasContent = widget.text.isNotEmpty ||
+        (widget.imageUrl != null && widget.imageUrl!.isNotEmpty) ||
+        (widget.followUpQuestions != null &&
+            widget.followUpQuestions!.isNotEmpty);
 
-    bool hasChainOfThoughts = widget.chainOfThoughts != null && widget.chainOfThoughts!.isNotEmpty;
+    bool hasChainOfThoughts =
+        widget.chainOfThoughts != null && widget.chainOfThoughts!.isNotEmpty;
 
     return (hasContent)
         ? Padding(
@@ -150,9 +154,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                                       color: widget.isUser
                                           ? const Color(0xffE2E3E4)
                                               .withOpacity(0.6)
-                                          : const Color(0xFFcff4fc)
-                                              .withOpacity(0.5),
-                                      // : Colors.green[500],
+                                          : const Color(0xFF2FAB2D).withOpacity(0.15),
                                       borderRadius: widget.isUser
                                           ? const BorderRadius.only(
                                               topLeft: Radius.circular(16),
@@ -539,7 +541,8 @@ class _ChatBubbleState extends State<ChatBubble> {
   }
 
   Future _pushFollowUpQuestionInFirebase(String data) async {
-    DatabaseReference ref = FirebaseDatabase.instance.ref("${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${AppState.instance.sessionId}");
+    DatabaseReference ref = FirebaseDatabase.instance.ref(
+        "${constants.keyspace}/${constants.projectId}/${AppState.instance.userId}/${AppState.instance.sessionId}");
 
     String timeStamp = DateTime.now().millisecondsSinceEpoch.toString();
 

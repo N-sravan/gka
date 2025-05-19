@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:gka/chat/view/chat_view.dart';
 import 'package:gka/home/view/home_view.dart';
 import 'package:gka/utils/app_state.dart';
 import 'package:provider/provider.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 import 'package:uuid/uuid.dart';
 import 'package:uuid/v4.dart';
+import '../../chat/view/chat_view_recording.dart';
 import '../../chat_window.dart';
 import '../../utils/network_utils.dart';
 import '../view_model/login_view_model.dart';
@@ -212,18 +214,19 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                             setState(() {
                                               viewModel.isLoading = true;
                                             });
-                                            await viewModel.authenticate(userId, password, context);
-                                       /*     AppState.instance.sessionId = Uuid().v4();
+                                            // await viewModel.authenticate(userId, password, context);
+                                            viewModel.isLoading = false;
+                                            AppState.instance.sessionId = Uuid().v4();
                                             AppState.instance.userId = '5bc7e266-ef3b-4796-99ad-3b9e0bcc97f4';
                                             Navigator.push(
                                               context,
                                               MaterialPageRoute(
-                                                builder: (_) => ChatWindow(
+                                                builder: (_) => ChatView(
                                                   isFromHistory: false,
                                                   sessionId: AppState.instance.sessionId,
                                                 ),
                                               ),
-                                            );*/
+                                            );
                                           }
                                         },
                                         style: ElevatedButton.styleFrom(

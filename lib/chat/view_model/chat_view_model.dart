@@ -866,6 +866,14 @@ class ChatViewModel extends LoadingViewModel {
     userActivity = newValue!;
   }
 
+  void updateChatControllerForSpeech(String text) {
+    if (text.toLowerCase().contains('hi')) {
+      text = text.replaceAll('hi', 'Hi');
+    }
+    chatController.text = text;
+    notifyListeners();
+  }
+
   /* Future? getChatHistoryForSession(
       String sessionId, BuildContext context) async {
     if (await networkUtils.hasActiveInternet()) {

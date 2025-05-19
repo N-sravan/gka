@@ -9,6 +9,7 @@ import '../../main.dart';
 import '../view_model/chat_view_model.dart';
 import 'chat_history_view.dart';
 import 'chat_view.dart';
+import 'chat_view_recording.dart';
 import 'documents_view.dart';
 import 'notifications_view.dart';
 

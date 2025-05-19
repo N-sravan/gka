@@ -1,14 +1,14 @@
-/*
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:speech_to_text/speech_recognition_result.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 import '../../chat_bubble.dart';
 import '/utils/common_constants.dart' as constants;
 import 'package:flutter/material.dart';
 import 'package:gka/chat/view_model/chat_view_model.dart';
-import 'package:gka/login/model/department_user_permission_response.dart' as response;
 import 'package:provider/provider.dart';
 import '../../utils/app_state.dart';
 import 'drawer_widget.dart';
@@ -28,35 +28,76 @@ class ChatView extends StatefulWidget {
 }
 
 class _ChatViewState extends State<ChatView> {
+  final ValueNotifier<bool> listeningActive = ValueNotifier(false);
   var scrollControllerListView = ScrollController();
   late ChatViewModel viewModel;
+  ValueNotifier<bool> showLoader = ValueNotifier<bool>(false);
+  final SpeechToText _speechToText = SpeechToText();
+  bool _speechEnabled = false;
+  String langId = 'en-IN';
+  String language = '';
+  FlutterTts tts = FlutterTts();
   final Map<String, String> questionsMap = {
-    'q1': 'ans1',
-    'q2': 'ans2',
-    'what is ai?': 'AI stands for Artificial Intelligence.',
-    'who are you?': 'I am your assistant.',
+    'hello' : 'Hello, how can I assist you today?',
+    'Is there any risk of pests or disease in my paddy field this week':'Your paddy crop is 43 days old. Based on current weather patterns—high humidity and moderate temperature—there is a medium risk of pest infestation from Brown Planthopper (BPH) and Sheath Blight this week in your area.',
+    'What are the Symptoms of the brown plant Hopper':
+    'Symptoms of BPH include:\n. Hopper burn patches starting from the leaf tips\n. Presence of tiny brown insects on the lower parts of plants\n. Sudden yellowing and wilting of tillers',
+    'How Should I control it':
+    'For 0.75 acres, use 60 ml of Imidacloprid 17.8% SL mixed in 30 liters of water. Spray uniformly during early morning or evening. Avoid spraying during mid-day heat.',
+    'Should I irrigate my field this week':
+    'According to the forecast, your area (Alathur) is expected to remain dry over the next 5 days with temperatures around 34°C. Soil moisture is likely to be low. I recommend irrigating your field within the next 2 days, especially if no irrigation was done in the past week.',
   };
 
-
-  @override
   void initState() {
     super.initState();
     AppState.instance.isEnglish = true;
     AppState.instance.language = 'english';
-
+    langId = 'en-IN';
+    // _initRecorder();
+    _initSpeech();
     viewModel = Provider.of<ChatViewModel>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await viewModel.initSpeech();
-      await viewModel.initWebsocketConnection();
+      // await viewModel.initWebsocketConnection(context);
       if (widget.isFromHistory != null && widget.isFromHistory == true) {
         await viewModel.getMessageHistoryForSession(widget.sessionId!, context);
       }
     });
   }
 
+  Future<void> _initSpeech() async {
+    Map<String, String> currentVoice = {
+      "name": "en-us-x-iom-local",
+      "locale": "en-US"
+    };
+    _speechEnabled = await _speechToText.initialize(
+      onError: (error) {
+        print("Speech recognition error: $error");
+        _stopListening();
+      },
+      onStatus: (status) {
+        print("Speech recognition status: $status");
+      },
+      debugLogging: true, // Enables detailed logging
+    );
+
+    if (_speechEnabled) {
+      // Retrieve the list of available locales
+      var locales = await _speechToText.locales();
+      // Set the desired locale, e.g., 'en-IN' for English (India)
+      // Configure Text-to-Speech settings
+      await tts.setLanguage(langId);
+      await tts.setSpeechRate(0.5);
+      await tts.setVoice(currentVoice);
+    } else {
+      print("Speech recognition is not available on this device.");
+    }
+  }
+
   @override
   void dispose() {
     super.dispose();
+    tts.stop();
+    showLoader.value = false;
     viewModel.clearData();
   }
 
@@ -65,10 +106,10 @@ class _ChatViewState extends State<ChatView> {
     return Consumer<ChatViewModel>(
       builder: (_, model, child) {
         return Scaffold(
-          drawer: (widget.isFromHistory != null && widget.isFromHistory == true)
-              ? null
-              : const DrawerWidget(),
+          drawer: (widget.isFromHistory != null && widget.isFromHistory == true) ? null : const DrawerWidget(),
           appBar: AppBar(
+            iconTheme: IconThemeData(color: Colors.white),
+            backgroundColor: Colors.green.withOpacity(0.7),
             leading:
                 (widget.isFromHistory != null && widget.isFromHistory == true)
                     ? IconButton(
@@ -80,10 +121,11 @@ class _ChatViewState extends State<ChatView> {
             title: Row(
               children: [
                 Image.asset(
-                  'assets/images/apaims_logo.png',
-                  height: 32,
+                  // 'assets/images/fieldrishi_appbar.png',
+                  'assets/images/kathir_logo.png',
+                  height: 40,
                 ),
-                const SizedBox(width: 8),
+                /* const SizedBox(width: 8),
                 const Text(
                   'APAIMS Chatbot',
                   style: TextStyle(
@@ -91,7 +133,7 @@ class _ChatViewState extends State<ChatView> {
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
                   ),
-                ),
+                ),*/
               ],
             ),
           ),
@@ -106,7 +148,7 @@ class _ChatViewState extends State<ChatView> {
                   children: [
                     Expanded(
                       child: ValueListenableBuilder<bool>(
-                        valueListenable: viewModel.showLoader,
+                        valueListenable: showLoader,
                         builder: (context, isLoading, _) {
                           return ListView.builder(
                             controller: scrollControllerListView,
@@ -118,7 +160,7 @@ class _ChatViewState extends State<ChatView> {
                               if (isLoading && index == 0) {
                                 WidgetsBinding.instance
                                     .addPostFrameCallback((_) {
-                                  viewModel.showLoader.value = true;
+                                  showLoader.value = true;
                                 });
                                 return const SizedBox();
                               }
@@ -139,7 +181,7 @@ class _ChatViewState extends State<ChatView> {
                                   viewModel.messages.last['is_user']) {
                                 WidgetsBinding.instance
                                     .addPostFrameCallback((_) {
-                                  viewModel.showLoader.value = true;
+                                  showLoader.value = true;
                                   // tts.stop();
                                 });
                               }
@@ -185,11 +227,11 @@ class _ChatViewState extends State<ChatView> {
                       child: Align(
                         alignment: AlignmentDirectional.centerStart,
                         child: ValueListenableBuilder(
-                          valueListenable: viewModel.showLoader,
+                          valueListenable: showLoader,
                           builder: (context, value, _) {
                             if (value) {
                               return LoadingAnimationWidget.waveDots(
-                                  color: Colors.blue, size: 40);
+                                  color: Colors.green, size: 40);
                             }
                             return const SizedBox();
                           },
@@ -240,7 +282,7 @@ class _ChatViewState extends State<ChatView> {
             ),
             contentPadding:
                 const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-            // prefixIcon: _speechButton(),
+            prefixIcon: _speechButton(),
             suffixIcon: _sendButton(),
           ),
         ),
@@ -253,50 +295,47 @@ class _ChatViewState extends State<ChatView> {
       mainAxisSize: MainAxisSize.min,
       children: [
         ValueListenableBuilder(
-          valueListenable: viewModel.showLoader,
+          valueListenable: showLoader,
           builder: (context, value, _) {
             return IconButton(
               icon: Icon(Icons.send,
-                  color: viewModel.showLoader.value ? Colors.grey : Colors.blue),
-              onPressed: viewModel.showLoader.value
+                  color: showLoader.value ? Colors.grey : Colors.green),
+              onPressed: showLoader.value
                   ? null
                   : () async {
-                String userInput = viewModel.chatController.text.trim();
-                if (userInput.isEmpty) {
-                  Fluttertoast.showToast(msg: "Please enter your question.");
-                  return;
-                }
+                      String userInput = viewModel.chatController.text.trim();
+                      if (userInput.isEmpty) {
+                        Fluttertoast.showToast(
+                            msg: "Please enter your question.");
+                        return;
+                      }
+                      showLoader.value = true;
+                      viewModel.updateChatControllerForSpeech('');
 
-                String questionKey = userInput.toLowerCase();
-                String? localAnswer = questionsMap[questionKey];
+                      String questionKey = userInput;
+                      print("userIput::$userInput");
+                      String? localAnswer = questionsMap[questionKey];
+                      print("localAnswer::$localAnswer");
 
-                // Add user message
-                viewModel.messages.add({
-                  'text': userInput,
-                  'is_user': true,
-                });
+                      // Add user message
+                      viewModel.messages.add({
+                        'text': userInput,
+                        'is_user': true,
+                      });
 
-                if (localAnswer != null) {
-                  // Answer from local map
-                  viewModel.messages.add({
-                    'text': localAnswer,
-                    'is_user': false,
-                  });
+                      if (localAnswer != null) {
+                        await Future.delayed(const Duration(seconds: 3));
+                        // Answer from local map
+                        viewModel.messages.add({
+                          'text': localAnswer,
+                          'is_user': false,
+                        });
 
-                  viewModel.chatController.clear();
-                  viewModel.showLoader.value = false;
-
-                  scrollControllerListView.animateTo(
-                    0,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOut,
-                  );
-                  setState(() {});
-                } else {
-                  // Fallback to backend
-                  viewModel.sendMessageStream(userInput, widget.sessionId);
-                }
-              },
+                        showLoader.value = false;
+                        tts.speak(localAnswer);
+                        setState(() {});
+                      }
+                    },
             );
           },
         ),
@@ -304,5 +343,68 @@ class _ChatViewState extends State<ChatView> {
     );
   }
 
+  Widget _speechButton() {
+    return ValueListenableBuilder(
+      valueListenable: listeningActive,
+      builder: (context, value, _) {
+        return IconButton(
+          onPressed: !value ? _startListening : _stopListening,
+          icon: Icon(
+            !value ? Icons.mic_off : Icons.mic,
+            color: Colors.grey,
+          ),
+          tooltip: 'Listen',
+        );
+      },
+    );
+  }
+
+  _startListening() async {
+    var locales = await _speechToText.locales();
+    for (int i = 0; i < locales.length; i++) {
+      print("LOCALESDSD $i   ${locales[i].name}");
+    }
+
+    //for android tab english locale at 5
+    print("_onSpeechResult_startListening");
+    SpeechRecognitionResult result;
+    try {
+      await _speechToText.listen(
+          onSoundLevelChange: onSoundLevelChange,
+          localeId: 'en-IN',
+          partialResults: true,
+          onResult: _onSpeechResult,
+          pauseFor: const Duration(seconds: 3),
+          listenFor: const Duration(seconds: 30),
+          cancelOnError: true);
+    } catch (e) {
+      print('EXCEPTIONKJSKFJK An exception occurred: $e');
+    }
+
+    print("_onSpeechResult_startListening aferfdf ${_speechToText.lastStatus}");
+    bool active = _speechToText.isListening;
+    tts.stop();
+    listeningActive.value = active;
+  }
+
+  dynamic Function(double)? onSoundLevelChange(double value) {
+    print("onSoundLevelChange  $value");
+    return null;
+  }
+
+  /// Manually stop the active speech recognition session
+  /// Note that there are also timeouts that each platform enforces
+  /// and the SpeechToText plugin supports setting timeouts on the
+  /// listen method.
+  void _stopListening() async {
+    bool active = _speechToText.isListening;
+    listeningActive.value = active;
+    setState(() {});
+  }
+
+  Future<void> _onSpeechResult(SpeechRecognitionResult result) async {
+    viewModel.updateChatControllerForSpeech(result.recognizedWords);
+    bool active = _speechToText.isListening;
+    listeningActive.value = active;
+  }
 }
-*/

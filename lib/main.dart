@@ -26,7 +26,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '../../login/model/department_user_permission_response.dart' as response;
 import 'dart:developer' as developer;
@@ -96,12 +95,6 @@ void main() async {
   // await initializeService();
 }
 
-_initSupabase() async {
-  await Supabase.initialize(
-    url: 'https://nawrims.vassarlabs.com/supabase',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNzIyNTM3MDAwLAogICJleHAiOiAxODgwMzAzNDAwCn0.YqyV3WH6Y39UnjAuGoJZCqPtRKOGzICweUE59mG83So',
-  );
-}
 
 Future<bool> requestPermissions() async {
   // Request notification permission

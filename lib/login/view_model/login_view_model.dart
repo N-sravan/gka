@@ -7,6 +7,7 @@ import 'package:gka/utils/common_constants.dart' as constants;
 import 'package:intl/intl.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:uuid/uuid.dart';
+import '../../chat/view/chat_view_recording.dart';
 import '../../chat_window.dart';
 import '../../services/api_provider.dart';
 import '../../utils/app_state.dart';
