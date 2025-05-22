@@ -2,8 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:web_socket_channel/io.dart';
+import 'package:flutter_sound/flutter_sound.dart' as fs;
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:gka/settings_view.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -36,8 +39,6 @@ class ChatView extends StatefulWidget {
 
 class _ChatViewState extends State<ChatView> {
   final _recorder = record.AudioRecorder();
-
-  // final fs.FlutterSoundRecorder _recorder = fs.FlutterSoundRecorder();
   final ValueNotifier<bool> listeningActive = ValueNotifier(false);
   late String recordedFilePath;
   var scrollControllerListView = ScrollController();
@@ -45,13 +46,12 @@ class _ChatViewState extends State<ChatView> {
   final SpeechToText _speechToText = SpeechToText();
   late ChatViewModel viewModel;
   bool _speechEnabled = false;
-  String langId = 'en-IN';
-  String language = '';
   FlutterTts tts = FlutterTts();
 
-  // final _audioRecorder = fs.FlutterSoundRecorder();
-  final StreamController<Uint8List> _audioStreamController =
-      StreamController<Uint8List>();
+  IOWebSocketChannel? channel;
+
+  final _audioRecorder = fs.FlutterSoundRecorder();
+  final StreamController<Uint8List> _audioStreamController = StreamController<Uint8List>();
   int prevChatLength = 0;
 
   bool _isRecording = false;
@@ -66,18 +66,23 @@ class _ChatViewState extends State<ChatView> {
   @override
   void initState() {
     super.initState();
-    AppState.instance.isEnglish = true;
-    AppState.instance.language = 'english';
-    langId = 'en-IN';
-    // _initRecorder();
+    _initAppStateValues();
     _initSpeech();
+    _initRecorder();
     viewModel = Provider.of<ChatViewModel>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // await viewModel.initWebsocketConnection(context);
       if (widget.isFromHistory != null && widget.isFromHistory == true) {
         await viewModel.getMessageHistoryForSession(widget.sessionId!, context);
       }
     });
+  }
+
+  _initAppStateValues() {
+    AppState.instance.isEnglish = true;
+    AppState.instance.language = 'English';
+    AppState.instance.sttMode = 'Native';
+    AppState.instance.ttsMode = 'Native';
+    AppState.instance.transMode = 'Bhashini';
   }
 
   Future<void> _initSpeech() async {
@@ -93,10 +98,11 @@ class _ChatViewState extends State<ChatView> {
     );
 
     if (_speechEnabled) {
-      // Retrieve the list of available locales
       var locales = await _speechToText.locales();
-      // Set the desired locale, e.g., 'en-IN' for English (India)
-      // Configure Text-to-Speech settings
+      String langId = AppState.instance.isEnglish ? 'en-IN' : 'te-IN';
+      currentVoice = AppState.instance.isEnglish
+          ? currentVoice = {"name": "en-us-x-iom-local", "locale": "en-US"}
+          : currentVoice = {"name": "te-in-x-tef-local", "locale": "te-IN"};
       await tts.setLanguage(langId);
       await tts.setSpeechRate(0.5);
       await tts.setVoice(currentVoice);
@@ -108,7 +114,7 @@ class _ChatViewState extends State<ChatView> {
   @override
   void dispose() {
     super.dispose();
-    // _audioRecorder.closeRecorder();
+    _audioRecorder.closeRecorder();
     _audioStreamController.close();
     _isRecording = false;
     tts.stop();
@@ -120,45 +126,53 @@ class _ChatViewState extends State<ChatView> {
     return Consumer<ChatViewModel>(
       builder: (_, viewModel, child) {
         return Scaffold(
-          drawer: (widget.isFromHistory ?? false) ? null : const DrawerWidget(),
-          appBar: AppBar(
-            leading: (widget.isFromHistory ?? false)
-                ? IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.black),
-                    onPressed: () => Navigator.pop(context),
-                  )
-                : null,
-            titleSpacing: 2,
-            title: Row(
-              children: [
-                Image.asset('assets/images/apaims_logo.png', height: 32),
-                const SizedBox(width: 8),
-                const Text(
-                  'APAIMS Chatbot',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
+            drawer:
+                (widget.isFromHistory ?? false) ? null : const DrawerWidget(),
+            appBar: AppBar(
+              leading: (widget.isFromHistory ?? false)
+                  ? IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.black),
+                      onPressed: () => Navigator.pop(context),
+                    )
+                  : null,
+              titleSpacing: 2,
+              title: Row(
+                children: [
+                  Image.asset('assets/images/apaims_logo.png', height: 32),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'APAIMS Chatbot',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
                   ),
+                ],
+              ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.settings, color: Colors.black),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const SettingsView()),
+                    );
+                  },
                 ),
               ],
             ),
-          ),
-          body: Column(
-            children: [
-              Expanded(
-                child: Stack(
-                  children: [
-                    _buildChatList(viewModel),
-                    // _buildAgentStepsOverlay(viewModel),
-                  ],
-                ),
-              ),
-              // _buildStreamingControls(viewModel),
-              _buildChatInput(viewModel),
-            ],
-          ),
-        );
+            body: Column(
+              children: [
+                _buildChatList(),
+                _buildLoaderWidget(),
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: bottomBar(),
+                )
+              ],
+            ));
       },
     );
   }
@@ -173,7 +187,7 @@ class _ChatViewState extends State<ChatView> {
           builder: (context, value, _) {
             if (value) {
               return LoadingAnimationWidget.waveDots(
-                  color: const Color(0XFF55A18F), size: 40);
+                  color: Colors.blue, size: 40);
             }
             return const SizedBox();
           },
@@ -195,73 +209,51 @@ class _ChatViewState extends State<ChatView> {
     );
   }
 
-  Widget _buildChatList(ChatViewModel viewModel) {
-    return ListView.builder(
-      controller: scrollControllerListView,
-      reverse: true,
-      padding: const EdgeInsets.all(10),
-      // itemCount: viewModel.messages.length + (viewModel.isStreaming.value ? 1 : 0),
-      itemCount: viewModel.messages.length,
-      itemBuilder: (_, index) {
-        if (viewModel.showLoader.value) {
-          _buildLoaderWidget();
-        }
+  Widget _buildChatList() {
+    return Expanded(
+      child: ListView.builder(
+        controller: scrollControllerListView,
+        reverse: true,
+        padding: const EdgeInsets.all(10),
+        // itemCount: viewModel.messages.length + (viewModel.isStreaming.value ? 1 : 0),
+        itemCount: viewModel.messages.length,
+        itemBuilder: (_, index) {
+          final adjustedIndex = viewModel.isStreaming.value
+              ? viewModel.messages.length - index
+              : viewModel.messages.length - 1 - index;
 
-        /*if (viewModel.isStreaming.value && index == 0) {
-          return ChatBubble(
-            expandContentBlocks: false,
-            timestamp: DateTime.now().toIso8601String(),
-            text: viewModel.streamingText.value,
-            isUser: false,
-            imageUrl: '',
-            tableColumnData: null,
-            tableRowData: null,
-            logMessage: '',
-            hasErrorLog: false,
-            timestampMapping: {},
-            followUpQuestions: [],
-            token: '',
-            isMapView: false,
-            isStreaming: true,
-            contentBlocks: viewModel.contentBlocksData,
+          if (adjustedIndex < 0 || adjustedIndex >= viewModel.messages.length) {
+            return const SizedBox();
+          }
+
+          final msg = viewModel.messages[adjustedIndex];
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: ChatBubble(
+              expandContentBlocks: false,
+              contentBlocks: msg['content_blocks'],
+              timestamp: msg['timestamp'] ?? '',
+              text: msg['text'] ?? '',
+              isUser: msg['is_user'],
+              imageUrl: msg['image_url'] ?? '',
+              tableColumnData: msg['sql_df_columns'],
+              tableRowData: msg['sql_df_values'] != null
+                  ? jsonDecode(msg['sql_df_values'])
+                  : null,
+              logMessage: msg['log'] ?? '',
+              hasErrorLog: false,
+              timestampMapping: {},
+              followUpQuestions: (msg['follow_up_questions'] as List<dynamic>?)
+                      ?.map((e) => e.toString())
+                      .toList() ??
+                  [],
+              token: msg['token'] ?? '',
+              isMapView: false,
+            ),
           );
-        }*/
-
-        final adjustedIndex = viewModel.isStreaming.value
-            ? viewModel.messages.length - index
-            : viewModel.messages.length - 1 - index;
-
-        if (adjustedIndex < 0 || adjustedIndex >= viewModel.messages.length) {
-          return const SizedBox();
-        }
-
-        final msg = viewModel.messages[adjustedIndex];
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: ChatBubble(
-            expandContentBlocks: false,
-            contentBlocks: msg['content_blocks'],
-            timestamp: msg['timestamp'] ?? '',
-            text: msg['text'] ?? '',
-            isUser: msg['is_user'],
-            imageUrl: msg['image_url'] ?? '',
-            tableColumnData: msg['sql_df_columns'],
-            tableRowData: msg['sql_df_values'] != null
-                ? jsonDecode(msg['sql_df_values'])
-                : null,
-            logMessage: msg['log'] ?? '',
-            hasErrorLog: false,
-            timestampMapping: {},
-            followUpQuestions: (msg['follow_up_questions'] as List<dynamic>?)
-                    ?.map((e) => e.toString())
-                    .toList() ??
-                [],
-            token: msg['token'] ?? '',
-            isMapView: false,
-          ),
-        );
-      },
+        },
+      ),
     );
   }
 
@@ -391,7 +383,7 @@ class _ChatViewState extends State<ChatView> {
     return SizedBox();
   }
 
-  Widget _buildChatInput(ChatViewModel viewModel) {
+  Widget _buildChatInput() {
     return Padding(
       padding: const EdgeInsets.all(20),
       child: TextFormField(
@@ -448,7 +440,23 @@ class _ChatViewState extends State<ChatView> {
       valueListenable: listeningActive,
       builder: (context, value, _) {
         return IconButton(
-          onPressed: !value ? _startListening : _stopListening,
+          // onPressed: !value ? _startListening : _stopListening,
+          onPressed: () {
+            print("listeningActive $value");
+            if (!value) {
+              if (AppState.instance.sttMode.toLowerCase() == 'native') {
+                _startListeningNative();
+              }
+              if (AppState.instance.sttMode.toLowerCase() == 'parakeet') {
+                _startListeningParakeet();
+              }
+              if (AppState.instance.sttMode.toLowerCase() == 'bhashini') {
+                _startListeningBhashini();
+              }
+            } else {
+              _stopListening();
+            }
+          },
           icon: Icon(
             !value ? Icons.mic_off : Icons.mic,
             color: Colors.grey,
@@ -480,11 +488,11 @@ class _ChatViewState extends State<ChatView> {
                           // viewModel.sendMessage(context, viewModel.chatController.text);
                           print(
                               "userId : ${AppState.instance.userId}, sessionId :${AppState.instance.sessionId}");
-                          if (viewModel.userInputEnglish.isNotEmpty) {
+                          if (viewModel.chatController.text.isNotEmpty &&
+                              viewModel.chatController.text !=
+                                  'Processing...') {
                             viewModel.sendMessageStream(
-                              viewModel.chatController.text,
-                              viewModel.userInputEnglish,
-                            );
+                                viewModel.chatController.text, context);
                           }
                         }
                       });
@@ -494,15 +502,7 @@ class _ChatViewState extends State<ChatView> {
     );
   }
 
-  Future<void> _initRecorder() async {
-    final status = await Permission.microphone.request();
-    if (status != PermissionStatus.granted) {
-      throw Exception('Microphone permission not granted');
-    }
-    // await _recorder.openRecorder();
-  }
-
-  Future<void> _startListening() async {
+  Future<void> _startListeningBhashini() async {
     viewModel.updateChatControllerForSpeech('');
     await _initRecorder();
     Directory tempDir = await getTemporaryDirectory();
@@ -518,31 +518,40 @@ class _ChatViewState extends State<ChatView> {
       ),
       path: recordedFilePath,
     );
-
     listeningActive.value = true;
   }
 
   Future<void> _stopListening() async {
-    // await _recorder.stopRecorder();
-    await _recorder.stop();
+    if (AppState.instance.sttMode.toLowerCase() == 'bhashini') {
+      await _recorder.stop();
+      await viewModel.sendAudioToAPI(recordedFilePath, context);
+    }
+    if (AppState.instance.sttMode.toLowerCase() == 'parakeet') {
+      _audioStreamController.close();
+      _audioRecorder.closeRecorder();
+      _isRecording = false;
+      _inactivityTimer?.cancel();
+      channel!.sink.close();
+      if (_audioRecorder.isRecording) {
+        await _audioRecorder.stopRecorder();
+      }
+    }
+
     listeningActive.value = false;
-    await viewModel.sendAudioToAPI(recordedFilePath);
+    setState(() {});
   }
 
   /// Each time to start a speech recognition session
-  _startListeningTelugu() async {
-    print("_onSpeechResult_startListening BEFORE loop");
+  _startListeningNative() async {
     var locales = await _speechToText.locales();
     for (int i = 0; i < locales.length; i++) {
       print("LOCALESDSD $i   ${locales[i].name}");
     }
 
-    //for android tab english locale at 5
-    print("_onSpeechResult_startListening langId $langId");
     try {
       await _speechToText.listen(
           onSoundLevelChange: onSoundLevelChange,
-          localeId: langId,
+          localeId: AppState.instance.isEnglish ? 'en-IN' : 'te-IN',
           partialResults: true,
           onResult: _onSpeechResult,
           pauseFor: const Duration(seconds: 3),
@@ -552,38 +561,31 @@ class _ChatViewState extends State<ChatView> {
       print('EXCEPTIONKJSKFJK An exception occurred: $e');
     }
 
-    print("_onSpeechResult_startListening aferfdf ${_speechToText.lastStatus}");
     bool active = _speechToText.isListening;
     tts.stop();
     listeningActive.value = active;
   }
 
-/*
   Future<void> _initRecorder() async {
     await tts.stop();
     await _audioRecorder.openRecorder();
-
     await Permission.microphone.request();
-
     _audioRecorder.setSubscriptionDuration(const Duration(milliseconds: 100));
   }
-*/
 
-/*
-  Future<void> _startListening() async {
+  Future<void> _startListeningParakeet() async {
     await tts.stop();
     try {
       if (_audioRecorder.isRecording) {
         await _audioRecorder.stopRecorder();
       }
 
-      channel = WebSocketChannel.connect(
+      channel = IOWebSocketChannel.connect(
         Uri.parse("ws://acerkrishidss.vassarlabs.com/chatbot_transcribe"),
       );
       channel!.sink.add(jsonEncode({"timestamps": true}));
 
       await _audioRecorder.openRecorder();
-      ;
 
       bool isPcmSupported =
           await _audioRecorder.isEncoderSupported(fs.Codec.pcm16WAV);
@@ -624,7 +626,7 @@ class _ChatViewState extends State<ChatView> {
             transcript.isNotEmpty &&
             transcript != _lastRecognizedText) {
           _lastRecognizedText = transcript;
-          updateChatControllerForSpeech(transcript);
+          viewModel.updateChatControllerForSpeech(transcript);
 
           // Reset inactivity timer
           _inactivityTimer?.cancel();
@@ -643,42 +645,11 @@ class _ChatViewState extends State<ChatView> {
       Fluttertoast.showToast(msg: "Error starting transcription.");
     }
   }
-*/
-
-/*
-  Future<void> _stopListening() async {
-    try {
-      */
-/* _inactivityTimer?.cancel();
-      if (_audioRecorder.isRecording) {
-        await _audioRecorder.stopRecorder();
-      }
-      await _audioStreamController.close();*/ /*
-
-      channel?.sink.close();
-      _isRecording = false;
-      listeningActive.value = false;
-      setState(() {});
-      print("Stopped listening due to inactivity.");
-    } catch (e) {
-      print("Error stopping listening: $e");
-    }
-  }
-*/
 
   dynamic Function(double)? onSoundLevelChange(double value) {
     print("onSoundLevelChange  $value");
     return null;
   }
-
-/*  void _stopListening() async {
-    bool active = _speechToText.isListening;
-    listeningActive.value = active;
-    _audioStreamController.close();
-    _audioRecorder.closeRecorder();
-    _isRecording = false;
-    setState(() {});
-  }*/
 
   Future<void> _onSpeechResult(SpeechRecognitionResult result) async {
     viewModel.updateChatControllerForSpeech(result.recognizedWords);
@@ -707,21 +678,21 @@ class _ChatViewState extends State<ChatView> {
     return result.trim();
   }
 
-  // Function to save audio data to a file
+// Function to save audio data to a file
   Future<void> _saveAudioToFile(Uint8List data) async {
     try {
       Directory? dir;
 
       if (Platform.isAndroid) {
-        dir = Directory('/storage/emulated/0/Download'); // Android Downloads
+        dir = Directory('/storage/emulated/0/Download');
       } else if (Platform.isIOS) {
         dir = await getApplicationDocumentsDirectory();
       }
 
-      String _filePath =
+      String filePath =
           '${dir!.path}/audio_${DateTime.now().millisecondsSinceEpoch}.wav';
 
-      print("Audio saved to: $_filePath");
+      print("Audio saved to: $filePath");
     } catch (e) {
       print("Error saving audio to file: $e");
     }
@@ -743,23 +714,13 @@ class _ChatViewState extends State<ChatView> {
             });
 
             if (AppState.instance.language.toLowerCase() == 'telugu') {
-              AppState.instance.language = 'Telugu';
+              AppState.instance.language = 'telugu';
               AppState.instance.isEnglish = false;
-              langId = 'te-IN';
-              language = 'telugu';
-              currentVoice = {"name": "te-in-x-tef-local", "locale": "te-IN"};
             }
             if (AppState.instance.language.toLowerCase() == 'english') {
-              AppState.instance.language = 'English';
+              AppState.instance.language = 'english';
               AppState.instance.isEnglish = true;
-              langId = 'en-US';
-              language = 'english';
-              currentVoice = {"name": "en-us-x-iom-local", "locale": "en-US"};
             }
-            await tts.setVoice(currentVoice);
-            await tts.setLanguage(langId);
-            await tts.setSpeechRate(0.5);
-            print("12345 current voice :: $currentVoice langId - $langId");
             Fluttertoast.showToast(
                 msg: "Switched to ${AppState.instance.language}");
           },

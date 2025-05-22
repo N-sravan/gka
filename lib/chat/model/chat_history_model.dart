@@ -1,24 +1,49 @@
-import 'package:gka/chat/model/user_session_model.dart';
-
 class ChatHistoryModel {
-  final int status;
-  final List<SessionHistoryModel> data;
+  final int statuscode;
+  final List<ChatMessageHistoryModel> data;
 
   ChatHistoryModel({
-    required this.status,
+    required this.statuscode,
     required this.data,
   });
 
   factory ChatHistoryModel.fromJson(Map<String, dynamic> json) {
     return ChatHistoryModel(
-      status: json['statuscode'],
+      statuscode: json['statuscode'],
       data: (json['response'] as List?)
-              ?.map((item) => SessionHistoryModel.fromJson(item))
+              ?.map((item) => ChatMessageHistoryModel.fromJson(item))
               .toList() ??
           [],
     );
   }
 }
+
+class ChatMessageHistoryModel {
+  final String createdAt;
+  final int messageId;
+  final String language;
+  final String text;
+  final String senderType;
+
+  ChatMessageHistoryModel({
+    required this.createdAt,
+    required this.messageId,
+    required this.language,
+    required this.text,
+    required this.senderType,
+  });
+
+  factory ChatMessageHistoryModel.fromJson(Map<String, dynamic> json) {
+    return ChatMessageHistoryModel(
+      createdAt: json['created_at'],
+      messageId: json['message_id'],
+      language: json['language'],
+      text: json['text'],
+      senderType: json['sender_type'],
+    );
+  }
+}
+
 
 
 class ChatData {

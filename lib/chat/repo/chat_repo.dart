@@ -41,6 +41,9 @@ abstract class ChatRepository {
   Future<ChatHistoryModel> fetchChatHistory(
       String sessionId, BuildContext context);
 
+  Future<ChatHistoryModel> fetchChatHistoryForSession(
+      String sessionId, BuildContext context);
+
   Future<UserResponseModel> fetchUsers(BuildContext context);
 
   Future<List<ChatMessageHistory>> fetchMessageHistory(String sessionId);
@@ -53,9 +56,11 @@ abstract class ChatRepository {
 
   Future<bool> deleteSession(BuildContext context, String sessionId);
 
-  Future<bool> updateSession(BuildContext context, String sessionId, String newId);
+  Future<bool> updateSession(
+      BuildContext context, String sessionId, String newId);
 
-  Future<Map<String, dynamic>> translateText(BuildContext context, String text, String sourceLang, String destLang);
+  Future<Map<String, dynamic>> translateText(
+      BuildContext context, String text, String sourceLang, String destLang);
 
   Future<bool> deleteChunk(BuildContext context, String chunkId);
 
@@ -168,7 +173,8 @@ class ChatRepositoryImpl extends ChatRepository {
   }
 
   @override
-  Future<PromptSubmissionResponse> createPrompt(BuildContext context, String promptMessage, String intent, String modelUUID) async {
+  Future<PromptSubmissionResponse> createPrompt(BuildContext context,
+      String promptMessage, String intent, String modelUUID) async {
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
     };
@@ -230,7 +236,8 @@ class ChatRepositoryImpl extends ChatRepository {
   }
 
   @override
-  Future<PromptSubmissionResponse> updatePrompt(BuildContext context, String promptMessage, String intent) async {
+  Future<PromptSubmissionResponse> updatePrompt(
+      BuildContext context, String promptMessage, String intent) async {
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
     };
@@ -303,7 +310,8 @@ class ChatRepositoryImpl extends ChatRepository {
   }
 
   @override
-  Future<ChatHistoryModel> fetchChatHistory(String sessionId, BuildContext context) async {
+  Future<ChatHistoryModel> fetchChatHistory(
+      String sessionId, BuildContext context) async {
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
     };
@@ -315,6 +323,28 @@ class ChatRepositoryImpl extends ChatRepository {
     String authUrl =
         'https://apaims2.0.vassarlabs.com/chatbot/chat/get-chat-history';
     // String authUrl = 'http://192.168.18.40:8000/chat/get-chat-history';
+    Object data = jsonEncode(params);
+    var response =
+        await http.post(Uri.parse(authUrl), headers: authHeaders, body: data);
+
+    Map<String, dynamic> responseMap = jsonDecode(response.body);
+
+    ChatHistoryModel chatHistoryModel = ChatHistoryModel.fromJson(responseMap);
+    return chatHistoryModel;
+  }
+
+  @override
+  Future<ChatHistoryModel> fetchChatHistoryForSession(
+      String sessionId, BuildContext context) async {
+    Map<String, String> authHeaders = {
+      constants.headerContentType: constants.headerJson
+    };
+
+    Map<String, dynamic> params = {
+      "user_id": AppState.instance.userId,
+      "session_id": sessionId
+    };
+    String authUrl = constants.baseUrl + constants.chatHistoryEndpoint;
     Object data = jsonEncode(params);
     var response =
         await http.post(Uri.parse(authUrl), headers: authHeaders, body: data);
@@ -377,7 +407,7 @@ class ChatRepositoryImpl extends ChatRepository {
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
     };
-    String authUrl = constants.deleteSessionEndpoint;
+    String authUrl = constants.baseUrl + constants.deleteSessionEndpoint;
     String requestBody = jsonEncode(params);
 
     http.Response response = await http.post(
@@ -394,7 +424,8 @@ class ChatRepositoryImpl extends ChatRepository {
   }
 
   @override
-  Future<bool> updateSession(BuildContext context, String sessionId, String newId) async {
+  Future<bool> updateSession(
+      BuildContext context, String sessionId, String newId) async {
     Map<String, dynamic> params = {
       "user_id": AppState.instance.userId,
       "session_id": sessionId,
@@ -403,7 +434,7 @@ class ChatRepositoryImpl extends ChatRepository {
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
     };
-    String authUrl = constants.updateSessionEndpoint;
+    String authUrl = constants.baseUrl + constants.updateSessionEndpoint;
     String requestBody = jsonEncode(params);
 
     http.Response response = await http.post(
@@ -420,7 +451,8 @@ class ChatRepositoryImpl extends ChatRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> translateText(BuildContext context, String text, String sourceLang, String destLang) async {
+  Future<Map<String, dynamic>> translateText(BuildContext context, String text,
+      String sourceLang, String destLang) async {
     Map<String, dynamic> params = {
       "text": text,
       "from_lang": sourceLang,
@@ -429,7 +461,7 @@ class ChatRepositoryImpl extends ChatRepository {
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
     };
-    String authUrl = constants.langTranslateEndpoint;
+    String authUrl = constants.baseUrl + constants.langTranslateEndpoint;
     String requestBody = jsonEncode(params);
 
     http.Response response = await http.post(
@@ -465,7 +497,8 @@ class ChatRepositoryImpl extends ChatRepository {
   }
 
   @override
-  Future<ActivityStatusResponse> submitActivityStatus(Map<String, dynamic> body, bool isIncreased) async {
+  Future<ActivityStatusResponse> submitActivityStatus(
+      Map<String, dynamic> body, bool isIncreased) async {
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
     };
@@ -548,8 +581,7 @@ class ChatRepositoryImpl extends ChatRepository {
     Map<String, dynamic> params = {
       "user_id": AppState.instance.userId,
     };
-    String authUrl =
-        'https://apaims2.0.vassarlabs.com/chatbot/chat/get-sessions';
+    String authUrl = constants.baseUrl + constants.sessionsEndpoint;
     String data = jsonEncode(params);
     var response =
         await http.post(Uri.parse(authUrl), headers: authHeaders, body: data);

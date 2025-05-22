@@ -1,7 +1,3 @@
-import 'package:event_bus/event_bus.dart';
-
-import '../login/model/department_user_permission_response.dart';
-
 class AppState {
   static AppState? _instance;
 
@@ -42,11 +38,7 @@ class AppState {
   Map<String, dynamic> userMetaDataMap = {};
   late String? hiveEncryptionKey;
   late String userData;
-  String triggeredWord = '';
   late String fcmToken;
-  bool hasFarmerData = false;
-  bool isVoiceUpdateEnabled = false;
-  bool isExternalLLM = false;
   String modelName = "chatgpt-3.5";
   String modelUUID = "43c31fae-3469-4c87-a73d-8648e9c78f3663";
   late String locUUID;
@@ -55,7 +47,10 @@ class AppState {
   late String userId;
   late String sessionId;
   late String language;
-  bool isEnglish = true;
+  late bool isEnglish;
   late String mode;
+  late String transMode;
+  late String sttMode;
+  late String ttsMode;
   bool isListeningMode =false;
 }

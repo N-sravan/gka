@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-
 class ChatBubble extends StatefulWidget {
   final String timestamp;
   final String text;
@@ -64,10 +63,8 @@ class _ChatBubbleState extends State<ChatBubble> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
-
     return Padding(
         padding: EdgeInsets.fromLTRB(
             widget.isUser ? 64.0 : 16.0, 4, widget.isUser ? 16.0 : 8.0, 4),
@@ -94,19 +91,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                       : MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (!widget.isUser)
-                      const Padding(
-                        padding: EdgeInsets.only(left: 4.0),
-                        child: SizedBox(
-                          height: 36,
-                          width: 36,
-                          child: CircleAvatar(
-                            radius: 50,
-                            backgroundImage:
-                                AssetImage('assets/images/male_bot.jfif'),
-                          ),
-                        ),
-                      ),
+                    if (!widget.isUser) _botProfileView(),
                     const SizedBox(
                       width: 8,
                     ),
@@ -130,8 +115,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                                 ),
                         ),
                         child: Padding(
-                          // padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                          padding: const EdgeInsets.only(left: 10, right: 10,top: 10),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -274,16 +258,16 @@ class _ChatBubbleState extends State<ChatBubble> {
                   ),
                   const SizedBox(height: 8),
                   ...widget.contentBlocks!.entries.map((entry) {
-                    int colorIndex = widget.contentBlocks!.keys
-                        .toList()
-                        .indexOf(entry.key) %
-                        4;
+                    int colorIndex =
+                        widget.contentBlocks!.keys.toList().indexOf(entry.key) %
+                            4;
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
                       child: GestureDetector(
                         onTap: () {
                           setState(() {
-                            _expanded[entry.key] = !(_expanded[entry.key] ?? false);
+                            _expanded[entry.key] =
+                                !(_expanded[entry.key] ?? false);
                           });
                         },
                         child: Container(
@@ -321,6 +305,20 @@ class _ChatBubbleState extends State<ChatBubble> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _botProfileView() {
+    return const Padding(
+      padding: EdgeInsets.only(left: 4.0),
+      child: SizedBox(
+        height: 36,
+        width: 36,
+        child: CircleAvatar(
+          radius: 50,
+          backgroundImage: AssetImage('assets/images/male_bot.jfif'),
         ),
       ),
     );

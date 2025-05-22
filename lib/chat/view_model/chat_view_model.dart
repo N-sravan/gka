@@ -1,11 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/chat/model/chat_history_model.dart';
 import 'package:gka/chat/model/chat_message_history.dart';
@@ -13,13 +15,13 @@ import 'package:gka/chat/model/get_documents_response.dart';
 import 'package:gka/chat/model/get_users_response.dart';
 import 'package:gka/shared/loading_view_model.dart';
 import 'package:gka/utils/app_state.dart';
-import 'package:intl/intl.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:gka/utils/common_constants.dart' as constants;
+import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:uuid/uuid.dart';
 import 'package:web_socket_channel/io.dart';
+
 import '../../home/model/available_models.dart' as model;
 import '../../message_bubble.dart';
 import '../../services/api_provider.dart';
@@ -94,9 +96,9 @@ class ChatViewModel extends LoadingViewModel {
   String selectedPromptModel = '';
   String selectedPromptModelUUID = '';
   String fileUUID = '';
-  String userInputEnglish = '';
 
   final SpeechToText _speechToText = SpeechToText();
+  FlutterTts tts = FlutterTts();
   ValueNotifier<bool> listeningActive = ValueNotifier<bool>(false);
 
   // ValueNotifier<bool> showLoader = ValueNotifier<bool>(false);
@@ -130,7 +132,7 @@ class ChatViewModel extends LoadingViewModel {
   String highlightedText = "";
   String remainingText = "";
   bool isllmDropdown = false;
-  final List<Map<String, dynamic>> messages = [];
+  List<Map<String, dynamic>> messages = [];
   String url = '';
   IOWebSocketChannel? channel;
   late ChatViewModel viewModel;
@@ -319,20 +321,15 @@ class ChatViewModel extends LoadingViewModel {
             await repo.fetchDocuments(context);
         documentIdTextMapping.clear();
         if (getDocumentsResponseModel.statusCode == 200) {
-          if (getDocumentsResponseModel.response != null) {
-            getDocumentsResponseModel.response.forEach((key, value) {
-              if (value.isNotEmpty) {
-                documentIdTextMapping[key] = value;
-                fileUUID = value[0].fileUUID!;
-              }
-            });
-            print("weweweww documentIdMapping $documentIdTextMapping");
-            isLoading = false;
-            notifyListeners();
-          } else {
-            isLoading = false;
-            notifyListeners();
-          }
+          getDocumentsResponseModel.response.forEach((key, value) {
+            if (value.isNotEmpty) {
+              documentIdTextMapping[key] = value;
+              fileUUID = value[0].fileUUID!;
+            }
+          });
+          print("weweweww documentIdMapping $documentIdTextMapping");
+          isLoading = false;
+          notifyListeners();
         } else {
           isLoading = false;
           notifyListeners();
@@ -893,29 +890,24 @@ class ChatViewModel extends LoadingViewModel {
     userActivity = newValue!;
   }
 
-  /* Future? getChatHistoryForSession(
+  Future? getMessageHistoryForSession(
       String sessionId, BuildContext context) async {
     if (await networkUtils.hasActiveInternet()) {
       isLoading = true;
       try {
         ChatHistoryModel chatHistoryModel =
-            await repo.fetchChatHistory(sessionId, context);
-        chatDataList.clear();
-        if (chatHistoryModel.status == 200) {
-          if (chatHistoryModel.data.isNotEmpty) {
-            for (SessionHistoryModel item in chatHistoryModel.data) {
-              ChatData chatData = ChatData(
-                isUser: item.data['is_user'],
-                message: item.data['message'],
-              );
-              chatDataList.add(chatData);
-            }
-            isLoading = false;
-            notifyListeners();
-          } else {
-            isLoading = false;
-            notifyListeners();
+            await repo.fetchChatHistoryForSession(sessionId, context);
+        chatHistoryModel.data.sort((a, b) =>
+            DateTime.parse(a.createdAt).compareTo(DateTime.parse(b.createdAt)));
+        if (chatHistoryModel.data.isNotEmpty) {
+          for (ChatMessageHistoryModel item in chatHistoryModel.data) {
+            messages.add({
+              'text': item.text,
+              'is_user': item.senderType.toLowerCase() == "user" ? true : false,
+            });
           }
+          isLoading = false;
+          notifyListeners();
         } else {
           isLoading = false;
           notifyListeners();
@@ -939,15 +931,14 @@ class ChatViewModel extends LoadingViewModel {
       ));
     }
     return null;
-  }*/
+  }
 
-  Future<bool>? getMessageHistoryForSession(
+/*  Future<bool>? getMessageHistoryForSession(
       String sessionId, BuildContext context) async {
     if (await networkUtils.hasActiveInternet()) {
       isLoading = true;
       try {
-        List<ChatMessageHistory> chatMessageHistoryList =
-            await repo.fetchMessageHistory(sessionId);
+        List<ChatMessageHistory> chatMessageHistoryList = await repo.fetchMessageHistory(sessionId);
         chatDataList.clear();
         messages.clear();
         chatMessageHistoryList.sort((a, b) {
@@ -998,7 +989,7 @@ class ChatViewModel extends LoadingViewModel {
       ));
     }
     return false;
-  }
+  }*/
 
   Future<bool>? getStreamResponse(
       String sessionId, BuildContext context) async {
@@ -1089,8 +1080,7 @@ class ChatViewModel extends LoadingViewModel {
         List<ChatMessageHistory> chatMessageHistoryList =
             await repo.fetchMessageHistory(sessionId);
         chatDataList.clear();
-        if (chatMessageHistoryList != null &&
-            chatMessageHistoryList.isNotEmpty) {
+        if (chatMessageHistoryList.isNotEmpty) {
           if (chatMessageHistoryList.isNotEmpty) {
             for (ChatMessageHistory item in chatMessageHistoryList) {
               ChatData chatData = ChatData(
@@ -1205,12 +1195,6 @@ class ChatViewModel extends LoadingViewModel {
     url = 'wss://apaims2.0.vassarlabs.com/chatbot/ws/chat/$deviceId';
     print("12345 Generated Device ID: $deviceId");
     print("12345 Web socket URL: $url");
-  }
-
-  void stopListening() async {
-    bool active = _speechToText.isListening;
-    listeningActive.value = active;
-    notifyListeners();
   }
 
 // Send a message and process streaming response
@@ -1547,26 +1531,33 @@ class ChatViewModel extends LoadingViewModel {
 */
 
   Future<void> sendMessageStream(
-      String userMessage, String userInputEnglish) async {
-    String url = 'https://apaims2.0.vassarlabs.com/chatbot/chat/query';
-
+      String userMessage, BuildContext context) async {
     messages.add({
       'text': userMessage,
       'is_user': true,
     });
-
     chatController.clear();
     showLoader.value = true;
     notifyListeners();
 
     Map<String, dynamic> data = {
-      'query': userInputEnglish,
+      'query': userMessage,
       'session_id': AppState.instance.sessionId,
       'user_id': AppState.instance.userId,
-      'stream': false,
+      'language': AppState.instance.isEnglish ? 'en' : 'te',
     };
 
+    if (!AppState.instance.isEnglish) {
+      String translation =
+          AppState.instance.transMode == 'bhashini' ? 'bhashini' : 'google';
+
+      data['translation_engine'] = translation;
+    }
+
+    print("Query Payload : $data");
+
     try {
+      String url = constants.baseUrl + constants.chatQueryEndpoint;
       final response = await http.post(
         Uri.parse(url),
         headers: {
@@ -1579,20 +1570,30 @@ class ChatViewModel extends LoadingViewModel {
         final decoded = jsonDecode(response.body);
         final messageText = decoded['message'];
 
+        print("Query Response : $messageText");
+
         if (messageText != null && messageText.toString().isNotEmpty) {
-          await translateAndSpeakResponse(messageText);
+          if (AppState.instance.ttsMode.toLowerCase() == 'bhashini') {
+            await ttsResponse(messageText, context);
+          } else {
+            messages.add({
+              'text': messageText.toString(),
+              'is_user': false,
+            });
+            showLoader.value = false;
+            await tts.speak(messageText);
+          }
           /*isStreaming.value = false;
           streamingText.value = translatedResponse ?? '';*/
         }
       } else {
-        Fluttertoast.showToast(msg: "Error: ${response.statusCode}");
+        Fluttertoast.showToast(msg: "Something went wrong!");
       }
     } catch (e) {
       Fluttertoast.showToast(msg: "Something went wrong!");
-    } finally {
-      showLoader.value = false;
-      notifyListeners();
     }
+    showLoader.value = false;
+    notifyListeners();
   }
 
   void toggleExpandAllSteps() {
@@ -1614,18 +1615,21 @@ class ChatViewModel extends LoadingViewModel {
   }
 
   void updateChatControllerForSpeech(String text) {
+    chatController.clear();
     chatController.text = text;
     notifyListeners();
   }
 
-  Future<void> sendAudioToAPI(String path) async {
+  Future<void> sendAudioToAPI(String path, BuildContext context) async {
+    print("AppState isEnglish :${AppState.instance.isEnglish}");
+    // Show temporary loading message in chat
+    updateChatControllerForSpeech('Processing...');
     final bytes = await File(path).readAsBytes();
-    print('12345 Read ${bytes.length} bytes from file');
     final base64Audio = base64Encode(bytes);
-    print("12345 base64Audio $base64Audio");
-
-    const String sourceLanguage = "te";
-    const String targetLanguage = "en";
+    String sourceLanguage = AppState.instance.isEnglish ? 'en' : 'te';
+    String serviceId = AppState.instance.isEnglish
+        ? constants.asrServiceIdEnglish
+        : constants.asrServiceIdTelugu;
 
     final body = {
       "pipelineTasks": [
@@ -1633,19 +1637,9 @@ class ChatViewModel extends LoadingViewModel {
           "taskType": "asr",
           "config": {
             "language": {"sourceLanguage": sourceLanguage},
-            "serviceId": constants.asrServiceId,
+            "serviceId": serviceId,
             "audioFormat": "flac",
             "samplingRate": 16000
-          }
-        },
-        {
-          "taskType": "translation",
-          "config": {
-            "language": {
-              "sourceLanguage": sourceLanguage,
-              "targetLanguage": targetLanguage
-            },
-            "serviceId": constants.nmtServiceId
           }
         }
       ],
@@ -1668,53 +1662,39 @@ class ChatViewModel extends LoadingViewModel {
         headers: headersMap,
         body: data,
       );
+      print("ASR payload: $data");
 
       if (response.statusCode == 200) {
         final jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
-        print("API Response: $jsonResponse");
+        print("ASR response: $jsonResponse");
 
         final pipelineResponse =
             jsonResponse['pipelineResponse'] as List<dynamic>;
 
-        final translationTask = pipelineResponse.firstWhere(
-            (task) => task['taskType'] == 'translation',
+        final asrTask = pipelineResponse.firstWhere(
+            (task) => task['taskType'] == 'asr',
             orElse: () => null);
 
-        final sourceText = translationTask?['output']?[0]?['source'];
-        final targetText = translationTask?['output']?[0]?['target'];
+        final sourceText = asrTask?['output']?[0]?['source'];
 
         sourceText != null ? updateChatControllerForSpeech(sourceText) : null;
-
-        if (targetText != null) {
-          userInputEnglish = targetText;
-          print("userInputEnglish : $userInputEnglish");
-        } else {
-          print("Translation not found.");
-        }
       } else {
-        print("API Error: ${response.body}");
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(constants.genericErrorMsg),
+        ));
       }
     } catch (e) {
-      print("Error sending audio: $e");
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(constants.genericErrorMsg),
+      ));
     }
   }
 
-  Future<void> translateAndSpeakResponse(String response) async {
-    const String sourceLanguage = "en";
-    const String targetLanguage = "te";
+  Future<void> ttsResponse(String resultText, BuildContext context) async {
+    String targetLanguage = AppState.instance.isEnglish ? 'en' : 'te';
 
     final body = {
       "pipelineTasks": [
-        {
-          "taskType": "translation",
-          "config": {
-            "language": {
-              "sourceLanguage": sourceLanguage,
-              "targetLanguage": targetLanguage
-            },
-            "serviceId": constants.nmtServiceId
-          }
-        },
         {
           "taskType": "tts",
           "config": {
@@ -1727,7 +1707,7 @@ class ChatViewModel extends LoadingViewModel {
       ],
       "inputData": {
         "input": [
-          {"source": response}
+          {"source": resultText}
         ]
       }
     };
@@ -1739,6 +1719,7 @@ class ChatViewModel extends LoadingViewModel {
         "Authorization": constants.bhasiniApikey
       };
 
+      print("NMT payload :: $data");
       final response = await http.post(
         Uri.parse(constants.bhasiniUrl),
         headers: headersMap,
@@ -1747,51 +1728,57 @@ class ChatViewModel extends LoadingViewModel {
 
       if (response.statusCode == 200) {
         final responseBody = json.decode(utf8.decode(response.bodyBytes));
+
         final pipelineResponse = responseBody['pipelineResponse'];
 
-        // Extract translation target text
-        final translationTask = pipelineResponse.firstWhere(
-          (task) => task['taskType'] == 'translation',
-          orElse: () => null,
-        );
-        final targetText = translationTask?['output']?[0]?['target'];
+        print("NMT response :: $pipelineResponse");
 
-        // Extract base64 audio from TTS task
-        final ttsTask = pipelineResponse.firstWhere(
-          (task) => task['taskType'] == 'tts',
-          orElse: () => null,
-        );
+        if (pipelineResponse != null && pipelineResponse is List) {
+          // Extract base64 audio from TTS task
+          final ttsTask = pipelineResponse.firstWhere(
+            (task) => task['taskType'] == 'tts',
+            orElse: () => null,
+          );
 
-        final List<dynamic>? audioList = ttsTask?['audio'];
-        if (audioList != null && audioList.isNotEmpty) {
-          String content = audioList[0]['audioContent'];
-          print("audio content : $content");
-        }
-        final String? base64Audio = audioList != null &&
-                audioList.isNotEmpty &&
-                audioList[0]['audioContent'] != null
-            ? audioList[0]['audioContent'].toString()
-            : null;
+          final List<dynamic>? audioList = ttsTask?['audio'];
+          if (audioList != null && audioList.isNotEmpty) {
+            String content = audioList[0]['audioContent'];
+            print("audio content : $content");
+          }
+          final String? base64Audio = audioList != null &&
+                  audioList.isNotEmpty &&
+                  audioList[0]['audioContent'] != null
+              ? audioList[0]['audioContent'].toString()
+              : null;
 
-        if (targetText != null && base64Audio != null) {
-          // Convert base64 to bytes
-          Uint8List audioBytes = base64Decode(base64Audio);
-          final player = AudioPlayer();
-          messages.add({
-            'text': targetText.toString(),
-            'is_user': false,
-          });
-          showLoader.value = false;
-          await player.play(BytesSource(audioBytes));
-          print('Response: $targetText');
+          if (base64Audio != null) {
+            Uint8List audioBytes = base64Decode(base64Audio);
+            final player = AudioPlayer();
+            messages.add({
+              'text': resultText.toString(),
+              'is_user': false,
+            });
+            await player.play(BytesSource(audioBytes));
+            showLoader.value = false;
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text(constants.genericErrorMsg),
+            ));
+          }
         } else {
-          print('Missing target text or audio.');
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text(constants.genericErrorMsg),
+          ));
         }
       } else {
-        print("API Error: ${response.body}");
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(constants.genericErrorMsg),
+        ));
       }
     } catch (e) {
-      print("Error  audio: $e");
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(constants.genericErrorMsg),
+      ));
     }
   }
 }

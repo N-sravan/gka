@@ -110,19 +110,13 @@ const String userPermissionsEndPoint =
 const String getToolsEndpoint = 'tool_inventory/get_tools';
 const String updatePromptTemplateEndpoint = 'update_prompt_template';
 const String createPromptTemplateEndpoint = 'create_prompt_template';
-const String createSessionEndpoint = 'session/create_session';
 const String getDocumentsEndpoint = 'data_extractor/get_collection_data/';
 const String uploadDocumentEndpoint = 'data_extractor/save_data_upload/';
 const String deleteChunkEndpoint = 'data_extractor/delete_collection_data/';
 const String deleteFileEndpoint = 'data_extractor/delete-file-data/';
-const String deleteSessionEndpoint =
-    'https://apaims2.0.vassarlabs.com/chatbot/chat/delete-sessions';
-const String updateSessionEndpoint =
-    'https://apaims2.0.vassarlabs.com/chatbot/chat/update-session';
 const String getUsersDataEndpoint = 'auth_and_session/admin-user-management';
 const String increaseLimitEndpoint = 'auth_and_session/add-tokens';
 const String decreaseLimitEndpoint = 'auth_and_session/remove-tokens';
-const String langTranslateEndpoint = 'https://apaims2.0.vassarlabs.com/chatbot/chat/translate-text';
 
 //UUIDs & keys
 const String indiaUUID = 'd6b37905-d2d3-4275-9317-d9b6f47cd783';
@@ -141,7 +135,6 @@ const String recordingKeySpace = 'CHAT_BOT_GOOGLE_TEST';
 const String projectId = fieldRishiUUID;
 const String keyspace = prodKeySpace;
 String appTitle = '';
-String baseUrl = '';
 
 // Paddings
 const double largePadding = 32;
@@ -772,12 +765,11 @@ const String locationPermissionSubHeading =
     'Allow location permission to fetch '
     'the current location. Please make sure your \'Location services\' are turned on.';
 const String cameraPermissionHeading = 'Camera';
-const String cameraPermissionSubHeading = 'Allow camera permission to take '
-    'pictures';
+const String cameraPermissionSubHeading =
+    'Allow camera permission to take ' 'pictures';
 const String microPhonePermissionHeading = 'Microphone';
 const String microPhonePermissionSubHeading =
-    'Allow microphone permission to access '
-    'audio';
+    'Allow microphone permission to access ' 'audio';
 const String allowPermissions = 'ALLOW PERMISSIONS';
 const String permissionsErrorMsg = 'Please grant permissions before proceeding';
 const String genericErrorMsg = 'Something went wrong, please try later';
@@ -850,19 +842,35 @@ const String farmerLoginRoute = '/farmerLogin';
 const String departmentLoginRoute = '/departmentLogin';
 const String homeRoute = '/home';
 const String farmerHomeRoute = '/farmerHome';
-
 const String clickFromCamera = 'Click from Camera';
 const String clickFromGallery = 'Click from Gallery';
 const String cancel = 'Cancel';
 
-
 ///Bhasini constants
-const String asrServiceId = 'ai4bharat/conformer-multilingual-dravidian-gpu--t4';
+const String asrServiceIdTelugu =
+    'ai4bharat/conformer-multilingual-dravidian-gpu--t4';
+const String asrServiceIdEnglish = 'ai4bharat/whisper-medium-en--gpu--t4';
 const String nmtServiceId = 'ai4bharat/indictrans-v2-all-gpu--t4';
 const String ttsServiceId = 'Bhashini/IITM/TTS';
-const String bhasiniUrl = 'https://dhruva-api.bhashini.gov.in/services/inference/pipeline';
-const String bhasiniApikey = '9ehV7vDnMszVayjw4U486-9GH27LdgeB-lO85BCkPKrbN29tI9fxLlAp-05tDChA';
+// const String bhasiniUrl = 'https://dhruva-api.bhashini.gov.in/services/inference/pipeline';
+const String bhasiniUrl =
+    'https://apaims2.0.vassarlabs.com/chatbot/bhashini/pipeline';
+const String bhasiniApikey =
+    '9ehV7vDnMszVayjw4U486-9GH27LdgeB-lO85BCkPKrbN29tI9fxLlAp-05tDChA';
+
+///chatbot constants
+const String baseUrl = 'https://apaims2.0.vassarlabs.com/chatbot/chat/';
+
+//chatbot API Endpoints
+const String chatHistoryEndpoint = 'get-history';
+const String chatQueryEndpoint = 'query';
+const String sessionsEndpoint = 'get-sessions';
+const String deleteSessionEndpoint = 'delete-sessions';
+const String updateSessionEndpoint = 'update-session';
+const String createSessionEndpoint = 'create-session';
+const String langTranslateEndpoint = 'translate-text';
 
 //baseurls
 const String genAiBaseUrl = "https://nawrims.vassarlabs.com/vassar_mind/";
-const String chatbotBaseUrl = 'https://agentsbuilder.apaims2.0.vassarlabs.com/api/v1/prediction/4a5c8d41-51d7-4e81-85b8-377bb6a28043';
+const String chatbotBaseUrl =
+    'https://agentsbuilder.apaims2.0.vassarlabs.com/api/v1/prediction/4a5c8d41-51d7-4e81-85b8-377bb6a28043';

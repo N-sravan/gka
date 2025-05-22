@@ -153,8 +153,7 @@ class LoginRepositoryImpl extends LoginRepository {
       "user_id": AppState.instance.userId,
       "session_id": sessionId,
     };
-    String authUrl =
-        'https://apaims2.0.vassarlabs.com/chatbot/chat/create-session';
+    String authUrl = constants.baseUrl + constants.createSessionEndpoint;
     Object data = jsonEncode(params);
     var response =
         await http.post(Uri.parse(authUrl), headers: authHeaders, body: data);

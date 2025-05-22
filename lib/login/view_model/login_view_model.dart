@@ -356,10 +356,13 @@ class LoginViewModel extends LoadingViewModel {
         if (langflowLoginModel.accessToken != null) {
           /// Login is successful
           Map<String, dynamic> decodedToken =
-          JwtDecoder.decode(langflowLoginModel.accessToken!);
+              JwtDecoder.decode(langflowLoginModel.accessToken!);
           String userId = decodedToken["sub"];
-          await _setLoginSharedPreferences(userName, userId,
-              langflowLoginModel.accessToken!, langflowLoginModel.refreshToken!);
+          await _setLoginSharedPreferences(
+              userName,
+              userId,
+              langflowLoginModel.accessToken!,
+              langflowLoginModel.refreshToken!);
           String sessionId = formatSession();
           if (sessionId.isNotEmpty) {
             isLoading = false;
@@ -420,7 +423,7 @@ class LoginViewModel extends LoadingViewModel {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text(constants.genericErrorMsg),
         ));
-        Util.instance.logMessage('Chat View Model', 'Error $e');
+        Util.instance.logMessage('Login ViewModel', 'Error $e');
       }
     } else {
       isLoading = false;
