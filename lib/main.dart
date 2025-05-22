@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:gka/chat/repo/chat_repo.dart';
 import 'package:gka/home/repo/home_repo.dart';
 import 'package:gka/home/view_model/home_view_model.dart';
+import 'package:gka/settings_view.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -80,6 +81,7 @@ class MyApp extends StatelessWidget {
           constants.initialRoute: (context) => const SplashScreenWidget(),
           constants.roleRoute: (context) => const LoginScreenWidget(),
           constants.homeRoute: (context) => const HomeScreenWidget(),
+          constants.settingsRoute: (context) => const SettingsPage(),
         },
         onGenerateRoute: (settings) {
           final String? data = settings.arguments as String?;

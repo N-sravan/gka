@@ -32,28 +32,28 @@ class _LanguageSettingsPageState extends State<LanguageSettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Language Settings")),
+      backgroundColor: const Color(0xFFFCF6FC),
+      appBar: AppBar(
+        title: const Text("Language Settings"),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        foregroundColor: Colors.black,
+        leading: const BackButton(),
+      ),
       body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         children: [
-          _buildSection("Choose Language", langList, selectedLanguage, (value) {
-            setState(() => selectedLanguage = value);
-          }),
+          _buildSection("Choose Language", langList, selectedLanguage,
+                  (value) => setState(() => selectedLanguage = value)),
           _buildSection("Speech Recognition Services", speechServicesList,
-              selectedSpeechService, (value) {
-            setState(() => selectedSpeechService = value);
-          }),
+              selectedSpeechService, (value) => setState(() => selectedSpeechService = value)),
           _buildSection("TTS Services", ttsServicesList, selectedTTSService,
-              (value) {
-            setState(() => selectedTTSService = value);
-          }),
+                  (value) => setState(() => selectedTTSService = value)),
           _buildSection("Translation Services", translationServicesList,
-              selectedTranslationService, (value) {
-            setState(() => selectedTranslationService = value);
-          }),
-          SizedBox(height: 40),
+              selectedTranslationService, (value) => setState(() => selectedTranslationService = value)),
+          const SizedBox(height: 40),
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 24),
             child: ElevatedButton(
               onPressed: () {
                 _updateAppStateValues();
@@ -62,6 +62,12 @@ class _LanguageSettingsPageState extends State<LanguageSettingsPage> {
                 Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(40),
+                ),
+                backgroundColor: const Color(0xF0F1E9FA),
+                foregroundColor: const Color(0xFF623E98),
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 textStyle: const TextStyle(fontSize: 16),
               ),
@@ -74,52 +80,57 @@ class _LanguageSettingsPageState extends State<LanguageSettingsPage> {
     );
   }
 
-  Widget _buildSection(String title, List<String> options, String selected,
-      Function(String) onChanged) {
+  Widget _buildSection(
+      String title,
+      List<String> options,
+      String selected,
+      Function(String) onChanged,
+      ) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title,
               style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              )),
-          const SizedBox(height: 6),
-          ...options.map((option) => RadioListTile<String>(
-                title: Text(option),
-                contentPadding: EdgeInsets.zero,
-                visualDensity: const VisualDensity(vertical: -4),
-                value: option,
-                groupValue: selected,
-                onChanged: (value) async {
-                  if (value != null) onChanged(value);
-                },
-              )),
+                  fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
+          const SizedBox(height: 10),
+          ...options.map((option) => Theme(
+            data: Theme.of(context).copyWith(
+              unselectedWidgetColor: Colors.grey,
+              radioTheme: RadioThemeData(
+                fillColor: MaterialStateProperty.resolveWith<Color>(
+                      (Set<MaterialState> states) {
+                    return const Color(0xFF623E98); // Purple color
+                  },
+                ),
+              ),
+            ),
+            child: RadioListTile<String>(
+              title: Text(option),
+              contentPadding: EdgeInsets.zero,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              value: option,
+              groupValue: selected,
+              onChanged: (value) {
+                if (value != null) onChanged(value);
+              },
+              visualDensity: const VisualDensity(vertical: -2),
+            ),
+          )),
         ],
       ),
     );
   }
 
-  _updateAppStateValues() {
-    if (selectedLanguage.toLowerCase() == 'telugu') {
-      AppState.instance.language = 'Telugu';
-      AppState.instance.isEnglish = false;
-    }
-    if (selectedLanguage.toLowerCase() == 'english') {
-      AppState.instance.language = 'English';
-      AppState.instance.isEnglish = true;
-    }
-    if (selectedSpeechService.isNotEmpty) {
-      AppState.instance.sttMode = selectedSpeechService;
-    }
-    if (selectedTTSService.isNotEmpty) {
-      AppState.instance.ttsMode = selectedTTSService;
-    }
-    if (selectedTranslationService.isNotEmpty) {
-      AppState.instance.transMode = selectedTranslationService;
-    }
+  void _updateAppStateValues() {
+    AppState.instance.language = selectedLanguage;
+    AppState.instance.isEnglish = selectedLanguage.toLowerCase() == 'english';
+    AppState.instance.sttMode = selectedSpeechService;
+    AppState.instance.ttsMode = selectedTTSService;
+    AppState.instance.transMode = selectedTranslationService;
 
     print(
         "AppState langSelected ${AppState.instance.language}\n STT : ${AppState.instance.sttMode}\n TTS : ${AppState.instance.ttsMode}\n Translation: ${AppState.instance.transMode}");

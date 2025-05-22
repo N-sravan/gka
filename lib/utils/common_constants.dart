@@ -841,6 +841,7 @@ const String farmerLoginRoute = '/farmerLogin';
 // const String farmerLoginRoute = '/farmerLogin';
 const String departmentLoginRoute = '/departmentLogin';
 const String homeRoute = '/home';
+const String settingsRoute = '/settings';
 const String farmerHomeRoute = '/farmerHome';
 const String clickFromCamera = 'Click from Camera';
 const String clickFromGallery = 'Click from Gallery';

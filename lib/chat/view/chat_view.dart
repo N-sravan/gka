@@ -51,8 +51,10 @@ class _ChatViewState extends State<ChatView> {
   IOWebSocketChannel? channel;
 
   final _audioRecorder = fs.FlutterSoundRecorder();
-  final StreamController<Uint8List> _audioStreamController = StreamController<Uint8List>();
+  final StreamController<Uint8List> _audioStreamController =
+      StreamController<Uint8List>();
   int prevChatLength = 0;
+  int _currentIndex = 0;
 
   bool _isRecording = false;
   Timer? _inactivityTimer;
@@ -99,11 +101,8 @@ class _ChatViewState extends State<ChatView> {
 
     if (_speechEnabled) {
       var locales = await _speechToText.locales();
-      String langId = AppState.instance.isEnglish ? 'en-IN' : 'te-IN';
-      currentVoice = AppState.instance.isEnglish
-          ? currentVoice = {"name": "en-us-x-iom-local", "locale": "en-US"}
-          : currentVoice = {"name": "te-in-x-tef-local", "locale": "te-IN"};
-      await tts.setLanguage(langId);
+      await viewModel.setlangCodes();
+      await tts.setLanguage(viewModel.langId);
       await tts.setSpeechRate(0.5);
       await tts.setVoice(currentVoice);
     } else {
@@ -126,53 +125,53 @@ class _ChatViewState extends State<ChatView> {
     return Consumer<ChatViewModel>(
       builder: (_, viewModel, child) {
         return Scaffold(
-            drawer:
-                (widget.isFromHistory ?? false) ? null : const DrawerWidget(),
-            appBar: AppBar(
-              leading: (widget.isFromHistory ?? false)
-                  ? IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.black),
-                      onPressed: () => Navigator.pop(context),
-                    )
-                  : null,
-              titleSpacing: 2,
-              title: Row(
-                children: [
-                  Image.asset('assets/images/apaims_logo.png', height: 32),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'APAIMS Chatbot',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
+          drawer: (widget.isFromHistory ?? false) ? null : const DrawerWidget(),
+          appBar: AppBar(
+            leading: (widget.isFromHistory ?? false)
+                ? IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.black),
+                    onPressed: () => Navigator.pop(context),
+                  )
+                : null,
+            titleSpacing: 2,
+            title: Row(
+              children: [
+                Image.asset('assets/images/apaims_logo.png', height: 32),
+                const SizedBox(width: 8),
+                const Text(
+                  'APAIMS Chatbot',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
                   ),
-                ],
-              ),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.settings, color: Colors.black),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const SettingsView()),
-                    );
-                  },
                 ),
               ],
             ),
-            body: Column(
-              children: [
-                _buildChatList(),
-                _buildLoaderWidget(),
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: bottomBar(),
-                )
-              ],
-            ));
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.settings, color: Colors.black),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const SettingsPage()),
+                  );
+                },
+              ),
+            ],
+          ),
+          body: Column(
+            children: [
+              _buildChatList(),
+              _buildLoaderWidget(),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: bottomBar(),
+              )
+            ],
+          ),
+        );
       },
     );
   }

@@ -97,6 +97,11 @@ class ChatViewModel extends LoadingViewModel {
   String selectedPromptModelUUID = '';
   String fileUUID = '';
 
+  Map<String, String> currentVoice = {
+    "name": "en-us-x-iom-local",
+    "locale": "en-US"
+  };
+
   final SpeechToText _speechToText = SpeechToText();
   FlutterTts tts = FlutterTts();
   ValueNotifier<bool> listeningActive = ValueNotifier<bool>(false);
@@ -141,12 +146,8 @@ class ChatViewModel extends LoadingViewModel {
   List<String> llmOptionsList = ['chatgpt-4o', 'gemma2:9b', 'deepseek-r1'];
   List<String> langList = ['English', 'Telugu'];
 
-  Map<String, String> currentVoice = {
-    "name": "en-us-x-iom-local",
-    "locale": "en-US"
-  };
   String language = '';
-  String langId = '';
+  String langId = 'en-US';
   String dataNotFoundMsg = '';
   String? llmSelected;
   String? langSelected;
@@ -1572,16 +1573,39 @@ class ChatViewModel extends LoadingViewModel {
 
         print("Query Response : $messageText");
 
-        if (messageText != null && messageText.toString().isNotEmpty) {
+        bool hasEnglishSource = RegExp(r'\(Source:.*?\)').hasMatch(messageText);
+        bool hasTeluguSource = RegExp(r'\(మూలం:.*?\)').hasMatch(messageText);
+        String noSourceText = '';
+
+        if (hasEnglishSource) {
+          noSourceText =
+              messageText.replaceAll(RegExp(r'\s*\(Source:.*?\)'), '');
+        } else if (hasTeluguSource) {
+          noSourceText = messageText.replaceAll(RegExp(r'\s*\(మూలం:.*?\)'), '');
+        } else {
+          noSourceText = messageText;
+        }
+
+        print("noSourceText BHasini:$noSourceText");
+
+        if (noSourceText.toString().isNotEmpty &&
+            messageText.toString().isNotEmpty) {
           if (AppState.instance.ttsMode.toLowerCase() == 'bhashini') {
-            await ttsResponse(messageText, context);
+            await ttsResponse(noSourceText, messageText, context);
           } else {
             messages.add({
               'text': messageText.toString(),
               'is_user': false,
             });
             showLoader.value = false;
-            await tts.speak(messageText);
+
+            print("noSourceText Native :$noSourceText");
+            print("noSourceText currentVoice :$currentVoice");
+            print("noSourceText langId :$langId");
+            await tts.setLanguage(langId);
+            await tts.setVoice(currentVoice);
+            await tts.setSpeechRate(0.5);
+            await tts.speak(noSourceText);
           }
           /*isStreaming.value = false;
           streamingText.value = translatedResponse ?? '';*/
@@ -1690,7 +1714,8 @@ class ChatViewModel extends LoadingViewModel {
     }
   }
 
-  Future<void> ttsResponse(String resultText, BuildContext context) async {
+  Future<void> ttsResponse(
+      String nosourceText, String resultText, BuildContext context) async {
     String targetLanguage = AppState.instance.isEnglish ? 'en' : 'te';
 
     final body = {
@@ -1707,7 +1732,7 @@ class ChatViewModel extends LoadingViewModel {
       ],
       "inputData": {
         "input": [
-          {"source": resultText}
+          {"source": nosourceText}
         ]
       }
     };
@@ -1780,5 +1805,13 @@ class ChatViewModel extends LoadingViewModel {
         content: Text(constants.genericErrorMsg),
       ));
     }
+  }
+
+  setlangCodes() {
+    langId = AppState.instance.isEnglish ? 'en-US' : 'te-IN';
+    currentVoice = AppState.instance.isEnglish
+        ? currentVoice = {"name": "en-us-x-iom-local", "locale": "en-US"}
+        : currentVoice = {"name": "te-in-x-tef-local", "locale": "te-IN"};
+    notifyListeners();
   }
 }
