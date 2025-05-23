@@ -64,8 +64,10 @@ abstract class ChatRepository {
 
   Future<bool> deleteChunk(BuildContext context, String chunkId);
 
-  Future<ActivityStatusResponse> submitActivityStatus(
-      Map<String, dynamic> data, bool isIncreased);
+  Future<ActivityStatusResponse> submitActivityStatus(Map<String, dynamic> data, bool isIncreased);
+
+  Future<List> fetchASRconfig(Map<String,dynamic> body);
+  Future<List> fetchTTSconfig(Map<String,dynamic> body);
 }
 
 /// Concrete class implementation for the login repository
@@ -593,5 +595,54 @@ class ChatRepositoryImpl extends ChatRepository {
             session.data != null && session.data.toString().trim().isNotEmpty)
         .toList();*/
     return userSessionModel;
+  }
+
+  @override
+  Future<List> fetchASRconfig(Map<String,dynamic> body) async {
+    Map<String, String> headersMap = {
+      "Content-Type": "application/json",
+      "Authorization": constants.bhasiniApikey
+    };
+    Object data = jsonEncode(body);
+
+    print("ASR payload: $data");
+
+    final response = await http.post(
+      Uri.parse(constants.bhasiniUrl),
+      headers: headersMap,
+      body: data,
+    );
+    var pipelineResponse = [];
+
+    if (response.statusCode == 200) {
+      final jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
+      print("ASR response: $jsonResponse");
+      pipelineResponse = jsonResponse['pipelineResponse'] as List<dynamic>;
+    }
+    return pipelineResponse;
+  }
+
+  @override
+  Future<List> fetchTTSconfig(Map<String,dynamic> body) async {
+    Map<String, String> headersMap = {
+      "Content-Type": "application/json",
+      "Authorization": constants.bhasiniApikey
+    };
+    Object data = jsonEncode(body);
+
+    print("TTS payload :: $data");
+    final response = await http.post(
+      Uri.parse(constants.bhasiniUrl),
+      headers: headersMap,
+      body: data,
+    );
+    var pipelineResponse = [];
+
+    if (response.statusCode == 200) {
+      final jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
+      print("ASR response: $jsonResponse");
+      pipelineResponse = jsonResponse['pipelineResponse'] as List<dynamic>;
+    }
+    return pipelineResponse;
   }
 }

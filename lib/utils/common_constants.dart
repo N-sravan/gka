@@ -875,3 +875,7 @@ const String langTranslateEndpoint = 'translate-text';
 const String genAiBaseUrl = "https://nawrims.vassarlabs.com/vassar_mind/";
 const String chatbotBaseUrl =
     'https://agentsbuilder.apaims2.0.vassarlabs.com/api/v1/prediction/4a5c8d41-51d7-4e81-85b8-377bb6a28043';
+
+
+const String bearerToken = '2r9MjMpyFar4ySZh_KfGWzMcmqoUnQOnA9lMoFTG8Bg';
+

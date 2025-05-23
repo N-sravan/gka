@@ -125,10 +125,6 @@ class ChatViewModel extends LoadingViewModel {
   ValueNotifier<bool> expandAllSteps = ValueNotifier(false);
   String tempStreamingText = '';
 
-  // API constants
-  static const String bearerToken =
-      '2r9MjMpyFar4ySZh_KfGWzMcmqoUnQOnA9lMoFTG8Bg';
-
   int start = 0;
   int end = 0;
   bool hasSpoken = false;
@@ -146,7 +142,6 @@ class ChatViewModel extends LoadingViewModel {
   List<String> llmOptionsList = ['chatgpt-4o', 'gemma2:9b', 'deepseek-r1'];
   List<String> langList = ['English', 'Telugu'];
 
-  String language = '';
   String langId = 'en-US';
   String dataNotFoundMsg = '';
   String? llmSelected;
@@ -230,7 +225,7 @@ class ChatViewModel extends LoadingViewModel {
         if (getAllPromptsResponseModel.statusCode == 200 &&
             getAllPromptsResponseModel.result == true) {
           if (getAllPromptsResponseModel.response != null &&
-              getAllPromptsResponseModel.response?.length != 0) {
+              getAllPromptsResponseModel.response!.isNotEmpty) {
             for (int i = 0;
                 i < getAllPromptsResponseModel.response!.length;
                 i++) {
@@ -1343,7 +1338,7 @@ class ChatViewModel extends LoadingViewModel {
               }
             }
           } catch (e) {
-            debugPrint('⚠️ SSE JSON parse error: $e\nLine: $trimmed');
+            debugPrint('⚠SSE JSON parse error: $e\nLine: $trimmed');
           }
         }
       }
@@ -1645,71 +1640,61 @@ class ChatViewModel extends LoadingViewModel {
   }
 
   Future<void> sendAudioToAPI(String path, BuildContext context) async {
-    print("AppState isEnglish :${AppState.instance.isEnglish}");
-    // Show temporary loading message in chat
-    updateChatControllerForSpeech('Processing...');
-    final bytes = await File(path).readAsBytes();
-    final base64Audio = base64Encode(bytes);
-    String sourceLanguage = AppState.instance.isEnglish ? 'en' : 'te';
-    String serviceId = AppState.instance.isEnglish
-        ? constants.asrServiceIdEnglish
-        : constants.asrServiceIdTelugu;
+    if (await networkUtils.hasActiveInternet()) {
+      updateChatControllerForSpeech('Processing...');
+      try {
+        final bytes = await File(path).readAsBytes();
+        final base64Audio = base64Encode(bytes);
+        String sourceLanguage = AppState.instance.isEnglish ? 'en' : 'te';
+        String serviceId = AppState.instance.isEnglish
+            ? constants.asrServiceIdEnglish
+            : constants.asrServiceIdTelugu;
 
-    final body = {
-      "pipelineTasks": [
-        {
-          "taskType": "asr",
-          "config": {
-            "language": {"sourceLanguage": sourceLanguage},
-            "serviceId": serviceId,
-            "audioFormat": "flac",
-            "samplingRate": 16000
+        final body = {
+          "pipelineTasks": [
+            {
+              "taskType": "asr",
+              "config": {
+                "language": {"sourceLanguage": sourceLanguage},
+                "serviceId": serviceId,
+                "audioFormat": "flac",
+                "samplingRate": 16000
+              }
+            }
+          ],
+          "inputData": {
+            "audio": [
+              {"audioContent": base64Audio}
+            ]
           }
+        };
+        final pipelineResponse = await repo.fetchASRconfig(body);
+        if (pipelineResponse.isNotEmpty) {
+          final asrTask = pipelineResponse.firstWhere(
+              (task) => task['taskType'] == 'asr',
+              orElse: () => null);
+
+          final sourceText = asrTask?['output']?[0]?['source'];
+
+          sourceText != null ? updateChatControllerForSpeech(sourceText) : null;
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text(constants.genericErrorMsg),
+          ));
         }
-      ],
-      "inputData": {
-        "audio": [
-          {"audioContent": base64Audio}
-        ]
-      }
-    };
-
-    try {
-      Object data = jsonEncode(body);
-      Map<String, String> headersMap = {
-        "Content-Type": "application/json",
-        "Authorization": constants.bhasiniApikey
-      };
-
-      final response = await http.post(
-        Uri.parse(constants.bhasiniUrl),
-        headers: headersMap,
-        body: data,
-      );
-      print("ASR payload: $data");
-
-      if (response.statusCode == 200) {
-        final jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
-        print("ASR response: $jsonResponse");
-
-        final pipelineResponse =
-            jsonResponse['pipelineResponse'] as List<dynamic>;
-
-        final asrTask = pipelineResponse.firstWhere(
-            (task) => task['taskType'] == 'asr',
-            orElse: () => null);
-
-        final sourceText = asrTask?['output']?[0]?['source'];
-
-        sourceText != null ? updateChatControllerForSpeech(sourceText) : null;
-      } else {
+      } catch (e) {
+        isLoading = false;
+        notifyListeners();
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text(constants.genericErrorMsg),
         ));
+        Util.instance.logMessage('Chat View Model', 'Error $e');
       }
-    } catch (e) {
+    } else {
+      isLoading = false;
+      notifyListeners();
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text(constants.genericErrorMsg),
+        content: Text(constants.noNetworkAvailability),
       ));
     }
   }
@@ -1718,53 +1703,33 @@ class ChatViewModel extends LoadingViewModel {
       String nosourceText, String resultText, BuildContext context) async {
     String targetLanguage = AppState.instance.isEnglish ? 'en' : 'te';
 
-    final body = {
-      "pipelineTasks": [
-        {
-          "taskType": "tts",
-          "config": {
-            "language": {"sourceLanguage": targetLanguage},
-            "serviceId": constants.ttsServiceId,
-            "gender": "female",
-            "samplingRate": 8000
+    if (await networkUtils.hasActiveInternet()) {
+      try {
+        final body = {
+          "pipelineTasks": [
+            {
+              "taskType": "tts",
+              "config": {
+                "language": {"sourceLanguage": targetLanguage},
+                "serviceId": constants.ttsServiceId,
+                "gender": "female",
+                "samplingRate": 8000
+              }
+            }
+          ],
+          "inputData": {
+            "input": [
+              {"source": nosourceText}
+            ]
           }
-        }
-      ],
-      "inputData": {
-        "input": [
-          {"source": nosourceText}
-        ]
-      }
-    };
-
-    try {
-      Object data = jsonEncode(body);
-      Map<String, String> headersMap = {
-        "Content-Type": "application/json",
-        "Authorization": constants.bhasiniApikey
-      };
-
-      print("NMT payload :: $data");
-      final response = await http.post(
-        Uri.parse(constants.bhasiniUrl),
-        headers: headersMap,
-        body: data,
-      );
-
-      if (response.statusCode == 200) {
-        final responseBody = json.decode(utf8.decode(response.bodyBytes));
-
-        final pipelineResponse = responseBody['pipelineResponse'];
-
-        print("NMT response :: $pipelineResponse");
-
-        if (pipelineResponse != null && pipelineResponse is List) {
+        };
+        final pipelineResponse = await repo.fetchTTSconfig(body);
+        if (pipelineResponse.isNotEmpty) {
           // Extract base64 audio from TTS task
           final ttsTask = pipelineResponse.firstWhere(
             (task) => task['taskType'] == 'tts',
             orElse: () => null,
           );
-
           final List<dynamic>? audioList = ttsTask?['audio'];
           if (audioList != null && audioList.isNotEmpty) {
             String content = audioList[0]['audioContent'];
@@ -1795,14 +1760,19 @@ class ChatViewModel extends LoadingViewModel {
             content: Text(constants.genericErrorMsg),
           ));
         }
-      } else {
+      } catch (e) {
+        isLoading = false;
+        notifyListeners();
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text(constants.genericErrorMsg),
         ));
+        Util.instance.logMessage('Chat View Model', 'Error $e');
       }
-    } catch (e) {
+    } else {
+      isLoading = false;
+      notifyListeners();
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text(constants.genericErrorMsg),
+        content: Text(constants.noNetworkAvailability),
       ));
     }
   }
@@ -1813,5 +1783,30 @@ class ChatViewModel extends LoadingViewModel {
         ? currentVoice = {"name": "en-us-x-iom-local", "locale": "en-US"}
         : currentVoice = {"name": "te-in-x-tef-local", "locale": "te-IN"};
     notifyListeners();
+  }
+
+  sendAudioToWebsocket(String recordedFilePath, BuildContext context) async {
+    try {
+      File audioFile = File(recordedFilePath);
+      Uint8List audioBytes = await audioFile.readAsBytes();
+
+      final channel = IOWebSocketChannel.connect('wss://your.websocket.server');
+
+      channel.sink.add(audioBytes);
+
+      channel.stream.listen((message) {
+        print("Received response: $message");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Server Response: $message")),
+        );
+
+        channel.sink.close();
+      });
+    } catch (e) {
+      print("WebSocket error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
   }
 }

@@ -54,7 +54,6 @@ class _ChatViewState extends State<ChatView> {
   final StreamController<Uint8List> _audioStreamController =
       StreamController<Uint8List>();
   int prevChatLength = 0;
-  int _currentIndex = 0;
 
   bool _isRecording = false;
   Timer? _inactivityTimer;
@@ -96,7 +95,7 @@ class _ChatViewState extends State<ChatView> {
       onStatus: (status) {
         print("Speech recognition status: $status");
       },
-      debugLogging: true, // Enables detailed logging
+      debugLogging: true,
     );
 
     if (_speechEnabled) {
@@ -521,19 +520,14 @@ class _ChatViewState extends State<ChatView> {
   }
 
   Future<void> _stopListening() async {
-    if (AppState.instance.sttMode.toLowerCase() == 'bhashini') {
+    if (AppState.instance.sttMode.toLowerCase() == 'bhashini' &&
+        recordedFilePath.isNotEmpty) {
       await _recorder.stop();
       await viewModel.sendAudioToAPI(recordedFilePath, context);
     }
     if (AppState.instance.sttMode.toLowerCase() == 'parakeet') {
-      _audioStreamController.close();
-      _audioRecorder.closeRecorder();
-      _isRecording = false;
-      _inactivityTimer?.cancel();
-      channel!.sink.close();
-      if (_audioRecorder.isRecording) {
-        await _audioRecorder.stopRecorder();
-      }
+      await _recorder.stop();
+      await viewModel.sendAudioToWebsocket(recordedFilePath, context);
     }
 
     listeningActive.value = false;
@@ -572,7 +566,7 @@ class _ChatViewState extends State<ChatView> {
     _audioRecorder.setSubscriptionDuration(const Duration(milliseconds: 100));
   }
 
-  Future<void> _startListeningParakeet() async {
+  /*Future<void> _startListeningParakeet() async {
     await tts.stop();
     try {
       if (_audioRecorder.isRecording) {
@@ -643,6 +637,24 @@ class _ChatViewState extends State<ChatView> {
       print("WebSocket/audio error: $e");
       Fluttertoast.showToast(msg: "Error starting transcription.");
     }
+  }*/
+  Future<void> _startListeningParakeet() async {
+    await tts.stop();
+    viewModel.updateChatControllerForSpeech('');
+    Directory tempDir = await getTemporaryDirectory();
+    recordedFilePath =
+        '${tempDir.path}/audio_${DateTime.now().millisecondsSinceEpoch.toString()}.flac';
+    print("12345 file- $recordedFilePath");
+
+    await _recorder.start(
+      const record.RecordConfig(
+        encoder: record.AudioEncoder.flac,
+        sampleRate: 16000,
+        numChannels: 1,
+      ),
+      path: recordedFilePath,
+    );
+    listeningActive.value = true;
   }
 
   dynamic Function(double)? onSoundLevelChange(double value) {
