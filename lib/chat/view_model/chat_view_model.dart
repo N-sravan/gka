@@ -1785,28 +1785,27 @@ class ChatViewModel extends LoadingViewModel {
     notifyListeners();
   }
 
-  sendAudioToWebsocket(String recordedFilePath, BuildContext context) async {
-    try {
-      File audioFile = File(recordedFilePath);
-      Uint8List audioBytes = await audioFile.readAsBytes();
-
-      final channel = IOWebSocketChannel.connect('wss://your.websocket.server');
-
-      channel.sink.add(audioBytes);
-
-      channel.stream.listen((message) {
-        print("Received response: $message");
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Server Response: $message")),
-        );
-
-        channel.sink.close();
-      });
-    } catch (e) {
-      print("WebSocket error: $e");
+  sendAudioForTranscription(
+      String recordedFilePath, BuildContext context) async {
+    if (await networkUtils.hasActiveInternet()) {
+      try {
+        updateChatControllerForSpeech('Processing...');
+        File audioFile = File(recordedFilePath);
+        String? text = await repo.parakeetTranscription(audioFile);
+        if (text != null && text.isNotEmpty) {
+          updateChatControllerForSpeech(text);
+        } else {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(constants.genericErrorMsg)));
+        }
+      } catch (e) {
+        print("WebSocket error: $e");
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(constants.genericErrorMsg)));
+      }
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
+          SnackBar(content: Text(constants.noNetworkAvailability)));
     }
   }
 }

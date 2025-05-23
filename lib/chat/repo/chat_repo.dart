@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:gka/chat/model/activity_status_response.dart';
 import 'package:gka/chat/model/chat_history_model.dart';
@@ -64,10 +65,14 @@ abstract class ChatRepository {
 
   Future<bool> deleteChunk(BuildContext context, String chunkId);
 
-  Future<ActivityStatusResponse> submitActivityStatus(Map<String, dynamic> data, bool isIncreased);
+  Future<ActivityStatusResponse> submitActivityStatus(
+      Map<String, dynamic> data, bool isIncreased);
 
-  Future<List> fetchASRconfig(Map<String,dynamic> body);
-  Future<List> fetchTTSconfig(Map<String,dynamic> body);
+  Future<List> fetchASRconfig(Map<String, dynamic> body);
+
+  Future<List> fetchTTSconfig(Map<String, dynamic> body);
+
+  Future<String?> parakeetTranscription(File path);
 }
 
 /// Concrete class implementation for the login repository
@@ -598,7 +603,7 @@ class ChatRepositoryImpl extends ChatRepository {
   }
 
   @override
-  Future<List> fetchASRconfig(Map<String,dynamic> body) async {
+  Future<List> fetchASRconfig(Map<String, dynamic> body) async {
     Map<String, String> headersMap = {
       "Content-Type": "application/json",
       "Authorization": constants.bhasiniApikey
@@ -623,7 +628,7 @@ class ChatRepositoryImpl extends ChatRepository {
   }
 
   @override
-  Future<List> fetchTTSconfig(Map<String,dynamic> body) async {
+  Future<List> fetchTTSconfig(Map<String, dynamic> body) async {
     Map<String, String> headersMap = {
       "Content-Type": "application/json",
       "Authorization": constants.bhasiniApikey
@@ -644,5 +649,30 @@ class ChatRepositoryImpl extends ChatRepository {
       pipelineResponse = jsonResponse['pipelineResponse'] as List<dynamic>;
     }
     return pipelineResponse;
+  }
+
+  @override
+  Future<String?> parakeetTranscription(File audioFile) async {
+    String url = 'http://acerkrishidss.vassarlabs.com/chatbot_file_transcribe';
+    Map<String, String> headersMap = {
+      'Content-Type': constants.headerJson,
+      "endpoints": constants.headerMultipart
+    };
+
+    var request = http.MultipartRequest('POST', Uri.parse(url));
+    var stream = http.ByteStream(audioFile.openRead());
+    var length = await audioFile.length();
+    var multipartFile = http.MultipartFile('file', stream, length,
+        filename: audioFile.path.split("/").last);
+    request.files.add(multipartFile);
+
+    request.headers.addAll(headersMap);
+    var response = await request.send();
+    var responseString = await response.stream.bytesToString();
+    dynamic finalRes = json.decode(responseString);
+    if (finalRes != null && finalRes["transcription"] != null) {
+      return finalRes["transcription"]["text"];
+    }
+    return null;
   }
 }

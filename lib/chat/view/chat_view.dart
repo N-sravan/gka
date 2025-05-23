@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:web_socket_channel/io.dart';
-import 'package:flutter_sound/flutter_sound.dart' as fs;
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/settings_view.dart';
@@ -50,7 +49,7 @@ class _ChatViewState extends State<ChatView> {
 
   IOWebSocketChannel? channel;
 
-  final _audioRecorder = fs.FlutterSoundRecorder();
+  // final _audioRecorder = fs.FlutterSoundRecorder();
   final StreamController<Uint8List> _audioStreamController =
       StreamController<Uint8List>();
   int prevChatLength = 0;
@@ -112,7 +111,7 @@ class _ChatViewState extends State<ChatView> {
   @override
   void dispose() {
     super.dispose();
-    _audioRecorder.closeRecorder();
+    // _audioRecorder.closeRecorder();
     _audioStreamController.close();
     _isRecording = false;
     tts.stop();
@@ -527,7 +526,7 @@ class _ChatViewState extends State<ChatView> {
     }
     if (AppState.instance.sttMode.toLowerCase() == 'parakeet') {
       await _recorder.stop();
-      await viewModel.sendAudioToWebsocket(recordedFilePath, context);
+      await viewModel.sendAudioForTranscription(recordedFilePath, context);
     }
 
     listeningActive.value = false;
@@ -561,9 +560,9 @@ class _ChatViewState extends State<ChatView> {
 
   Future<void> _initRecorder() async {
     await tts.stop();
-    await _audioRecorder.openRecorder();
+    // await _audioRecorder.openRecorder();
     await Permission.microphone.request();
-    _audioRecorder.setSubscriptionDuration(const Duration(milliseconds: 100));
+    // _audioRecorder.setSubscriptionDuration(const Duration(milliseconds: 100));
   }
 
   /*Future<void> _startListeningParakeet() async {
@@ -643,12 +642,12 @@ class _ChatViewState extends State<ChatView> {
     viewModel.updateChatControllerForSpeech('');
     Directory tempDir = await getTemporaryDirectory();
     recordedFilePath =
-        '${tempDir.path}/audio_${DateTime.now().millisecondsSinceEpoch.toString()}.flac';
+        '${tempDir.path}/audio_parakeet_${DateTime.now().millisecondsSinceEpoch.toString()}.wav';
     print("12345 file- $recordedFilePath");
 
     await _recorder.start(
       const record.RecordConfig(
-        encoder: record.AudioEncoder.flac,
+        encoder: record.AudioEncoder.wav,
         sampleRate: 16000,
         numChannels: 1,
       ),

@@ -20,7 +20,7 @@ class _SettingsPageState extends State<SettingsPage> {
   String selectedTranslationService = 'Bhashini';
 
   final langList = ['English', 'Telugu'];
-  final speechServicesList = ['Native', 'Bhashini'];
+  final speechServicesList = ['Native', 'Bhashini','Parakeet'];
   final ttsServicesList = ['Native', 'Bhashini'];
   final translationServicesList = ['Google Translate', 'Bhashini'];
   late ChatViewModel viewModel;
