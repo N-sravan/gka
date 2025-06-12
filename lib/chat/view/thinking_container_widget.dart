@@ -124,37 +124,74 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
     return GestureDetector(
       onTap: _toggleExpanded,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.grey[100],
+          gradient: LinearGradient(
+            colors: widget.isProcessing 
+                ? [Colors.orange.shade50, Colors.orange.shade100]
+                : widget.steps.any((s) => s.status == StepStatus.error)
+                    ? [Colors.red.shade50, Colors.red.shade100]
+                    : [Colors.green.shade50, Colors.green.shade100],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           borderRadius: BorderRadius.vertical(
-            top: const Radius.circular(12),
-            bottom: _isExpanded ? Radius.zero : const Radius.circular(12),
+            top: const Radius.circular(16),
+            bottom: _isExpanded ? Radius.zero : const Radius.circular(16),
+          ),
+          border: Border.all(
+            color: widget.isProcessing 
+                ? Colors.orange.shade200
+                : widget.steps.any((s) => s.status == StepStatus.error)
+                    ? Colors.red.shade200
+                    : Colors.green.shade200,
+            width: 1,
           ),
         ),
         child: Row(
           children: [
             _buildStatusIcon(),
-            const SizedBox(width: 8),
+            const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                widget.isProcessing ? 'Processing query...' : 
-                widget.steps.any((s) => s.status == StepStatus.error) 
-                    ? 'Processing failed' 
-                    : 'Processing complete',
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black87,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.isProcessing ? '🔄 Processing query...' : 
+                    widget.steps.any((s) => s.status == StepStatus.error) 
+                        ? '❌ Processing failed' 
+                        : '✅ Processing complete',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${widget.steps.length} steps • ${widget.totalDuration}ms',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             ),
-            RotationTransition(
-              turns: _rotationAnimation,
-              child: Icon(
-                Icons.keyboard_arrow_down,
-                size: 16,
-                color: Colors.grey[600],
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.8),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: RotationTransition(
+                turns: _rotationAnimation,
+                child: Icon(
+                  Icons.keyboard_arrow_down,
+                  size: 18,
+                  color: Colors.grey[700],
+                ),
               ),
             ),
           ],
@@ -346,21 +383,42 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
   Widget _buildStepDetails(ProcessingStepModel step) {
     final details = step.details!;
     return Container(
-      margin: const EdgeInsets.only(top: 6),
-      padding: const EdgeInsets.all(8),
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: Colors.grey[300]!),
+        gradient: LinearGradient(
+          colors: [Colors.blue.shade50, Colors.blue.shade25],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.blue.shade200, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: details.entries.map((entry) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: _buildDetailItem(entry.key, entry.value),
-          );
-        }).toList(),
+        children: [
+          Row(
+            children: [
+              Icon(Icons.info_outline, size: 16, color: Colors.blue.shade600),
+              const SizedBox(width: 6),
+              Text(
+                'Detailed Information',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.blue.shade800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ...details.entries.map((entry) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: _buildDetailItem(entry.key, entry.value),
+            );
+          }).toList(),
+        ],
       ),
     );
   }
@@ -370,27 +428,226 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
       return _buildChunksDetail(value);
     }
     
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '$key: ',
-          style: const TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
+    // Handle different data types with better formatting
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _getKeyIcon(key),
+              const SizedBox(width: 6),
+              Text(
+                _formatKeyName(key),
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
           ),
+          const SizedBox(height: 6),
+          _buildFormattedValue(value),
+        ],
+      ),
+    );
+  }
+  
+  Widget _getKeyIcon(String key) {
+    IconData icon;
+    Color color;
+    
+    switch (key.toLowerCase()) {
+      case 'model_used':
+      case 'vision_model':
+        icon = Icons.smart_toy;
+        color = Colors.purple;
+        break;
+      case 'chunks_retrieved':
+      case 'results_count':
+        icon = Icons.storage;
+        color = Colors.blue;
+        break;
+      case 'language':
+      case 'translated_query':
+        icon = Icons.translate;
+        color = Colors.green;
+        break;
+      case 'tokens_generated':
+        icon = Icons.memory;
+        color = Colors.orange;
+        break;
+      case 'search_query':
+        icon = Icons.search;
+        color = Colors.amber;
+        break;
+      case 'retrieval_type':
+        icon = Icons.category;
+        color = Colors.teal;
+        break;
+      case 'routing_confidence':
+        icon = Icons.analytics;
+        color = Colors.red;
+        break;
+      default:
+        icon = Icons.info;
+        color = Colors.grey;
+    }
+    
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Icon(icon, size: 12, color: color),
+    );
+  }
+  
+  String _formatKeyName(String key) {
+    return key.split('_').map((word) => 
+      word.isEmpty ? '' : word[0].toUpperCase() + word.substring(1)
+    ).join(' ');
+  }
+  
+  Widget _buildFormattedValue(dynamic value) {
+    if (value is String) {
+      return _buildFormattedText(value);
+    } else if (value is num) {
+      return _buildNumericValue(value);
+    } else if (value is Map) {
+      return _buildMapValue(value);
+    } else if (value is List) {
+      return _buildListValue(value);
+    } else {
+      return Text(
+        value.toString(),
+        style: TextStyle(
+          fontSize: 10,
+          color: Colors.grey[700],
         ),
-        Expanded(
-          child: Text(
-            value.toString(),
+      );
+    }
+  }
+  
+  Widget _buildFormattedText(String text) {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 10,
+          color: Colors.grey[800],
+          fontFamily: text.length > 100 ? 'monospace' : null,
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildNumericValue(num value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue.shade200),
+      ),
+      child: Text(
+        value.toString(),
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: Colors.blue.shade800,
+          fontFamily: 'monospace',
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildMapValue(Map map) {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.amber.shade50,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: Colors.amber.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: map.entries.map((entry) => 
+          Padding(
+            padding: const EdgeInsets.only(bottom: 2),
+            child: Text(
+              '${entry.key}: ${entry.value}',
+              style: TextStyle(
+                fontSize: 9,
+                color: Colors.amber.shade800,
+                fontFamily: 'monospace',
+              ),
+            ),
+          )
+        ).toList(),
+      ),
+    );
+  }
+  
+  Widget _buildListValue(List list) {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.green.shade50,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: Colors.green.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${list.length} items:',
             style: TextStyle(
               fontSize: 10,
-              color: Colors.grey[700],
+              fontWeight: FontWeight.w600,
+              color: Colors.green.shade800,
             ),
           ),
-        ),
-      ],
+          const SizedBox(height: 4),
+          ...list.take(3).map((item) => 
+            Padding(
+              padding: const EdgeInsets.only(bottom: 2),
+              child: Text(
+                '• ${item.toString()}',
+                style: TextStyle(
+                  fontSize: 9,
+                  color: Colors.green.shade700,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            )
+          ).toList(),
+          if (list.length > 3)
+            Text(
+              '... and ${list.length - 3} more',
+              style: TextStyle(
+                fontSize: 9,
+                color: Colors.green.shade600,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+        ],
+      ),
     );
   }
 

@@ -124,52 +124,103 @@ class _ChatViewState extends State<ChatView> {
     return Consumer<ChatViewModel>(
       builder: (_, viewModel, child) {
         return Scaffold(
+          backgroundColor: Colors.grey[50],
           drawer: (widget.isFromHistory ?? false) ? null : const DrawerWidget(),
           appBar: AppBar(
+            elevation: 0,
+            backgroundColor: Colors.white,
             leading: (widget.isFromHistory ?? false)
                 ? IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.black),
+                    icon: const Icon(Icons.arrow_back, color: Colors.black87),
                     onPressed: () => Navigator.pop(context),
                   )
                 : null,
             titleSpacing: 2,
             title: Row(
               children: [
-                Image.asset('assets/images/apaims_logo.png', height: 32),
-                const SizedBox(width: 8),
-                const Text(
-                  'APAIMS Chatbot',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(8),
                   ),
+                  child: Image.asset('assets/images/apaims_logo.png', height: 24),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'APAIMS Assistant',
+                      style: TextStyle(
+                        color: Colors.black87,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      'AI-Powered Chat',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 11,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
             actions: [
-              IconButton(
-                icon: const Icon(Icons.settings, color: Colors.black),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const SettingsPage()),
-                  );
-                },
+              Container(
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: IconButton(
+                  icon: Icon(Icons.settings_outlined, color: Colors.grey[700], size: 20),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const SettingsPage()),
+                    );
+                  },
+                ),
               ),
             ],
           ),
-          body: Column(
-            children: [
-              _buildChatList(),
-              _buildThinkingContainer(),
-              _buildLoaderWidget(),
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: bottomBar(),
-              )
-            ],
+          body: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.white, Colors.grey.shade50],
+              ),
+            ),
+            child: Column(
+              children: [
+                _buildChatList(),
+                _buildThinkingContainer(),
+                _buildLoaderWidget(),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, -2),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: bottomBar(),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -433,25 +484,42 @@ class _ChatViewState extends State<ChatView> {
   _chatInput() {
     return Column(
       children: [
-        TextFormField(
-          controller: viewModel.chatController,
-          maxLines: null,
-          minLines: 1,
-          textCapitalization: TextCapitalization.sentences,
-          decoration: InputDecoration(
-            hintText: 'Ask AI anything...',
-            hintStyle: constants.lightGrey2_14W400,
-            border: OutlineInputBorder(
-              borderSide: const BorderSide(
-                color: Color(0xFF4BA164),
-                width: 2,
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 2),
               ),
-              borderRadius: BorderRadius.circular(20),
+            ],
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: TextFormField(
+            controller: viewModel.chatController,
+            maxLines: null,
+            minLines: 1,
+            textCapitalization: TextCapitalization.sentences,
+            style: const TextStyle(
+              fontSize: 16,
+              color: Colors.black87,
             ),
-            contentPadding:
-                const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-            prefixIcon: _speechButton(),
-            suffixIcon: _sendButton(),
+            decoration: InputDecoration(
+              hintText: 'Type your message here...',
+              hintStyle: TextStyle(
+                color: Colors.grey[500],
+                fontSize: 15,
+                fontWeight: FontWeight.w400,
+              ),
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+              prefixIcon: _speechButton(),
+              suffixIcon: _sendButton(),
+            ),
           ),
         ),
       ],
