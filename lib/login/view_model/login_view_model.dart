@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:gka/chat/model/offline_chat_history_model.dart';
 import 'package:gka/chat/view/chat_view.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:gka/helper/database_helper.dart';
 import 'package:gka/login/langflow_login_response_model.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
 import 'package:intl/intl.dart';
@@ -34,6 +36,8 @@ class LoginViewModel extends LoadingViewModel {
   final otpKey = GlobalKey();
   final formKey = GlobalKey<FormState>();
   String selectedRole = constants.farmer;
+  Map<String, List<OfflineChatModel>> sessionIdHistoryMapping = {};
+  DatabaseHelper? databaseHelper = DatabaseHelper();
 
   /// Restricting user after 10 unsuccessful attempts
   /// If user reaches 10 attempts then they have to wait for 15 minutes
@@ -201,6 +205,7 @@ class LoginViewModel extends LoadingViewModel {
 
   void clearAllData() {
     getOtp = false;
+    sessionIdHistoryMapping.clear();
     notifyListeners();
   }
 
@@ -285,9 +290,10 @@ class LoginViewModel extends LoadingViewModel {
                   userPermissionsResponse.response!.meta!.firstName!);
 
               // bool? result = await sendSessionId(context);
+              bool? result = await fetchOfflineChatHistory(context);
 
               String sessionId = formatSession();
-              if (sessionId.isNotEmpty) {
+              if (sessionId.isNotEmpty && result != null && result) {
                 isLoading = false;
                 Navigator.push(
                   context,
@@ -298,6 +304,12 @@ class LoginViewModel extends LoadingViewModel {
                     ),
                   ),
                 );
+              } else {
+                isLoading = false;
+                notifyListeners();
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(constants.genericErrorMsg),
+                ));
               }
             } else {
               isLoading = false;
@@ -410,6 +422,61 @@ class LoginViewModel extends LoadingViewModel {
           isLoading = false;
           notifyListeners();
           return true;
+        } else {
+          isLoading = false;
+          notifyListeners();
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text(constants.genericErrorMsg),
+          ));
+        }
+      } catch (e) {
+        isLoading = false;
+        notifyListeners();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(constants.genericErrorMsg),
+        ));
+        Util.instance.logMessage('Login ViewModel', 'Error $e');
+      }
+    } else {
+      isLoading = false;
+      notifyListeners();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(constants.noNetworkAvailability),
+      ));
+    }
+    return false;
+  }
+
+  Future<bool?> fetchOfflineChatHistory(BuildContext context) async {
+    sessionIdHistoryMapping.clear();
+    if (await networkUtils.hasActiveInternet()) {
+      isLoading = true;
+      try {
+        OfflineChatHistoryResponse offlineChatHistoryResponse =
+            await repo.fetchOfflineHistory(context);
+        if (offlineChatHistoryResponse.statuscode == 200) {
+          if (offlineChatHistoryResponse.response.isNotEmpty) {
+            for (var item in offlineChatHistoryResponse.response) {
+              String sessionId = item.clientSessionId;
+              if (item.messages.isNotEmpty) {
+                List<OfflineChatModel> chatModelList = [];
+                for (var sessionData in item.messages) {
+                  OfflineChatModel chatModel = OfflineChatModel(
+                      senderType: sessionData.senderType,
+                      message: sessionData.originalText,
+                      insertTs: sessionData.createdAt);
+                  chatModelList.add(chatModel);
+                }
+                sessionIdHistoryMapping[sessionId] = chatModelList;
+                print("sessionIdHistoryMapping $sessionIdHistoryMapping");
+              }
+            }
+          }
+          bool result = await databaseHelper!.insertChatData(
+              sessionIdHistoryMapping, AppState.instance.userId);
+          isLoading = false;
+          notifyListeners();
+          return result;
         } else {
           isLoading = false;
           notifyListeners();

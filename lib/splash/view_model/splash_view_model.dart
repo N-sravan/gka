@@ -18,7 +18,7 @@ class SplashViewModel extends LoadingViewModel {
   checkPermissionsAndNavigate(BuildContext context) async {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const LoginScreenWidget()),
+      MaterialPageRoute(builder: (context) =>  LoginScreenWidget()),
     );
   }
 
@@ -27,7 +27,7 @@ class SplashViewModel extends LoadingViewModel {
     Timer(const Duration(seconds: constants.splashDuration), () async {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const LoginScreenWidget()),
+        MaterialPageRoute(builder: (context) =>  LoginScreenWidget()),
       );
     });
   }

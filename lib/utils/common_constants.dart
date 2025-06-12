@@ -691,8 +691,6 @@ ButtonStyle buttonStyle = ElevatedButton.styleFrom(
 );
 
 ButtonStyle agriButtonStyle = ElevatedButton.styleFrom(
-  // fixedSize: Size(MediaQuery.of(context).size.height,
-  //     constants.splashButtonHeight),
   shape: RoundedRectangleBorder(
     borderRadius: BorderRadius.circular(borderRadius),
   ),
@@ -774,10 +772,8 @@ const String allowPermissions = 'ALLOW PERMISSIONS';
 const String permissionsErrorMsg = 'Please grant permissions before proceeding';
 const String genericErrorMsg = 'Something went wrong, please try later';
 const String currentlyUnderDevMsg = 'Currently under development!';
-const String toManyLoginAttempts =
-    'Too many login attempts. Please wait for 15 minutes and try again';
-const String noNetworkAvailability =
-    'Please check your network connection, no internet available';
+const String toManyLoginAttempts = 'Too many login attempts. Please wait for 15 minutes and try again';
+const String noNetworkAvailability = 'Please check your network connection, no internet available';
 const String userNameString = 'Username';
 const String emptyUsernameErrorMsg = 'Username cannot be empty';
 const String submit = 'Submit';
@@ -796,7 +792,7 @@ const String gowaterString = 'GoWater Bot';
 const String apwrimsString = 'APWRIMS Bot';
 const String miCadaString = 'MICADA Bot';
 const String kaleswaramString = 'Kaleswaram Bot';
-const String kuidfctring = 'Kaleswaram Bot';
+const String kuidfcString = 'Kaleswaram Bot';
 const String getOtpString = 'Get OTP';
 const String verifyOtpString = 'Verify OTP';
 const String enterOtpString = 'Enter OTP';
@@ -809,8 +805,7 @@ const String forgotPasswordString = 'Forgot Password?';
 const String emptyEmailErrorMsg = 'Email cannot be empty';
 const String emptyMobileNumberErrorMsg = 'Mobile number cannot be empty';
 const String invalidMobileNumberErrorMsg = 'Enter valid Mobile number';
-const String loginDesc =
-    'Please enter the registered Mobile number or Please input New Mobile number';
+const String loginDesc = 'Please enter the registered Mobile number or Please input New Mobile number';
 const String generateOTP = 'Generate OTP';
 const String invalidEntry = 'Invalid Entry';
 
@@ -854,28 +849,26 @@ const String asrServiceIdEnglish = 'ai4bharat/whisper-medium-en--gpu--t4';
 const String nmtServiceId = 'ai4bharat/indictrans-v2-all-gpu--t4';
 const String ttsServiceId = 'Bhashini/IITM/TTS';
 // const String bhasiniUrl = 'https://dhruva-api.bhashini.gov.in/services/inference/pipeline';
-const String bhasiniUrl =
-    'https://apaims2.0.vassarlabs.com/chatbot/bhashini/pipeline';
-const String bhasiniApikey =
-    '9ehV7vDnMszVayjw4U486-9GH27LdgeB-lO85BCkPKrbN29tI9fxLlAp-05tDChA';
+const String bhasiniUrl = 'https://apaims2.0.vassarlabs.com/chatbot/bhashini/pipeline';
+const String bhasiniApikey = '9ehV7vDnMszVayjw4U486-9GH27LdgeB-lO85BCkPKrbN29tI9fxLlAp-05tDChA';
 
-///chatbot constants
-const String baseUrl = 'https://apaims2.0.vassarlabs.com/chatbot/chat/';
 
 //chatbot API Endpoints
 const String chatHistoryEndpoint = 'get-history';
 const String chatQueryEndpoint = 'query';
 const String sessionsEndpoint = 'get-sessions';
-const String deleteSessionEndpoint = 'delete-sessions';
-const String updateSessionEndpoint = 'update-session';
+const String deleteSessionEndpoint = 'delete-session';
+const String updateSessionEndpoint = 'update-session-id';
 const String createSessionEndpoint = 'create-session';
 const String langTranslateEndpoint = 'translate-text';
+const String offlineHistoryEndpoint = 'https://apaims2.0.vassarlabs.com/chatbot/dashboard/get-user-chat-history';
 
 //baseurls
+const String baseUrl = 'https://apaims2.0.vassarlabs.com/chatbot/chat/';
 const String genAiBaseUrl = "https://nawrims.vassarlabs.com/vassar_mind/";
-const String chatbotBaseUrl =
-    'https://agentsbuilder.apaims2.0.vassarlabs.com/api/v1/prediction/4a5c8d41-51d7-4e81-85b8-377bb6a28043';
-
-
 const String bearerToken = '2r9MjMpyFar4ySZh_KfGWzMcmqoUnQOnA9lMoFTG8Bg';
+
+//database constants
+const String dbName = 'chatbot.db';
+const int dbVersion = 1;
 

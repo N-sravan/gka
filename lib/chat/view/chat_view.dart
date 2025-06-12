@@ -72,7 +72,7 @@ class _ChatViewState extends State<ChatView> {
     viewModel = Provider.of<ChatViewModel>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (widget.isFromHistory != null && widget.isFromHistory == true) {
-        await viewModel.getMessageHistoryForSession(widget.sessionId!, context);
+        await viewModel.getChatHistoryForSession(widget.sessionId!, context);
       }
     });
   }
@@ -439,7 +439,7 @@ class _ChatViewState extends State<ChatView> {
         return IconButton(
           // onPressed: !value ? _startListening : _stopListening,
           onPressed: () {
-            print("listeningActive $value");
+            print("listening active $value");
             if (!value) {
               if (AppState.instance.sttMode.toLowerCase() == 'native') {
                 _startListeningNative();
@@ -479,17 +479,13 @@ class _ChatViewState extends State<ChatView> {
                     ? null
                     : () async {
                         if (viewModel.chatController.text.isEmpty) {
-                          Fluttertoast.showToast(
-                              msg: "Please enter your question.");
+                          Fluttertoast.showToast(msg: "Please enter your question.");
                         } else {
-                          // viewModel.sendMessage(context, viewModel.chatController.text);
-                          print(
-                              "userId : ${AppState.instance.userId}, sessionId :${AppState.instance.sessionId}");
-                          if (viewModel.chatController.text.isNotEmpty &&
-                              viewModel.chatController.text !=
-                                  'Processing...') {
-                            viewModel.sendMessageStream(
-                                viewModel.chatController.text, context);
+                          //viewModel.sendMessage(context, viewModel.chatController.text);
+                          print("userId : ${AppState.instance.userId}, sessionId :${AppState.instance.sessionId}");
+                          if (viewModel.chatController.text.isNotEmpty && viewModel.chatController.text != 'Processing...') {
+                            // viewModel.sendMessageKerala(viewModel.chatController.text, context);
+                            viewModel.sendMessageStream(viewModel.chatController.text, context);
                           }
                         }
                       });
@@ -667,26 +663,6 @@ class _ChatViewState extends State<ChatView> {
     listeningActive.value = active;
   }
 
-  _speakMessage(String text) async {
-    String plainText = _extractPlainText(text.trim());
-    await tts.speak(plainText);
-  }
-
-  String _extractPlainText(String text) {
-    // Remove double asterisks for bold text
-    final RegExp boldRegex = RegExp(r'\*\*(.*?)\*\*');
-    String result =
-        text.replaceAllMapped(boldRegex, (match) => match.group(1) ?? '');
-
-    // Remove single asterisks
-    final RegExp singleAsteriskRegex = RegExp(r'\*');
-    result = result.replaceAll(singleAsteriskRegex, '');
-
-    // Remove newlines
-    result = result.replaceAll('\\n', ' ');
-    print("result ::$result");
-    return result.trim();
-  }
 
 // Function to save audio data to a file
   Future<void> _saveAudioToFile(Uint8List data) async {

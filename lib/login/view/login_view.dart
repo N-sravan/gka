@@ -1,18 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:gka/home/view/home_view.dart';
-import 'package:gka/utils/app_state.dart';
 import 'package:provider/provider.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
-import 'package:uuid/uuid.dart';
-import 'package:uuid/v4.dart';
-import '../../chat_window.dart';
-import '../../utils/network_utils.dart';
 import '../view_model/login_view_model.dart';
 
 class LoginScreenWidget extends StatefulWidget {
+
   final String? role;
 
-  const LoginScreenWidget({super.key, this.role});
+   const LoginScreenWidget({super.key, this.role});
 
   @override
   State<LoginScreenWidget> createState() => _LoginScreenWidgetState();
@@ -31,22 +26,9 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
     super.initState();
     viewModel = Provider.of<LoginViewModel>(context, listen: false);
 
-  /*  _usernameController.text = "apaimssuperadmin";
-    _passwordController.text = "Ap@1ms\$Sup3r@dm1n#2025";
-*/
     _usernameController.text = "apaims_siddarth";
     _passwordController.text = "apaims@123";
 
-/*    switch (constants.projectId) {
-      // case constants.fieldRishiUUID:
-        _usernameController.text = "tapranauser";
-        _passwordController.text = "fieldwise@123";
-        appIcon = constants.appIcon;
-        // break;
-    }*/
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      networkUtils.startTrackingConnection();
-    });
     _passwordVisible = false;
   }
 

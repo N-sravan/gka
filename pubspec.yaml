@@ -35,17 +35,14 @@ dependencies:
   uuid: ^4.3.3
   #workmanager: ^0.5.2
   permission_handler: ^11.4.0
-#  notification_permissions: ^0.6.1
   firebase_messaging: ^15.2.5
   flutter_local_notifications: ^18.0.1
-#  flutter_background_service: ^5.0.5
   flutter_background_service: ^5.1.0
   shared_preferences: ^2.2.2
   device_info_plus: ^11.4.0
   fluttertoast : ^8.1.1
   path_provider: ^2.0.15
   image_picker: ^1.1.2
-#  flutter_native_image: ^0.0.6
   connectivity_plus: ^4.0.0
   firebase_storage: ^12.4.5
   provider: ^6.0.5
@@ -68,12 +65,13 @@ dependencies:
   geolocator: ^14.0.0
   latlong2: ">=0.8.0 <0.10.0"
   web_socket_channel: ^3.0.3
-  flutter_sound: ^9.28.0
   record: ^6.0.0
   audioplayers: ^6.4.0
+  sqflite: ^2.4.2
 
 # flutter pub get
 # flutter pub run flutter_launcher_icons:main
+# flutter build apk --release --target-platform=android-arm64
 
 flutter_launcher_icons:
   image_path: "assets/images/apaims_logo.png"

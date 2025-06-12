@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/material.dart';
+import 'package:gka/chat/model/offline_chat_history_model.dart';
 import 'package:gka/login/langflow_login_response_model.dart';
 import 'package:gka/login/model/session_details_response_model.dart';
 import 'package:gka/login/model/ap_login_response_model.dart';
@@ -28,6 +29,8 @@ abstract class LoginRepository {
   Future<int?> sendSessionId(BuildContext context, String sessionId);
 
   Future<int?> saveFcmToken(BuildContext context);
+
+  Future<OfflineChatHistoryResponse> fetchOfflineHistory(BuildContext context);
 }
 
 class LoginRepositoryImpl extends LoginRepository {
@@ -161,5 +164,28 @@ class LoginRepositoryImpl extends LoginRepository {
     Map<String, dynamic> responseMap = jsonDecode(response.body);
 
     return responseMap['statuscode'];
+  }
+
+  @override
+  Future<OfflineChatHistoryResponse> fetchOfflineHistory(
+      BuildContext context) async {
+    Map<String, String> authHeaders = {
+      constants.headerContentType: constants.headerJson
+    };
+
+    Map<String, dynamic> params = {
+      "user_id": AppState.instance.userId,
+    };
+    String authUrl = constants.offlineHistoryEndpoint;
+    Object data = jsonEncode(params);
+    var response =
+        await http.post(Uri.parse(authUrl), headers: authHeaders, body: data);
+    Map<String, dynamic> responseMap = jsonDecode(response.body);
+
+
+    OfflineChatHistoryResponse offlineChatHistoryResponse =
+        OfflineChatHistoryResponse.fromJson(responseMap);
+
+    return offlineChatHistoryResponse;
   }
 }

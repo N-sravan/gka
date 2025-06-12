@@ -79,7 +79,7 @@ class MyApp extends StatelessWidget {
         initialRoute: constants.initialRoute,
         routes: {
           constants.initialRoute: (context) => const SplashScreenWidget(),
-          constants.roleRoute: (context) => const LoginScreenWidget(),
+          constants.roleRoute: (context) => LoginScreenWidget(),
           constants.homeRoute: (context) => const HomeScreenWidget(),
           constants.settingsRoute: (context) => const SettingsPage(),
         },

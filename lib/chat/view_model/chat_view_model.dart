@@ -886,7 +886,7 @@ class ChatViewModel extends LoadingViewModel {
     userActivity = newValue!;
   }
 
-  Future? getMessageHistoryForSession(
+  Future? getChatHistoryForSession(
       String sessionId, BuildContext context) async {
     if (await networkUtils.hasActiveInternet()) {
       isLoading = true;
@@ -987,8 +987,7 @@ class ChatViewModel extends LoadingViewModel {
     return false;
   }*/
 
-  Future<bool>? getStreamResponse(
-      String sessionId, BuildContext context) async {
+  Future<bool>? getStreamResponse(String sessionId, BuildContext context) async {
     if (await networkUtils.hasActiveInternet()) {
       isLoading = true;
       try {
@@ -1562,10 +1561,87 @@ class ChatViewModel extends LoadingViewModel {
         body: jsonEncode(data),
       );
 
-      if (response.body != null) {
-        final decoded = jsonDecode(response.body);
-        final messageText = decoded['message'];
+      final decoded = jsonDecode(response.body);
+      final messageText = decoded['message'];
 
+      print("Query Response : $messageText");
+
+      bool hasEnglishSource = RegExp(r'\(Source:.*?\)').hasMatch(messageText);
+      bool hasTeluguSource = RegExp(r'\(మూలం:.*?\)').hasMatch(messageText);
+      String noSourceText = '';
+
+      if (hasEnglishSource) {
+        noSourceText = messageText.replaceAll(RegExp(r'\s*\(Source:.*?\)'), '');
+      } else if (hasTeluguSource) {
+        noSourceText = messageText.replaceAll(RegExp(r'\s*\(మూలం:.*?\)'), '');
+      } else {
+        noSourceText = messageText;
+      }
+
+      if (noSourceText.toString().isNotEmpty &&
+          messageText.toString().isNotEmpty) {
+        if (AppState.instance.ttsMode.toLowerCase() == 'bhashini') {
+          await ttsResponse(noSourceText, messageText, context);
+        } else {
+          messages.add({
+            'text': messageText.toString(),
+            'is_user': false,
+          });
+          showLoader.value = false;
+          await tts.setLanguage(langId);
+          await tts.setVoice(currentVoice);
+          await tts.setSpeechRate(0.5);
+          await tts.speak(noSourceText);
+        }
+        /*
+        isStreaming.value = false;
+        streamingText.value = translatedResponse ?? '';*/
+      }
+    } catch (e) {
+      Fluttertoast.showToast(msg: "Something went wrong!");
+    }
+    showLoader.value = false;
+    notifyListeners();
+  }
+
+  Future<void> sendMessageKerala(
+      String userMessage, BuildContext context) async {
+    messages.add({
+      'text': userMessage,
+      'is_user': true,
+    });
+    chatController.clear();
+    showLoader.value = true;
+    notifyListeners();
+
+    Map<String, dynamic> data = {
+      'message': userMessage,
+      'session_id': AppState.instance.sessionId,
+      'user_id': AppState.instance.userId,
+      'language': 'english',
+      "llm": "chatgpt-4o",
+      "token":
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMTAzODBiM2YtNzU4YS00M2FhLWI2NWMtNDY1NzU0NmZkZTZkIiwiZXhwIjoxNzIzNTQ0NzI5fQ.EIacZbnBlmXJwoqRV9CPlZsotLYsNbP9I4xEYrL-GvE",
+      "sm_enabled": false,
+      "image_url": "",
+      "super_question_agent": true,
+      "mode": "",
+      "pre_configure": false
+    };
+
+    if (!AppState.instance.isEnglish) {
+      String translation =
+          AppState.instance.transMode == 'bhashini' ? 'bhashini' : 'google';
+
+      data['translation_engine'] = translation;
+    }
+
+    print("Query Payload : $data");
+
+    try {
+      String? messageText = await repo.sendQuery(data);
+
+      if (messageText != null && messageText.isNotEmpty) {
         print("Query Response : $messageText");
 
         bool hasEnglishSource = RegExp(r'\(Source:.*?\)').hasMatch(messageText);
@@ -1581,8 +1657,6 @@ class ChatViewModel extends LoadingViewModel {
           noSourceText = messageText;
         }
 
-        print("noSourceText BHasini:$noSourceText");
-
         if (noSourceText.toString().isNotEmpty &&
             messageText.toString().isNotEmpty) {
           if (AppState.instance.ttsMode.toLowerCase() == 'bhashini') {
@@ -1593,17 +1667,8 @@ class ChatViewModel extends LoadingViewModel {
               'is_user': false,
             });
             showLoader.value = false;
-
-            print("noSourceText Native :$noSourceText");
-            print("noSourceText currentVoice :$currentVoice");
-            print("noSourceText langId :$langId");
-            await tts.setLanguage(langId);
-            await tts.setVoice(currentVoice);
-            await tts.setSpeechRate(0.5);
-            await tts.speak(noSourceText);
+            _speakMessage(noSourceText);
           }
-          /*isStreaming.value = false;
-          streamingText.value = translatedResponse ?? '';*/
         }
       } else {
         Fluttertoast.showToast(msg: "Something went wrong!");
@@ -1725,16 +1790,15 @@ class ChatViewModel extends LoadingViewModel {
         };
         final pipelineResponse = await repo.fetchTTSconfig(body);
         if (pipelineResponse.isNotEmpty) {
-          // Extract base64 audio from TTS task
           final ttsTask = pipelineResponse.firstWhere(
-            (task) => task['taskType'] == 'tts',
-            orElse: () => null,
-          );
+              (task) => task['taskType'] == 'tts',
+              orElse: () => null);
           final List<dynamic>? audioList = ttsTask?['audio'];
           if (audioList != null && audioList.isNotEmpty) {
             String content = audioList[0]['audioContent'];
             print("audio content : $content");
           }
+
           final String? base64Audio = audioList != null &&
                   audioList.isNotEmpty &&
                   audioList[0]['audioContent'] != null
@@ -1807,5 +1871,29 @@ class ChatViewModel extends LoadingViewModel {
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(constants.noNetworkAvailability)));
     }
+  }
+
+  _speakMessage(String text) async {
+    await tts.setLanguage(langId);
+    await tts.setVoice(currentVoice);
+    await tts.setSpeechRate(0.5);
+    String plainText = _extractPlainText(text.trim());
+    await tts.speak(plainText);
+  }
+
+  String _extractPlainText(String text) {
+    // Remove double asterisks for bold text
+    final RegExp boldRegex = RegExp(r'\*\*(.*?)\*\*');
+    String result =
+        text.replaceAllMapped(boldRegex, (match) => match.group(1) ?? '');
+
+    // Remove single asterisks
+    final RegExp singleAsteriskRegex = RegExp(r'\*');
+    result = result.replaceAll(singleAsteriskRegex, '');
+
+    // Remove newlines
+    result = result.replaceAll('\\n', ' ');
+    print("result ::$result");
+    return result.trim();
   }
 }

@@ -20,7 +20,7 @@ class _SettingsPageState extends State<SettingsPage> {
   String selectedTranslationService = 'Bhashini';
 
   final langList = ['English', 'Telugu'];
-  final speechServicesList = ['Native', 'Bhashini','Parakeet'];
+  final speechServicesList = ['Native', 'Bhashini', 'Parakeet'];
   final ttsServicesList = ['Native', 'Bhashini'];
   final translationServicesList = ['Google Translate', 'Bhashini'];
   late ChatViewModel viewModel;
@@ -276,8 +276,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
     viewModel.setlangCodes();
 
-    print("Langcodes LangId - ${viewModel.langId}\n isEnglish ${AppState.instance.isEnglish}\n");
     print("Langcodes currentVoice - ${viewModel.currentVoice}");
-    print("AppState langSelected ${AppState.instance.language}\n STT : ${AppState.instance.sttMode}\n TTS : ${AppState.instance.ttsMode}\n Translation: ${AppState.instance.transMode}");
+    print(
+        "AppState langSelected ${AppState.instance.language}\n STT : ${AppState.instance.sttMode}\n TTS : ${AppState.instance.ttsMode}\n Translation: ${AppState.instance.transMode}");
   }
 }

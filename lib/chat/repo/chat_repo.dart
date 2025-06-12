@@ -18,6 +18,8 @@ import '../model/user_session_model.dart';
 
 /// Abstract class for the login repository
 abstract class ChatRepository {
+  Future<String?> sendQuery(Map<String, dynamic> data);
+
   Future<int?> deleteToken(BuildContext context);
 
   Future<int?> deleteTools(List<String> toolUUIDs);
@@ -39,17 +41,11 @@ abstract class ChatRepository {
 
   Future<GetDocumentsResponseModel> fetchDocuments(BuildContext context);
 
-  Future<ChatHistoryModel> fetchChatHistory(
-      String sessionId, BuildContext context);
-
-  Future<ChatHistoryModel> fetchChatHistoryForSession(
-      String sessionId, BuildContext context);
+  Future<ChatHistoryModel> fetchChatHistoryForSession(String sessionId, BuildContext context);
 
   Future<UserResponseModel> fetchUsers(BuildContext context);
 
-  Future<List<ChatMessageHistory>> fetchMessageHistory(String sessionId);
-
-  Future<List<ChatMessageHistory>> fetchSessionHistory();
+  Future<List<ChatMessageHistory>> fetchMessageHistory(String sessionId);  //stream response
 
   Future<UserSessionModel> fetchUserSessions();
 
@@ -77,6 +73,28 @@ abstract class ChatRepository {
 
 /// Concrete class implementation for the login repository
 class ChatRepositoryImpl extends ChatRepository {
+
+  @override
+  Future<String?> sendQuery(Map<String, dynamic> data) async {
+    Map<String, String> authHeaders = {
+      constants.headerContentType: constants.headerJson
+    };
+    String authUrl = constants.baseUrl + constants.chatQueryEndpoint;
+    String requestBody = jsonEncode(data);
+
+    http.Response response = await http.post(
+      Uri.parse(authUrl),
+      headers: authHeaders,
+      body: requestBody,
+    );
+    Map<String, dynamic> responseMap = jsonDecode(response.body);
+
+    if (responseMap != null) {
+      return responseMap['message'];
+    }
+    return null;
+  }
+
   @override
   Future<int?> deleteToken(BuildContext context) async {
     Map<String, dynamic> params = {
@@ -316,29 +334,6 @@ class ChatRepositoryImpl extends ChatRepository {
     return getDocumentsResponseModel;
   }
 
-  @override
-  Future<ChatHistoryModel> fetchChatHistory(
-      String sessionId, BuildContext context) async {
-    Map<String, String> authHeaders = {
-      constants.headerContentType: constants.headerJson
-    };
-
-    Map<String, dynamic> params = {
-      "user_id": AppState.instance.userId,
-      "session_id": sessionId
-    };
-    String authUrl =
-        'https://apaims2.0.vassarlabs.com/chatbot/chat/get-chat-history';
-    // String authUrl = 'http://192.168.18.40:8000/chat/get-chat-history';
-    Object data = jsonEncode(params);
-    var response =
-        await http.post(Uri.parse(authUrl), headers: authHeaders, body: data);
-
-    Map<String, dynamic> responseMap = jsonDecode(response.body);
-
-    ChatHistoryModel chatHistoryModel = ChatHistoryModel.fromJson(responseMap);
-    return chatHistoryModel;
-  }
 
   @override
   Future<ChatHistoryModel> fetchChatHistoryForSession(
@@ -409,7 +404,7 @@ class ChatRepositoryImpl extends ChatRepository {
   Future<bool> deleteSession(BuildContext context, String sessionId) async {
     Map<String, dynamic> params = {
       "user_id": AppState.instance.userId,
-      "session_ids": [sessionId]
+      "session_id": sessionId
     };
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
@@ -435,8 +430,8 @@ class ChatRepositoryImpl extends ChatRepository {
       BuildContext context, String sessionId, String newId) async {
     Map<String, dynamic> params = {
       "user_id": AppState.instance.userId,
-      "session_id": sessionId,
-      "new_session_id": newId
+      "old_session_id": sessionId,
+      "new_session_name": newId
     };
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
@@ -645,7 +640,7 @@ class ChatRepositoryImpl extends ChatRepository {
 
     if (response.statusCode == 200) {
       final jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
-      print("ASR response: $jsonResponse");
+      print("TTS response: $jsonResponse");
       pipelineResponse = jsonResponse['pipelineResponse'] as List<dynamic>;
     }
     return pipelineResponse;
