@@ -170,7 +170,7 @@ class ChatViewModel extends LoadingViewModel {
   Map<String, int> stepTimings = {};
   String? currentSessionId;
   int? startTime;
-  bool includeDetails = false;
+  bool includeDetails = true;
   
   // ValueNotifiers for the thinking container
   ValueNotifier<bool> isQueryProcessing = ValueNotifier<bool>(false);
@@ -1875,23 +1875,25 @@ class ChatViewModel extends LoadingViewModel {
     const apiUrl = 'https://apaims2.0.vassarlabs.com/chatbot/chat/query-stream';
 
     try {
-      final response = await http.post(
-        Uri.parse(apiUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'text/event-stream',
-        },
-        body: jsonEncode(requestBody),
-      );
+      final client = http.Client();
+      final request = http.Request('POST', Uri.parse(apiUrl));
+      request.headers.addAll({
+        'Content-Type': 'application/json',
+        'Accept': 'text/event-stream',
+      });
+      request.body = jsonEncode(requestBody);
 
-      if (response.statusCode != 200) {
+      final streamedResponse = await client.send(request);
+
+      if (streamedResponse.statusCode != 200) {
         _updateProcessingStep(
           'api_connection',
           'API Connection',
           StepStatus.error,
-          'API request failed: ${response.statusCode} ${response.reasonPhrase}',
+          'API request failed: ${streamedResponse.statusCode} ${streamedResponse.reasonPhrase}',
         );
         _completeProcessing(false);
+        client.close();
         return;
       }
 
@@ -1903,7 +1905,8 @@ class ChatViewModel extends LoadingViewModel {
       );
 
       // Process SSE stream
-      await _processSSEStream(response.body, context);
+      await _processSSEStreamFromResponse(streamedResponse, context);
+      client.close();
 
     } catch (e) {
       print('Query stream error: $e');
@@ -1913,6 +1916,74 @@ class ChatViewModel extends LoadingViewModel {
         StepStatus.error,
         'Connection error: $e',
       );
+      _completeProcessing(false);
+    }
+  }
+
+  /// Process the SSE stream from a StreamedResponse
+  Future<void> _processSSEStreamFromResponse(http.StreamedResponse response, BuildContext context) async {
+    String buffer = '';
+    
+    await for (final chunk in response.stream.transform(utf8.decoder)) {
+      buffer += chunk;
+      
+      // Process complete lines
+      final lines = buffer.split('\n');
+      buffer = lines.removeLast(); // Keep incomplete line in buffer
+      
+      for (final line in lines) {
+        final trimmed = line.trim();
+        if (trimmed.isEmpty) continue;
+        
+        if (trimmed.startsWith('data: ')) {
+          try {
+            final sseDataString = trimmed.substring(6).trim();
+            if (sseDataString.isNotEmpty && sseDataString != '[DONE]') {
+              final eventData = jsonDecode(sseDataString);
+              final sseEvent = SSEEventModel.fromJson(eventData);
+              
+              await _handleSSEEvent(sseEvent, context);
+              
+              if (sseEvent.step == 'complete') {
+                _completeProcessing(true, sseEvent.finalAnswer);
+                return;
+              }
+            }
+          } catch (e) {
+            print('Error parsing SSE event: $e');
+            print('Problematic line: $trimmed');
+            _updateProcessingStep(
+              'parsing_error',
+              'Parsing Error',
+              StepStatus.error,
+              'Error parsing stream data: $e',
+            );
+          }
+        }
+      }
+    }
+    
+    // Process any remaining buffer content
+    if (buffer.trim().isNotEmpty && buffer.trim().startsWith('data: ')) {
+      try {
+        final sseDataString = buffer.trim().substring(6).trim();
+        if (sseDataString.isNotEmpty && sseDataString != '[DONE]') {
+          final eventData = jsonDecode(sseDataString);
+          final sseEvent = SSEEventModel.fromJson(eventData);
+          await _handleSSEEvent(sseEvent, context);
+          
+          if (sseEvent.step == 'complete') {
+            _completeProcessing(true, sseEvent.finalAnswer);
+            return;
+          }
+        }
+      } catch (e) {
+        print('Error parsing final SSE event: $e');
+      }
+    }
+    
+    // If we reach here without completing, something went wrong
+    if (isQueryProcessing.value) {
       _completeProcessing(false);
     }
   }

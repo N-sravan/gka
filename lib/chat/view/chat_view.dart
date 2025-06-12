@@ -180,6 +180,7 @@ class _ChatViewState extends State<ChatView> {
     return ValueListenableBuilder<bool>(
       valueListenable: viewModel.isQueryProcessing,
       builder: (context, isProcessing, _) {
+        // Show the container if currently processing OR if we have processing steps to show
         if (!isProcessing && viewModel.processingSteps.isEmpty) {
           return const SizedBox();
         }
