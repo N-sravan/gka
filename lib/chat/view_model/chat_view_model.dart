@@ -13,6 +13,8 @@ import 'package:gka/chat/model/chat_history_model.dart';
 import 'package:gka/chat/model/chat_message_history.dart';
 import 'package:gka/chat/model/get_documents_response.dart';
 import 'package:gka/chat/model/get_users_response.dart';
+import 'package:gka/chat/model/sse_event_model.dart';
+import 'package:gka/chat/model/processing_step_model.dart';
 import 'package:gka/shared/loading_view_model.dart';
 import 'package:gka/utils/app_state.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
@@ -162,6 +164,17 @@ class ChatViewModel extends LoadingViewModel {
 
   // Debug data
   List<String> debugSseEvents = [];
+
+  // New query-stream processing state
+  List<ProcessingStepModel> processingSteps = [];
+  Map<String, int> stepTimings = {};
+  String? currentSessionId;
+  int? startTime;
+  bool includeDetails = false;
+  
+  // ValueNotifiers for the thinking container
+  ValueNotifier<bool> isQueryProcessing = ValueNotifier<bool>(false);
+  ValueNotifier<bool> showThinkingContainer = ValueNotifier<bool>(true);
 
   // API configuration
   final Map<String, String> apiConfig = {
@@ -1807,5 +1820,384 @@ class ChatViewModel extends LoadingViewModel {
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(constants.noNetworkAvailability)));
     }
+  }
+
+  // Query-stream API methods
+
+  /// Send message using the new query-stream API with SSE
+  Future<void> sendMessageWithQueryStream(String userMessage, BuildContext context) async {
+    // Add user message to chat
+    messages.add({
+      'text': userMessage,
+      'is_user': true,
+      'timestamp': DateTime.now().toIso8601String(),
+    });
+    chatController.clear();
+    
+    // Initialize processing state
+    isQueryProcessing.value = true;
+    showLoader.value = false;
+    processingSteps.clear();
+    stepTimings.clear();
+    startTime = DateTime.now().millisecondsSinceEpoch;
+    currentSessionId = generateSessionId();
+    
+    notifyListeners();
+
+    // Start query processing with SSE
+    await _startQueryProcessing(userMessage, context);
+  }
+
+  /// Start the query processing with SSE stream
+  Future<void> _startQueryProcessing(String query, BuildContext context) async {
+    // Create initial API connection step
+    _updateProcessingStep(
+      'api_connection',
+      'API Connection',
+      StepStatus.inProgress,
+      'Connecting to API...',
+    );
+
+    final requestBody = {
+      'query': query,
+      'session_id': currentSessionId,
+      'user_id': AppState.instance.userId,
+      'language': AppState.instance.isEnglish ? 'en' : 'te',
+      'retrieval_type': 'vector',
+      'include_details': includeDetails,
+    };
+
+    if (!AppState.instance.isEnglish) {
+      requestBody['translation_engine'] = 
+          AppState.instance.transMode == 'bhashini' ? 'bhashini' : 'google';
+    }
+
+    const apiUrl = 'https://apaims2.0.vassarlabs.com/chatbot/chat/query-stream';
+
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'text/event-stream',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode != 200) {
+        _updateProcessingStep(
+          'api_connection',
+          'API Connection',
+          StepStatus.error,
+          'API request failed: ${response.statusCode} ${response.reasonPhrase}',
+        );
+        _completeProcessing(false);
+        return;
+      }
+
+      _updateProcessingStep(
+        'api_connection',
+        'API Connection',
+        StepStatus.completed,
+        'Connected. Streaming events...',
+      );
+
+      // Process SSE stream
+      await _processSSEStream(response.body, context);
+
+    } catch (e) {
+      print('Query stream error: $e');
+      _updateProcessingStep(
+        'api_connection',
+        'API Connection',
+        StepStatus.error,
+        'Connection error: $e',
+      );
+      _completeProcessing(false);
+    }
+  }
+
+  /// Process the SSE stream from the API
+  Future<void> _processSSEStream(String responseBody, BuildContext context) async {
+    final lines = responseBody.split('\n\n');
+    
+    for (final line in lines) {
+      if (line.startsWith('data: ')) {
+        try {
+          final sseDataString = line.substring(6).trim();
+          if (sseDataString.isNotEmpty) {
+            final eventData = jsonDecode(sseDataString);
+            final sseEvent = SSEEventModel.fromJson(eventData);
+            
+            await _handleSSEEvent(sseEvent, context);
+            
+            if (sseEvent.step == 'complete') {
+              _completeProcessing(true, sseEvent.finalAnswer);
+              return;
+            }
+          }
+        } catch (e) {
+          print('Error parsing SSE event: $e');
+          _updateProcessingStep(
+            'parsing_error',
+            'Parsing Error',
+            StepStatus.error,
+            'Error parsing stream data: $e',
+          );
+        }
+      }
+    }
+  }
+
+  /// Handle individual SSE events
+  Future<void> _handleSSEEvent(SSEEventModel event, BuildContext context) async {
+    print('SSE Event: ${event.step} - ${event.status} - ${event.message}');
+
+    // Track step timing
+    final stepStartKey = '${event.step}_start';
+    if (event.status == 'in_progress' && !stepTimings.containsKey(stepStartKey)) {
+      stepTimings[stepStartKey] = DateTime.now().millisecondsSinceEpoch;
+    }
+
+    int? duration;
+    if (event.status == 'completed' || event.status == 'skipped' || event.status == 'error') {
+      final stepStart = stepTimings[stepStartKey];
+      if (stepStart != null) {
+        duration = DateTime.now().millisecondsSinceEpoch - stepStart;
+        stepTimings['${event.step}_final_duration'] = duration;
+      }
+    }
+
+    // Update step status
+    _updateProcessingStep(
+      event.step,
+      ProcessingStepModel.formatStepName(event.step),
+      _mapStringToStepStatus(event.status),
+      event.message,
+      duration: duration,
+      details: _formatEventDetails(event),
+    );
+
+    notifyListeners();
+  }
+
+  /// Update or create a processing step
+  void _updateProcessingStep(
+    String stepName,
+    String displayName,
+    StepStatus status,
+    String message, {
+    int? duration,
+    Map<String, dynamic>? details,
+  }) {
+    final existingIndex = processingSteps.indexWhere((step) => step.name == stepName);
+    
+    if (existingIndex != -1) {
+      // Update existing step
+      processingSteps[existingIndex] = processingSteps[existingIndex].copyWith(
+        status: status,
+        message: message,
+        duration: duration,
+        details: details,
+      );
+    } else {
+      // Create new step
+      processingSteps.add(ProcessingStepModel(
+        name: stepName,
+        displayName: displayName,
+        status: status,
+        message: message,
+        startTime: stepTimings['${stepName}_start'],
+        duration: duration,
+        details: details,
+      ));
+    }
+    
+    notifyListeners();
+  }
+
+  /// Complete the processing workflow
+  void _completeProcessing(bool success, [String? finalAnswer]) {
+    isQueryProcessing.value = false;
+    showLoader.value = false;
+    
+    if (success && finalAnswer != null) {
+      // Add assistant response to messages
+      messages.add({
+        'text': finalAnswer,
+        'is_user': false,
+        'timestamp': DateTime.now().toIso8601String(),
+        'processing_steps': List.from(processingSteps),
+      });
+      
+      // Handle TTS if needed (we'll need to pass context through the method chain)
+      // _handleTTSResponse(finalAnswer, context);
+    } else if (!success) {
+      messages.add({
+        'text': 'Sorry, an error occurred while processing your request. Please try again.',
+        'is_user': false,
+        'timestamp': DateTime.now().toIso8601String(),
+        'processing_steps': List.from(processingSteps),
+      });
+    }
+    
+    notifyListeners();
+  }
+
+  /// Handle TTS response
+  Future<void> _handleTTSResponse(String text, BuildContext context) async {
+    // Remove source citations for TTS
+    String cleanText = text;
+    final sourceRegex = RegExp(r'\(Source:.*?\)');
+    final teluguSourceRegex = RegExp(r'\(మూలం:.*?\)');
+    
+    if (sourceRegex.hasMatch(text)) {
+      cleanText = text.replaceAll(sourceRegex, '');
+    } else if (teluguSourceRegex.hasMatch(text)) {
+      cleanText = text.replaceAll(teluguSourceRegex, '');
+    }
+
+    if (AppState.instance.ttsMode.toLowerCase() == 'bhashini') {
+      await ttsResponse(cleanText, text, context);
+    } else {
+      await tts.setLanguage(langId);
+      await tts.setVoice(currentVoice);
+      await tts.setSpeechRate(0.5);
+      await tts.speak(cleanText);
+    }
+  }
+
+  /// Format event details for display
+  Map<String, dynamic>? _formatEventDetails(SSEEventModel event) {
+    if (!includeDetails) return null;
+    
+    final details = <String, dynamic>{};
+    
+    // Add step-specific details
+    switch (event.step) {
+      case 'translation':
+        if (event.translatedQuery != null) {
+          details['translated_query'] = event.translatedQuery;
+        }
+        if (event.sourceLang != null && event.targetLang != null) {
+          details['language'] = '${event.sourceLang} → ${event.targetLang}';
+        }
+        break;
+        
+      case 'restructure_route':
+      case 'workflow_init':
+        if (event.collection != null) {
+          details['collection'] = event.collection;
+        }
+        if (event.isSmallTalk != null) {
+          details['is_small_talk'] = event.isSmallTalk;
+        }
+        if (event.routingConfidence != null) {
+          details['routing_confidence'] = '${(event.routingConfidence! * 100).toStringAsFixed(1)}%';
+        }
+        break;
+        
+      case 'retrieval':
+        if (event.chunksCount != null) {
+          details['chunks_retrieved'] = event.chunksCount;
+        }
+        if (event.retrievalType != null) {
+          details['retrieval_type'] = event.retrievalType;
+        }
+        if (event.top10Chunks != null) {
+          details['top_10_chunks'] = event.top10Chunks;
+        }
+        break;
+        
+      case 'answer_generation':
+        if (event.modelUsed != null) {
+          details['model_used'] = event.modelUsed;
+        }
+        if (event.tokensGenerated != null) {
+          details['tokens_generated'] = event.tokensGenerated;
+        }
+        if (event.llmPrompt != null) {
+          details['llm_prompt'] = event.llmPrompt!.substring(0, 100) + '...';
+        }
+        break;
+        
+      case 'vision_processing':
+        if (event.imagesProcessed != null) {
+          details['images_processed'] = event.imagesProcessed;
+        }
+        if (event.visionModel != null) {
+          details['vision_model'] = event.visionModel;
+        }
+        break;
+        
+      case 'web_search':
+        if (event.searchQuery != null) {
+          details['search_query'] = event.searchQuery;
+        }
+        if (event.resultsCount != null) {
+          details['results_count'] = event.resultsCount;
+        }
+        break;
+    }
+    
+    // Add error details
+    if (event.error != null) {
+      details['error'] = event.error.toString();
+    }
+    
+    return details.isNotEmpty ? details : null;
+  }
+
+  /// Map string status to StepStatus enum
+  StepStatus _mapStringToStepStatus(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return StepStatus.pending;
+      case 'in_progress':
+        return StepStatus.inProgress;
+      case 'completed':
+        return StepStatus.completed;
+      case 'error':
+        return StepStatus.error;
+      case 'skipped':
+        return StepStatus.skipped;
+      default:
+        return StepStatus.pending;
+    }
+  }
+
+  /// Generate a unique session ID
+  String generateSessionId() {
+    return const Uuid().v4();
+  }
+
+  /// Get total processing duration
+  int get totalProcessingDuration {
+    return processingSteps
+        .where((step) => step.duration != null)
+        .fold(0, (sum, step) => sum + step.duration!);
+  }
+
+  /// Toggle thinking container visibility
+  void toggleThinkingContainer() {
+    showThinkingContainer.value = !showThinkingContainer.value;
+    notifyListeners();
+  }
+
+  /// Toggle include details option
+  void toggleIncludeDetails() {
+    includeDetails = !includeDetails;
+    notifyListeners();
+  }
+
+  /// Clear processing state
+  void clearProcessingState() {
+    processingSteps.clear();
+    stepTimings.clear();
+    isQueryProcessing.value = false;
+    showThinkingContainer.value = true;
+    currentSessionId = null;
+    startTime = null;
+    notifyListeners();
   }
 }

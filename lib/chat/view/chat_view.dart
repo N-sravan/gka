@@ -21,6 +21,7 @@ import 'package:provider/provider.dart';
 import '../../utils/app_state.dart';
 import 'agent_step.dart';
 import 'drawer_widget.dart';
+import 'thinking_container_widget.dart';
 
 class ChatView extends StatefulWidget {
   const ChatView({
@@ -162,6 +163,7 @@ class _ChatViewState extends State<ChatView> {
           body: Column(
             children: [
               _buildChatList(),
+              _buildThinkingContainer(),
               _buildLoaderWidget(),
               Padding(
                 padding: const EdgeInsets.all(20),
@@ -169,6 +171,35 @@ class _ChatViewState extends State<ChatView> {
               )
             ],
           ),
+        );
+      },
+    );
+  }
+
+  Widget _buildThinkingContainer() {
+    return ValueListenableBuilder<bool>(
+      valueListenable: viewModel.isQueryProcessing,
+      builder: (context, isProcessing, _) {
+        if (!isProcessing && viewModel.processingSteps.isEmpty) {
+          return const SizedBox();
+        }
+        
+        return ValueListenableBuilder<bool>(
+          valueListenable: viewModel.showThinkingContainer,
+          builder: (context, showContainer, _) {
+            if (!showContainer) return const SizedBox();
+            
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: ThinkingContainerWidget(
+                steps: viewModel.processingSteps,
+                isProcessing: isProcessing,
+                totalDuration: viewModel.totalProcessingDuration,
+                includeDetails: viewModel.includeDetails,
+                onToggle: viewModel.toggleThinkingContainer,
+              ),
+            );
+          },
         );
       },
     );
@@ -488,7 +519,8 @@ class _ChatViewState extends State<ChatView> {
                           if (viewModel.chatController.text.isNotEmpty &&
                               viewModel.chatController.text !=
                                   'Processing...') {
-                            viewModel.sendMessageStream(
+                            // Use the new query-stream API
+                            viewModel.sendMessageWithQueryStream(
                                 viewModel.chatController.text, context);
                           }
                         }
