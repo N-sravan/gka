@@ -185,22 +185,16 @@ class _ChatViewState extends State<ChatView> {
           return const SizedBox();
         }
         
-        return ValueListenableBuilder<bool>(
-          valueListenable: viewModel.showThinkingContainer,
-          builder: (context, showContainer, _) {
-            if (!showContainer) return const SizedBox();
-            
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: ThinkingContainerWidget(
-                steps: viewModel.processingSteps,
-                isProcessing: isProcessing,
-                totalDuration: viewModel.totalProcessingDuration,
-                includeDetails: viewModel.includeDetails,
-                onToggle: viewModel.toggleThinkingContainer,
-              ),
-            );
-          },
+        // Always show the container when there are steps, regardless of showThinkingContainer state
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: ThinkingContainerWidget(
+            steps: viewModel.processingSteps,
+            isProcessing: isProcessing,
+            totalDuration: viewModel.totalProcessingDuration,
+            includeDetails: viewModel.includeDetails,
+            onToggle: viewModel.toggleThinkingContainer,
+          ),
         );
       },
     );

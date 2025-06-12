@@ -91,7 +91,7 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
         _rotationController.forward();
       }
     });
-    widget.onToggle?.call();
+    // Don't call onToggle here as it should not hide the container
   }
 
   @override
