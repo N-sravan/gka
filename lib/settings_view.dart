@@ -18,6 +18,8 @@ class _SettingsPageState extends State<SettingsPage> {
   String selectedSpeechService = 'Native';
   String selectedTTSService = 'Native';
   String selectedTranslationService = 'Bhashini';
+  bool showChainOfActions = true;
+  bool showDetailedMode = true;
 
   final langList = ['English', 'Telugu'];
   final speechServicesList = ['Native', 'Bhashini','Parakeet'];
@@ -33,6 +35,8 @@ class _SettingsPageState extends State<SettingsPage> {
     selectedSpeechService = AppState.instance.sttMode;
     selectedTTSService = AppState.instance.ttsMode;
     selectedTranslationService = AppState.instance.transMode;
+    showChainOfActions = AppState.instance.showChainOfActions;
+    showDetailedMode = AppState.instance.showDetailedMode;
   }
 
   @override
@@ -111,6 +115,33 @@ class _SettingsPageState extends State<SettingsPage> {
                 setState(() => selectedSpeechService = value);
               }),
             ),
+            const SizedBox(height: 32),
+            _buildSectionHeader("Chat Display Options"),
+            const SizedBox(height: 8),
+            _buildToggleItem(
+              "Show Chain of Actions",
+              "Display processing steps during AI responses",
+              showChainOfActions,
+              (value) {
+                setState(() {
+                  showChainOfActions = value;
+                  AppState.instance.showChainOfActions = value;
+                });
+                Fluttertoast.showToast(msg: 'Chain of Actions ${value ? 'Enabled' : 'Disabled'}!');
+              },
+            ),
+            _buildToggleItem(
+              "Show Detailed Information",
+              "Include technical details in processing steps",
+              showDetailedMode,
+              (value) {
+                setState(() {
+                  showDetailedMode = value;
+                  AppState.instance.showDetailedMode = value;
+                });
+                Fluttertoast.showToast(msg: 'Detailed Mode ${value ? 'Enabled' : 'Disabled'}!');
+              },
+            ),
             const SizedBox(height: 40),
           ],
         ),
@@ -172,6 +203,58 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildToggleItem(
+      String title, String description, bool value, Function(bool) onChanged) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 1),
+      child: Material(
+        color: Colors.white,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      description,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF757575),
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Transform.scale(
+                scale: 0.8,
+                child: Switch(
+                  value: value,
+                  onChanged: onChanged,
+                  activeColor: const Color(0xFF4CAF50),
+                  activeTrackColor: const Color(0xFF4CAF50).withOpacity(0.3),
+                  inactiveThumbColor: Colors.grey[400],
+                  inactiveTrackColor: Colors.grey[300],
+                ),
+              ),
+            ],
           ),
         ),
       ),

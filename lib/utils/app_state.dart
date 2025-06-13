@@ -52,5 +52,9 @@ class AppState {
   late String transMode;
   late String sttMode;
   late String ttsMode;
-  bool isListeningMode =false;
+  bool isListeningMode = false;
+  
+  // Chat display preferences
+  bool showChainOfActions = true;
+  bool showDetailedMode = true;
 }

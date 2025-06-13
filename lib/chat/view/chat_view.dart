@@ -231,6 +231,11 @@ class _ChatViewState extends State<ChatView> {
     return ValueListenableBuilder<bool>(
       valueListenable: viewModel.isQueryProcessing,
       builder: (context, isProcessing, _) {
+        // Check if chain of actions should be shown based on user settings
+        if (!AppState.instance.showChainOfActions) {
+          return const SizedBox();
+        }
+        
         // Show the container if currently processing OR if we have processing steps to show
         if (!isProcessing && viewModel.processingSteps.isEmpty) {
           return const SizedBox();
@@ -243,7 +248,7 @@ class _ChatViewState extends State<ChatView> {
             steps: viewModel.processingSteps,
             isProcessing: isProcessing,
             totalDuration: viewModel.totalProcessingDuration,
-            includeDetails: viewModel.includeDetails,
+            includeDetails: AppState.instance.showDetailedMode,
             onToggle: viewModel.toggleThinkingContainer,
           ),
         );
