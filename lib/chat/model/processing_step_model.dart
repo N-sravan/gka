@@ -66,6 +66,53 @@ class ProcessingStepModel {
     return '${duration}ms';
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'displayName': displayName,
+      'status': status.toString().split('.').last,
+      'message': message,
+      'startTime': startTime,
+      'duration': duration,
+      'details': details,
+      'error': error,
+    };
+  }
+
+  static ProcessingStepModel fromJson(Map<String, dynamic> json) {
+    return ProcessingStepModel(
+      name: json['name'] ?? '',
+      displayName: json['displayName'] ?? '',
+      status: _parseStepStatus(json['status']),
+      message: json['message'] ?? '',
+      startTime: json['startTime'],
+      duration: json['duration'],
+      details: json['details'] as Map<String, dynamic>?,
+      error: json['error'],
+    );
+  }
+
+  static StepStatus _parseStepStatus(dynamic status) {
+    if (status is StepStatus) return status;
+    
+    final statusStr = status.toString().toLowerCase();
+    switch (statusStr) {
+      case 'pending':
+        return StepStatus.pending;
+      case 'inprogress':
+      case 'in_progress':
+        return StepStatus.inProgress;
+      case 'completed':
+        return StepStatus.completed;
+      case 'error':
+        return StepStatus.error;
+      case 'skipped':
+        return StepStatus.skipped;
+      default:
+        return StepStatus.pending;
+    }
+  }
+
   static String formatStepName(String stepName) {
     const names = {
       'translation': 'Translation',

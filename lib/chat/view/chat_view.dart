@@ -236,12 +236,12 @@ class _ChatViewState extends State<ChatView> {
           return const SizedBox();
         }
         
-        // Show the container if currently processing OR if we have processing steps to show
-        if (!isProcessing && viewModel.processingSteps.isEmpty) {
+        // Only show for currently processing queries (not completed ones)
+        if (!isProcessing) {
           return const SizedBox();
         }
         
-        // Always show the container when there are steps, regardless of showThinkingContainer state
+        // Show the container for active processing
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: ThinkingContainerWidget(
@@ -254,6 +254,35 @@ class _ChatViewState extends State<ChatView> {
         );
       },
     );
+  }
+
+  // Helper methods for message-specific thinking containers
+  bool _shouldShowThinkingContainerForMessage(Map<String, dynamic> message) {
+    // Only show for non-user messages that have processing steps and if settings allow
+    return AppState.instance.showChainOfActions &&
+           !message['is_user'] &&
+           message['processing_steps'] != null &&
+           (message['processing_steps'] as List).isNotEmpty;
+  }
+
+  List<ProcessingStepModel> _getProcessingStepsFromMessage(Map<String, dynamic> message) {
+    final stepsData = message['processing_steps'] as List?;
+    if (stepsData == null) return [];
+    
+    return stepsData.map((stepData) {
+      if (stepData is ProcessingStepModel) {
+        return stepData;
+      }
+      // If the data is stored as Map (serialized), reconstruct ProcessingStepModel
+      return ProcessingStepModel.fromJson(stepData as Map<String, dynamic>);
+    }).toList();
+  }
+
+  int _getTotalDurationFromMessage(Map<String, dynamic> message) {
+    final steps = _getProcessingStepsFromMessage(message);
+    return steps
+        .where((step) => step.duration != null)
+        .fold(0, (sum, step) => sum + step.duration!);
   }
 
   Widget _buildLoaderWidget() {
@@ -309,26 +338,43 @@ class _ChatViewState extends State<ChatView> {
 
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
-            child: ChatBubble(
-              expandContentBlocks: false,
-              contentBlocks: msg['content_blocks'],
-              timestamp: msg['timestamp'] ?? '',
-              text: msg['text'] ?? '',
-              isUser: msg['is_user'],
-              imageUrl: msg['image_url'] ?? '',
-              tableColumnData: msg['sql_df_columns'],
-              tableRowData: msg['sql_df_values'] != null
-                  ? jsonDecode(msg['sql_df_values'])
-                  : null,
-              logMessage: msg['log'] ?? '',
-              hasErrorLog: false,
-              timestampMapping: {},
-              followUpQuestions: (msg['follow_up_questions'] as List<dynamic>?)
-                      ?.map((e) => e.toString())
-                      .toList() ??
-                  [],
-              token: msg['token'] ?? '',
-              isMapView: false,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ChatBubble(
+                  expandContentBlocks: false,
+                  contentBlocks: msg['content_blocks'],
+                  timestamp: msg['timestamp'] ?? '',
+                  text: msg['text'] ?? '',
+                  isUser: msg['is_user'],
+                  imageUrl: msg['image_url'] ?? '',
+                  tableColumnData: msg['sql_df_columns'],
+                  tableRowData: msg['sql_df_values'] != null
+                      ? jsonDecode(msg['sql_df_values'])
+                      : null,
+                  logMessage: msg['log'] ?? '',
+                  hasErrorLog: false,
+                  timestampMapping: {},
+                  followUpQuestions: (msg['follow_up_questions'] as List<dynamic>?)
+                          ?.map((e) => e.toString())
+                          .toList() ??
+                      [],
+                  token: msg['token'] ?? '',
+                  isMapView: false,
+                ),
+                // Show thinking container for messages with processing steps
+                if (_shouldShowThinkingContainerForMessage(msg))
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8, left: 16, right: 16),
+                    child: ThinkingContainerWidget(
+                      steps: _getProcessingStepsFromMessage(msg),
+                      isProcessing: false, // Historical steps are always completed
+                      totalDuration: _getTotalDurationFromMessage(msg),
+                      includeDetails: AppState.instance.showDetailedMode,
+                      onToggle: null, // No toggle needed for historical steps
+                    ),
+                  ),
+              ],
             ),
           );
         },

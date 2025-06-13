@@ -2098,7 +2098,7 @@ class ChatViewModel extends LoadingViewModel {
         'text': finalAnswer,
         'is_user': false,
         'timestamp': DateTime.now().toIso8601String(),
-        'processing_steps': List.from(processingSteps),
+        'processing_steps': processingSteps.map((step) => step.toJson()).toList(),
       });
       
       // Handle TTS if needed (we'll need to pass context through the method chain)
@@ -2108,7 +2108,7 @@ class ChatViewModel extends LoadingViewModel {
         'text': 'Sorry, an error occurred while processing your request. Please try again.',
         'is_user': false,
         'timestamp': DateTime.now().toIso8601String(),
-        'processing_steps': List.from(processingSteps),
+        'processing_steps': processingSteps.map((step) => step.toJson()).toList(),
       });
     }
     
