@@ -365,7 +365,7 @@ class _ChatViewState extends State<ChatView> {
                   token: msg['token'] ?? '',
                   isMapView: false,
                 ),
-                // Show thinking container for messages with processing steps
+                // Show thinking container for messages with processing steps (now starts collapsed)
                 if (_shouldShowThinkingContainerForMessage(msg))
                   Padding(
                     padding: const EdgeInsets.only(top: 8, left: 16, right: 16),

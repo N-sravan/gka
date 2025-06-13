@@ -25,7 +25,7 @@ class ThinkingContainerWidget extends StatefulWidget {
 
 class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
     with TickerProviderStateMixin {
-  bool _isExpanded = true;
+  bool _isExpanded = false;
   Map<String, bool> _detailsExpanded = {};
   late AnimationController _rotationController;
   late AnimationController _pulseController;
@@ -388,7 +388,7 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
   Widget _buildStepDetails(ProcessingStepModel step) {
     final details = step.details!;
     final stepKey = step.name;
-    final isExpanded = _detailsExpanded[stepKey] ?? true;
+    final isExpanded = _detailsExpanded[stepKey] ?? false;
 
     return Container(
       margin: const EdgeInsets.only(top: 8),
