@@ -201,22 +201,31 @@ class _ChatViewState extends State<ChatView> {
             child: Column(
               children: [
                 _buildChatList(),
-                _buildThinkingContainer(),
-                _buildLoaderWidget(),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, -2),
-                      ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: bottomBar(),
+                Flexible(
+                  fit: FlexFit.loose,
+                  child: _buildThinkingContainer(),
+                ),
+                Flexible(
+                  fit: FlexFit.loose,
+                  child: _buildLoaderWidget(),
+                ),
+                Flexible(
+                  fit: FlexFit.loose,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, -2),
+                        ),
+                      ],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: bottomBar(),
+                    ),
                   ),
                 ),
               ],
