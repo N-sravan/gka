@@ -25,6 +25,7 @@ class ThinkingContainerWidget extends StatefulWidget {
 class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
     with TickerProviderStateMixin {
   bool _isExpanded = true;
+  Map<String, bool> _detailsExpanded = {};
   late AnimationController _rotationController;
   late AnimationController _pulseController;
   late Animation<double> _rotationAnimation;
@@ -383,9 +384,11 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
 
   Widget _buildStepDetails(ProcessingStepModel step) {
     final details = step.details!;
+    final stepKey = step.name;
+    final isExpanded = _detailsExpanded[stepKey] ?? true;
+    
     return Container(
       margin: const EdgeInsets.only(top: 8),
-      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [Colors.blue.shade50, Colors.blue.shade25],
@@ -398,27 +401,61 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(Icons.info_outline, size: 16, color: Colors.blue.shade600),
-              const SizedBox(width: 6),
-              Text(
-                'Detailed Information',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.blue.shade800,
-                ),
+          // Header with toggle button
+          InkWell(
+            onTap: () {
+              setState(() {
+                _detailsExpanded[stepKey] = !isExpanded;
+              });
+            },
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, size: 16, color: Colors.blue.shade600),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Detailed Information',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.blue.shade800,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Icon(
+                      isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                      size: 16,
+                      color: Colors.blue.shade700,
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-          const SizedBox(height: 8),
-          ...details.entries.map((entry) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: _buildDetailItem(entry.key, entry.value),
-            );
-          }).toList(),
+          // Collapsible content
+          if (isExpanded) ...[
+            Container(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: details.entries.map((entry) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: _buildDetailItem(entry.key, entry.value),
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
         ],
       ),
     );
