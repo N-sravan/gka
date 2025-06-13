@@ -19,7 +19,8 @@ class ThinkingContainerWidget extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<ThinkingContainerWidget> createState() => _ThinkingContainerWidgetState();
+  State<ThinkingContainerWidget> createState() =>
+      _ThinkingContainerWidgetState();
 }
 
 class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
@@ -42,7 +43,7 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
       duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
-    
+
     _rotationAnimation = Tween<double>(
       begin: 0.0,
       end: 0.5,
@@ -50,7 +51,7 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
       parent: _rotationController,
       curve: Curves.easeInOut,
     ));
-    
+
     _pulseAnimation = Tween<double>(
       begin: 1.0,
       end: 1.2,
@@ -129,7 +130,7 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: widget.isProcessing 
+            colors: widget.isProcessing
                 ? [Colors.orange.shade50, Colors.orange.shade100]
                 : widget.steps.any((s) => s.status == StepStatus.error)
                     ? [Colors.red.shade50, Colors.red.shade100]
@@ -142,7 +143,7 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
             bottom: _isExpanded ? Radius.zero : const Radius.circular(16),
           ),
           border: Border.all(
-            color: widget.isProcessing 
+            color: widget.isProcessing
                 ? Colors.orange.shade200
                 : widget.steps.any((s) => s.status == StepStatus.error)
                     ? Colors.red.shade200
@@ -159,10 +160,11 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.isProcessing ? '🔄 Processing query...' : 
-                    widget.steps.any((s) => s.status == StepStatus.error) 
-                        ? '❌ Processing failed' 
-                        : '✅ Processing complete',
+                    widget.isProcessing
+                        ? '🔄 Processing query...'
+                        : widget.steps.any((s) => s.status == StepStatus.error)
+                            ? '❌ Processing failed'
+                            : '✅ Processing complete',
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -288,7 +290,8 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
               ),
               if (step.duration != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(3),
@@ -331,7 +334,7 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
   Widget _buildStatusIndicator(StepStatus status) {
     Color color;
     Widget? child;
-    
+
     switch (status) {
       case StepStatus.pending:
         color = Colors.grey[400]!;
@@ -357,7 +360,7 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
         color = Colors.grey[600]!;
         break;
     }
-    
+
     return Container(
       width: 8,
       height: 8,
@@ -386,12 +389,12 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
     final details = step.details!;
     final stepKey = step.name;
     final isExpanded = _detailsExpanded[stepKey] ?? true;
-    
+
     return Container(
       margin: const EdgeInsets.only(top: 8),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.blue.shade50, Colors.blue.shade25],
+          colors: [Colors.blue.shade100, Colors.blue.shade50],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -413,7 +416,8 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
               padding: const EdgeInsets.all(12),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline, size: 16, color: Colors.blue.shade600),
+                  Icon(Icons.info_outline,
+                      size: 16, color: Colors.blue.shade600),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
@@ -432,7 +436,9 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Icon(
-                      isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                      isExpanded
+                          ? Icons.keyboard_arrow_up
+                          : Icons.keyboard_arrow_down,
                       size: 16,
                       color: Colors.blue.shade700,
                     ),
@@ -465,7 +471,7 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
     if (value is List && key == 'top_10_chunks') {
       return _buildChunksDetail(value);
     }
-    
+
     // Handle different data types with better formatting
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -498,11 +504,11 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
       ),
     );
   }
-  
+
   Widget _getKeyIcon(String key) {
     IconData icon;
     Color color;
-    
+
     switch (key.toLowerCase()) {
       case 'model_used':
       case 'vision_model':
@@ -539,7 +545,7 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
         icon = Icons.info;
         color = Colors.grey;
     }
-    
+
     return Container(
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
@@ -549,13 +555,15 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
       child: Icon(icon, size: 12, color: color),
     );
   }
-  
+
   String _formatKeyName(String key) {
-    return key.split('_').map((word) => 
-      word.isEmpty ? '' : word[0].toUpperCase() + word.substring(1)
-    ).join(' ');
+    return key
+        .split('_')
+        .map((word) =>
+            word.isEmpty ? '' : word[0].toUpperCase() + word.substring(1))
+        .join(' ');
   }
-  
+
   Widget _buildFormattedValue(dynamic value) {
     if (value is String) {
       // Check if string contains structured data
@@ -583,18 +591,18 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
       );
     }
   }
-  
+
   bool _isImageUrl(String text) {
     final uri = Uri.tryParse(text);
     if (uri == null) return false;
     final path = uri.path.toLowerCase();
-    return path.endsWith('.jpg') || 
-           path.endsWith('.jpeg') || 
-           path.endsWith('.png') || 
-           path.endsWith('.gif') || 
-           path.endsWith('.webp');
+    return path.endsWith('.jpg') ||
+        path.endsWith('.jpeg') ||
+        path.endsWith('.png') ||
+        path.endsWith('.gif') ||
+        path.endsWith('.webp');
   }
-  
+
   Widget _buildImageFromUrl(String url) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
@@ -616,7 +624,8 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.broken_image, size: 16, color: Colors.grey.shade600),
+                  Icon(Icons.broken_image,
+                      size: 16, color: Colors.grey.shade600),
                   const SizedBox(height: 2),
                   Text(
                     'Image failed to load',
@@ -653,7 +662,7 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
       ),
     );
   }
-  
+
   Widget _buildFormattedText(String text) {
     return Container(
       padding: const EdgeInsets.all(8),
@@ -671,7 +680,7 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
       ),
     );
   }
-  
+
   Widget _buildNumericValue(num value) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -691,7 +700,7 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
       ),
     );
   }
-  
+
   Widget _buildMapValue(Map map) {
     return Container(
       padding: const EdgeInsets.all(8),
@@ -718,47 +727,48 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
             ],
           ),
           const SizedBox(height: 4),
-          ...map.entries.map((entry) => 
-            Padding(
-              padding: const EdgeInsets.only(bottom: 2),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.shade200,
-                      borderRadius: BorderRadius.circular(2),
+          ...map.entries
+              .map((entry) => Padding(
+                    padding: const EdgeInsets.only(bottom: 2),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.shade200,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                          child: Text(
+                            entry.key.toString(),
+                            style: TextStyle(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.amber.shade900,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            entry.value.toString(),
+                            style: TextStyle(
+                              fontSize: 8,
+                              color: Colors.amber.shade800,
+                              fontFamily: 'monospace',
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    child: Text(
-                      entry.key.toString(),
-                      style: TextStyle(
-                        fontSize: 8,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.amber.shade900,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      entry.value.toString(),
-                      style: TextStyle(
-                        fontSize: 8,
-                        color: Colors.amber.shade800,
-                        fontFamily: 'monospace',
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            )
-          ).toList(),
+                  ))
+              .toList(),
         ],
       ),
     );
   }
-  
+
   Widget _buildListValue(List list) {
     return Container(
       padding: const EdgeInsets.all(8),
@@ -785,46 +795,50 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
             ],
           ),
           const SizedBox(height: 4),
-          ...list.take(3).toList().asMap().entries.map((entry) => 
-            Padding(
-              padding: const EdgeInsets.only(bottom: 2),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 16,
-                    height: 16,
-                    decoration: BoxDecoration(
-                      color: Colors.green.shade200,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        '${entry.key + 1}',
-                        style: TextStyle(
-                          fontSize: 7,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.green.shade900,
+          ...list
+              .take(3)
+              .toList()
+              .asMap()
+              .entries
+              .map((entry) => Padding(
+                    padding: const EdgeInsets.only(bottom: 2),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 16,
+                          height: 16,
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade200,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              '${entry.key + 1}',
+                              style: TextStyle(
+                                fontSize: 7,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.green.shade900,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            entry.value.toString(),
+                            style: TextStyle(
+                              fontSize: 9,
+                              color: Colors.green.shade700,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      entry.value.toString(),
-                      style: TextStyle(
-                        fontSize: 9,
-                        color: Colors.green.shade700,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            )
-          ).toList(),
+                  ))
+              .toList(),
           if (list.length > 3)
             Padding(
               padding: const EdgeInsets.only(top: 2),
@@ -862,11 +876,11 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
 
   Widget _buildChunkItem(dynamic chunk) {
     if (chunk is! Map<String, dynamic>) return const SizedBox();
-    
+
     final metadata = chunk['metadata'] as Map<String, dynamic>?;
     final document = chunk['document'] as String?;
     final similarity = chunk['similarity'] as double?;
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(8),
@@ -888,7 +902,7 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
           // Document header with metadata
           _buildDocumentHeader(metadata, similarity),
           const SizedBox(height: 6),
-          
+
           // Rich document content
           if (document != null && document.isNotEmpty)
             _buildRichDocumentContent(document, metadata),
@@ -896,8 +910,9 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
       ),
     );
   }
-  
-  Widget _buildDocumentHeader(Map<String, dynamic>? metadata, double? similarity) {
+
+  Widget _buildDocumentHeader(
+      Map<String, dynamic>? metadata, double? similarity) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -952,50 +967,52 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
       ),
     );
   }
-  
-  Widget _buildRichDocumentContent(String document, Map<String, dynamic>? metadata) {
+
+  Widget _buildRichDocumentContent(
+      String document, Map<String, dynamic>? metadata) {
     // Check if document contains table data
     if (_isTableData(document)) {
       return _buildTableContent(document);
     }
-    
+
     // Check if document has structured table format
     if (_isStructuredTableData(document)) {
       return _buildStructuredTableContent(document);
     }
-    
+
     // Show image if available in metadata
     final widgets = <Widget>[];
-    
+
     if (metadata?['image_url'] != null) {
-      widgets.add(_buildDocumentImage(metadata!['image_url'], metadata['caption']));
+      widgets.add(
+          _buildDocumentImage(metadata!['image_url'], metadata['caption']));
       widgets.add(const SizedBox(height: 6));
     }
-    
+
     // Regular text content
     widgets.add(_buildTextContent(document));
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: widgets,
     );
   }
-  
+
   bool _isTableData(String document) {
     return document.trim().startsWith('[[') && document.trim().endsWith(']]');
   }
-  
+
   bool _isStructuredTableData(String document) {
     return document.contains('Headers:') && document.contains('Data:');
   }
-  
+
   Widget _buildTableContent(String jsonString) {
     try {
       final dynamic tableData = jsonDecode(jsonString);
       if (tableData is! List || tableData.isEmpty) {
         return _buildTextContent(jsonString);
       }
-      
+
       return Container(
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey.shade300),
@@ -1008,11 +1025,13 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 color: Colors.grey.shade100,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(4)),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.table_chart, size: 12, color: Colors.grey.shade600),
+                  Icon(Icons.table_chart,
+                      size: 12, color: Colors.grey.shade600),
                   const SizedBox(width: 4),
                   Text(
                     'Data Table',
@@ -1044,59 +1063,65 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
       return _buildTextContent(jsonString);
     }
   }
-  
+
   List<DataColumn> _buildTableColumns(List<dynamic> headers) {
-    return headers.map((header) => DataColumn(
-      label: Expanded(
-        child: Text(
-          header.toString(),
-          style: const TextStyle(
-            fontSize: 8,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-    )).toList();
+    return headers
+        .map((header) => DataColumn(
+              label: Expanded(
+                child: Text(
+                  header.toString(),
+                  style: const TextStyle(
+                    fontSize: 8,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ))
+        .toList();
   }
-  
+
   List<DataRow> _buildTableRows(List<dynamic> rows) {
-    return rows.take(5).map((row) { // Limit to 5 rows for space
+    return rows.take(5).map((row) {
+      // Limit to 5 rows for space
       if (row is! List) return DataRow(cells: [DataCell(Text(row.toString()))]);
-      
+
       return DataRow(
-        cells: row.map((cell) => DataCell(
-          Text(
-            cell.toString(),
-            style: const TextStyle(fontSize: 8),
-            overflow: TextOverflow.ellipsis,
-          ),
-        )).toList(),
+        cells: row
+            .map((cell) => DataCell(
+                  Text(
+                    cell.toString(),
+                    style: const TextStyle(fontSize: 8),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ))
+            .toList(),
       );
     }).toList();
   }
-  
+
   Widget _buildStructuredTableContent(String document) {
     final lines = document.split('\n');
     List<String> headers = [];
     List<List<String>> rows = [];
-    
+
     bool inDataSection = false;
-    
+
     for (String line in lines) {
       line = line.trim();
-      
+
       if (line.startsWith('Headers:')) {
         headers = line.substring(8).split('|').map((h) => h.trim()).toList();
         continue;
       }
-      
+
       if (line.startsWith('Data:')) {
         inDataSection = true;
         continue;
       }
-      
+
       if (inDataSection && line.startsWith('Row ')) {
-        final rowData = line.substring(line.indexOf(':') + 1)
+        final rowData = line
+            .substring(line.indexOf(':') + 1)
             .split('|')
             .map((cell) => cell.trim())
             .toList();
@@ -1104,16 +1129,16 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
           rows.add(rowData);
         }
       }
-      
+
       if (line.startsWith('Notes:') || line.startsWith('Raw Extraction:')) {
         break;
       }
     }
-    
+
     if (headers.isEmpty) {
       return _buildTextContent(document);
     }
-    
+
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: Colors.orange.shade300),
@@ -1125,7 +1150,8 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
               color: Colors.orange.shade50,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(4)),
             ),
             child: Row(
               children: [
@@ -1149,33 +1175,40 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
               horizontalMargin: 8,
               headingRowHeight: 24,
               dataRowHeight: 20,
-              columns: headers.map((header) => DataColumn(
-                label: Expanded(
-                  child: Text(
-                    header,
-                    style: const TextStyle(
-                      fontSize: 8,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              )).toList(),
-              rows: rows.take(5).map((row) => DataRow(
-                cells: row.map((cell) => DataCell(
-                  Text(
-                    cell,
-                    style: const TextStyle(fontSize: 8),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                )).toList(),
-              )).toList(),
+              columns: headers
+                  .map((header) => DataColumn(
+                        label: Expanded(
+                          child: Text(
+                            header,
+                            style: const TextStyle(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ))
+                  .toList(),
+              rows: rows
+                  .take(5)
+                  .map((row) => DataRow(
+                        cells: row
+                            .map((cell) => DataCell(
+                                  Text(
+                                    cell,
+                                    style: const TextStyle(fontSize: 8),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ))
+                            .toList(),
+                      ))
+                  .toList(),
             ),
           ),
         ],
       ),
     );
   }
-  
+
   Widget _buildDocumentImage(String imageUrl, String? caption) {
     return Container(
       decoration: BoxDecoration(
@@ -1189,7 +1222,8 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
               color: Colors.purple.shade50,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(4)),
             ),
             child: Row(
               children: [
@@ -1207,7 +1241,8 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
             ),
           ),
           ClipRRect(
-            borderRadius: const BorderRadius.vertical(bottom: Radius.circular(4)),
+            borderRadius:
+                const BorderRadius.vertical(bottom: Radius.circular(4)),
             child: Image.network(
               imageUrl,
               height: 100,
@@ -1244,7 +1279,7 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
       ),
     );
   }
-  
+
   Widget _buildTextContent(String text) {
     return Container(
       padding: const EdgeInsets.all(6),
@@ -1282,10 +1317,11 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            widget.isProcessing ? 'Processing steps...' : 
-            widget.steps.any((s) => s.status == StepStatus.error)
-                ? 'An error occurred during processing.'
-                : 'All steps completed successfully.',
+            widget.isProcessing
+                ? 'Processing steps...'
+                : widget.steps.any((s) => s.status == StepStatus.error)
+                    ? 'An error occurred during processing.'
+                    : 'All steps completed successfully.',
             style: TextStyle(
               fontSize: 12,
               color: Colors.grey[700],

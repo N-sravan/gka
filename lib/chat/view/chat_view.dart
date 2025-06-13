@@ -14,6 +14,7 @@ import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import '../../chat_bubble.dart';
 import 'package:http/http.dart' as http;
+import '../model/processing_step_model.dart';
 import '/utils/common_constants.dart' as constants;
 import 'package:flutter/material.dart';
 import 'package:gka/chat/view_model/chat_view_model.dart';
