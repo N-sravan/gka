@@ -202,16 +202,9 @@ class _ChatViewState extends State<ChatView> {
             child: Column(
               children: [
                 _buildChatList(),
-                Flexible(
-                  fit: FlexFit.loose,
-                  child: _buildThinkingContainer(),
-                ),
-                Flexible(
-                  fit: FlexFit.loose,
-                  child: _buildLoaderWidget(),
-                ),
-                Flexible(
-                  fit: FlexFit.loose,
+                _buildThinkingContainer(),
+                _buildLoaderWidget(),
+                SafeArea(
                   child: Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
