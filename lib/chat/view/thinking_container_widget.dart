@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../model/processing_step_model.dart';
 
@@ -520,6 +521,14 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
   
   Widget _buildFormattedValue(dynamic value) {
     if (value is String) {
+      // Check if string contains structured data
+      if (_isTableData(value) || _isStructuredTableData(value)) {
+        return _buildRichDocumentContent(value, null);
+      }
+      // Check if it's a URL (image or link)
+      if (_isImageUrl(value)) {
+        return _buildImageFromUrl(value);
+      }
       return _buildFormattedText(value);
     } else if (value is num) {
       return _buildNumericValue(value);
@@ -536,6 +545,76 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
         ),
       );
     }
+  }
+  
+  bool _isImageUrl(String text) {
+    final uri = Uri.tryParse(text);
+    if (uri == null) return false;
+    final path = uri.path.toLowerCase();
+    return path.endsWith('.jpg') || 
+           path.endsWith('.jpeg') || 
+           path.endsWith('.png') || 
+           path.endsWith('.gif') || 
+           path.endsWith('.webp');
+  }
+  
+  Widget _buildImageFromUrl(String url) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(4),
+        child: Image.network(
+          url,
+          height: 120,
+          width: double.infinity,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => Container(
+            height: 60,
+            color: Colors.grey.shade200,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.broken_image, size: 16, color: Colors.grey.shade600),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Image failed to load',
+                    style: TextStyle(
+                      fontSize: 8,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Container(
+              height: 120,
+              color: Colors.grey.shade100,
+              child: Center(
+                child: SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    value: loadingProgress.expectedTotalBytes != null
+                        ? loadingProgress.cumulativeBytesLoaded /
+                            loadingProgress.expectedTotalBytes!
+                        : null,
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
   }
   
   Widget _buildFormattedText(String text) {
@@ -586,19 +665,59 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: map.entries.map((entry) => 
-          Padding(
-            padding: const EdgeInsets.only(bottom: 2),
-            child: Text(
-              '${entry.key}: ${entry.value}',
-              style: TextStyle(
-                fontSize: 9,
-                color: Colors.amber.shade800,
-                fontFamily: 'monospace',
+        children: [
+          Row(
+            children: [
+              Icon(Icons.data_object, size: 12, color: Colors.amber.shade700),
+              const SizedBox(width: 4),
+              Text(
+                'Object Data',
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.amber.shade800,
+                ),
               ),
-            ),
-          )
-        ).toList(),
+            ],
+          ),
+          const SizedBox(height: 4),
+          ...map.entries.map((entry) => 
+            Padding(
+              padding: const EdgeInsets.only(bottom: 2),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade200,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                    child: Text(
+                      entry.key.toString(),
+                      style: TextStyle(
+                        fontSize: 8,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.amber.shade900,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      entry.value.toString(),
+                      style: TextStyle(
+                        fontSize: 8,
+                        color: Colors.amber.shade800,
+                        fontFamily: 'monospace',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          ).toList(),
+        ],
       ),
     );
   }
@@ -614,36 +733,71 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '${list.length} items:',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: Colors.green.shade800,
-            ),
+          Row(
+            children: [
+              Icon(Icons.list, size: 12, color: Colors.green.shade700),
+              const SizedBox(width: 4),
+              Text(
+                'Array Data (${list.length} items)',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.green.shade800,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 4),
-          ...list.take(3).map((item) => 
+          ...list.take(3).asMap().entries.map((entry) => 
             Padding(
               padding: const EdgeInsets.only(bottom: 2),
-              child: Text(
-                '• ${item.toString()}',
-                style: TextStyle(
-                  fontSize: 9,
-                  color: Colors.green.shade700,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 16,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade200,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        '${entry.key + 1}',
+                        style: TextStyle(
+                          fontSize: 7,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.green.shade900,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      entry.value.toString(),
+                      style: TextStyle(
+                        fontSize: 9,
+                        color: Colors.green.shade700,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
             )
           ).toList(),
           if (list.length > 3)
-            Text(
-              '... and ${list.length - 3} more',
-              style: TextStyle(
-                fontSize: 9,
-                color: Colors.green.shade600,
-                fontStyle: FontStyle.italic,
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                '... and ${list.length - 3} more items',
+                style: TextStyle(
+                  fontSize: 9,
+                  color: Colors.green.shade600,
+                  fontStyle: FontStyle.italic,
+                ),
               ),
             ),
         ],
@@ -677,44 +831,398 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
     final similarity = chunk['similarity'] as double?;
     
     return Container(
-      margin: const EdgeInsets.only(bottom: 4),
-      padding: const EdgeInsets.all(6),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(3),
-        border: Border.all(color: Colors.grey[200]!),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Colors.blue.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.shade50,
+            blurRadius: 2,
+            offset: const Offset(0, 1),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (metadata != null) ...[
-            if (metadata['pdf_id'] != null)
-              Text(
-                'Source: ${metadata['pdf_id']}',
-                style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey[800],
-                ),
-              ),
-            if (similarity != null)
-              Text(
-                'Similarity: ${(similarity * 100).toStringAsFixed(1)}%',
-                style: TextStyle(
-                  fontSize: 9,
-                  color: Colors.grey[600],
-                ),
-              ),
-          ],
+          // Document header with metadata
+          _buildDocumentHeader(metadata, similarity),
+          const SizedBox(height: 6),
+          
+          // Rich document content
           if (document != null && document.isNotEmpty)
-            Text(
-              document.length > 200 ? '${document.substring(0, 200)}...' : document,
-              style: TextStyle(
-                fontSize: 9,
-                color: Colors.grey[700],
+            _buildRichDocumentContent(document, metadata),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildDocumentHeader(Map<String, dynamic>? metadata, double? similarity) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.description, size: 14, color: Colors.blue.shade700),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (metadata?['pdf_id'] != null)
+                  Text(
+                    'Source: ${metadata!['pdf_id']}',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.blue.shade800,
+                    ),
+                  ),
+                if (metadata?['page'] != null)
+                  Text(
+                    'Page: ${metadata!['page']}',
+                    style: TextStyle(
+                      fontSize: 8,
+                      color: Colors.blue.shade600,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          if (similarity != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.green.shade100,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '${(similarity * 100).toStringAsFixed(1)}%',
+                style: TextStyle(
+                  fontSize: 8,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.green.shade800,
+                ),
               ),
             ),
         ],
+      ),
+    );
+  }
+  
+  Widget _buildRichDocumentContent(String document, Map<String, dynamic>? metadata) {
+    // Check if document contains table data
+    if (_isTableData(document)) {
+      return _buildTableContent(document);
+    }
+    
+    // Check if document has structured table format
+    if (_isStructuredTableData(document)) {
+      return _buildStructuredTableContent(document);
+    }
+    
+    // Show image if available in metadata
+    final widgets = <Widget>[];
+    
+    if (metadata?['image_url'] != null) {
+      widgets.add(_buildDocumentImage(metadata!['image_url'], metadata['caption']));
+      widgets.add(const SizedBox(height: 6));
+    }
+    
+    // Regular text content
+    widgets.add(_buildTextContent(document));
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: widgets,
+    );
+  }
+  
+  bool _isTableData(String document) {
+    return document.trim().startsWith('[[') && document.trim().endsWith(']]');
+  }
+  
+  bool _isStructuredTableData(String document) {
+    return document.contains('Headers:') && document.contains('Data:');
+  }
+  
+  Widget _buildTableContent(String jsonString) {
+    try {
+      final dynamic tableData = jsonDecode(jsonString);
+      if (tableData is! List || tableData.isEmpty) {
+        return _buildTextContent(jsonString);
+      }
+      
+      return Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Column(
+          children: [
+            // Table header
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.table_chart, size: 12, color: Colors.grey.shade600),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Data Table',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Table content
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                columnSpacing: 8,
+                horizontalMargin: 8,
+                headingRowHeight: 24,
+                dataRowHeight: 20,
+                columns: _buildTableColumns(tableData[0]),
+                rows: _buildTableRows(tableData.skip(1).toList()),
+              ),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      return _buildTextContent(jsonString);
+    }
+  }
+  
+  List<DataColumn> _buildTableColumns(List<dynamic> headers) {
+    return headers.map((header) => DataColumn(
+      label: Expanded(
+        child: Text(
+          header.toString(),
+          style: const TextStyle(
+            fontSize: 8,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    )).toList();
+  }
+  
+  List<DataRow> _buildTableRows(List<dynamic> rows) {
+    return rows.take(5).map((row) { // Limit to 5 rows for space
+      if (row is! List) return DataRow(cells: [DataCell(Text(row.toString()))]);
+      
+      return DataRow(
+        cells: row.map((cell) => DataCell(
+          Text(
+            cell.toString(),
+            style: const TextStyle(fontSize: 8),
+            overflow: TextOverflow.ellipsis,
+          ),
+        )).toList(),
+      );
+    }).toList();
+  }
+  
+  Widget _buildStructuredTableContent(String document) {
+    final lines = document.split('\n');
+    List<String> headers = [];
+    List<List<String>> rows = [];
+    
+    bool inDataSection = false;
+    
+    for (String line in lines) {
+      line = line.trim();
+      
+      if (line.startsWith('Headers:')) {
+        headers = line.substring(8).split('|').map((h) => h.trim()).toList();
+        continue;
+      }
+      
+      if (line.startsWith('Data:')) {
+        inDataSection = true;
+        continue;
+      }
+      
+      if (inDataSection && line.startsWith('Row ')) {
+        final rowData = line.substring(line.indexOf(':') + 1)
+            .split('|')
+            .map((cell) => cell.trim())
+            .toList();
+        if (rowData.isNotEmpty) {
+          rows.add(rowData);
+        }
+      }
+      
+      if (line.startsWith('Notes:') || line.startsWith('Raw Extraction:')) {
+        break;
+      }
+    }
+    
+    if (headers.isEmpty) {
+      return _buildTextContent(document);
+    }
+    
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.orange.shade300),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: Colors.orange.shade50,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.table_rows, size: 12, color: Colors.orange.shade600),
+                const SizedBox(width: 4),
+                Text(
+                  'Extracted Table',
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.orange.shade700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: DataTable(
+              columnSpacing: 8,
+              horizontalMargin: 8,
+              headingRowHeight: 24,
+              dataRowHeight: 20,
+              columns: headers.map((header) => DataColumn(
+                label: Expanded(
+                  child: Text(
+                    header,
+                    style: const TextStyle(
+                      fontSize: 8,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              )).toList(),
+              rows: rows.take(5).map((row) => DataRow(
+                cells: row.map((cell) => DataCell(
+                  Text(
+                    cell,
+                    style: const TextStyle(fontSize: 8),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                )).toList(),
+              )).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildDocumentImage(String imageUrl, String? caption) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.purple.shade200),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: Colors.purple.shade50,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.image, size: 12, color: Colors.purple.shade600),
+                const SizedBox(width: 4),
+                Text(
+                  'Document Image',
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.purple.shade700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(bottom: Radius.circular(4)),
+            child: Image.network(
+              imageUrl,
+              height: 100,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                height: 50,
+                color: Colors.grey.shade200,
+                child: Center(
+                  child: Text(
+                    'Image failed to load',
+                    style: TextStyle(
+                      fontSize: 8,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          if (caption != null && caption.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.all(4),
+              child: Text(
+                caption,
+                style: TextStyle(
+                  fontSize: 8,
+                  fontStyle: FontStyle.italic,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildTextContent(String text) {
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Text(
+        text.length > 300 ? '${text.substring(0, 300)}...' : text,
+        style: TextStyle(
+          fontSize: 8,
+          color: Colors.grey.shade700,
+          height: 1.2,
+        ),
       ),
     );
   }
