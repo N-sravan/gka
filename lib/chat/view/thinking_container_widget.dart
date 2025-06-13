@@ -748,7 +748,7 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
             ],
           ),
           const SizedBox(height: 4),
-          ...list.take(3).asMap().entries.map((entry) => 
+          ...list.take(3).toList().asMap().entries.map((entry) => 
             Padding(
               padding: const EdgeInsets.only(bottom: 2),
               child: Row(
