@@ -2188,7 +2188,7 @@ class ChatViewModel extends LoadingViewModel {
           details['tokens_generated'] = event.tokensGenerated;
         }
         if (event.llmPrompt != null) {
-          details['llm_prompt'] = event.llmPrompt!.substring(0, 100) + '...';
+          details['llm_prompt'] = event.llmPrompt!;
         }
         break;
         
