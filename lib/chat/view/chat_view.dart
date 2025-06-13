@@ -633,6 +633,9 @@ class _ChatViewState extends State<ChatView> {
                 onPressed: viewModel.showLoader.value
                     ? null
                     : () async {
+                        // Hide keyboard immediately when send button is pressed
+                        FocusScope.of(context).unfocus();
+
                         if (viewModel.chatController.text.isEmpty) {
                           Fluttertoast.showToast(
                               msg: "Please enter your question.");
