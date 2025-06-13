@@ -147,6 +147,26 @@ class _ChatBubbleState extends State<ChatBubble> {
     // Split the text by line breaks (\\n)
     List<String> lines = trimmedText.split('\\n');
 
+    // For very long text, add scrolling capability
+    if (trimmedText.length > 1000 || lines.length > 20) {
+      return ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 300),
+        child: Scrollbar(
+          child: SingleChildScrollView(
+            child: SelectableText.rich(
+              TextSpan(
+                children: _parseText(trimmedText),
+                style: const TextStyle(
+                  color: Color(0xff1E1E1E),
+                  fontSize: 14.0,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     // Process each line to apply bold formatting and replace '*' with '•'
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

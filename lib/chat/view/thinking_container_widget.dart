@@ -1216,12 +1216,19 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
         borderRadius: BorderRadius.circular(4),
         border: Border.all(color: Colors.grey.shade200),
       ),
-      child: Text(
-        text.length > 300 ? '${text.substring(0, 300)}...' : text,
-        style: TextStyle(
-          fontSize: 8,
-          color: Colors.grey.shade700,
-          height: 1.2,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 200),
+        child: Scrollbar(
+          child: SingleChildScrollView(
+            child: SelectableText(
+              text,
+              style: TextStyle(
+                fontSize: 8,
+                color: Colors.grey.shade700,
+                height: 1.2,
+              ),
+            ),
+          ),
         ),
       ),
     );
