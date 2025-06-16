@@ -214,12 +214,12 @@ class PromptManagementViewModel extends LoadingViewModel {
   // Load prompt history
   Future<void> loadPromptHistory(String promptName) async {
     isLoading = true;
-    ;
+    notifyListeners();
     try {
       final response = await _repository.getPromptHistory(promptName);
       if (response.success && response.history != null) {
         _promptHistory = response.history!;
-        notifyListeners();
+        _showSuccess('Loaded ${response.history!.length} history items');
       } else {
         _showError('Failed to load prompt history: ${response.message}');
       }
@@ -227,7 +227,7 @@ class PromptManagementViewModel extends LoadingViewModel {
       _showError('Error loading prompt history: ${e.toString()}');
     }
     isLoading = false;
-    ;
+    notifyListeners();
   }
 
   // Create new category
