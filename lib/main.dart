@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:gka/chat/repo/chat_repo.dart';
+import 'package:gka/chat/repo/prompt_management_repo.dart';
+import 'package:gka/chat/view_model/prompt_management_view_model.dart';
 import 'package:gka/home/repo/home_repo.dart';
 import 'package:gka/home/view_model/home_view_model.dart';
 import 'package:gka/settings_view.dart';
@@ -44,6 +46,9 @@ void main() async {
         ),
         ChangeNotifierProvider(
           create: (_) => HomeViewModel(repo: locator<HomeRepository>()),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => PromptManagementViewModel(repository: locator<PromptManagementRepository>()),
         ),
       ],
       child: const MyApp(),

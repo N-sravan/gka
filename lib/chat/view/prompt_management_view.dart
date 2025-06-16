@@ -640,10 +640,9 @@ class _PromptManagementViewState extends State<PromptManagementView>
   }
 
   void _showPromptHistory(BuildContext context, PromptManagementViewModel viewModel, PromptModel prompt) {
-    viewModel.loadPromptHistory(prompt.name);
     showDialog(
       context: context,
-      builder: (context) => PromptHistoryDialog(viewModel: viewModel, prompt: prompt),
+      builder: (context) => PromptHistoryDialog(prompt: prompt),
     );
   }
 

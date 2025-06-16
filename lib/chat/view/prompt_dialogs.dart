@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../view_model/prompt_management_view_model.dart';
 import '../model/prompt_management_models.dart';
 
@@ -439,93 +440,112 @@ class _CreateCategoryDialogState extends State<CreateCategoryDialog> {
   }
 }
 
-class PromptHistoryDialog extends StatelessWidget {
-  final PromptManagementViewModel viewModel;
+class PromptHistoryDialog extends StatefulWidget {
   final PromptModel prompt;
 
-  const PromptHistoryDialog({Key? key, required this.viewModel, required this.prompt}) : super(key: key);
+  const PromptHistoryDialog({super.key, required this.prompt});
+
+  @override
+  State<PromptHistoryDialog> createState() => _PromptHistoryDialogState();
+}
+
+class _PromptHistoryDialogState extends State<PromptHistoryDialog> {
+  bool _didFetch = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_didFetch) {
+      final viewModel = Provider.of<PromptManagementViewModel>(context, listen: false);
+      viewModel.loadPromptHistory(widget.prompt.name);
+      _didFetch = true;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('History: ${prompt.name}'),
-      content: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.9,
-        height: MediaQuery.of(context).size.height * 0.6,
-        child: viewModel.isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : viewModel.promptHistory.isEmpty
-                ? const Center(
-                    child: Text('No history available'),
-                  )
+    return Consumer<PromptManagementViewModel>(
+      builder: (context, viewModel, child) {
+        return AlertDialog(
+          title: Text('History: ${widget.prompt.name}'),
+          content: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.9,
+            height: MediaQuery.of(context).size.height * 0.6,
+            child: viewModel.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : viewModel.promptHistory.isEmpty
+                ? const Center(child: Text('No history available'))
                 : ListView.builder(
-                    itemCount: viewModel.promptHistory.length,
-                    itemBuilder: (context, index) {
-                      final history = viewModel.promptHistory[index];
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      _formatDateTime(history.createdAt),
-                                      style: const TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                  if (history.changedBy != null)
-                                    Text(
-                                      'by ${history.changedBy}',
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                ],
+              itemCount: viewModel.promptHistory.length,
+              itemBuilder: (context, index) {
+                final history = viewModel.promptHistory[index];
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                _formatDateTime(history.createdAt),
+                                style: const TextStyle(fontWeight: FontWeight.bold),
                               ),
-                              if (history.changeDescription != null) ...[
-                                const SizedBox(height: 4),
-                                Text(
-                                  history.changeDescription!,
-                                  style: TextStyle(color: Colors.grey[600]),
-                                ),
-                              ],
-                              const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[100],
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  history.content,
-                                  style: const TextStyle(
-                                    fontFamily: 'monospace',
-                                    fontSize: 12,
-                                  ),
+                            ),
+                            if (history.changedBy != null)
+                              Text(
+                                'by ${history.changedBy}',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
                                 ),
                               ),
-                            ],
+                          ],
+                        ),
+                        if (history.changeDescription != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            history.changeDescription!,
+                            style: TextStyle(color: Colors.grey[600]),
+                          ),
+                        ],
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            history.content,
+                            style: const TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 12,
+                            ),
                           ),
                         ),
-                      );
-                    },
+                      ],
+                    ),
                   ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Close'),
-        ),
-      ],
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
     );
   }
 
   String _formatDateTime(DateTime date) {
-    return '${date.day}/${date.month}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    return '${date.day}/${date.month}/${date.year} '
+        '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 }
