@@ -157,13 +157,14 @@ class PromptHistoryModel {
   });
 
   factory PromptHistoryModel.fromJson(Map<String, dynamic> json) {
+    debugPrint('PromptHistoryModel.fromJson: $json');
     return PromptHistoryModel(
-      id: json['id']?.toString() ?? '',
+      id: json['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
       promptName: json['prompt_name'] ?? '',
       content: json['content'] ?? '',
       changedBy: json['changed_by'],
       changeDescription: json['change_description'],
-      createdAt: PromptModel._parseDateTime(json['created_at']),
+      createdAt: json['created_at'] != null ? PromptModel._parseDateTime(json['created_at']) : DateTime.now(),
     );
   }
 }
@@ -201,20 +202,20 @@ class PromptManagementResponse {
         if (responseList.isNotEmpty) {
           final firstItem = responseList[0];
           
+          // Check if it's history (has 'change_description' or 'changed_by' field)
+          if (firstItem['change_description'] != null || firstItem['changed_by'] != null) {
+            history = responseList.map((item) => PromptHistoryModel.fromJson(item)).toList();
+            debugPrint('Parsed ${history.length} history items');
+          }
           // Check if it's categories (has 'description' field but not 'content')
-          if (firstItem['description'] != null && firstItem['content'] == null) {
+          else if (firstItem['description'] != null && firstItem['content'] == null) {
             categories = responseList.map((item) => PromptCategoryModel.fromJson(item)).toList();
             debugPrint('Parsed ${categories.length} categories');
           }
-          // Check if it's prompts (has 'content' field)
-          else if (firstItem['content'] != null) {
+          // Check if it's prompts (has 'content' field and other prompt-specific fields)
+          else if (firstItem['content'] != null && (firstItem['name'] != null || firstItem['category_name'] != null)) {
             prompts = responseList.map((item) => PromptModel.fromJson(item)).toList();
             debugPrint('Parsed ${prompts.length} prompts');
-          }
-          // Check if it's history (has 'prompt_name' field)
-          else if (firstItem['prompt_name'] != null) {
-            history = responseList.map((item) => PromptHistoryModel.fromJson(item)).toList();
-            debugPrint('Parsed ${history.length} history items');
           }
         }
       } else if (json['response'] is Map<String, dynamic>) {
