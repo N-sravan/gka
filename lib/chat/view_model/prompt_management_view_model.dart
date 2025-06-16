@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gka/shared/loading_view_model.dart';
 import 'package:gka/utils/app_state.dart';
 import '../model/prompt_management_models.dart';
@@ -343,14 +344,29 @@ class PromptManagementViewModel extends LoadingViewModel {
 
   // Helper methods
   void _showError(String message) {
-    // You can implement your preferred error showing method here
-    // For example, using Fluttertoast or a custom notification system
     debugPrint('Error: $message');
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_LONG,
+      gravity: ToastGravity.BOTTOM,
+      timeInSecForIosWeb: 3,
+      backgroundColor: Colors.red,
+      textColor: Colors.white,
+      fontSize: 16.0,
+    );
   }
 
   void _showSuccess(String message) {
-    // You can implement your preferred success showing method here
     debugPrint('Success: $message');
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      timeInSecForIosWeb: 2,
+      backgroundColor: Colors.green,
+      textColor: Colors.white,
+      fontSize: 16.0,
+    );
   }
 
   @override

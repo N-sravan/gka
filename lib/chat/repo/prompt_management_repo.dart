@@ -30,14 +30,25 @@ class PromptManagementRepositoryImpl extends PromptManagementRepository {
 
   @override
   Future<PromptManagementResponse> getAllPrompts() async {
+    final url = '${constants.baseUrl}api/v1/prompts';
+    debugPrint('PromptRepo: Fetching all prompts from: $url');
+    debugPrint('PromptRepo: Headers: $_headers');
+    
     try {
       final response = await http.get(
-        Uri.parse('${constants.baseUrl}api/v1/prompts'),
+        Uri.parse(url),
         headers: _headers,
       );
       
-      return PromptManagementResponse.fromJson(jsonDecode(response.body));
+      debugPrint('PromptRepo: getAllPrompts response - Status: ${response.statusCode}');
+      debugPrint('PromptRepo: getAllPrompts response - Body: ${response.body}');
+      
+      final result = PromptManagementResponse.fromJson(jsonDecode(response.body));
+      debugPrint('PromptRepo: getAllPrompts parsed - Success: ${result.success}, Prompts count: ${result.prompts?.length ?? 0}');
+      
+      return result;
     } catch (e) {
+      debugPrint('PromptRepo: getAllPrompts error: $e');
       return PromptManagementResponse(
         statusCode: 500,
         success: false,
@@ -87,7 +98,7 @@ class PromptManagementRepositoryImpl extends PromptManagementRepository {
   Future<PromptManagementResponse> updatePrompt(String promptName, UpdatePromptRequest request) async {
     try {
       final response = await http.put(
-        Uri.parse('${constants.baseUrl}/api/v1/prompts/$promptName'),
+        Uri.parse('${constants.baseUrl}api/v1/prompts/$promptName'),
         headers: _headers,
         body: jsonEncode(request.toJson()),
       );
@@ -106,7 +117,7 @@ class PromptManagementRepositoryImpl extends PromptManagementRepository {
   Future<PromptManagementResponse> deletePrompt(String promptName) async {
     try {
       final response = await http.delete(
-        Uri.parse('${constants.baseUrl}/api/v1/prompts/$promptName'),
+        Uri.parse('${constants.baseUrl}api/v1/prompts/$promptName'),
         headers: _headers,
       );
       
@@ -158,14 +169,24 @@ class PromptManagementRepositoryImpl extends PromptManagementRepository {
 
   @override
   Future<PromptManagementResponse> getCategories() async {
+    final url = '${constants.baseUrl}api/v1/prompts/categories';
+    debugPrint('PromptRepo: Fetching categories from: $url');
+    
     try {
       final response = await http.get(
-        Uri.parse('${constants.baseUrl}api/v1/prompts/categories'),
+        Uri.parse(url),
         headers: _headers,
       );
       
-      return PromptManagementResponse.fromJson(jsonDecode(response.body));
+      debugPrint('PromptRepo: getCategories response - Status: ${response.statusCode}');
+      debugPrint('PromptRepo: getCategories response - Body: ${response.body}');
+      
+      final result = PromptManagementResponse.fromJson(jsonDecode(response.body));
+      debugPrint('PromptRepo: getCategories parsed - Success: ${result.success}, Categories count: ${result.categories?.length ?? 0}');
+      
+      return result;
     } catch (e) {
+      debugPrint('PromptRepo: getCategories error: $e');
       return PromptManagementResponse(
         statusCode: 500,
         success: false,
