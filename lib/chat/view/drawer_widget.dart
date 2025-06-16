@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../../utils/common_constants.dart' as constants;
 import '../view_model/chat_view_model.dart';
 import 'chat_view.dart';
+import 'prompt_management_view.dart';
 
 
 class DrawerWidget extends StatefulWidget {
@@ -255,6 +256,27 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                             ],
                           ),
                   ),
+                  // Prompt Management Navigation
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 8, 8, 8.0),
+                    child: ListTile(
+                      leading: const Icon(Icons.psychology, color: Colors.blue),
+                      title: Text(
+                        "Prompt Management",
+                        style: constants.appBarListTileTextStyle,
+                      ),
+                      onTap: () {
+                        Navigator.pop(context); // Close drawer
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const PromptManagementView(),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const Divider(),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(8, 8, 8, 40.0),
                     child: ListTile(

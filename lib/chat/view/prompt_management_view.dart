@@ -1,10 +1,10 @@
-import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../utils/app_state.dart';
-import '../view_model/chat_view_model.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
-import 'create_prompt_template_view.dart';
+import '../view_model/prompt_management_view_model.dart';
+import '../model/prompt_management_models.dart';
+import '../repo/prompt_management_repo.dart';
+import 'prompt_dialogs.dart';
 
 class PromptManagementView extends StatefulWidget {
   const PromptManagementView({Key? key}) : super(key: key);
@@ -13,364 +13,581 @@ class PromptManagementView extends StatefulWidget {
   State<PromptManagementView> createState() => _PromptManagementViewState();
 }
 
-class _PromptManagementViewState extends State<PromptManagementView> {
-  String? _selectedPromptTemplate;
-  String? _selectedPromptKey;
-  final TextEditingController _promptTextController = TextEditingController();
-
-  late ChatViewModel viewModel;
+class _PromptManagementViewState extends State<PromptManagementView>
+    with TickerProviderStateMixin {
+  late PromptManagementViewModel _viewModel;
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    viewModel = Provider.of<ChatViewModel>(context, listen: false);
-    viewModel.selectedPromptModelUUID = AppState.instance.modelUUID;
-    viewModel.selectedPromptModel = AppState.instance.modelName;
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await viewModel.getAvailablePrompts(
-          context, viewModel.selectedPromptModelUUID);
-      await viewModel.getAvailableModels(context);
+    _tabController = TabController(length: 3, vsync: this);
+    _viewModel = PromptManagementViewModel(
+      repository: PromptManagementRepositoryImpl(),
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _viewModel.initialize();
     });
   }
 
   @override
   void dispose() {
-    _promptTextController.clear();
-    viewModel.clearData();
+    _tabController.dispose();
+    _viewModel.dispose();
     super.dispose();
-  }
-
-  void _createPrompt() {
-    String newPrompt = _promptTextController.text;
-    if (newPrompt.isNotEmpty) {
-      setState(() {
-        viewModel.promptTemplateIntentMapping[newPrompt] = "New Intent";
-      });
-      _promptTextController.clear();
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ChatViewModel>(
-      builder: (_, model, child) {
-        /* if (model.isLoading) {
-          return child ?? const SizedBox();
-        }*/
-        return WillPopScope(
-          onWillPop: () {
-            viewModel.clearData();
-            return Future.value(true);
-          },
-          child: Scaffold(
-            appBar: AppBar(
-              title: const Text('Prompt Management'),
-            ),
-            body: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.all(12.0),
-                  child: Text(
-                    'Select Model',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Container(
-                  width: MediaQuery.of(context).size.width,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: DropdownButtonFormField2<String>(
-                    isExpanded: true,
-                    hint: const Text('Select'),
-                    items: viewModel.modelList!
-                        .map((String item) => DropdownMenuItem<String>(
-                              value: item,
-                              child: Text(
-                                item,
+    return ChangeNotifierProvider<PromptManagementViewModel>(
+      create: (_) => _viewModel,
+      child: Consumer<PromptManagementViewModel>(
+        builder: (context, viewModel, child) {
+          return Scaffold(
+            backgroundColor: Colors.grey[50],
+            body: NestedScrollView(
+              headerSliverBuilder: (context, innerBoxIsScrolled) {
+                return [
+                  SliverAppBar(
+                    expandedHeight: 200,
+                    floating: false,
+                    pinned: true,
+                    elevation: 0,
+                    backgroundColor: Theme.of(context).primaryColor,
+                    flexibleSpace: FlexibleSpaceBar(
+                      title: const Text(
+                        'Prompt Management',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      background: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Theme.of(context).primaryColor,
+                              Theme.of(context).primaryColor.withOpacity(0.8),
+                            ],
+                          ),
+                        ),
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.psychology,
+                                size: 64,
+                                color: Colors.white70,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                '${viewModel.prompts.length} Prompts Available',
                                 style: const TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 14,
-                                  fontFamily: 'Poppins',
-                                  fontWeight: FontWeight.w400,
+                                  color: Colors.white70,
+                                  fontSize: 16,
                                 ),
                               ),
-                            ))
-                        .toList(),
-                    value: viewModel.selectedPromptModel.isNotEmpty == true
-                        ? viewModel.selectedPromptModel
-                        : null,
-                    onChanged: (String? value) async {
-                      if (value!.isNotEmpty) {
-                        await viewModel.updateSelectedModelForPrompt(value);
-                        await viewModel.getAvailablePrompts(
-                            context, viewModel.selectedPromptModelUUID);
-                      }
-                    },
-                    buttonStyleData: ButtonStyleData(
-                      height: 50,
-                      padding: const EdgeInsets.only(left: 14, right: 14),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: const Color.fromRGBO(118, 118, 128, 0.12),
-                        boxShadow: const [],
-                      ),
-                      elevation: 0,
-                    ),
-                    iconStyleData: const IconStyleData(
-                      icon: Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                      ),
-                      iconSize: 20,
-                      iconEnabledColor: Color(0xFF666B77),
-                      iconDisabledColor: Color(0xFF666B77),
-                    ),
-                    dropdownStyleData: DropdownStyleData(
-                      maxHeight: 200,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(14),
-                        color: Colors.grey.shade300,
-                        boxShadow: const [],
-                      ),
-                    ),
-                    menuItemStyleData: const MenuItemStyleData(
-                      height: 30,
-                      padding: EdgeInsets.only(left: 14, right: 14),
-                    ),
-                    decoration: const InputDecoration(
-                      filled: true,
-                      fillColor: Colors.transparent,
-                      hintText: 'Select',
-                      hintStyle: TextStyle(
-                        fontFamily: "Poppins",
-                        fontWeight: FontWeight.w400,
-                        fontSize: 14.0,
-                        color: Colors.grey,
-                      ),
-                      contentPadding:
-                          EdgeInsets.only(top: 2, left: 2, right: 2, bottom: 2),
-                      border: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.black),
-                        borderRadius: BorderRadius.all(Radius.circular(10)),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide.none,
-                        borderRadius: BorderRadius.all(Radius.circular(10)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide.none,
-                        borderRadius: BorderRadius.all(Radius.circular(10)),
-                      ),
-                      errorStyle: TextStyle(
-                        color: Colors.red,
-                      ),
-                      errorBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Colors.red,
-                        ),
-                        borderRadius: BorderRadius.all(Radius.circular(10)),
-                      ),
-                    ),
-                  ),
-                ),
-                ListTile(
-                  title: const Text(
-                    'Create a Prompt',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.normal,
-                    ),
-                  ),
-                  trailing: const Icon(
-                    Icons.add,
-                  ),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => CreatePromptView(
-                                isCreate: true,
-                              )),
-                    ); /* showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        _promptTextController.clear();
-                        return AlertDialog(
-                          title: const Text('Create Prompt'),
-                          content: TextField(
-                            controller: _promptTextController,
-                            decoration: const InputDecoration(
-                                labelText: 'Enter your prompt'),
+                            ],
                           ),
-                          actions: <Widget>[
-                            TextButton(
-                              child: const Text('Cancel'),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                            TextButton(
-                              child: const Text('Submit'),
-                              onPressed: () async {
-                                bool result = await viewModel.createPrompt(
-                                    context,
-                                    _promptTextController.text,
-                                    'zero-shot');
-                                if (result) {
-                                  _promptTextController.clear();
-                                  Navigator.of(context).pop();
-                                  await viewModel.getAvailablePrompts(context);
-                                  Fluttertoast.showToast(
-                                      msg: "Prompt added Successfully!");
-                                }
-                                // _createPrompt();
-                              },
-                            ),
-                          ],
-                        );
-                      },
-                    );*/
+                        ),
+                      ),
+                    ),
+                    bottom: TabBar(
+                      controller: _tabController,
+                      indicatorColor: Colors.white,
+                      labelColor: Colors.white,
+                      unselectedLabelColor: Colors.white70,
+                      tabs: const [
+                        Tab(icon: Icon(Icons.list), text: 'Prompts'),
+                        Tab(icon: Icon(Icons.category), text: 'Categories'),
+                        Tab(icon: Icon(Icons.settings), text: 'Settings'),
+                      ],
+                    ),
+                  ),
+                ];
+              },
+              body: viewModel.isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildPromptsTab(context, viewModel),
+                        _buildCategoriesTab(context, viewModel),
+                        _buildSettingsTab(context, viewModel),
+                      ],
+                    ),
+            ),
+            floatingActionButton: FloatingActionButton.extended(
+              onPressed: () => _showCreatePromptDialog(context, viewModel),
+              icon: const Icon(Icons.add),
+              label: const Text('New Prompt'),
+              backgroundColor: Theme.of(context).primaryColor,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildPromptsTab(BuildContext context, PromptManagementViewModel viewModel) {
+    return Column(
+      children: [
+        // Search and Filter Bar
+        Container(
+          padding: const EdgeInsets.all(16),
+          color: Colors.white,
+          child: Column(
+            children: [
+              TextField(
+                controller: viewModel.searchController,
+                onChanged: viewModel.updateSearchQuery,
+                decoration: InputDecoration(
+                  hintText: 'Search prompts...',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: viewModel.searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: viewModel.clearSearch,
+                        )
+                      : null,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey[100],
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Category Filter
+              if (viewModel.categories.isNotEmpty)
+                DropdownButtonFormField<String>(
+                  value: viewModel.selectedCategoryId,
+                  decoration: InputDecoration(
+                    labelText: 'Filter by Category',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey[100],
+                  ),
+                  items: [
+                    const DropdownMenuItem<String>(
+                      value: null,
+                      child: Text('All Categories'),
+                    ),
+                    ...viewModel.categories.map((category) =>
+                        DropdownMenuItem<String>(
+                          value: category.name,
+                          child: Text(category.name),
+                        ),
+                    ),
+                  ],
+                  onChanged: viewModel.setSelectedCategory,
+                ),
+            ],
+          ),
+        ),
+        // Prompts List
+        Expanded(
+          child: viewModel.filteredPrompts.isEmpty
+              ? _buildEmptyState()
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: viewModel.filteredPrompts.length,
+                  itemBuilder: (context, index) {
+                    final prompt = viewModel.filteredPrompts[index];
+                    return _buildPromptCard(context, viewModel, prompt);
                   },
                 ),
-                viewModel.promptTemplateIntentMapping.isNotEmpty
-                    ? Expanded(
-                        child: !model.isLoading
-                            ? Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: ListView.builder(
-                                  itemCount: viewModel
-                                      .promptTemplateIntentMapping.length,
-                                  itemBuilder: (context, index) {
-                                    final key = viewModel
-                                        .promptTemplateIntentMapping.keys
-                                        .elementAt(index);
-                                    final value = viewModel
-                                        .promptTemplateIntentMapping[key];
-                                    return Card(
-                                      margin: const EdgeInsets.symmetric(
-                                          vertical: 8.0, horizontal: 16.0),
-                                      child: ListTile(
-                                        trailing: IconButton(
-                                          onPressed: () {
-                                            showDialog(
-                                                context: context,
-                                                builder:
-                                                    (BuildContext context) {
-                                                  return AlertDialog(
-                                                    title: const Text(
-                                                        'Delete Prompt'),
-                                                    content: const Text(
-                                                      'Do you want to delete this prompt?',
-                                                    ),
-                                                    actions: <Widget>[
-                                                      TextButton(
-                                                        child: const Text('No'),
-                                                        onPressed: () {
-                                                          Navigator.of(context)
-                                                              .pop();
-                                                        },
-                                                      ),
-                                                      TextButton(
-                                                        child:
-                                                            const Text('Yes'),
-                                                        onPressed: () async {
-                                                          // Implement delete logic here
-                                                          Navigator.of(context)
-                                                              .pop();
-                                                        },
-                                                      ),
-                                                    ],
-                                                  );
-                                                });
-                                          },
-                                          icon: const Icon(
-                                            Icons.delete,
-                                            size: 20,
-                                          ),
-                                        ),
-                                        title: Text('Prompt: $key'),
-                                        subtitle: Text('Intent: $value'),
-                                        onTap: () {
-                                          setState(() {
-                                            _selectedPromptKey = key;
-                                            viewModel.intentController.text =
-                                                value!;
-                                            viewModel.promptController.text =
-                                                key;
-                                          });
+        ),
+      ],
+    );
+  }
 
-                                          showDialog(
-                                              context: context,
-                                              builder: (BuildContext context) {
-                                                return AlertDialog(
-                                                  title: const Text(
-                                                      'Update Prompt'),
-                                                  content: const Text(
-                                                    'Do you want to update this prompt?',
-                                                  ),
-                                                  actions: <Widget>[
-                                                    TextButton(
-                                                      child: const Text('No'),
-                                                      onPressed: () {
-                                                        Navigator.of(context)
-                                                            .pop();
-                                                      },
-                                                    ),
-                                                    TextButton(
-                                                      child: const Text('Yes'),
-                                                      onPressed: () async {
-                                                        Navigator.of(context)
-                                                            .pop();
-                                                        Navigator.push(
-                                                            context,
-                                                            MaterialPageRoute(
-                                                              builder: (context) =>
-                                                                  const CreatePromptView(
-                                                                      isCreate:
-                                                                          false),
-                                                            ));
-                                                      },
-                                                    ),
-                                                  ],
-                                                );
-                                              });
-                                        },
-                                      ),
-                                    );
-                                  },
-                                ),
-                              )
-                            : Container(
-                                width: MediaQuery.of(context).size.width,
-                                height: MediaQuery.of(context).size.height,
-                                color: Colors.white,
-                                child: constants.indicator,
-                              ),
-                      )
-                    : const Expanded(
-                        child: Center(
-                          child: Text('No Prompts found'),
+  Widget _buildPromptCard(BuildContext context, PromptManagementViewModel viewModel, PromptModel prompt) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => _showPromptDetailsDialog(context, viewModel, prompt),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      prompt.name,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  PopupMenuButton<String>(
+                    onSelected: (value) async {
+                      switch (value) {
+                        case 'edit':
+                          _showEditPromptDialog(context, viewModel, prompt);
+                          break;
+                        case 'history':
+                          _showPromptHistory(context, viewModel, prompt);
+                          break;
+                        case 'delete':
+                          _showDeleteConfirmation(context, viewModel, prompt);
+                          break;
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit),
+                            SizedBox(width: 8),
+                            Text('Edit'),
+                          ],
                         ),
                       ),
+                      const PopupMenuItem(
+                        value: 'history',
+                        child: Row(
+                          children: [
+                            Icon(Icons.history),
+                            SizedBox(width: 8),
+                            Text('History'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('Delete', style: TextStyle(color: Colors.red)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              if (prompt.description != null && prompt.description!.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  prompt.description!,
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  prompt.content,
+                  style: const TextStyle(fontSize: 14, fontFamily: 'monospace'),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  if (prompt.categoryName != null)
+                    Chip(
+                      label: Text(prompt.categoryName!),
+                      backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                      labelStyle: TextStyle(
+                        color: Theme.of(context).primaryColor,
+                        fontSize: 12,
+                      ),
+                    ),
+                  const Spacer(),
+                  Text(
+                    'Created ${_formatDate(prompt.createdAt)}',
+                    style: TextStyle(
+                      color: Colors.grey[500],
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoriesTab(BuildContext context, PromptManagementViewModel viewModel) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.add_circle, color: Colors.green),
+              title: const Text('Create New Category'),
+              subtitle: const Text('Organize your prompts with categories'),
+              onTap: () => _showCreateCategoryDialog(context, viewModel),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: viewModel.categories.isEmpty
+                ? const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.category, size: 64, color: Colors.grey),
+                        SizedBox(height: 16),
+                        Text(
+                          'No categories yet',
+                          style: TextStyle(fontSize: 18, color: Colors.grey),
+                        ),
+                        Text(
+                          'Create your first category to organize prompts',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: viewModel.categories.length,
+                    itemBuilder: (context, index) {
+                      final category = viewModel.categories[index];
+                      final promptCount = viewModel.prompts
+                          .where((p) => p.categoryName == category.name)
+                          .length;
+                      
+                      return Card(
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: Theme.of(context).primaryColor,
+                            child: Text(
+                              category.name.substring(0, 1).toUpperCase(),
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ),
+                          title: Text(category.name),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (category.description != null)
+                                Text(category.description!),
+                              Text('$promptCount prompts'),
+                            ],
+                          ),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.arrow_forward_ios),
+                            onPressed: () {
+                              viewModel.setSelectedCategory(category.name);
+                              _tabController.animateTo(0);
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSettingsTab(BuildContext context, PromptManagementViewModel viewModel) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Card(
+          child: Column(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.refresh),
+                title: const Text('Refresh Cache'),
+                subtitle: const Text('Reload all prompts from server'),
+                onTap: () => viewModel.refreshCache(),
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.backup),
+                title: const Text('Migrate Prompts'),
+                subtitle: const Text('Import existing prompts from old system'),
+                onTap: () => _showMigrateConfirmation(context, viewModel),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Statistics',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                _buildStatRow('Total Prompts', '${viewModel.prompts.length}'),
+                _buildStatRow('Categories', '${viewModel.categories.length}'),
+                _buildStatRow('Active Prompts', '${viewModel.prompts.where((p) => p.isActive).length}'),
               ],
             ),
           ),
-        );
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          elevation: constants.appBarElevation,
-          backgroundColor: Colors.black,
         ),
-        body: Container(
-          width: MediaQuery.of(context).size.width,
-          height: MediaQuery.of(context).size.height,
-          color: Colors.white,
-          child: constants.indicator,
-        ),
+      ],
+    );
+  }
+
+  Widget _buildStatRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.psychology_outlined, size: 64, color: Colors.grey),
+          SizedBox(height: 16),
+          Text(
+            'No prompts found',
+            style: TextStyle(fontSize: 18, color: Colors.grey),
+          ),
+          Text(
+            'Create your first prompt to get started',
+            style: TextStyle(color: Colors.grey),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+    
+    if (difference.inDays == 0) {
+      return 'today';
+    } else if (difference.inDays == 1) {
+      return 'yesterday';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays} days ago';
+    } else {
+      return '${date.day}/${date.month}/${date.year}';
+    }
+  }
+
+  void _showCreatePromptDialog(BuildContext context, PromptManagementViewModel viewModel) {
+    showDialog(
+      context: context,
+      builder: (context) => _CreatePromptDialog(viewModel: viewModel),
+    );
+  }
+
+  void _showEditPromptDialog(BuildContext context, PromptManagementViewModel viewModel, PromptModel prompt) {
+    viewModel.selectPrompt(prompt);
+    showDialog(
+      context: context,
+      builder: (context) => _EditPromptDialog(viewModel: viewModel, prompt: prompt),
+    );
+  }
+
+  void _showPromptDetailsDialog(BuildContext context, PromptManagementViewModel viewModel, PromptModel prompt) {
+    showDialog(
+      context: context,
+      builder: (context) => _PromptDetailsDialog(prompt: prompt),
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context, PromptManagementViewModel viewModel, PromptModel prompt) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Prompt'),
+        content: Text('Are you sure you want to delete "${prompt.name}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await viewModel.deletePrompt(prompt.name);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCreateCategoryDialog(BuildContext context, PromptManagementViewModel viewModel) {
+    showDialog(
+      context: context,
+      builder: (context) => _CreateCategoryDialog(viewModel: viewModel),
+    );
+  }
+
+  void _showPromptHistory(BuildContext context, PromptManagementViewModel viewModel, PromptModel prompt) {
+    viewModel.loadPromptHistory(prompt.name);
+    showDialog(
+      context: context,
+      builder: (context) => _PromptHistoryDialog(viewModel: viewModel, prompt: prompt),
+    );
+  }
+
+  void _showMigrateConfirmation(BuildContext context, PromptManagementViewModel viewModel) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Migrate Prompts'),
+        content: const Text('This will import existing prompts from the old system. Continue?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await viewModel.migratePrompts();
+            },
+            child: const Text('Migrate'),
+          ),
+        ],
       ),
     );
   }
