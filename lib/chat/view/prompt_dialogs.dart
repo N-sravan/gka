@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import '../view_model/prompt_management_view_model.dart';
 import '../model/prompt_management_models.dart';
 
-class _CreatePromptDialog extends StatefulWidget {
+class CreatePromptDialog extends StatefulWidget {
   final PromptManagementViewModel viewModel;
 
-  const _CreatePromptDialog({required this.viewModel});
+  const CreatePromptDialog({Key? key, required this.viewModel}) : super(key: key);
 
   @override
-  State<_CreatePromptDialog> createState() => _CreatePromptDialogState();
+  State<CreatePromptDialog> createState() => _CreatePromptDialogState();
 }
 
-class _CreatePromptDialogState extends State<_CreatePromptDialog> {
+class _CreatePromptDialogState extends State<CreatePromptDialog> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _contentController = TextEditingController();
@@ -143,17 +143,17 @@ class _CreatePromptDialogState extends State<_CreatePromptDialog> {
   }
 }
 
-class _EditPromptDialog extends StatefulWidget {
+class EditPromptDialog extends StatefulWidget {
   final PromptManagementViewModel viewModel;
   final PromptModel prompt;
 
-  const _EditPromptDialog({required this.viewModel, required this.prompt});
+  const EditPromptDialog({Key? key, required this.viewModel, required this.prompt}) : super(key: key);
 
   @override
-  State<_EditPromptDialog> createState() => _EditPromptDialogState();
+  State<EditPromptDialog> createState() => _EditPromptDialogState();
 }
 
-class _EditPromptDialogState extends State<_EditPromptDialog> {
+class _EditPromptDialogState extends State<EditPromptDialog> {
   final _formKey = GlobalKey<FormState>();
   final _contentController = TextEditingController();
   final _changeDescriptionController = TextEditingController();
@@ -246,10 +246,10 @@ class _EditPromptDialogState extends State<_EditPromptDialog> {
   }
 }
 
-class _PromptDetailsDialog extends StatelessWidget {
+class PromptDetailsDialog extends StatelessWidget {
   final PromptModel prompt;
 
-  const _PromptDetailsDialog({required this.prompt});
+  const PromptDetailsDialog({Key? key, required this.prompt}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -347,16 +347,16 @@ class _PromptDetailsDialog extends StatelessWidget {
   }
 }
 
-class _CreateCategoryDialog extends StatefulWidget {
+class CreateCategoryDialog extends StatefulWidget {
   final PromptManagementViewModel viewModel;
 
-  const _CreateCategoryDialog({required this.viewModel});
+  const CreateCategoryDialog({Key? key, required this.viewModel}) : super(key: key);
 
   @override
-  State<_CreateCategoryDialog> createState() => _CreateCategoryDialogState();
+  State<CreateCategoryDialog> createState() => _CreateCategoryDialogState();
 }
 
-class _CreateCategoryDialogState extends State<_CreateCategoryDialog> {
+class _CreateCategoryDialogState extends State<CreateCategoryDialog> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -436,11 +436,11 @@ class _CreateCategoryDialogState extends State<_CreateCategoryDialog> {
   }
 }
 
-class _PromptHistoryDialog extends StatelessWidget {
+class PromptHistoryDialog extends StatelessWidget {
   final PromptManagementViewModel viewModel;
   final PromptModel prompt;
 
-  const _PromptHistoryDialog({required this.viewModel, required this.prompt});
+  const PromptHistoryDialog({Key? key, required this.viewModel, required this.prompt}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

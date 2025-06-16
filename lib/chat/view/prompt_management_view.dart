@@ -511,7 +511,7 @@ class _PromptManagementViewState extends State<PromptManagementView>
   void _showCreatePromptDialog(BuildContext context, PromptManagementViewModel viewModel) {
     showDialog(
       context: context,
-      builder: (context) => _CreatePromptDialog(viewModel: viewModel),
+      builder: (context) => CreatePromptDialog(viewModel: viewModel),
     );
   }
 
@@ -519,14 +519,14 @@ class _PromptManagementViewState extends State<PromptManagementView>
     viewModel.selectPrompt(prompt);
     showDialog(
       context: context,
-      builder: (context) => _EditPromptDialog(viewModel: viewModel, prompt: prompt),
+      builder: (context) => EditPromptDialog(viewModel: viewModel, prompt: prompt),
     );
   }
 
   void _showPromptDetailsDialog(BuildContext context, PromptManagementViewModel viewModel, PromptModel prompt) {
     showDialog(
       context: context,
-      builder: (context) => _PromptDetailsDialog(prompt: prompt),
+      builder: (context) => PromptDetailsDialog(prompt: prompt),
     );
   }
 
@@ -557,7 +557,7 @@ class _PromptManagementViewState extends State<PromptManagementView>
   void _showCreateCategoryDialog(BuildContext context, PromptManagementViewModel viewModel) {
     showDialog(
       context: context,
-      builder: (context) => _CreateCategoryDialog(viewModel: viewModel),
+      builder: (context) => CreateCategoryDialog(viewModel: viewModel),
     );
   }
 
@@ -565,7 +565,7 @@ class _PromptManagementViewState extends State<PromptManagementView>
     viewModel.loadPromptHistory(prompt.name);
     showDialog(
       context: context,
-      builder: (context) => _PromptHistoryDialog(viewModel: viewModel, prompt: prompt),
+      builder: (context) => PromptHistoryDialog(viewModel: viewModel, prompt: prompt),
     );
   }
 
