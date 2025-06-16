@@ -10,6 +10,7 @@ class SSEEventModel {
   final String? targetLang;
   final String? collection;
   final bool? isSmallTalk;
+  final String? restructuredQuestion;
   final double? routingConfidence;
   final int? chunksCount;
   final String? retrievalType;
@@ -36,6 +37,7 @@ class SSEEventModel {
     this.targetLang,
     this.collection,
     this.isSmallTalk,
+    this.restructuredQuestion,
     this.routingConfidence,
     this.chunksCount,
     this.retrievalType,
@@ -64,6 +66,7 @@ class SSEEventModel {
       targetLang: json['target_lang'],
       collection: json['collection'],
       isSmallTalk: json['is_small_talk'],
+      restructuredQuestion: json['routing_result'] !=null ?  json['routing_result']['restructured_question'] : null,
       routingConfidence: json['routing_confidence']?.toDouble(),
       chunksCount: json['chunks_count'],
       retrievalType: json['retrieval_type'],
@@ -93,6 +96,7 @@ class SSEEventModel {
       'target_lang': targetLang,
       'collection': collection,
       'is_small_talk': isSmallTalk,
+      'restructured_question' : restructuredQuestion,
       'routing_confidence': routingConfidence,
       'chunks_count': chunksCount,
       'retrieval_type': retrievalType,

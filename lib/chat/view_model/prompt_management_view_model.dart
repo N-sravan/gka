@@ -36,7 +36,7 @@ class PromptManagementViewModel extends LoadingViewModel {
   // Filtered prompts based on search and category
   List<PromptModel> get filteredPrompts {
     var filtered = _prompts;
-    
+
     // Filter by search query
     if (_searchQuery.isNotEmpty) {
       filtered = filtered.where((prompt) =>
@@ -45,23 +45,25 @@ class PromptManagementViewModel extends LoadingViewModel {
           (prompt.description?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false)
       ).toList();
     }
-    
+
     // Filter by category
     if (_selectedCategoryId != null && _selectedCategoryId!.isNotEmpty) {
       filtered = filtered.where((prompt) => prompt.categoryName == _selectedCategoryId).toList();
     }
-    
+
     return filtered;
   }
 
   // Initialize data
   Future<void> initialize() async {
-    setLoading(true);
+    isLoading = true;
+    ;
     await Future.wait([
       loadPrompts(),
       loadCategories(),
     ]);
-    setLoading(false);
+    isLoading = false;
+    ;
   }
 
   // Load all prompts
@@ -104,7 +106,8 @@ class PromptManagementViewModel extends LoadingViewModel {
       return false;
     }
 
-    setLoading(true);
+    isLoading = true;
+    ;
     try {
       final request = CreatePromptRequest(
         name: name.trim(),
@@ -115,21 +118,24 @@ class PromptManagementViewModel extends LoadingViewModel {
       );
 
       final response = await _repository.createPrompt(request);
-      
+
       if (response.success) {
         await loadPrompts(); // Refresh list
         clearForm();
         _showSuccess('Prompt created successfully');
-        setLoading(false);
+        isLoading = false;
+        ;
         return true;
       } else {
         _showError('Failed to create prompt: ${response.message}');
-        setLoading(false);
+        isLoading = false;
+        ;
         return false;
       }
     } catch (e) {
       _showError('Error creating prompt: ${e.toString()}');
-      setLoading(false);
+      isLoading = false;
+      ;
       return false;
     }
   }
@@ -145,7 +151,8 @@ class PromptManagementViewModel extends LoadingViewModel {
       return false;
     }
 
-    setLoading(true);
+    isLoading = true;
+    ;
     try {
       final request = UpdatePromptRequest(
         content: content.trim(),
@@ -154,51 +161,59 @@ class PromptManagementViewModel extends LoadingViewModel {
       );
 
       final response = await _repository.updatePrompt(name, request);
-      
+
       if (response.success) {
         await loadPrompts(); // Refresh list
         clearForm();
         _showSuccess('Prompt updated successfully');
-        setLoading(false);
+        isLoading = false;
+        ;
         return true;
       } else {
         _showError('Failed to update prompt: ${response.message}');
-        setLoading(false);
+        isLoading = false;
+        ;
         return false;
       }
     } catch (e) {
       _showError('Error updating prompt: ${e.toString()}');
-      setLoading(false);
+      isLoading = false;
+      ;
       return false;
     }
   }
 
   // Delete prompt
   Future<bool> deletePrompt(String promptName) async {
-    setLoading(true);
+    isLoading = true;
+    ;
     try {
       final response = await _repository.deletePrompt(promptName);
-      
+
       if (response.success) {
         await loadPrompts(); // Refresh list
         _showSuccess('Prompt deleted successfully');
-        setLoading(false);
+        isLoading = false;
+        ;
         return true;
       } else {
         _showError('Failed to delete prompt: ${response.message}');
-        setLoading(false);
+        isLoading = false;
+        ;
         return false;
       }
     } catch (e) {
       _showError('Error deleting prompt: ${e.toString()}');
-      setLoading(false);
+      isLoading = false;
+      ;
       return false;
     }
   }
 
   // Load prompt history
   Future<void> loadPromptHistory(String promptName) async {
-    setLoading(true);
+    isLoading = true;
+    ;
     try {
       final response = await _repository.getPromptHistory(promptName);
       if (response.success && response.history != null) {
@@ -210,7 +225,8 @@ class PromptManagementViewModel extends LoadingViewModel {
     } catch (e) {
       _showError('Error loading prompt history: ${e.toString()}');
     }
-    setLoading(false);
+    isLoading = false;
+    ;
   }
 
   // Create new category
@@ -223,23 +239,28 @@ class PromptManagementViewModel extends LoadingViewModel {
       return false;
     }
 
-    setLoading(true);
+    isLoading = true;
+    ;
     try {
-      final response = await _repository.createCategory(name.trim(), description?.trim());
-      
+      final response =
+          await _repository.createCategory(name.trim(), description?.trim());
+
       if (response.success) {
         await loadCategories(); // Refresh categories
         _showSuccess('Category created successfully');
-        setLoading(false);
+        isLoading = false;
+        ;
         return true;
       } else {
         _showError('Failed to create category: ${response.message}');
-        setLoading(false);
+        isLoading = false;
+        ;
         return false;
       }
     } catch (e) {
       _showError('Error creating category: ${e.toString()}');
-      setLoading(false);
+      isLoading = false;
+      ;
       return false;
     }
   }
@@ -284,7 +305,8 @@ class PromptManagementViewModel extends LoadingViewModel {
 
   // Refresh cache
   Future<void> refreshCache() async {
-    setLoading(true);
+    isLoading = true;
+    ;
     try {
       final response = await _repository.refreshCache();
       if (response.success) {
@@ -296,12 +318,14 @@ class PromptManagementViewModel extends LoadingViewModel {
     } catch (e) {
       _showError('Error refreshing cache: ${e.toString()}');
     }
-    setLoading(false);
+    isLoading = false;
+    ;
   }
 
   // Migrate existing prompts
   Future<void> migratePrompts() async {
-    setLoading(true);
+    isLoading = true;
+    ;
     try {
       final response = await _repository.migratePrompts();
       if (response.success) {
@@ -313,7 +337,8 @@ class PromptManagementViewModel extends LoadingViewModel {
     } catch (e) {
       _showError('Error migrating prompts: ${e.toString()}');
     }
-    setLoading(false);
+    isLoading = false;
+    ;
   }
 
   // Helper methods

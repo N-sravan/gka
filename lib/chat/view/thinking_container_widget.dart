@@ -173,7 +173,7 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '${widget.steps.length} steps • ${widget.totalDuration}ms',
+                    '${widget.steps.length} steps • ${widget.totalDuration/1000}s',
                     style: TextStyle(
                       fontSize: 11,
                       color: Colors.grey[600],
@@ -869,7 +869,7 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
           ),
         ),
         const SizedBox(height: 4),
-        ...chunks.take(3).map((chunk) => _buildChunkItem(chunk)).toList(),
+        ...chunks.take(3).map((chunk) => _buildChunkItem(chunk)),
       ],
     );
   }
@@ -1328,7 +1328,7 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
             ),
           ),
           Text(
-            '${widget.totalDuration}ms',
+            '${widget.totalDuration/1000}s',
             style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,

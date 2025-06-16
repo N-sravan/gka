@@ -28,7 +28,7 @@ class ChatView extends StatefulWidget {
   const ChatView({
     super.key,
     required this.isFromHistory,
-    this.sessionId,
+    required this.sessionId,
   });
 
   final bool? isFromHistory;
@@ -238,12 +238,12 @@ class _ChatViewState extends State<ChatView> {
         if (!AppState.instance.showChainOfActions) {
           return const SizedBox();
         }
-        
+
         // Only show for currently processing queries (not completed ones)
         if (!isProcessing) {
           return const SizedBox();
         }
-        
+
         // Show the container for active processing
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -271,7 +271,7 @@ class _ChatViewState extends State<ChatView> {
   List<ProcessingStepModel> _getProcessingStepsFromMessage(Map<String, dynamic> message) {
     final stepsData = message['processing_steps'] as List?;
     if (stepsData == null) return [];
-    
+
     return stepsData.map((stepData) {
       if (stepData is ProcessingStepModel) {
         return stepData;
@@ -635,13 +635,17 @@ class _ChatViewState extends State<ChatView> {
                         } else {
                           // viewModel.sendMessage(context, viewModel.chatController.text);
                           print(
-                              "userId : ${AppState.instance.userId}, sessionId :${AppState.instance.sessionId}");
+                              "userId : ${AppState.instance.userId}, sessionId :${widget.sessionId}");
                           if (viewModel.chatController.text.isNotEmpty &&
+                              widget.sessionId != null &&
+                              widget.sessionId!.isNotEmpty &&
                               viewModel.chatController.text !=
                                   'Processing...') {
                             // Use the new query-stream API
                             viewModel.sendMessageWithQueryStream(
-                                viewModel.chatController.text, context);
+                                widget.sessionId,
+                                viewModel.chatController.text,
+                                context);
                           }
                         }
                       });

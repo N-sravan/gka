@@ -43,7 +43,6 @@ class ChatViewModel extends LoadingViewModel {
 
   final ChatRepository repo;
   bool isFirstTime = true;
-  String? sessionId;
   var scrollControllerListView = ScrollController();
   int prevChatLength = 0;
 
@@ -168,10 +167,9 @@ class ChatViewModel extends LoadingViewModel {
   // New query-stream processing state
   List<ProcessingStepModel> processingSteps = [];
   Map<String, int> stepTimings = {};
-  String? currentSessionId;
   int? startTime;
   bool includeDetails = true;
-  
+
   // ValueNotifiers for the thinking container
   ValueNotifier<bool> isQueryProcessing = ValueNotifier<bool>(false);
   ValueNotifier<bool> showThinkingContainer = ValueNotifier<bool>(true);
@@ -1825,7 +1823,8 @@ class ChatViewModel extends LoadingViewModel {
   // Query-stream API methods
 
   /// Send message using the new query-stream API with SSE
-  Future<void> sendMessageWithQueryStream(String userMessage, BuildContext context) async {
+  Future<void> sendMessageWithQueryStream(
+      String? sessionId, String userMessage, BuildContext context) async {
     // Add user message to chat
     messages.add({
       'text': userMessage,
@@ -1833,23 +1832,20 @@ class ChatViewModel extends LoadingViewModel {
       'timestamp': DateTime.now().toIso8601String(),
     });
     chatController.clear();
-    
-    // Initialize processing state
     isQueryProcessing.value = true;
     showLoader.value = false;
     processingSteps.clear();
     stepTimings.clear();
     startTime = DateTime.now().millisecondsSinceEpoch;
-    currentSessionId = generateSessionId();
-    
     notifyListeners();
 
     // Start query processing with SSE
-    await _startQueryProcessing(userMessage, context);
+    await _startQueryProcessing(sessionId!, userMessage, context);
   }
 
   /// Start the query processing with SSE stream
-  Future<void> _startQueryProcessing(String query, BuildContext context) async {
+  Future<void> _startQueryProcessing(
+      String sessionId, String query, BuildContext context) async {
     // Create initial API connection step
     _updateProcessingStep(
       'api_connection',
@@ -1860,7 +1856,7 @@ class ChatViewModel extends LoadingViewModel {
 
     final requestBody = {
       'query': query,
-      'session_id': currentSessionId,
+      'session_id': sessionId,
       'user_id': AppState.instance.userId,
       'language': AppState.instance.isEnglish ? 'en' : 'te',
       'retrieval_type': 'vector',
@@ -1868,7 +1864,7 @@ class ChatViewModel extends LoadingViewModel {
     };
 
     if (!AppState.instance.isEnglish) {
-      requestBody['translation_engine'] = 
+      requestBody['translation_engine'] =
           AppState.instance.transMode == 'bhashini' ? 'bhashini' : 'google';
     }
 
@@ -1923,27 +1919,27 @@ class ChatViewModel extends LoadingViewModel {
   /// Process the SSE stream from a StreamedResponse
   Future<void> _processSSEStreamFromResponse(http.StreamedResponse response, BuildContext context) async {
     String buffer = '';
-    
+
     await for (final chunk in response.stream.transform(utf8.decoder)) {
       buffer += chunk;
-      
+
       // Process complete lines
       final lines = buffer.split('\n');
       buffer = lines.removeLast(); // Keep incomplete line in buffer
-      
+
       for (final line in lines) {
         final trimmed = line.trim();
         if (trimmed.isEmpty) continue;
-        
+
         if (trimmed.startsWith('data: ')) {
           try {
             final sseDataString = trimmed.substring(6).trim();
             if (sseDataString.isNotEmpty && sseDataString != '[DONE]') {
               final eventData = jsonDecode(sseDataString);
               final sseEvent = SSEEventModel.fromJson(eventData);
-              
+
               await _handleSSEEvent(sseEvent, context);
-              
+
               if (sseEvent.step == 'complete') {
                 _completeProcessing(true, sseEvent.finalAnswer);
                 return;
@@ -1962,7 +1958,7 @@ class ChatViewModel extends LoadingViewModel {
         }
       }
     }
-    
+
     // Process any remaining buffer content
     if (buffer.trim().isNotEmpty && buffer.trim().startsWith('data: ')) {
       try {
@@ -1971,7 +1967,7 @@ class ChatViewModel extends LoadingViewModel {
           final eventData = jsonDecode(sseDataString);
           final sseEvent = SSEEventModel.fromJson(eventData);
           await _handleSSEEvent(sseEvent, context);
-          
+
           if (sseEvent.step == 'complete') {
             _completeProcessing(true, sseEvent.finalAnswer);
             return;
@@ -1981,7 +1977,7 @@ class ChatViewModel extends LoadingViewModel {
         print('Error parsing final SSE event: $e');
       }
     }
-    
+
     // If we reach here without completing, something went wrong
     if (isQueryProcessing.value) {
       _completeProcessing(false);
@@ -1991,7 +1987,7 @@ class ChatViewModel extends LoadingViewModel {
   /// Process the SSE stream from the API
   Future<void> _processSSEStream(String responseBody, BuildContext context) async {
     final lines = responseBody.split('\n\n');
-    
+
     for (final line in lines) {
       if (line.startsWith('data: ')) {
         try {
@@ -1999,9 +1995,9 @@ class ChatViewModel extends LoadingViewModel {
           if (sseDataString.isNotEmpty) {
             final eventData = jsonDecode(sseDataString);
             final sseEvent = SSEEventModel.fromJson(eventData);
-            
+
             await _handleSSEEvent(sseEvent, context);
-            
+
             if (sseEvent.step == 'complete') {
               _completeProcessing(true, sseEvent.finalAnswer);
               return;
@@ -2062,7 +2058,7 @@ class ChatViewModel extends LoadingViewModel {
     Map<String, dynamic>? details,
   }) {
     final existingIndex = processingSteps.indexWhere((step) => step.name == stepName);
-    
+
     if (existingIndex != -1) {
       // Update existing step
       processingSteps[existingIndex] = processingSteps[existingIndex].copyWith(
@@ -2083,7 +2079,7 @@ class ChatViewModel extends LoadingViewModel {
         details: details,
       ));
     }
-    
+
     notifyListeners();
   }
 
@@ -2091,7 +2087,7 @@ class ChatViewModel extends LoadingViewModel {
   void _completeProcessing(bool success, [String? finalAnswer]) {
     isQueryProcessing.value = false;
     showLoader.value = false;
-    
+
     if (success && finalAnswer != null) {
       // Add assistant response to messages
       messages.add({
@@ -2100,7 +2096,7 @@ class ChatViewModel extends LoadingViewModel {
         'timestamp': DateTime.now().toIso8601String(),
         'processing_steps': processingSteps.map((step) => step.toJson()).toList(),
       });
-      
+
       // Handle TTS if needed (we'll need to pass context through the method chain)
       // _handleTTSResponse(finalAnswer, context);
     } else if (!success) {
@@ -2111,7 +2107,7 @@ class ChatViewModel extends LoadingViewModel {
         'processing_steps': processingSteps.map((step) => step.toJson()).toList(),
       });
     }
-    
+
     notifyListeners();
   }
 
@@ -2121,7 +2117,7 @@ class ChatViewModel extends LoadingViewModel {
     String cleanText = text;
     final sourceRegex = RegExp(r'\(Source:.*?\)');
     final teluguSourceRegex = RegExp(r'\(మూలం:.*?\)');
-    
+
     if (sourceRegex.hasMatch(text)) {
       cleanText = text.replaceAll(sourceRegex, '');
     } else if (teluguSourceRegex.hasMatch(text)) {
@@ -2141,9 +2137,9 @@ class ChatViewModel extends LoadingViewModel {
   /// Format event details for display
   Map<String, dynamic>? _formatEventDetails(SSEEventModel event) {
     if (!includeDetails) return null;
-    
+
     final details = <String, dynamic>{};
-    
+
     // Add step-specific details
     switch (event.step) {
       case 'translation':
@@ -2154,7 +2150,7 @@ class ChatViewModel extends LoadingViewModel {
           details['language'] = '${event.sourceLang} → ${event.targetLang}';
         }
         break;
-        
+
       case 'restructure_route':
       case 'workflow_init':
         if (event.collection != null) {
@@ -2164,10 +2160,14 @@ class ChatViewModel extends LoadingViewModel {
           details['is_small_talk'] = event.isSmallTalk;
         }
         if (event.routingConfidence != null) {
-          details['routing_confidence'] = '${(event.routingConfidence! * 100).toStringAsFixed(1)}%';
+          details['routing_confidence'] =
+              '${(event.routingConfidence! * 100).toStringAsFixed(1)}%';
+        }
+        if (event.restructuredQuestion != null) {
+          details['restructured_question'] = event.restructuredQuestion;
         }
         break;
-        
+
       case 'retrieval':
         if (event.chunksCount != null) {
           details['chunks_retrieved'] = event.chunksCount;
@@ -2179,7 +2179,7 @@ class ChatViewModel extends LoadingViewModel {
           details['top_10_chunks'] = event.top10Chunks;
         }
         break;
-        
+
       case 'answer_generation':
         if (event.modelUsed != null) {
           details['model_used'] = event.modelUsed;
@@ -2191,7 +2191,7 @@ class ChatViewModel extends LoadingViewModel {
           details['llm_prompt'] = event.llmPrompt!;
         }
         break;
-        
+
       case 'vision_processing':
         if (event.imagesProcessed != null) {
           details['images_processed'] = event.imagesProcessed;
@@ -2200,7 +2200,7 @@ class ChatViewModel extends LoadingViewModel {
           details['vision_model'] = event.visionModel;
         }
         break;
-        
+
       case 'web_search':
         if (event.searchQuery != null) {
           details['search_query'] = event.searchQuery;
@@ -2210,12 +2210,12 @@ class ChatViewModel extends LoadingViewModel {
         }
         break;
     }
-    
+
     // Add error details
     if (event.error != null) {
       details['error'] = event.error.toString();
     }
-    
+
     return details.isNotEmpty ? details : null;
   }
 
@@ -2267,7 +2267,6 @@ class ChatViewModel extends LoadingViewModel {
     stepTimings.clear();
     isQueryProcessing.value = false;
     showThinkingContainer.value = true;
-    currentSessionId = null;
     startTime = null;
     notifyListeners();
   }
