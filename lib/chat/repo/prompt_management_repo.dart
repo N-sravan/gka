@@ -30,7 +30,7 @@ class PromptManagementRepositoryImpl extends PromptManagementRepository {
 
   @override
   Future<PromptManagementResponse> getAllPrompts() async {
-    final url = '${constants.baseUrl}api/v1/prompts';
+    final url = '${constants.promptManagementBaseUrl}api/v1/prompts';
     debugPrint('PromptRepo: Fetching all prompts from: $url');
     debugPrint('PromptRepo: Headers: $_headers');
     
@@ -61,7 +61,7 @@ class PromptManagementRepositoryImpl extends PromptManagementRepository {
   Future<PromptManagementResponse> getPrompt(String promptName) async {
     try {
       final response = await http.get(
-        Uri.parse('${constants.baseUrl}api/v1/prompts/$promptName'),
+        Uri.parse('${constants.promptManagementBaseUrl}api/v1/prompts/$promptName'),
         headers: _headers,
       );
       
@@ -79,7 +79,7 @@ class PromptManagementRepositoryImpl extends PromptManagementRepository {
   Future<PromptManagementResponse> createPrompt(CreatePromptRequest request) async {
     try {
       final response = await http.post(
-        Uri.parse('${constants.baseUrl}api/v1/prompts'),
+        Uri.parse('${constants.promptManagementBaseUrl}api/v1/prompts'),
         headers: _headers,
         body: jsonEncode(request.toJson()),
       );
@@ -98,7 +98,7 @@ class PromptManagementRepositoryImpl extends PromptManagementRepository {
   Future<PromptManagementResponse> updatePrompt(String promptName, UpdatePromptRequest request) async {
     try {
       final response = await http.put(
-        Uri.parse('${constants.baseUrl}api/v1/prompts/$promptName'),
+        Uri.parse('${constants.promptManagementBaseUrl}api/v1/prompts/$promptName'),
         headers: _headers,
         body: jsonEncode(request.toJson()),
       );
@@ -117,7 +117,7 @@ class PromptManagementRepositoryImpl extends PromptManagementRepository {
   Future<PromptManagementResponse> deletePrompt(String promptName) async {
     try {
       final response = await http.delete(
-        Uri.parse('${constants.baseUrl}api/v1/prompts/$promptName'),
+        Uri.parse('${constants.promptManagementBaseUrl}api/v1/prompts/$promptName'),
         headers: _headers,
       );
       
@@ -135,7 +135,7 @@ class PromptManagementRepositoryImpl extends PromptManagementRepository {
   Future<PromptManagementResponse> getPromptHistory(String promptName) async {
     try {
       final response = await http.get(
-        Uri.parse('${constants.baseUrl}api/v1/prompts/$promptName/history'),
+        Uri.parse('${constants.promptManagementBaseUrl}api/v1/prompts/$promptName/history'),
         headers: _headers,
       );
       
@@ -153,7 +153,7 @@ class PromptManagementRepositoryImpl extends PromptManagementRepository {
   Future<PromptManagementResponse> refreshCache() async {
     try {
       final response = await http.post(
-        Uri.parse('${constants.baseUrl}api/v1/prompts/refresh-cache'),
+        Uri.parse('${constants.promptManagementBaseUrl}api/v1/prompts/refresh-cache'),
         headers: _headers,
       );
       
@@ -169,7 +169,7 @@ class PromptManagementRepositoryImpl extends PromptManagementRepository {
 
   @override
   Future<PromptManagementResponse> getCategories() async {
-    final url = '${constants.baseUrl}api/v1/prompts/categories';
+    final url = '${constants.promptManagementBaseUrl}api/v1/prompts/categories';
     debugPrint('PromptRepo: Fetching categories from: $url');
     
     try {
@@ -199,7 +199,7 @@ class PromptManagementRepositoryImpl extends PromptManagementRepository {
   Future<PromptManagementResponse> createCategory(String name, String? description) async {
     try {
       final response = await http.post(
-        Uri.parse('${constants.baseUrl}api/v1/prompts/categories'),
+        Uri.parse('${constants.promptManagementBaseUrl}api/v1/prompts/categories'),
         headers: _headers,
         body: jsonEncode({
           'name': name,
@@ -221,7 +221,7 @@ class PromptManagementRepositoryImpl extends PromptManagementRepository {
   Future<PromptManagementResponse> migratePrompts() async {
     try {
       final response = await http.post(
-        Uri.parse('${constants.baseUrl}api/v1/prompts/migrate'),
+        Uri.parse('${constants.promptManagementBaseUrl}api/v1/prompts/migrate'),
         headers: _headers,
       );
       
@@ -239,7 +239,7 @@ class PromptManagementRepositoryImpl extends PromptManagementRepository {
   Future<PromptManagementResponse> healthCheck() async {
     try {
       final response = await http.get(
-        Uri.parse('${constants.baseUrl}api/v1/prompts/health'),
+        Uri.parse('${constants.promptManagementBaseUrl}api/v1/prompts/health'),
         headers: _headers,
       );
       

@@ -861,6 +861,7 @@ const String bhasiniApikey =
 
 ///chatbot constants
 const String baseUrl = 'https://apaims2.0.vassarlabs.com/chatbot/chat/';
+const String promptManagementBaseUrl = 'https://apaims2.0.vassarlabs.com/chatbot/';
 
 //chatbot API Endpoints
 const String chatHistoryEndpoint = 'get-history';
