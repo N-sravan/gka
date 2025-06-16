@@ -49,20 +49,23 @@ class _PromptManagementViewState extends State<PromptManagementView>
               headerSliverBuilder: (context, innerBoxIsScrolled) {
                 return [
                   SliverAppBar(
-                    expandedHeight: 200,
+                    expandedHeight: 220,
                     floating: false,
                     pinned: true,
                     elevation: 0,
+                    centerTitle: true,
                     backgroundColor: Theme.of(context).primaryColor,
-                    flexibleSpace: FlexibleSpaceBar(
-                      title: const Text(
-                        'Prompt Management',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    title: const Text(
+                      'Prompt Management',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
                       ),
+                    ),
+                    flexibleSpace: FlexibleSpaceBar(
                       background: Container(
+                        padding: const EdgeInsets.only(top: 4),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
@@ -73,25 +76,23 @@ class _PromptManagementViewState extends State<PromptManagementView>
                             ],
                           ),
                         ),
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.psychology,
-                                size: 64,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.psychology,
+                              size: 40,
+                              color: Colors.white70,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '${viewModel.prompts.length} Prompts Available',
+                              style: const TextStyle(
                                 color: Colors.white70,
+                                fontSize: 16,
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                '${viewModel.prompts.length} Prompts Available',
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -106,7 +107,7 @@ class _PromptManagementViewState extends State<PromptManagementView>
                         Tab(icon: Icon(Icons.settings), text: 'Settings'),
                       ],
                     ),
-                  ),
+                  )
                 ];
               },
               body: viewModel.isLoading
