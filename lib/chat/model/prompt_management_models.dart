@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 class PromptModel {
   final String id;
   final String name;
@@ -29,10 +31,65 @@ class PromptModel {
       description: json['description'],
       categoryName: json['category_name'],
       createdBy: json['created_by'],
-      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
-      updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at']) : null,
+      createdAt: _parseDateTime(json['created_at']),
+      updatedAt: json['updated_at'] != null ? _parseDateTime(json['updated_at']) : null,
       isActive: json['is_active'] ?? true,
     );
+  }
+
+  static DateTime _parseDateTime(dynamic dateStr) {
+    if (dateStr == null) return DateTime.now();
+    try {
+      final dateString = dateStr.toString();
+      debugPrint('Parsing date: $dateString');
+      
+      // Handle GMT format: "Mon, 09 Jun 2025 05:59:53 GMT"
+      if (dateString.contains('GMT')) {
+        // Remove GMT and day of week
+        final cleanDate = dateString
+            .replaceAll(' GMT', '')
+            .replaceAll(RegExp(r'^\w+, '), '');
+        debugPrint('Cleaned date: $cleanDate');
+        
+        // Parse manually: "09 Jun 2025 05:59:53"
+        final parts = cleanDate.split(' ');
+        if (parts.length >= 4) {
+          final day = int.parse(parts[0]);
+          final month = _monthNameToNumber(parts[1]);
+          final year = int.parse(parts[2]);
+          final timeParts = parts[3].split(':');
+          final hour = int.parse(timeParts[0]);
+          final minute = int.parse(timeParts[1]);
+          final second = int.parse(timeParts[2]);
+          
+          return DateTime(year, month, day, hour, minute, second);
+        }
+      }
+      
+      // Try standard ISO format
+      return DateTime.parse(dateString);
+    } catch (e) {
+      debugPrint('Error parsing date: $dateStr - $e');
+      return DateTime.now();
+    }
+  }
+  
+  static int _monthNameToNumber(String monthName) {
+    switch (monthName.toLowerCase()) {
+      case 'jan': return 1;
+      case 'feb': return 2;
+      case 'mar': return 3;
+      case 'apr': return 4;
+      case 'may': return 5;
+      case 'jun': return 6;
+      case 'jul': return 7;
+      case 'aug': return 8;
+      case 'sep': return 9;
+      case 'oct': return 10;
+      case 'nov': return 11;
+      case 'dec': return 12;
+      default: return 1;
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -68,7 +125,7 @@ class PromptCategoryModel {
       id: json['id']?.toString() ?? '',
       name: json['name'] ?? '',
       description: json['description'],
-      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
+      createdAt: PromptModel._parseDateTime(json['created_at']),
     );
   }
 
@@ -106,7 +163,7 @@ class PromptHistoryModel {
       content: json['content'] ?? '',
       changedBy: json['changed_by'],
       changeDescription: json['change_description'],
-      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
+      createdAt: PromptModel._parseDateTime(json['created_at']),
     );
   }
 }
@@ -131,22 +188,54 @@ class PromptManagementResponse {
   });
 
   factory PromptManagementResponse.fromJson(Map<String, dynamic> json) {
+    debugPrint('PromptManagementResponse.fromJson: $json');
+    
+    List<PromptModel>? prompts;
+    List<PromptCategoryModel>? categories;
+    List<PromptHistoryModel>? history;
+    String? message;
+    
+    try {
+      if (json['response'] is List) {
+        final responseList = json['response'] as List;
+        if (responseList.isNotEmpty) {
+          final firstItem = responseList[0];
+          
+          // Check if it's categories (has 'description' field but not 'content')
+          if (firstItem['description'] != null && firstItem['content'] == null) {
+            categories = responseList.map((item) => PromptCategoryModel.fromJson(item)).toList();
+            debugPrint('Parsed ${categories.length} categories');
+          }
+          // Check if it's prompts (has 'content' field)
+          else if (firstItem['content'] != null) {
+            prompts = responseList.map((item) => PromptModel.fromJson(item)).toList();
+            debugPrint('Parsed ${prompts.length} prompts');
+          }
+          // Check if it's history (has 'prompt_name' field)
+          else if (firstItem['prompt_name'] != null) {
+            history = responseList.map((item) => PromptHistoryModel.fromJson(item)).toList();
+            debugPrint('Parsed ${history.length} history items');
+          }
+        }
+      } else if (json['response'] is Map<String, dynamic>) {
+        final responseMap = json['response'] as Map<String, dynamic>;
+        if (responseMap['message'] != null) {
+          message = responseMap['message'];
+        }
+      }
+    } catch (e) {
+      debugPrint('Error parsing response: $e');
+    }
+    
+    final statusCode = json['statuscode'] ?? json['statusCode'] ?? 0;
+    
     return PromptManagementResponse(
-      prompts: json['response'] is List 
-          ? (json['response'] as List).map((item) => PromptModel.fromJson(item)).toList()
-          : null,
-      prompt: json['response'] is Map<String, dynamic> && json['response']['content'] != null
-          ? PromptModel.fromJson(json['response'])
-          : null,
-      categories: json['response'] is List && json['response'].isNotEmpty && json['response'][0]['name'] != null
-          ? (json['response'] as List).map((item) => PromptCategoryModel.fromJson(item)).toList()
-          : null,
-      history: json['response'] is List && json['response'].isNotEmpty && json['response'][0]['prompt_name'] != null
-          ? (json['response'] as List).map((item) => PromptHistoryModel.fromJson(item)).toList()
-          : null,
-      message: json['response'] is Map<String, dynamic> ? json['response']['message'] : null,
-      statusCode: json['statuscode'] ?? json['statusCode'] ?? 0,
-      success: (json['statuscode'] ?? json['statusCode'] ?? 0) >= 200 && (json['statuscode'] ?? json['statusCode'] ?? 0) < 300,
+      prompts: prompts,
+      categories: categories,
+      history: history,
+      message: message,
+      statusCode: statusCode,
+      success: statusCode >= 200 && statusCode < 300,
     );
   }
 }
