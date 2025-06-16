@@ -125,7 +125,9 @@ class _PromptManagementViewState extends State<PromptManagementView>
               icon: const Icon(Icons.add),
               label: const Text('New Prompt'),
               backgroundColor: Theme.of(context).primaryColor,
+              foregroundColor: Colors.white,
             ),
+            floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
           );
         },
       ),
@@ -137,16 +139,28 @@ class _PromptManagementViewState extends State<PromptManagementView>
       children: [
         // Search and Filter Bar
         Container(
-          padding: const EdgeInsets.all(16),
-          color: Colors.white,
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.1),
+                spreadRadius: 1,
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
           child: Column(
             children: [
               TextField(
                 controller: viewModel.searchController,
                 onChanged: viewModel.updateSearchQuery,
                 decoration: InputDecoration(
-                  hintText: 'Search prompts...',
-                  prefixIcon: const Icon(Icons.search),
+                  hintText: 'Search prompts by name or content...',
+                  hintStyle: TextStyle(color: Colors.grey[500]),
+                  prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
                   suffixIcon: viewModel.searchQuery.isNotEmpty
                       ? IconButton(
                           icon: const Icon(Icons.clear),
@@ -154,14 +168,15 @@ class _PromptManagementViewState extends State<PromptManagementView>
                         )
                       : null,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
                   ),
                   filled: true,
-                  fillColor: Colors.grey[100],
+                  fillColor: Colors.grey[50],
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               // Category Filter
               if (viewModel.categories.isNotEmpty)
                 DropdownButtonFormField<String>(
@@ -169,11 +184,12 @@ class _PromptManagementViewState extends State<PromptManagementView>
                   decoration: InputDecoration(
                     labelText: 'Filter by Category',
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide.none,
                     ),
                     filled: true,
-                    fillColor: Colors.grey[100],
+                    fillColor: Colors.grey[50],
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   ),
                   items: [
                     const DropdownMenuItem<String>(
@@ -197,7 +213,7 @@ class _PromptManagementViewState extends State<PromptManagementView>
           child: viewModel.filteredPrompts.isEmpty
               ? _buildEmptyState()
               : ListView.builder(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 80), // Extra bottom padding for FAB
                   itemCount: viewModel.filteredPrompts.length,
                   itemBuilder: (context, index) {
                     final prompt = viewModel.filteredPrompts[index];
@@ -211,18 +227,19 @@ class _PromptManagementViewState extends State<PromptManagementView>
 
   Widget _buildPromptCard(BuildContext context, PromptManagementViewModel viewModel, PromptModel prompt) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: const EdgeInsets.only(bottom: 16),
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         onTap: () => _showPromptDetailsDialog(context, viewModel, prompt),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: Text(
@@ -230,9 +247,13 @@ class _PromptManagementViewState extends State<PromptManagementView>
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
+                        height: 1.2,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  const SizedBox(width: 8),
                   PopupMenuButton<String>(
                     onSelected: (value) async {
                       switch (value) {
@@ -292,38 +313,65 @@ class _PromptManagementViewState extends State<PromptManagementView>
                   ),
                 ),
               ],
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               Container(
-                padding: const EdgeInsets.all(12),
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey[200]!),
                 ),
                 child: Text(
                   prompt.content,
-                  style: const TextStyle(fontSize: 14, fontFamily: 'monospace'),
-                  maxLines: 3,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontFamily: 'monospace',
+                    height: 1.4,
+                  ),
+                  maxLines: 4,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   if (prompt.categoryName != null)
-                    Chip(
-                      label: Text(prompt.categoryName!),
-                      backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-                      labelStyle: TextStyle(
-                        color: Theme.of(context).primaryColor,
+                    Flexible(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: Theme.of(context).primaryColor.withOpacity(0.3),
+                          ),
+                        ),
+                        child: Text(
+                          prompt.categoryName!,
+                          style: TextStyle(
+                            color: Theme.of(context).primaryColor,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    )
+                  else
+                    const SizedBox.shrink(),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      'Created ${_formatDate(prompt.createdAt)}',
+                      style: TextStyle(
+                        color: Colors.grey[500],
                         fontSize: 12,
                       ),
-                    ),
-                  const Spacer(),
-                  Text(
-                    'Created ${_formatDate(prompt.createdAt)}',
-                    style: TextStyle(
-                      color: Colors.grey[500],
-                      fontSize: 12,
+                      textAlign: TextAlign.end,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -377,25 +425,54 @@ class _PromptManagementViewState extends State<PromptManagementView>
                           .length;
                       
                       return Card(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         child: ListTile(
+                          contentPadding: const EdgeInsets.all(16),
                           leading: CircleAvatar(
+                            radius: 24,
                             backgroundColor: Theme.of(context).primaryColor,
                             child: Text(
                               category.name.substring(0, 1).toUpperCase(),
-                              style: const TextStyle(color: Colors.white),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
-                          title: Text(category.name),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (category.description != null)
-                                Text(category.description!),
-                              Text('$promptCount prompts'),
-                            ],
+                          title: Text(
+                            category.name,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          subtitle: Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (category.description != null && category.description!.isNotEmpty)
+                                  Text(
+                                    category.description!,
+                                    style: TextStyle(color: Colors.grey[600]),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '$promptCount prompts',
+                                  style: TextStyle(
+                                    color: Theme.of(context).primaryColor,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                           trailing: IconButton(
-                            icon: const Icon(Icons.arrow_forward_ios),
+                            icon: const Icon(Icons.arrow_forward_ios, size: 16),
                             onPressed: () {
                               viewModel.setSelectedCategory(category.name);
                               _tabController.animateTo(0);

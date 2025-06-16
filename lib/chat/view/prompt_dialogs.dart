@@ -30,8 +30,11 @@ class _CreatePromptDialogState extends State<CreatePromptDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Create New Prompt'),
+      contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+      actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
       content: SizedBox(
         width: MediaQuery.of(context).size.width * 0.9,
+        height: MediaQuery.of(context).size.height * 0.6,
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(
