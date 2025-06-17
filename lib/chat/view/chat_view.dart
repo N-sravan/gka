@@ -12,6 +12,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart' as record;
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
+import '../../camera_screen.dart';
 import '../../chat_bubble.dart';
 import 'package:http/http.dart' as http;
 import '../model/processing_step_model.dart';
@@ -616,6 +617,32 @@ class _ChatViewState extends State<ChatView> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        viewModel.capturedPhoto == null
+            ? CameraWidget(saveCapturedPhoto: viewModel.saveCapturedPhoto)
+            : Padding(
+                padding: const EdgeInsets.only(top: 4.0, bottom: 4),
+                child: GestureDetector(
+                  onTap: () {
+                    // setState(() {
+                    //   capturedPhoto = null;
+                    // });
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 4.0, bottom: 2),
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        image: DecorationImage(
+                          image: FileImage(File(viewModel.capturedPhoto!.path)),
+                          fit: BoxFit.fill,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
         ValueListenableBuilder(
           valueListenable: viewModel.showLoader,
           builder: (context, value, _) {
@@ -633,19 +660,19 @@ class _ChatViewState extends State<ChatView> {
                           Fluttertoast.showToast(
                               msg: "Please enter your question.");
                         } else {
-                          // viewModel.sendMessage(context, viewModel.chatController.text);
-                          print(
+                          debugPrint(
                               "userId : ${AppState.instance.userId}, sessionId :${widget.sessionId}");
                           if (viewModel.chatController.text.isNotEmpty &&
                               widget.sessionId != null &&
                               widget.sessionId!.isNotEmpty &&
                               viewModel.chatController.text !=
                                   'Processing...') {
-                            // Use the new query-stream API
+
+                            if (viewModel.capturedPhoto != null) {
+                              await viewModel.uploadMediaToS3();
+                            }
                             viewModel.sendMessageWithQueryStream(
-                                widget.sessionId,
-                                viewModel.chatController.text,
-                                context);
+                                widget.sessionId, context);
                           }
                         }
                       });

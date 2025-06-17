@@ -119,7 +119,16 @@ class _ChatBubbleState extends State<ChatBubble> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              if (widget.text.isNotEmpty) _formattedTextView(),
+                              if (widget.imageUrl != null && widget.imageUrl!.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 8.0),
+                                  child: _imageView(),
+                                ),
+                              if (widget.text.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 4.0),
+                                  child: _formattedTextView(),
+                                ),
                             ],
                           ),
                         ),
@@ -339,6 +348,84 @@ class _ChatBubbleState extends State<ChatBubble> {
         child: CircleAvatar(
           radius: 50,
           backgroundImage: AssetImage('assets/images/male_bot.jfif'),
+        ),
+      ),
+    );
+  }
+  _imageView() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GestureDetector(
+          onTap: () {
+            showImage(widget.imageUrl!);
+          },
+          child: Container(
+            // Reduced margin to shrink the outer space
+            margin: const EdgeInsets.only(bottom: 4.0,top: 4.0),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 3,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: AspectRatio(
+              aspectRatio: 16 / 9,
+              child: Image.network(
+                widget.imageUrl!,
+                fit: BoxFit.cover,
+                loadingBuilder: (BuildContext context, Widget child,
+                    ImageChunkEvent? loadingProgress) {
+                  if (loadingProgress == null) {
+                    return child;
+                  } else {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          value: loadingProgress.expectedTotalBytes != null
+                              ? loadingProgress.cumulativeBytesLoaded /
+                              loadingProgress.expectedTotalBytes!
+                              : null,
+                        ),
+                      ),
+                    );
+                  }
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey[200],
+                    child: const Center(
+                      child: Icon(
+                        Icons.broken_image,
+                        size: 40,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+
+  void showImage(String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        child: Image.network(
+          imageUrl,
+          fit: BoxFit.fill,
         ),
       ),
     );
