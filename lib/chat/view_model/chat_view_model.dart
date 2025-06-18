@@ -207,6 +207,8 @@ class ChatViewModel extends LoadingViewModel {
     debugSseEvents = [];
     isStreaming.value = false;
     showLoader.value = false;
+    isQueryProcessing.value = false;
+    showThinkingContainer.value = true;
     streamingText.value = "";
   }
 
@@ -1541,7 +1543,7 @@ class ChatViewModel extends LoadingViewModel {
   }
 */
 
-  Future<void> sendMessageStream(
+/*  Future<void> sendMessageStream(
       String userMessage, BuildContext context) async {
     messages.add({
       'text': userMessage,
@@ -1599,12 +1601,12 @@ class ChatViewModel extends LoadingViewModel {
         if (noSourceText.toString().isNotEmpty &&
             messageText.toString().isNotEmpty) {
           if (AppState.instance.ttsMode.toLowerCase() == 'bhashini') {
-            await ttsResponse(noSourceText, messageText,context);
+            await ttsResponse(cleanedText, messageText, context);
           }
           if (AppState.instance.ttsMode.toLowerCase() == 'native') {
-            await nativeTTS(noSourceText,messageText);
+            await nativeTTS(cleanedText, messageText);
           } else {
-            await resembleAItts(noSourceText,messageText, context);
+            await resembleAItts(cleanedText, messageText, context);
           }
         }
       } else {
@@ -1615,7 +1617,7 @@ class ChatViewModel extends LoadingViewModel {
     }
     showLoader.value = false;
     notifyListeners();
-  }
+  }*/
 
   void toggleExpandAllSteps() {
     showAllStepsExpanded.value = !showAllStepsExpanded.value;
@@ -1641,7 +1643,7 @@ class ChatViewModel extends LoadingViewModel {
     notifyListeners();
   }
 
- sendAudioToAPI(String path, BuildContext context) async {
+  sendAudioToAPI(String path, BuildContext context) async {
     if (await networkUtils.hasActiveInternet()) {
       updateChatControllerForSpeech('Processing...');
       try {
@@ -1701,27 +1703,28 @@ class ChatViewModel extends LoadingViewModel {
     }
   }
 
-   resembleAItts(String nosourceText, String messageText,BuildContext context) async {
+  resembleAItts(
+      String cleanedText, String messageText, BuildContext context) async {
     if (await networkUtils.hasActiveInternet()) {
       try {
-        final body = {"text": nosourceText};
+        String plainText = _extractPlainText(cleanedText.trim());
+        final body = {"text": plainText};
         String? base64Audio = await repo.fetchResembleAItts(body);
 
         if (base64Audio != null && base64Audio.isNotEmpty) {
           Uint8List audioBytes = base64Decode(base64Audio);
-          isQueryProcessing.value = false;
+          /*   isQueryProcessing.value = false;
           showLoader.value = false;
           notifyListeners();
-          final player = AudioPlayer();
           messages.add({
-            'text': nosourceText,
+            'text': cleanedText,
             'is_user': false,
             'timestamp': DateTime.now().toIso8601String(),
-            'processing_steps': processingSteps.map((step) => step.toJson()).toList(),
-          });
-
+            'processing_steps':
+                processingSteps.map((step) => step.toJson()).toList(),
+          });*/
+          final player = AudioPlayer();
           await player.play(BytesSource(audioBytes));
-
         } else {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text(constants.genericErrorMsg),
@@ -1744,8 +1747,10 @@ class ChatViewModel extends LoadingViewModel {
     }
   }
 
-  Future<void> ttsResponse(String nosourceText,String messageText, BuildContext context) async {
+  Future<void> ttsResponse(String cleanedText, String messageText, BuildContext context) async {
     String targetLanguage = AppState.instance.isEnglish ? 'en' : 'te';
+    String plainText = _extractPlainText(cleanedText.trim());
+
 
     if (await networkUtils.hasActiveInternet()) {
       try {
@@ -1763,7 +1768,7 @@ class ChatViewModel extends LoadingViewModel {
           ],
           "inputData": {
             "input": [
-              {"source": nosourceText}
+              {"source": plainText}
             ]
           }
         };
@@ -1788,15 +1793,16 @@ class ChatViewModel extends LoadingViewModel {
           if (base64Audio != null) {
             Uint8List audioBytes = base64Decode(base64Audio);
             final player = AudioPlayer();
-            isQueryProcessing.value = false;
+            /* isQueryProcessing.value = false;
             showLoader.value = false;
             notifyListeners();
             messages.add({
               'text': messageText.toString(),
               'is_user': false,
               'timestamp': DateTime.now().toIso8601String(),
-              'processing_steps': processingSteps.map((step) => step.toJson()).toList(),
-            });
+              'processing_steps':
+                  processingSteps.map((step) => step.toJson()).toList(),
+            });*/
             await player.play(BytesSource(audioBytes));
           } else {
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -1932,7 +1938,7 @@ class ChatViewModel extends LoadingViewModel {
           StepStatus.error,
           'API request failed: ${streamedResponse.statusCode} ${streamedResponse.reasonPhrase}',
         );
-        _completeProcessing(false,context);
+        _completeProcessing(false, context);
         client.close();
         return;
       }
@@ -1955,7 +1961,7 @@ class ChatViewModel extends LoadingViewModel {
         StepStatus.error,
         'Connection error: $e',
       );
-      _completeProcessing(false,context);
+      _completeProcessing(false, context);
     }
   }
 
@@ -1985,7 +1991,7 @@ class ChatViewModel extends LoadingViewModel {
               await _handleSSEEvent(sseEvent, context);
 
               if (sseEvent.step == 'complete') {
-                _completeProcessing(true, context,sseEvent.finalAnswer);
+                _completeProcessing(true, context, sseEvent.finalAnswer);
                 return;
               }
             }
@@ -2013,7 +2019,7 @@ class ChatViewModel extends LoadingViewModel {
           await _handleSSEEvent(sseEvent, context);
 
           if (sseEvent.step == 'complete') {
-            _completeProcessing(true, context,sseEvent.finalAnswer);
+            _completeProcessing(true, context, sseEvent.finalAnswer);
             return;
           }
         }
@@ -2024,7 +2030,7 @@ class ChatViewModel extends LoadingViewModel {
 
     // If we reach here without completing, something went wrong
     if (isQueryProcessing.value) {
-      _completeProcessing(false,context);
+      _completeProcessing(false, context);
     }
   }
 
@@ -2044,7 +2050,7 @@ class ChatViewModel extends LoadingViewModel {
             await _handleSSEEvent(sseEvent, context);
 
             if (sseEvent.step == 'complete') {
-              _completeProcessing(true,context, sseEvent.finalAnswer);
+              _completeProcessing(true, context, sseEvent.finalAnswer);
               return;
             }
           }
@@ -2134,27 +2140,31 @@ class ChatViewModel extends LoadingViewModel {
   }
 
   /// Complete the processing workflow
-  void _completeProcessing(bool success, BuildContext context,[String? finalAnswer]) {
-    // isQueryProcessing.value = false;
-    // showLoader.value = false;
+  void _completeProcessing(bool success, BuildContext context,
+      [String? finalAnswer]) {
+    isQueryProcessing.value = false;
+    showLoader.value = false;
 
     if (success && finalAnswer != null) {
-     /* // Add assistant response to messages
+      // Add assistant response to messages
       messages.add({
         'text': finalAnswer,
         'is_user': false,
         'timestamp': DateTime.now().toIso8601String(),
-        'processing_steps': processingSteps.map((step) => step.toJson()).toList(),
-      });*/
+        'processing_steps':
+            processingSteps.map((step) => step.toJson()).toList(),
+      });
 
       // Handle TTS if needed (we'll need to pass context through the method chain)
-      _handleTTSResponse(finalAnswer, context);
+      // _handleTTSResponse(finalAnswer, context);
     } else if (!success) {
       messages.add({
-        'text': 'Sorry, an error occurred while processing your request. Please try again.',
+        'text':
+            'Sorry, an error occurred while processing your request. Please try again.',
         'is_user': false,
         'timestamp': DateTime.now().toIso8601String(),
-        'processing_steps': processingSteps.map((step) => step.toJson()).toList(),
+        'processing_steps':
+            processingSteps.map((step) => step.toJson()).toList(),
       });
     }
 
@@ -2162,31 +2172,56 @@ class ChatViewModel extends LoadingViewModel {
   }
 
   /// Handle TTS response
-  Future<void> _handleTTSResponse(String messageText, BuildContext context) async {
+  Future<void> handleTTSResponse(
+      String messageText, BuildContext context) async {
+    print(
+        "AppState.instance.ttsMode.toLowerCase() : ${AppState.instance.ttsMode.toLowerCase()}");
     bool hasEnglishSource = RegExp(r'\(Source:.*?\)').hasMatch(messageText);
     bool hasTeluguSource = RegExp(r'\(మూలం:.*?\)').hasMatch(messageText);
     String noSourceText = '';
 
     if (hasEnglishSource) {
-      noSourceText =
-          messageText.replaceAll(RegExp(r'\s*\(Source:.*?\)'), '');
+      noSourceText = messageText.replaceAll(RegExp(r'\s*\(Source:.*?\)'), '');
     } else if (hasTeluguSource) {
       noSourceText = messageText.replaceAll(RegExp(r'\s*\(మూలం:.*?\)'), '');
     } else {
       noSourceText = messageText;
     }
 
+    final cleanedText = cleanTextForTts(noSourceText);
+
     if (noSourceText.toString().isNotEmpty &&
         messageText.toString().isNotEmpty) {
       if (AppState.instance.ttsMode.toLowerCase() == 'bhashini') {
-        await ttsResponse(noSourceText, messageText,context);
+        print("12345 BHASINI");
+        await ttsResponse(cleanedText, messageText, context);
       }
       if (AppState.instance.ttsMode.toLowerCase() == 'native') {
-        await nativeTTS(noSourceText,messageText);
-      } else {
-        await resembleAItts(noSourceText, messageText,context);
+        print("12345 NATIVE");
+        await nativeTTS(cleanedText, messageText);
+      }
+      if (AppState.instance.ttsMode.toLowerCase() == 'resemble ai') {
+        print("12345 RESEMBLE AI");
+        await resembleAItts(cleanedText, messageText, context);
       }
     }
+  }
+
+
+  String _extractPlainText(String text) {
+    // Remove double asterisks for bold text
+    final RegExp boldRegex = RegExp(r'\*\*(.*?)\*\*');
+    String result =
+    text.replaceAllMapped(boldRegex, (match) => match.group(1) ?? '');
+
+    // Remove single asterisks
+    final RegExp singleAsteriskRegex = RegExp(r'\*');
+    result = result.replaceAll(singleAsteriskRegex, '');
+
+    // Remove newlines
+    result = result.replaceAll('\\n', ' ');
+    print("result ::$result");
+    return result.trim();
   }
 
   /// Format event details for display
@@ -2351,8 +2386,8 @@ class ChatViewModel extends LoadingViewModel {
     notifyListeners();
   }
 
-  nativeTTS(String noSourceText, String messageText) async {
-    isQueryProcessing.value = false;
+  nativeTTS(String cleanedText, String messageText) async {
+    /* isQueryProcessing.value = false;
     showLoader.value = false;
     notifyListeners();
     messages.add({
@@ -2360,10 +2395,33 @@ class ChatViewModel extends LoadingViewModel {
       'is_user': false,
       'timestamp': DateTime.now().toIso8601String(),
       'processing_steps': processingSteps.map((step) => step.toJson()).toList(),
-    });
+    });*/
+    String plainText = _extractPlainText(cleanedText.trim());
     await tts.setLanguage(langId);
     await tts.setVoice(currentVoice);
     await tts.setSpeechRate(0.5);
-    await tts.speak(noSourceText);
+    await tts.speak(plainText);
+  }
+
+  String cleanTextForTts(String input) {
+    // Removes emojis and symbols
+    return input
+        .replaceAll(
+          RegExp(
+              r'[\u{1F600}-\u{1F64F}' // Emoticons
+              r'\u{1F300}-\u{1F5FF}' // Misc Symbols and Pictographs
+              r'\u{1F680}-\u{1F6FF}' // Transport and Map Symbols
+              r'\u{2600}-\u{26FF}' // Misc symbols
+              r'\u{2700}-\u{27BF}' // Dingbats
+              r'\u{FE00}-\u{FE0F}' // Variation Selectors
+              r'\u{1F900}-\u{1F9FF}' // Supplemental Symbols and Pictographs
+              r'\u{1FA70}-\u{1FAFF}' // Symbols and Pictographs Extended-A
+              r'\u{200D}' // Zero Width Joiner
+              r']+',
+              unicode: true),
+          '',
+        )
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim(); // Clean extra spaces
   }
 }

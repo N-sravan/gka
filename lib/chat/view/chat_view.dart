@@ -115,6 +115,7 @@ class _ChatViewState extends State<ChatView> {
     // _audioRecorder.closeRecorder();
     _audioStreamController.close();
     _isRecording = false;
+
     tts.stop();
     viewModel.clearData();
   }
@@ -340,6 +341,7 @@ class _ChatViewState extends State<ChatView> {
 
           final msg = viewModel.messages[adjustedIndex];
 
+
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: Column(
@@ -348,7 +350,7 @@ class _ChatViewState extends State<ChatView> {
                 ChatBubble(
                   expandContentBlocks: false,
                   contentBlocks: msg['content_blocks'],
-                  timestamp: msg['timestamp'] ?? '',
+                  timestamp: '${DateTime.now().millisecondsSinceEpoch}',
                   text: msg['text'] ?? '',
                   isUser: msg['is_user'],
                   imageUrl: msg['image_url'] ?? '',

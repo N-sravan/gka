@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
+import 'package:gka/utils/app_state.dart';
+import 'package:provider/provider.dart';
+
+import 'chat/view_model/chat_view_model.dart';
 
 class ChatBubble extends StatefulWidget {
   final String timestamp;
@@ -43,7 +48,10 @@ class ChatBubble extends StatefulWidget {
 
 class _ChatBubbleState extends State<ChatBubble> {
   ValueNotifier<bool> show = ValueNotifier<bool>(true);
+  FlutterTts tts = FlutterTts();
   Map<String, bool> _expanded = {};
+  Map<String, bool> _muted = {};
+  late ChatViewModel viewModel;
   List<Color> colors = [
     const Color(0xFFCFE2FF).withOpacity(0.5), //blue
     const Color(0xFFFFF3CD).withOpacity(0.5), //yellow
@@ -54,8 +62,12 @@ class _ChatBubbleState extends State<ChatBubble> {
   @override
   void initState() {
     super.initState();
-    show.value = widget.expandContentBlocks!;
+    viewModel = Provider.of<ChatViewModel>(context, listen: false);
+    show.value = widget.expandContentBlocks;
     _expanded = {};
+    if (!_muted.containsKey(widget.timestamp)) {
+      _muted[widget.timestamp] = true;
+    }
     if (widget.contentBlocks != null) {
       for (String key in widget.contentBlocks!.keys) {
         _expanded[key] = false;
@@ -65,78 +77,119 @@ class _ChatBubbleState extends State<ChatBubble> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return Consumer<ChatViewModel>(
+        builder: (_, viewModel, child)
+    {
+      return Padding(
         padding: EdgeInsets.fromLTRB(
             widget.isUser ? 64.0 : 16.0, 4, widget.isUser ? 16.0 : 8.0, 4),
         child: Align(
-            alignment:
-                widget.isUser ? Alignment.centerRight : Alignment.centerLeft,
-            child: Column(children: [
+          alignment: widget.isUser ? Alignment.centerRight : Alignment
+              .centerLeft,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               if (widget.isUser &&
                   widget.contentBlocks != null &&
                   widget.contentBlocks!.isNotEmpty)
                 ValueListenableBuilder(
                   builder: (context, value, _) {
                     return (show.value &&
-                            widget.contentBlocks != null &&
-                            widget.contentBlocks!.isNotEmpty)
+                        widget.contentBlocks != null &&
+                        widget.contentBlocks!.isNotEmpty)
                         ? showContentBlocks()
                         : const SizedBox();
                   },
                   valueListenable: show,
                 ),
               Row(
-                  mainAxisAlignment: widget.isUser
-                      ? MainAxisAlignment.end
-                      : MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (!widget.isUser) _botProfileView(),
-                    const SizedBox(
-                      width: 8,
-                    ),
-                    Flexible(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: widget.isUser
-                              ? const Color(0xffE2E3E4).withOpacity(0.6)
-                              : const Color(0xFFcff4fc).withOpacity(0.5),
-                          // : Colors.green[500],
-                          borderRadius: widget.isUser
-                              ? const BorderRadius.only(
-                                  topLeft: Radius.circular(16),
-                                  bottomLeft: Radius.circular(16),
-                                  bottomRight: Radius.circular(16),
-                                )
-                              : const BorderRadius.only(
-                                  topRight: Radius.circular(16),
-                                  bottomLeft: Radius.circular(16),
-                                  bottomRight: Radius.circular(16),
-                                ),
+                mainAxisAlignment: widget.isUser
+                    ? MainAxisAlignment.end
+                    : MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (!widget.isUser) _botProfileView(),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: widget.isUser
+                            ? const Color(0xffE2E3E4).withOpacity(0.6)
+                            : const Color(0xFFcff4fc).withOpacity(0.5),
+                        borderRadius: widget.isUser
+                            ? const BorderRadius.only(
+                          topLeft: Radius.circular(16),
+                          bottomLeft: Radius.circular(16),
+                          bottomRight: Radius.circular(16),
+                        )
+                            : const BorderRadius.only(
+                          topRight: Radius.circular(16),
+                          bottomLeft: Radius.circular(16),
+                          bottomRight: Radius.circular(16),
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 10, right: 10,top: 10),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (widget.imageUrl != null && widget.imageUrl!.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 8.0),
-                                  child: _imageView(),
-                                ),
-                              if (widget.text.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 4.0),
-                                  child: _formattedTextView(),
-                                ),
-                            ],
-                          ),
+                      ),
+                      child: Padding(
+                        padding:
+                        const EdgeInsets.only(left: 10, right: 10, top: 10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (widget.imageUrl != null &&
+                                widget.imageUrl!.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 8.0),
+                                child: _imageView(),
+                              ),
+                            if (widget.text.isNotEmpty)
+                              Stack(
+                                alignment: Alignment.bottomRight,
+                                children: [
+                                  Padding(
+                                    padding: EdgeInsets.only(
+                                        bottom: 4.0,
+                                        right: widget.isUser ? 10.0 : 50.0),
+                                    child: _formattedTextView(),
+                                  ),
+                                  if (!widget.isUser &&
+                                      widget.timestamp.isNotEmpty)
+                                    IconButton(
+                                      icon: Icon(
+                                        (_muted[widget.timestamp] ?? true)
+                                            ? Icons.volume_off
+                                            : Icons.volume_up,
+                                        size: 18,
+                                        color: Colors.black54,
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          _muted[widget.timestamp] =
+                                          !(_muted[widget.timestamp] ??
+                                              true);
+                                        });
+                                        if (!_muted[widget.timestamp]!) {
+                                           viewModel.handleTTSResponse(widget.text, context);
+                                        } else {
+                                          tts.stop();
+                                        }
+                                      },
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(),
+                                    ),
+                                ],
+                              ),
+                          ],
                         ),
                       ),
                     ),
-                    if (widget.isUser) _userProfileView(),
-                  ]),
-            ])));
+                  ),
+                  if (widget.isUser) _userProfileView(),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    });
   }
 
   _formattedTextView() {
@@ -244,18 +297,18 @@ class _ChatBubbleState extends State<ChatBubble> {
           ),
           (widget.contentBlocks != null && widget.contentBlocks!.isNotEmpty)
               ? ValueListenableBuilder(
-                  builder: (context, value, _) {
-                    return IconButton(
-                      onPressed: () {
-                        show.value = !show.value;
-                      },
-                      icon: show.value
-                          ? const Icon(Icons.keyboard_arrow_up)
-                          : const Icon(Icons.keyboard_arrow_down),
-                    );
-                  },
-                  valueListenable: show,
-                )
+            builder: (context, value, _) {
+              return IconButton(
+                onPressed: () {
+                  show.value = !show.value;
+                },
+                icon: show.value
+                    ? const Icon(Icons.keyboard_arrow_up)
+                    : const Icon(Icons.keyboard_arrow_down),
+              );
+            },
+            valueListenable: show,
+          )
               : const SizedBox(),
         ],
       ),
@@ -283,12 +336,14 @@ class _ChatBubbleState extends State<ChatBubble> {
                 children: [
                   const Text(
                     'Agent Steps',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 14),
                   ),
                   const SizedBox(height: 8),
                   ...widget.contentBlocks!.entries.map((entry) {
                     int colorIndex =
-                        widget.contentBlocks!.keys.toList().indexOf(entry.key) %
+                        widget.contentBlocks!.keys.toList().indexOf(
+                            entry.key) %
                             4;
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
@@ -296,7 +351,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                         onTap: () {
                           setState(() {
                             _expanded[entry.key] =
-                                !(_expanded[entry.key] ?? false);
+                            !(_expanded[entry.key] ?? false);
                           });
                         },
                         child: Container(
@@ -352,6 +407,7 @@ class _ChatBubbleState extends State<ChatBubble> {
       ),
     );
   }
+
   _imageView() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -362,7 +418,7 @@ class _ChatBubbleState extends State<ChatBubble> {
           },
           child: Container(
             // Reduced margin to shrink the outer space
-            margin: const EdgeInsets.only(bottom: 4.0,top: 4.0),
+            margin: const EdgeInsets.only(bottom: 4.0, top: 4.0),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
               boxShadow: [
@@ -418,16 +474,17 @@ class _ChatBubbleState extends State<ChatBubble> {
     );
   }
 
-
   void showImage(String imageUrl) {
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        child: Image.network(
-          imageUrl,
-          fit: BoxFit.fill,
-        ),
-      ),
+      builder: (context) =>
+          Dialog(
+            child: Image.network(
+              imageUrl,
+              fit: BoxFit.fill,
+            ),
+          ),
     );
   }
+
 }
