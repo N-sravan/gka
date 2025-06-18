@@ -854,10 +854,8 @@ const String asrServiceIdEnglish = 'ai4bharat/whisper-medium-en--gpu--t4';
 const String nmtServiceId = 'ai4bharat/indictrans-v2-all-gpu--t4';
 const String ttsServiceId = 'Bhashini/IITM/TTS';
 // const String bhasiniUrl = 'https://dhruva-api.bhashini.gov.in/services/inference/pipeline';
-const String bhasiniUrl =
-    'https://apaims2.0.vassarlabs.com/chatbot/bhashini/pipeline';
-const String bhasiniApikey =
-    '9ehV7vDnMszVayjw4U486-9GH27LdgeB-lO85BCkPKrbN29tI9fxLlAp-05tDChA';
+const String bhasiniUrl = 'https://apaims2.0.vassarlabs.com/chatbot/bhashini/pipeline';
+const String bhasiniApikey = '9ehV7vDnMszVayjw4U486-9GH27LdgeB-lO85BCkPKrbN29tI9fxLlAp-05tDChA';
 
 ///chatbot constants
 const String baseUrl = 'https://apaims2.0.vassarlabs.com/chatbot/chat/';
@@ -874,8 +872,8 @@ const String langTranslateEndpoint = 'translate-text';
 
 //baseurls
 const String genAiBaseUrl = "https://nawrims.vassarlabs.com/vassar_mind/";
-const String chatbotBaseUrl =
-    'https://agentsbuilder.apaims2.0.vassarlabs.com/api/v1/prediction/4a5c8d41-51d7-4e81-85b8-377bb6a28043';
+const String resembleTtsUrl = "http://acerkrishidss.vassarlabs.com/resemble_tts";
+const String chatbotBaseUrl = 'https://agentsbuilder.apaims2.0.vassarlabs.com/api/v1/prediction/4a5c8d41-51d7-4e81-85b8-377bb6a28043';
 
 
 const String bearerToken = '2r9MjMpyFar4ySZh_KfGWzMcmqoUnQOnA9lMoFTG8Bg';

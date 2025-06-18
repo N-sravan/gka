@@ -72,6 +72,9 @@ abstract class ChatRepository {
 
   Future<List> fetchTTSconfig(Map<String, dynamic> body);
 
+  Future<String?> fetchResembleAItts(Map<String, dynamic> body);
+
+
   Future<String?> parakeetTranscription(File path);
 }
 
@@ -645,10 +648,34 @@ class ChatRepositoryImpl extends ChatRepository {
 
     if (response.statusCode == 200) {
       final jsonResponse = jsonDecode(utf8.decode(response.bodyBytes));
-      print("ASR response: $jsonResponse");
+      print("TTS response: $jsonResponse");
       pipelineResponse = jsonResponse['pipelineResponse'] as List<dynamic>;
     }
     return pipelineResponse;
+  }
+
+
+  @override
+  Future<String?> fetchResembleAItts(Map<String, dynamic> body) async {
+    String? base64Audio;
+    Map<String, String> headersMap = {
+      "Content-Type": "application/json",
+    };
+    Object data = jsonEncode(body);
+
+    print("ResembleAI TTS payload :: $data");
+    final response = await http.post(
+      Uri.parse(constants.resembleTtsUrl),
+      headers: headersMap,
+      body: data,
+    );
+
+    if (response.statusCode == 200) {
+      final jsonResponse = jsonDecode(response.body);
+      base64Audio = jsonResponse;
+      print("Resemble AI TTS response: $jsonResponse");
+    }
+    return base64Audio;
   }
 
   @override
@@ -675,4 +702,5 @@ class ChatRepositoryImpl extends ChatRepository {
     }
     return null;
   }
+
 }

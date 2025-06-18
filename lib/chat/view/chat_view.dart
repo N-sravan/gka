@@ -58,8 +58,6 @@ class _ChatViewState extends State<ChatView> {
   int prevChatLength = 0;
 
   bool _isRecording = false;
-  Timer? _inactivityTimer;
-  String? _lastRecognizedText;
 
   Map<String, String> currentVoice = {
     "name": "en-us-x-iom-local",
@@ -146,7 +144,8 @@ class _ChatViewState extends State<ChatView> {
                     color: Colors.blue.shade50,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Image.asset('assets/images/apaims_logo.png', height: 24),
+                  child:
+                      Image.asset('assets/images/apaims_logo.png', height: 24),
                 ),
                 const SizedBox(width: 12),
                 Column(
@@ -180,7 +179,8 @@ class _ChatViewState extends State<ChatView> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: IconButton(
-                  icon: Icon(Icons.settings_outlined, color: Colors.grey[700], size: 20),
+                  icon: Icon(Icons.settings_outlined,
+                      color: Colors.grey[700], size: 20),
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -264,12 +264,13 @@ class _ChatViewState extends State<ChatView> {
   bool _shouldShowThinkingContainerForMessage(Map<String, dynamic> message) {
     // Only show for non-user messages that have processing steps and if settings allow
     return AppState.instance.showChainOfActions &&
-           !message['is_user'] &&
-           message['processing_steps'] != null &&
-           (message['processing_steps'] as List).isNotEmpty;
+        !message['is_user'] &&
+        message['processing_steps'] != null &&
+        (message['processing_steps'] as List).isNotEmpty;
   }
 
-  List<ProcessingStepModel> _getProcessingStepsFromMessage(Map<String, dynamic> message) {
+  List<ProcessingStepModel> _getProcessingStepsFromMessage(
+      Map<String, dynamic> message) {
     final stepsData = message['processing_steps'] as List?;
     if (stepsData == null) return [];
 
@@ -327,7 +328,6 @@ class _ChatViewState extends State<ChatView> {
         controller: scrollControllerListView,
         reverse: true,
         padding: const EdgeInsets.all(10),
-        // itemCount: viewModel.messages.length + (viewModel.isStreaming.value ? 1 : 0),
         itemCount: viewModel.messages.length,
         itemBuilder: (_, index) {
           final adjustedIndex = viewModel.isStreaming.value
@@ -359,23 +359,23 @@ class _ChatViewState extends State<ChatView> {
                   logMessage: msg['log'] ?? '',
                   hasErrorLog: false,
                   timestampMapping: {},
-                  followUpQuestions: (msg['follow_up_questions'] as List<dynamic>?)
-                          ?.map((e) => e.toString())
-                          .toList() ??
-                      [],
+                  followUpQuestions:
+                      (msg['follow_up_questions'] as List<dynamic>?)
+                              ?.map((e) => e.toString())
+                              .toList() ??
+                          [],
                   token: msg['token'] ?? '',
                   isMapView: false,
                 ),
-                // Show thinking container for messages with processing steps (now starts collapsed)
                 if (_shouldShowThinkingContainerForMessage(msg))
                   Padding(
                     padding: const EdgeInsets.only(top: 8, left: 16, right: 16),
                     child: ThinkingContainerWidget(
                       steps: _getProcessingStepsFromMessage(msg),
-                      isProcessing: false, // Historical steps are always completed
+                      isProcessing: false,
                       totalDuration: _getTotalDurationFromMessage(msg),
                       includeDetails: AppState.instance.showDetailedMode,
-                      onToggle: null, // No toggle needed for historical steps
+                      onToggle: null,
                     ),
                   ),
               ],
@@ -562,7 +562,7 @@ class _ChatViewState extends State<ChatView> {
               color: Colors.black87,
             ),
             decoration: InputDecoration(
-              hintText: 'Type your message here...',
+              hintText: 'Ask anything..',
               hintStyle: TextStyle(
                 color: Colors.grey[500],
                 fontSize: 15,
@@ -571,7 +571,8 @@ class _ChatViewState extends State<ChatView> {
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
               focusedBorder: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
               prefixIcon: _speechButton(),
               suffixIcon: _sendButton(),
             ),
@@ -667,9 +668,10 @@ class _ChatViewState extends State<ChatView> {
                               widget.sessionId!.isNotEmpty &&
                               viewModel.chatController.text !=
                                   'Processing...') {
-
                             if (viewModel.capturedPhoto != null) {
                               await viewModel.uploadMediaToS3();
+                            } else {
+                              viewModel.imageUrl = '';
                             }
                             viewModel.sendMessageWithQueryStream(
                                 widget.sessionId, context);

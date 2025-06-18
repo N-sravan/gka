@@ -23,7 +23,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   final langList = ['English', 'Telugu'];
   final speechServicesList = ['Native', 'Bhashini','Parakeet'];
-  final ttsServicesList = ['Native', 'Bhashini'];
+  final ttsServicesList = ['Native', 'Bhashini', 'Resemble AI'];
   final translationServicesList = ['Google Translate', 'Bhashini'];
   late ChatViewModel viewModel;
 
