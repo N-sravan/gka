@@ -118,6 +118,7 @@ class _ChatViewState extends State<ChatView> {
 
     tts.stop();
     viewModel.clearData();
+    viewModel.stopSpeaking();
   }
 
   @override
@@ -340,7 +341,6 @@ class _ChatViewState extends State<ChatView> {
           }
 
           final msg = viewModel.messages[adjustedIndex];
-
 
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
@@ -626,9 +626,9 @@ class _ChatViewState extends State<ChatView> {
                 padding: const EdgeInsets.only(top: 4.0, bottom: 4),
                 child: GestureDetector(
                   onTap: () {
-                    // setState(() {
-                    //   capturedPhoto = null;
-                    // });
+                    setState(() {
+                      viewModel.capturedPhoto = null;
+                    });
                   },
                   child: Padding(
                     padding: const EdgeInsets.only(top: 4.0, bottom: 2),

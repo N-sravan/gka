@@ -160,7 +160,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                                         size: 18,
                                         color: Colors.black54,
                                       ),
-                                      onPressed: () {
+                                      onPressed: () async {
                                         setState(() {
                                           _muted[widget.timestamp] =
                                           !(_muted[widget.timestamp] ??
@@ -169,7 +169,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                                         if (!_muted[widget.timestamp]!) {
                                            viewModel.handleTTSResponse(widget.text, context);
                                         } else {
-                                          tts.stop();
+                                           await viewModel.stopSpeaking();
                                         }
                                       },
                                       padding: EdgeInsets.zero,
@@ -430,43 +430,40 @@ class _ChatBubbleState extends State<ChatBubble> {
               ],
             ),
             clipBehavior: Clip.antiAlias,
-            child: AspectRatio(
-              aspectRatio: 16 / 9,
-              child: Image.network(
-                widget.imageUrl!,
-                fit: BoxFit.cover,
-                loadingBuilder: (BuildContext context, Widget child,
-                    ImageChunkEvent? loadingProgress) {
-                  if (loadingProgress == null) {
-                    return child;
-                  } else {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          value: loadingProgress.expectedTotalBytes != null
-                              ? loadingProgress.cumulativeBytesLoaded /
-                              loadingProgress.expectedTotalBytes!
-                              : null,
-                        ),
-                      ),
-                    );
-                  }
-                },
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: Colors.grey[200],
-                    child: const Center(
-                      child: Icon(
-                        Icons.broken_image,
-                        size: 40,
-                        color: Colors.grey,
+            child: Image.network(
+              widget.imageUrl!,
+              fit: BoxFit.cover,
+              loadingBuilder: (BuildContext context, Widget child,
+                  ImageChunkEvent? loadingProgress) {
+                if (loadingProgress == null) {
+                  return child;
+                } else {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                            loadingProgress.expectedTotalBytes!
+                            : null,
                       ),
                     ),
                   );
-                },
-              ),
+                }
+              },
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: Colors.grey[200],
+                  child: const Center(
+                    child: Icon(
+                      Icons.broken_image,
+                      size: 40,
+                      color: Colors.grey,
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ),

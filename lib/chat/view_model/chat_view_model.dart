@@ -69,6 +69,7 @@ class ChatViewModel extends LoadingViewModel {
   TextEditingController filterIsMandatoryController = TextEditingController();
   TextEditingController filterVariableNameController = TextEditingController();
   TextEditingController filterValueController = TextEditingController();
+  final player = AudioPlayer();
   bool speechToTextOn = false;
   bool isVoiceInitiated = false;
   int timerCounter = 0;
@@ -1723,7 +1724,6 @@ class ChatViewModel extends LoadingViewModel {
             'processing_steps':
                 processingSteps.map((step) => step.toJson()).toList(),
           });*/
-          final player = AudioPlayer();
           await player.play(BytesSource(audioBytes));
         } else {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -1792,7 +1792,6 @@ class ChatViewModel extends LoadingViewModel {
 
           if (base64Audio != null) {
             Uint8List audioBytes = base64Decode(base64Audio);
-            final player = AudioPlayer();
             /* isQueryProcessing.value = false;
             showLoader.value = false;
             notifyListeners();
@@ -2139,6 +2138,12 @@ class ChatViewModel extends LoadingViewModel {
     notifyListeners();
   }
 
+  String? extractImageUrl(String text) {
+    final regex = RegExp(r'https:\/\/minio\.apaims2\.0\.vassarlabs\.com\/[^\s]+\.jpeg');
+    final match = regex.firstMatch(text);
+    return match?.group(0); // Returns the first match or null
+  }
+
   /// Complete the processing workflow
   void _completeProcessing(bool success, BuildContext context,
       [String? finalAnswer]) {
@@ -2146,10 +2151,17 @@ class ChatViewModel extends LoadingViewModel {
     showLoader.value = false;
 
     if (success && finalAnswer != null) {
+      print("12345 Final Answer : $finalAnswer");
+      String? imageUrl = extractImageUrl(finalAnswer);
+
+      print("12345 Image Url: $imageUrl");
+      finalAnswer = finalAnswer.replaceAll(RegExp(r'\*\*📸 Annotated Image:\*\*.*\n?'), '');
+
       // Add assistant response to messages
       messages.add({
-        'text': finalAnswer,
+        'text': finalAnswer.trim(),
         'is_user': false,
+        'image_url' : imageUrl,
         'timestamp': DateTime.now().toIso8601String(),
         'processing_steps':
             processingSteps.map((step) => step.toJson()).toList(),
@@ -2157,7 +2169,8 @@ class ChatViewModel extends LoadingViewModel {
 
       // Handle TTS if needed (we'll need to pass context through the method chain)
       // _handleTTSResponse(finalAnswer, context);
-    } else if (!success) {
+    }
+    else if (!success) {
       messages.add({
         'text':
             'Sorry, an error occurred while processing your request. Please try again.',
@@ -2423,5 +2436,16 @@ class ChatViewModel extends LoadingViewModel {
         )
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim(); // Clean extra spaces
+  }
+
+  Future<void> stopSpeaking() async {
+     tts.stop();
+     debugPrint("player.state :${player.state}");
+     await player.stop();
+     if (player.state == PlayerState.playing) {
+       await player.stop();
+       await player.release();
+     }
+     notifyListeners();
   }
 }
