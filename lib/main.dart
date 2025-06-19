@@ -9,7 +9,6 @@ import 'package:gka/utils/common_constants.dart' as constants;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:gka/chat/view_model/chat_view_model.dart';
 import 'package:gka/login/repository/login_repo.dart';
 import 'package:gka/login/view/login_view.dart';
@@ -17,7 +16,6 @@ import 'package:gka/login/view_model/login_view_model.dart';
 import 'package:gka/splash/view/splash_view.dart';
 import 'package:gka/splash/view_model/splash_view_model.dart';
 import 'package:provider/provider.dart';
-import 'package:speech_to_text/speech_to_text.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'home/view/home_view.dart';
 import 'locator.dart';
@@ -48,7 +46,8 @@ void main() async {
           create: (_) => HomeViewModel(repo: locator<HomeRepository>()),
         ),
         ChangeNotifierProvider(
-          create: (_) => PromptManagementViewModel(repository: locator<PromptManagementRepository>()),
+          create: (_) => PromptManagementViewModel(
+              repository: locator<PromptManagementRepository>()),
         ),
       ],
       child: const MyApp(),

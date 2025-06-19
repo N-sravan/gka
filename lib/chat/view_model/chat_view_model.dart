@@ -74,7 +74,6 @@ class ChatViewModel extends LoadingViewModel {
   bool isVoiceInitiated = false;
   int timerCounter = 0;
   int loaderCounter = 0;
-  List<MessageBubble> chatMessages = [];
   List<String> loaderMsgList = [
     'Please wait',
     'we are checking',
@@ -2151,12 +2150,15 @@ class ChatViewModel extends LoadingViewModel {
     showLoader.value = false;
 
     if (success && finalAnswer != null) {
-      print("12345 Final Answer : $finalAnswer");
+      print("12345 Final Answer from Response: $finalAnswer");
       String? imageUrl = extractImageUrl(finalAnswer);
 
       print("12345 Image Url: $imageUrl");
-      finalAnswer = finalAnswer.replaceAll(RegExp(r'\*\*📸 Annotated Image:\*\*.*\n?'), '');
-
+      finalAnswer = finalAnswer.replaceAll(
+          RegExp(r'^.*https:\/\/minio\.apaims2\.0\.vassarlabs\.com\/[^\s]+\.jpeg.*$', multiLine: true),
+          ''
+      );
+      finalAnswer = finalAnswer.replaceAll(RegExp(r'\n\s*\n+', multiLine: true), '\n\n');
       // Add assistant response to messages
       messages.add({
         'text': finalAnswer.trim(),
