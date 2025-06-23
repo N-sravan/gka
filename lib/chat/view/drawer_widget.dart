@@ -8,7 +8,6 @@ import '../view_model/chat_view_model.dart';
 import 'chat_view.dart';
 import 'prompt_management_view.dart';
 
-
 class DrawerWidget extends StatefulWidget {
   const DrawerWidget({
     Key? key,
@@ -22,10 +21,7 @@ class DrawerWidget extends StatefulWidget {
 }
 
 class _DrawerWidgetState extends State<DrawerWidget> {
-  late String mode;
-  bool isDisplay = true;
-  bool isHindi = false;
-  bool isListeningMode = false;
+  ScrollController scrollController = ScrollController();
 
   Timer? periodicTimer;
 
@@ -33,11 +29,25 @@ class _DrawerWidgetState extends State<DrawerWidget> {
 
   @override
   void initState() {
-    super.initState();
     viewModel = Provider.of<ChatViewModel>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await viewModel.getSessionsForUser(context);
     });
+
+    scrollController.addListener(() {
+      if (scrollController.position.pixels >=
+          scrollController.position.maxScrollExtent - 200) {
+        if (viewModel.hasMoreData && !viewModel.isFetchingMore) {
+          viewModel.getSessionsForUser(context, isLoadMore: true);
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -69,6 +79,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                     child: model.isLoading
                         ? Center(child: constants.indicator)
                         : ListView(
+                            controller: scrollController,
                             children: [
                               viewModel.sessionIdDataMapping.isNotEmpty
                                   ? Padding(
@@ -78,10 +89,15 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                                         shrinkWrap: true,
                                         physics:
                                             const NeverScrollableScrollPhysics(),
-                                        itemCount: viewModel.sessionIdDataMapping.length,
+                                        itemCount: viewModel
+                                            .sessionIdDataMapping.length,
                                         itemBuilder: (context, index) {
-                                          final key = viewModel.sessionIdDataMapping.keys.elementAt(index);
-                                          final value = viewModel.sessionIdDataMapping[key] ?? '';
+                                          final key = viewModel
+                                              .sessionIdDataMapping.keys
+                                              .elementAt(index);
+                                          final value = viewModel
+                                                  .sessionIdDataMapping[key] ??
+                                              '';
 
                                           return Card(
                                             margin: const EdgeInsets.symmetric(
@@ -250,8 +266,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                                   : const Padding(
                                       padding: EdgeInsets.all(16),
                                       child: Center(
-                                        child: Text('No Previous sessions'),
-                                      ),
+                                          child: Text('No Previous sessions')),
                                     ),
                             ],
                           ),

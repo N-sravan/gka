@@ -24,7 +24,7 @@ class _SettingsPageState extends State<SettingsPage> {
   final langList = ['English', 'Telugu'];
   final speechServicesList = ['Native', 'Bhashini','Parakeet'];
   final ttsServicesList = ['Native', 'Bhashini', 'Resemble AI'];
-  final translationServicesList = ['Google Translate', 'Bhashini'];
+  final translationServicesList = ['Google Translate', 'Bhashini' , 'LLM Translate'];
   late ChatViewModel viewModel;
 
   @override

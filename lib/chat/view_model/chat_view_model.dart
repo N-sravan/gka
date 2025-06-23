@@ -68,7 +68,6 @@ class ChatViewModel extends LoadingViewModel {
   TextEditingController defaultValueController = TextEditingController();
   TextEditingController filterIsMandatoryController = TextEditingController();
   TextEditingController filterVariableNameController = TextEditingController();
-  TextEditingController filterValueController = TextEditingController();
   final player = AudioPlayer();
   bool speechToTextOn = false;
   bool isVoiceInitiated = false;
@@ -129,7 +128,11 @@ class ChatViewModel extends LoadingViewModel {
   ValueNotifier<bool> showAllStepsExpanded = ValueNotifier(false);
   ValueNotifier<bool> expandAllSteps = ValueNotifier(false);
   String tempStreamingText = '';
+  bool isFetchingMore = false;
+  bool hasMoreData = true;
 
+  int currentPage = 1;
+  final int pageSize = 10;
   int start = 0;
   int end = 0;
   bool hasSpoken = false;
@@ -1049,34 +1052,51 @@ class ChatViewModel extends LoadingViewModel {
     return false;
   }
 
-  Future? getSessionsForUser(BuildContext context) async {
+  Future<void> getSessionsForUser(BuildContext context,
+      {bool isLoadMore = false}) async {
     if (await networkUtils.hasActiveInternet()) {
-      isLoading = true;
-      try {
-        UserSessionModel userSessionModel = await repo.fetchUserSessions();
+      if (isFetchingMore || (!hasMoreData && isLoadMore)) return;
+
+      if (isLoadMore) {
+        isFetchingMore = true;
+      } else {
+        isLoading = true;
+        currentPage = 1;
+        hasMoreData = true;
         sessionIdDataMapping.clear();
+      }
+
+      notifyListeners();
+
+      try {
+        // Call paginated API with current page and size
+        UserSessionModel userSessionModel = await repo.fetchUserSessions(currentPage, pageSize);
+
         if (userSessionModel.data.isNotEmpty) {
-          userSessionModel.data.sort((a, b) =>
-              DateTime.parse(b.insertTs).compareTo(DateTime.parse(a.insertTs)));
+          userSessionModel.data.sort((a, b) => DateTime.parse(b.insertTs).compareTo(DateTime.parse(a.insertTs)));
+
           for (var item in userSessionModel.data) {
             sessionIdDataMapping[item.sessionId] = item.insertTs;
           }
-          print("sessionIdDataMapping::${sessionIdDataMapping}");
-          print("userid::${AppState.instance.userId}");
-          isLoading = false;
-          notifyListeners();
+
+          currentPage++;
+          if (userSessionModel.data.length < pageSize) {
+            hasMoreData = false;
+          }
         } else {
-          isLoading = false;
-          notifyListeners();
+          hasMoreData = false;
         }
+        debugPrint("sessionIdDataMapping length - ${sessionIdDataMapping.length}");
       } catch (e) {
-        isLoading = false;
-        notifyListeners();
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text(constants.genericErrorMsg),
         ));
         Util.instance.logMessage('Chat View Model', 'Error $e');
       }
+
+      isLoading = false;
+      isFetchingMore = false;
+      notifyListeners();
     } else {
       isLoading = false;
       notifyListeners();
@@ -1746,10 +1766,10 @@ class ChatViewModel extends LoadingViewModel {
     }
   }
 
-  Future<void> ttsResponse(String cleanedText, String messageText, BuildContext context) async {
+  Future<void> ttsResponse(
+      String cleanedText, String messageText, BuildContext context) async {
     String targetLanguage = AppState.instance.isEnglish ? 'en' : 'te';
     String plainText = _extractPlainText(cleanedText.trim());
-
 
     if (await networkUtils.hasActiveInternet()) {
       try {
@@ -1912,8 +1932,17 @@ class ChatViewModel extends LoadingViewModel {
     debugPrint("Query Stream request body : $requestBody");
 
     if (!AppState.instance.isEnglish) {
-      requestBody['translation_engine'] =
-          AppState.instance.transMode == 'bhashini' ? 'bhashini' : 'google';
+      String translatorEngine = '';
+      if (AppState.instance.transMode == 'Bhashini') {
+        translatorEngine = 'bhashini';
+      }
+      if (AppState.instance.transMode == 'Google Translate') {
+        translatorEngine = 'google';
+      }
+      if (AppState.instance.transMode == 'LLM Translate') {
+        translatorEngine = 'llm_translate';
+      }
+      requestBody['translation_engine'] = translatorEngine;
     }
 
     const apiUrl = 'https://apaims2.0.vassarlabs.com/chatbot/chat/query-stream';
@@ -2138,7 +2167,8 @@ class ChatViewModel extends LoadingViewModel {
   }
 
   String? extractImageUrl(String text) {
-    final regex = RegExp(r'https:\/\/minio\.apaims2\.0\.vassarlabs\.com\/[^\s]+\.jpeg');
+    final regex =
+        RegExp(r'https:\/\/minio\.apaims2\.0\.vassarlabs\.com\/[^\s]+\.jpeg');
     final match = regex.firstMatch(text);
     return match?.group(0); // Returns the first match or null
   }
@@ -2155,15 +2185,17 @@ class ChatViewModel extends LoadingViewModel {
 
       print("12345 Image Url: $imageUrl");
       finalAnswer = finalAnswer.replaceAll(
-          RegExp(r'^.*https:\/\/minio\.apaims2\.0\.vassarlabs\.com\/[^\s]+\.jpeg.*$', multiLine: true),
-          ''
-      );
-      finalAnswer = finalAnswer.replaceAll(RegExp(r'\n\s*\n+', multiLine: true), '\n\n');
+          RegExp(
+              r'^.*https:\/\/minio\.apaims2\.0\.vassarlabs\.com\/[^\s]+\.jpeg.*$',
+              multiLine: true),
+          '');
+      finalAnswer =
+          finalAnswer.replaceAll(RegExp(r'\n\s*\n+', multiLine: true), '\n\n');
       // Add assistant response to messages
       messages.add({
         'text': finalAnswer.trim(),
         'is_user': false,
-        'image_url' : imageUrl,
+        'image_url': imageUrl,
         'timestamp': DateTime.now().toIso8601String(),
         'processing_steps':
             processingSteps.map((step) => step.toJson()).toList(),
@@ -2171,8 +2203,7 @@ class ChatViewModel extends LoadingViewModel {
 
       // Handle TTS if needed (we'll need to pass context through the method chain)
       // _handleTTSResponse(finalAnswer, context);
-    }
-    else if (!success) {
+    } else if (!success) {
       messages.add({
         'text':
             'Sorry, an error occurred while processing your request. Please try again.',
@@ -2222,12 +2253,11 @@ class ChatViewModel extends LoadingViewModel {
     }
   }
 
-
   String _extractPlainText(String text) {
     // Remove double asterisks for bold text
     final RegExp boldRegex = RegExp(r'\*\*(.*?)\*\*');
     String result =
-    text.replaceAllMapped(boldRegex, (match) => match.group(1) ?? '');
+        text.replaceAllMapped(boldRegex, (match) => match.group(1) ?? '');
 
     // Remove single asterisks
     final RegExp singleAsteriskRegex = RegExp(r'\*');
@@ -2441,13 +2471,13 @@ class ChatViewModel extends LoadingViewModel {
   }
 
   Future<void> stopSpeaking() async {
-     tts.stop();
-     debugPrint("player.state :${player.state}");
-     await player.stop();
-     if (player.state == PlayerState.playing) {
-       await player.stop();
-       await player.release();
-     }
-     notifyListeners();
+    tts.stop();
+    debugPrint("player.state :${player.state}");
+    await player.stop();
+    if (player.state == PlayerState.playing) {
+      await player.stop();
+      await player.release();
+    }
+    notifyListeners();
   }
 }

@@ -51,7 +51,7 @@ abstract class ChatRepository {
 
   Future<List<ChatMessageHistory>> fetchSessionHistory();
 
-  Future<UserSessionModel> fetchUserSessions();
+  Future<UserSessionModel> fetchUserSessions(int page, int limit);
 
   Future<bool> deleteDocument(BuildContext context, String docId);
 
@@ -73,7 +73,6 @@ abstract class ChatRepository {
   Future<List> fetchTTSconfig(Map<String, dynamic> body);
 
   Future<String?> fetchResembleAItts(Map<String, dynamic> body);
-
 
   Future<String?> parakeetTranscription(File path);
 }
@@ -584,12 +583,14 @@ class ChatRepositoryImpl extends ChatRepository {
   }
 
   @override
-  Future<UserSessionModel> fetchUserSessions() async {
+  Future<UserSessionModel> fetchUserSessions(int page, int pageSize) async {
     Map<String, String> authHeaders = {
-      constants.headerContentType: constants.headerJson
+      constants.headerContentType: constants.headerJson,
     };
     Map<String, dynamic> params = {
       "user_id": AppState.instance.userId,
+      "page": page,
+      "page_size": pageSize
     };
     String authUrl = constants.baseUrl + constants.sessionsEndpoint;
     String data = jsonEncode(params);
@@ -654,7 +655,6 @@ class ChatRepositoryImpl extends ChatRepository {
     return pipelineResponse;
   }
 
-
   @override
   Future<String?> fetchResembleAItts(Map<String, dynamic> body) async {
     String? base64Audio;
@@ -702,5 +702,4 @@ class ChatRepositoryImpl extends ChatRepository {
     }
     return null;
   }
-
 }

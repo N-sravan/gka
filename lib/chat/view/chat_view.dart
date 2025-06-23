@@ -904,7 +904,7 @@ class _ChatViewState extends State<ChatView> {
           hint: Text('Select Language', style: constants.grey12W400),
           value: viewModel.langSelected,
           isExpanded: true,
-          onChanged: (newValue) async {
+          onChanged: (newValue) {
             setState(() {
               viewModel.langSelected = newValue!;
               AppState.instance.language = viewModel.langSelected ?? '';
@@ -918,8 +918,7 @@ class _ChatViewState extends State<ChatView> {
               AppState.instance.language = 'english';
               AppState.instance.isEnglish = true;
             }
-            Fluttertoast.showToast(
-                msg: "Switched to ${AppState.instance.language}");
+            Fluttertoast.showToast(msg: "Switched to ${AppState.instance.language}");
           },
           items: viewModel.langList
               .map(
