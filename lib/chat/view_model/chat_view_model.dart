@@ -2431,6 +2431,20 @@ class ChatViewModel extends LoadingViewModel {
     lastTtsChunkTime = null;
   }
 
+  /// Update auto speech setting and notify listeners
+  void updateAutoSpeechSetting(bool enabled) {
+    print('[AUTO SPEECH] Setting changed to: $enabled');
+    AppState.instance.autoSpeechEnabled = enabled;
+    
+    if (!enabled) {
+      // If auto speech is disabled, stop any current TTS
+      stopSpeaking();
+      resetStreamingTTS();
+    }
+    
+    notifyListeners(); // This will trigger UI updates in all ChatBubbles
+  }
+
   String _extractPlainText(String text) {
     // Remove double asterisks for bold text
     final RegExp boldRegex = RegExp(r'\*\*(.*?)\*\*');

@@ -154,8 +154,9 @@ class _SettingsPageState extends State<SettingsPage> {
               (value) {
                 setState(() {
                   autoSpeechEnabled = value;
-                  AppState.instance.autoSpeechEnabled = value;
                 });
+                // Use ChatViewModel method to update setting and notify all UI components
+                viewModel.updateAutoSpeechSetting(value);
                 Fluttertoast.showToast(msg: 'Auto Speech ${value ? 'Enabled' : 'Disabled'}!');
               },
             ),

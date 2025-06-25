@@ -65,9 +65,13 @@ class _ChatBubbleState extends State<ChatBubble> {
     viewModel = Provider.of<ChatViewModel>(context, listen: false);
     show.value = widget.expandContentBlocks;
     _expanded = {};
+    
+    // Initialize mute state based on auto speech setting
     if (!_muted.containsKey(widget.timestamp)) {
-      _muted[widget.timestamp] = true;
+      // If auto speech is enabled, message starts unmuted; otherwise muted
+      _muted[widget.timestamp] = !AppState.instance.autoSpeechEnabled;
     }
+    
     if (widget.contentBlocks != null) {
       for (String key in widget.contentBlocks!.keys) {
         _expanded[key] = false;
@@ -80,6 +84,14 @@ class _ChatBubbleState extends State<ChatBubble> {
     return Consumer<ChatViewModel>(
         builder: (_, viewModel, child)
     {
+      // Sync mute state with auto speech setting on every rebuild
+      if (!widget.isUser && widget.timestamp.isNotEmpty) {
+        bool shouldBeMuted = !AppState.instance.autoSpeechEnabled;
+        if (_muted[widget.timestamp] != shouldBeMuted) {
+          _muted[widget.timestamp] = shouldBeMuted;
+          print('[MUTE/UNMUTE] Syncing message ${widget.timestamp} mute state to: $shouldBeMuted');
+        }
+      }
       return Padding(
         padding: EdgeInsets.fromLTRB(
             widget.isUser ? 64.0 : 16.0, 4, widget.isUser ? 16.0 : 8.0, 4),
@@ -154,22 +166,32 @@ class _ChatBubbleState extends State<ChatBubble> {
                                       widget.timestamp.isNotEmpty)
                                     IconButton(
                                       icon: Icon(
-                                        (_muted[widget.timestamp] ?? true)
+                                        // Sync with auto speech setting - if auto speech disabled, show muted
+                                        (!AppState.instance.autoSpeechEnabled || (_muted[widget.timestamp] ?? true))
                                             ? Icons.volume_off
                                             : Icons.volume_up,
                                         size: 18,
                                         color: Colors.black54,
                                       ),
                                       onPressed: () async {
-                                        setState(() {
-                                          _muted[widget.timestamp] =
-                                          !(_muted[widget.timestamp] ??
-                                              true);
-                                        });
-                                        if (!_muted[widget.timestamp]!) {
-                                           viewModel.handleTTSResponse(widget.text, context);
+                                        bool isCurrentlyMuted = !AppState.instance.autoSpeechEnabled || (_muted[widget.timestamp] ?? true);
+                                        
+                                        if (isCurrentlyMuted) {
+                                          // Currently muted - unmute and enable auto speech
+                                          print('[MUTE/UNMUTE] Unmuting message - enabling auto speech');
+                                          setState(() {
+                                            _muted[widget.timestamp] = false;
+                                          });
+                                          AppState.instance.autoSpeechEnabled = true;
+                                          viewModel.handleTTSResponse(widget.text, context);
                                         } else {
-                                           await viewModel.stopSpeaking();
+                                          // Currently unmuted - mute and disable auto speech
+                                          print('[MUTE/UNMUTE] Muting message - disabling auto speech');
+                                          setState(() {
+                                            _muted[widget.timestamp] = true;
+                                          });
+                                          AppState.instance.autoSpeechEnabled = false;
+                                          await viewModel.stopSpeaking();
                                         }
                                       },
                                       padding: EdgeInsets.zero,
