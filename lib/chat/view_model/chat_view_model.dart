@@ -132,7 +132,7 @@ class ChatViewModel extends LoadingViewModel {
   bool isFetchingMore = false;
   bool hasMoreData = true;
   int oldMsgId = 0;
-  
+
   // Streaming TTS state variables
   String streamingTtsBuffer = '';
   bool isStreamingTtsActive = false;
@@ -1225,13 +1225,13 @@ class ChatViewModel extends LoadingViewModel {
               'text': AppState.instance.isEnglish ? result : translatedText,
               'is_user': isUser,
             });
-            
+
             // Trigger final response TTS for AI responses
             if (!isUser) {
               print('[FINAL RESPONSE TTS] WebSocket received AI response');
               await handleFinalResponseTTS(AppState.instance.isEnglish ? result : translatedText, context);
             }
-            
+
             showLoader.value = false;
           } catch (e) {
             print("Error decoding JSON: $e");
@@ -1265,192 +1265,6 @@ class ChatViewModel extends LoadingViewModel {
     print("12345 Web socket URL: $url");
   }
 
-// Send a message and process streaming response
-/*Future<void> sendMessage(BuildContext context, String message) async {
-    if (message.isEmpty) return;
-
-    // Add user message to conversation
-    final userMessage = {
-      'is_user': true,
-      'text': message,
-      'timestamp': DateTime.now().toIso8601String(),
-    };
-
-    messages.add(userMessage);
-    chatController.clear();
-    showLoader.value = false;
-
-    // Start streaming process
-    isStreaming.value = true;
-    streamingText.value = "Thinking..._";
-    currentSteps = [];
-    showAgentSteps.value = false;
-
-    notifyListeners();
-
-    // Make API request
-    await _streamResponse(message);
-  }*/
-
-// Process streaming response from the API
-  Future<void> _streamResponse(String userInput) async {
-    final apiUrl =
-        "https://agentsbuilder.apaims2.0.vassarlabs.com/api/v1/run/d38adaab-877c-4a47-a35c-047affbf1102?stream=true";
-    final headers = {
-      "Content-Type": "application/json",
-      "accept": "text/event-stream",
-      "x-api-key": "sk-kzSs-5jk4A7J_8JBqvCX5iaF2miwKuexm1_FIcPLuCw",
-    };
-    final payload = {
-      "input_value": userInput,
-      "session_id": AppState.instance.sessionId,
-      "input_type": "chat",
-      "output_type": "chat",
-      "tweaks": null,
-    };
-
-    final client = http.Client();
-    String finalText = "";
-    final List<Map<String, dynamic>> stepsForThisMessage = [];
-
-    try {
-      final request = http.Request('POST', Uri.parse(apiUrl));
-      request.headers.addAll(headers);
-      request.body = json.encode(payload);
-
-      final streamedResponse = await client.send(request);
-
-      if (streamedResponse.statusCode != 200) {
-        streamingText.value =
-            "Error: Server returned ${streamedResponse.statusCode}";
-        return;
-      }
-
-      final stream = streamedResponse.stream.transform(utf8.decoder);
-      String buffer = '';
-
-      await for (final chunk in stream) {
-        buffer += chunk;
-
-        final lines = buffer.split('\n');
-        buffer = lines.removeLast();
-
-        for (final line in lines) {
-          final trimmed = line.trim();
-          if (trimmed.isEmpty) continue;
-
-          debugSseEvents.add(trimmed);
-
-          try {
-            final dynamic data = json.decode(trimmed);
-            if (data is! Map<String, dynamic>) continue;
-
-            final eventType = data['event'] ?? 'data';
-            final eventData = data['data'];
-
-            if (eventType == 'add_message') {
-              Map<String, dynamic>? msgData = eventData;
-
-              if (msgData != null &&
-                  (msgData['sender_name'] == 'Agent' ||
-                      msgData['sender_name'] == 'AI')) {
-                final contentBlocks = msgData['content_blocks'] ?? [];
-                if (contentBlocks.isNotEmpty) {
-                  _processContentBlocks(contentBlocks, stepsForThisMessage);
-                  for (var block in contentBlocks) {
-                    final contents = block['contents'] ?? [];
-
-                    for (var content in contents) {
-                      final header = content['header'];
-                      if (header != null && header['title'] == 'Output') {
-                        String newText = content['text'];
-                        if (newText != finalText) {
-                          // New final response content detected
-                          String chunk = newText.substring(finalText.length);
-                          print('[FINAL RESPONSE TTS] New final response chunk: "$chunk"');
-                          handleFinalResponseTTS(chunk, context);
-                        }
-                        finalText = newText;
-                        streamingText.value = finalText;
-                        print('Output: $finalText');
-                        break;
-                      }
-                    }
-                  }
-                }
-              }
-            }
-
-            if (eventType == 'end' &&
-                streamingText.value == "Thinking..._" &&
-                finalText.isNotEmpty) {
-              final outputs = eventData['result']?['outputs'];
-              if (outputs != null && outputs is List && outputs.isNotEmpty) {
-                final outputData = outputs[0]?['outputs'];
-                if (outputData != null &&
-                    outputData is List &&
-                    outputData.isNotEmpty) {
-                  final messageData =
-                      outputData[0]?['results']?['message']?['data'];
-                  if (messageData != null) {
-                    final textContent = messageData['text'] ?? '';
-                    if (textContent.isNotEmpty) {
-                      finalText = textContent;
-                      streamingText.value = finalText;
-
-                      if (!_hasStepWithTitle(currentSteps, 'Output')) {
-                        currentSteps.add({
-                          'title': 'Output',
-                          'type': 'Output',
-                          'content': textContent,
-                        });
-                      } else {
-                        final outputIndex = currentSteps
-                            .indexWhere((step) => step['title'] == 'Output');
-                        if (outputIndex != -1) {
-                          currentSteps[outputIndex]['content'] = textContent;
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          } catch (e) {
-            debugPrint('⚠SSE JSON parse error: $e\nLine: $trimmed');
-          }
-        }
-      }
-      final contentBlocks = extractContentBlocks(currentSteps);
-      // Final save of message
-      if (finalText.isNotEmpty) {
-        messages.add({
-          'timestamp': DateTime.now().toIso8601String(),
-          'text': finalText,
-          'is_user': false,
-          'expandContentBlocks': true,
-          'content_blocks': contentBlocks,
-        });
-        
-        // Trigger final response TTS for any remaining content
-        await handleFinalResponseTTS(finalText, context);
-      }
-
-      if (messages.length >= 2) {
-        final prevMessageIndex = messages.length - 2;
-        if (messages[prevMessageIndex]['is_user'] == true) {
-          messages[prevMessageIndex]['content_blocks'] = contentBlocks;
-        }
-      }
-      isStreaming.value = false;
-    } catch (e) {
-      streamingText.value = "Error: $e";
-    } finally {
-      isStreaming.value = false;
-      client.close();
-      notifyListeners();
-    }
-  }
 
 // Process content blocks from the streaming response
   void _processContentBlocks(
@@ -2094,38 +1908,6 @@ class ChatViewModel extends LoadingViewModel {
     }
   }
 
-  /// Process the SSE stream from the API
-  Future<void> _processSSEStream(
-      String responseBody, BuildContext context) async {
-    final lines = responseBody.split('\n\n');
-
-    for (final line in lines) {
-      if (line.startsWith('data: ')) {
-        try {
-          final sseDataString = line.substring(6).trim();
-          if (sseDataString.isNotEmpty) {
-            final eventData = jsonDecode(sseDataString);
-            final sseEvent = SSEEventModel.fromJson(eventData);
-
-            await _handleSSEEvent(sseEvent, context);
-
-            if (sseEvent.step == 'complete') {
-              _completeProcessing(true, context, sseEvent.finalAnswer);
-              return;
-            }
-          }
-        } catch (e) {
-          print('Error parsing SSE event: $e');
-          _updateProcessingStep(
-            'parsing_error',
-            'Parsing Error',
-            StepStatus.error,
-            'Error parsing stream data: $e',
-          );
-        }
-      }
-    }
-  }
 
   /// Handle individual SSE events
   Future<void> _handleSSEEvent(
@@ -2166,38 +1948,67 @@ class ChatViewModel extends LoadingViewModel {
     notifyListeners();
   }
 
-  /// Process SSE events for streaming TTS - ONLY for final answer generation
-  Future<void> _processEventForStreamingTTS(SSEEventModel event, BuildContext context) async {
+  /// Process SSE events for streaming TTS
+  Future<void> _processEventForStreamingTTS(
+      SSEEventModel event, BuildContext context) async {
     if (!AppState.instance.autoSpeechEnabled) return;
 
-    print('[FINAL RESPONSE TTS] Processing SSE event - Step: ${event.step}, Status: ${event.status}');
+    print(
+        '[STREAMING TTS] Processing SSE event - Step: ${event.step}, Status: ${event.status}');
 
-    // ONLY process answer_generation step for final response TTS
-    if (event.step == 'answer_generation') {
-      if (event.status == 'in_progress') {
-        print('[FINAL RESPONSE TTS] Starting streaming TTS for final answer generation');
-        isStreamingTtsActive = true;
-        
-        // Process streaming final answer content
-        if (event.message.isNotEmpty) {
-          print('[FINAL RESPONSE TTS] Final answer chunk: "${event.message}"');
-          await handleFinalResponseTTS(event.message, context);
-        }
-      } else if (event.status == 'completed' && event.finalAnswer != null) {
-        print('[FINAL RESPONSE TTS] Answer generation completed');
-        // Process any remaining final answer content
-        if (event.finalAnswer!.isNotEmpty) {
-          await handleFinalResponseTTS(event.finalAnswer!, context);
-        }
-        isStreamingTtsActive = false;
-      }
+    // Initialize streaming TTS on answer generation start
+    if (event.step == 'answer_generation' && event.status == 'in_progress') {
+      print('[STREAMING TTS] Starting streaming TTS for answer generation');
+      isStreamingTtsActive = true;
+      resetStreamingTTS();
     }
-    
-    // Handle complete event with final answer
-    if (event.step == 'complete' && event.finalAnswer != null && event.finalAnswer!.isNotEmpty) {
-      print('[FINAL RESPONSE TTS] Final answer received in complete event');
-      await handleFinalResponseTTS(event.finalAnswer!, context);
-      isStreamingTtsActive = false;
+
+    // Process streaming text content from various event sources
+    String? streamingText;
+
+    switch (event.step) {
+      case 'answer_generation':
+        if (event.status == 'in_progress' && event.message.isNotEmpty) {
+          streamingText = event.message;
+          print('[STREAMING TTS] Answer generation message: "$streamingText"');
+        } else if (event.llmPrompt != null && event.llmPrompt!.isNotEmpty) {
+          streamingText = event.llmPrompt;
+          print('[STREAMING TTS] LLM prompt content: "$streamingText"');
+        }
+        break;
+
+      case 'translation':
+        if (event.translatedQuery != null &&
+            event.translatedQuery!.isNotEmpty) {
+          streamingText = event.translatedQuery;
+          print('[STREAMING TTS] Translated query: "$streamingText"');
+        }
+        break;
+
+      case 'restructure_route':
+        if (event.restructuredQuestion != null &&
+            event.restructuredQuestion!.isNotEmpty) {
+          streamingText = event.restructuredQuestion;
+          print('[STREAMING TTS] Restructured question: "$streamingText"');
+        }
+        break;
+
+      case 'complete':
+        if (event.finalAnswer != null && event.finalAnswer!.isNotEmpty) {
+          print(
+              '[STREAMING TTS] Final answer received - completing streaming TTS');
+          // Process any remaining content and mark as complete
+          streamingText = event.finalAnswer;
+          isStreamingTtsActive = false;
+        }
+        break;
+    }
+
+    // Trigger streaming TTS if we have content
+    if (streamingText != null &&
+        streamingText.isNotEmpty &&
+        isStreamingTtsActive) {
+      await handleStreamingTTS(streamingText, context);
     }
   }
 
@@ -2270,9 +2081,9 @@ class ChatViewModel extends LoadingViewModel {
         'processing_steps':
             processingSteps.map((step) => step.toJson()).toList(),
       });
-      
-      // Trigger final response TTS for completed answer
-      await handleFinalResponseTTS(finalAnswer.trim(), context);
+
+      // Trigger auto speech for AI response
+      await handleTTSResponse(finalAnswer.trim(), context);
     } else if (!success) {
       messages.add({
         'text':
@@ -2290,7 +2101,7 @@ class ChatViewModel extends LoadingViewModel {
   Future<void> handleTTSResponse(String response, BuildContext context) async {
     // Check if auto speech is enabled
     if (!AppState.instance.autoSpeechEnabled) return;
-    
+
     bool hasEnglishSource = RegExp(r'\(Source:.*?\)').hasMatch(response);
     bool hasTeluguSource = RegExp(r'\(మూలం:.*?\)').hasMatch(response);
     String noSourceText = '';
@@ -2314,11 +2125,11 @@ class ChatViewModel extends LoadingViewModel {
   /// Handle chunk-wise TTS processing
   Future<void> handleChunkwiseTTS(String text, BuildContext context) async {
     final chunks = _splitIntoChunks(text, maxLen: 200);
-    
+
     for (String chunk in chunks) {
       // Check if speech should be stopped
       if (!AppState.instance.autoSpeechEnabled) break;
-      
+
       if (AppState.instance.ttsMode.toLowerCase() == 'bhashini') {
         await ttsResponse(chunk, context);
       } else if (AppState.instance.ttsMode.toLowerCase() == 'native') {
@@ -2326,203 +2137,73 @@ class ChatViewModel extends LoadingViewModel {
       } else if (AppState.instance.ttsMode.toLowerCase() == 'resemble ai') {
         await resembleAItts(chunk, context);
       }
-      
+
       // Small delay between chunks to ensure smooth playback
       await Future.delayed(const Duration(milliseconds: 300));
     }
   }
 
-  /// Handle complete final response - chunk and speak immediately for faster TTS
-  Future<void> handleFinalResponseTTS(String completeResponse, BuildContext context) async {
-    if (!AppState.instance.autoSpeechEnabled || completeResponse.trim().isEmpty) return;
-    
-    print('[CHUNKED TTS] Received complete response: ${completeResponse.length} characters');
-    
-    // Clean the complete response text for TTS
-    String cleanedText = cleanTextForTts(completeResponse);
-    
-    // Count words in complete response
-    List<String> words = cleanedText.trim().split(RegExp(r'\s+'));
-    print('[CHUNKED TTS] Complete response has ${words.length} words');
-    
-    // Only process if we have more than 5 words
-    if (words.length > 5) {
-      // Split complete response into chunks for faster TTS processing
-      List<String> chunks = _splitResponseIntoTTSChunks(cleanedText);
-      
-      print('[CHUNKED TTS] Split into ${chunks.length} chunks for TTS processing');
-      
-      // Process each chunk sequentially without waiting for previous to complete
-      _processChunksSequentially(chunks, context);
-    } else {
-      print('[CHUNKED TTS] Response too short (${words.length} words), skipping TTS');
-    }
-  }
+  /// Handle streaming text chunks for real-time TTS processing
+  Future<void> handleStreamingTTS(
+      String incomingText, BuildContext context) async {
+    if (!AppState.instance.autoSpeechEnabled) return;
 
-  /// Process chunks sequentially in background without blocking
-  void _processChunksSequentially(List<String> chunks, BuildContext context) async {
-    for (int i = 0; i < chunks.length; i++) {
-      if (!AppState.instance.autoSpeechEnabled) {
-        print('[CHUNKED TTS] Auto speech disabled, stopping chunk processing');
-        break;
+    final currentTime = DateTime.now();
+    print(
+        '[STREAMING TTS] Processing incoming text: "${incomingText.length > 50 ? incomingText.substring(0, 50) + "..." : incomingText}"');
+
+    // Add incoming text to buffer
+    streamingTtsBuffer += incomingText;
+    lastTtsChunkTime = currentTime;
+
+    // Clean the buffer text for TTS
+    String cleanedBuffer = cleanTextForTts(streamingTtsBuffer);
+
+    // Split buffer into sentences for natural TTS chunks
+    List<String> sentences = cleanedBuffer.split(RegExp(r'(?<=[.!?])\s+'));
+
+    // Process complete sentences for TTS
+    if (sentences.length > 1) {
+      // Keep the last incomplete sentence in buffer
+      String lastSentence = sentences.removeLast();
+
+      for (String sentence in sentences) {
+        if (sentence.trim().isNotEmpty && AppState.instance.autoSpeechEnabled) {
+          streamingTtsChunkCount++;
+          print(
+              '[STREAMING TTS] Speaking chunk #${streamingTtsChunkCount}: "${sentence.trim()}"');
+
+          await _speakStreamingChunk(sentence.trim(), context);
+
+          // Small delay between streaming chunks
+          await Future.delayed(const Duration(milliseconds: 200));
+        }
       }
-      
-      String chunk = chunks[i].trim();
-      if (chunk.isNotEmpty) {
+
+      // Update buffer with remaining incomplete sentence
+      streamingTtsBuffer = lastSentence;
+    }
+
+    // Handle timeout for remaining buffer content
+    Future.delayed(const Duration(seconds: 2), () async {
+      if (lastTtsChunkTime == currentTime &&
+          streamingTtsBuffer.trim().isNotEmpty &&
+          AppState.instance.autoSpeechEnabled) {
+        print(
+            '[STREAMING TTS] Processing remaining buffer on timeout: "${streamingTtsBuffer.trim()}"');
         streamingTtsChunkCount++;
-        print('[CHUNKED TTS] Processing chunk ${i + 1}/${chunks.length}: "$chunk"');
-        
-        // Start TTS for this chunk immediately (don't await - let it run in background)
-        _speakChunkInBackground(chunk, i + 1, context);
-        
-        // Small delay between starting each chunk to avoid overwhelming TTS service
-        await Future.delayed(const Duration(milliseconds: 100));
+        await _speakStreamingChunk(streamingTtsBuffer.trim(), context);
+        streamingTtsBuffer = '';
       }
-    }
-  }
-
-  /// Speak a chunk in background without blocking the next chunk
-  void _speakChunkInBackground(String chunk, int chunkNumber, BuildContext context) async {
-    try {
-      print('[CHUNKED TTS] Starting TTS for chunk $chunkNumber: "$chunk"');
-      
-      if (AppState.instance.ttsMode.toLowerCase() == 'bhashini') {
-        await ttsResponse(chunk, context);
-      } else if (AppState.instance.ttsMode.toLowerCase() == 'native') {
-        await nativeTTS(chunk);
-      } else if (AppState.instance.ttsMode.toLowerCase() == 'resemble ai') {
-        await resembleAItts(chunk, context);
-      }
-      
-      print('[CHUNKED TTS] Completed TTS for chunk $chunkNumber');
-    } catch (e) {
-      print('[CHUNKED TTS ERROR] Failed to speak chunk $chunkNumber "$chunk": $e');
-    }
-  }
-
-  /// Split complete response into optimal chunks for TTS processing
-  List<String> _splitResponseIntoTTSChunks(String text) {
-    List<String> chunks = [];
-    
-    // First try to split by sentences
-    List<String> sentences = text.split(RegExp(r'(?<=[.!?])\s+'));
-    
-    for (String sentence in sentences) {
-      if (sentence.trim().isNotEmpty) {
-        List<String> words = sentence.trim().split(RegExp(r'\s+'));
-        
-        // Optimal chunk size: 8-15 words for natural speech flow
-        if (words.length > 15) {
-          // Long sentence - split at natural break points
-          List<String> phrases = sentence.split(RegExp(r'[,;:]\s+'));
-          
-          String currentChunk = '';
-          for (String phrase in phrases) {
-            if (phrase.trim().isNotEmpty) {
-              String testChunk = currentChunk.isEmpty ? phrase.trim() : '$currentChunk, ${phrase.trim()}';
-              List<String> testWords = testChunk.split(RegExp(r'\s+'));
-              
-              if (testWords.length <= 15) {
-                currentChunk = testChunk;
-              } else {
-                // Add current chunk and start new one
-                if (currentChunk.isNotEmpty) {
-                  chunks.add(currentChunk);
-                }
-                currentChunk = phrase.trim();
-              }
-            }
-          }
-          // Add remaining chunk
-          if (currentChunk.isNotEmpty) {
-            chunks.add(currentChunk);
-          }
-        } else if (words.length >= 3) {
-          // Good size sentence - add as single chunk
-          chunks.add(sentence.trim());
-        }
-      }
-    }
-    
-    // Merge very small chunks (< 3 words) with next chunk
-    List<String> optimizedChunks = [];
-    String pendingSmallChunk = '';
-    
-    for (String chunk in chunks) {
-      List<String> chunkWords = chunk.split(RegExp(r'\s+'));
-      
-      if (chunkWords.length < 3 && optimizedChunks.isNotEmpty) {
-        // Small chunk - merge with previous
-        String lastChunk = optimizedChunks.removeLast();
-        optimizedChunks.add('$lastChunk $chunk');
-      } else {
-        // Add pending small chunk if any
-        if (pendingSmallChunk.isNotEmpty) {
-          optimizedChunks.add('$pendingSmallChunk $chunk');
-          pendingSmallChunk = '';
-        } else {
-          optimizedChunks.add(chunk);
-        }
-      }
-    }
-    
-    return optimizedChunks;
-  }
-
-  /// Split text into meaningful chunks for immediate TTS (legacy method)
-  List<String> _splitIntoMeaningfulChunks(String text) {
-    List<String> chunks = [];
-    
-    // First try to split by sentences
-    List<String> sentences = text.split(RegExp(r'(?<=[.!?])\s+'));
-    
-    for (String sentence in sentences) {
-      if (sentence.trim().isNotEmpty) {
-        List<String> words = sentence.trim().split(RegExp(r'\s+'));
-        
-        // If sentence has more than 10 words, split into smaller phrases
-        if (words.length > 10) {
-          // Split at commas, semicolons, or every 8-10 words
-          List<String> phrases = sentence.split(RegExp(r'[,;]\s+'));
-          for (String phrase in phrases) {
-            if (phrase.trim().isNotEmpty) {
-              chunks.add(phrase.trim());
-            }
-          }
-        } else if (words.length >= 3) {
-          // Add complete sentence if it has at least 3 words
-          chunks.add(sentence.trim());
-        }
-      }
-    }
-    
-    return chunks;
-  }
-
-  /// Speak a final response chunk using the configured TTS provider
-  Future<void> _speakFinalResponseChunk(String text, BuildContext context) async {
-    try {
-      print('[FINAL RESPONSE TTS] TTS Provider: ${AppState.instance.ttsMode}, Text: "$text"');
-      
-      if (AppState.instance.ttsMode.toLowerCase() == 'bhashini') {
-        await ttsResponse(text, context);
-      } else if (AppState.instance.ttsMode.toLowerCase() == 'native') {
-        await nativeTTS(text);
-      } else if (AppState.instance.ttsMode.toLowerCase() == 'resemble ai') {
-        await resembleAItts(text, context);
-      }
-      
-      print('[FINAL RESPONSE TTS] Successfully spoke chunk: "$text"');
-    } catch (e) {
-      print('[FINAL RESPONSE TTS ERROR] Failed to speak chunk "$text": $e');
-    }
+    });
   }
 
   /// Speak a single streaming chunk using the configured TTS provider
   Future<void> _speakStreamingChunk(String text, BuildContext context) async {
     try {
-      print('[STREAMING TTS] TTS Provider: ${AppState.instance.ttsMode}, Text: "$text"');
-      
+      print(
+          '[STREAMING TTS] TTS Provider: ${AppState.instance.ttsMode}, Text: "$text"');
+
       if (AppState.instance.ttsMode.toLowerCase() == 'bhashini') {
         await ttsResponse(text, context);
       } else if (AppState.instance.ttsMode.toLowerCase() == 'native') {
@@ -2530,7 +2211,7 @@ class ChatViewModel extends LoadingViewModel {
       } else if (AppState.instance.ttsMode.toLowerCase() == 'resemble ai') {
         await resembleAItts(text, context);
       }
-      
+
       print('[STREAMING TTS] Successfully spoke chunk: "$text"');
     } catch (e) {
       print('[STREAMING TTS ERROR] Failed to speak chunk "$text": $e');
@@ -2539,25 +2220,11 @@ class ChatViewModel extends LoadingViewModel {
 
   /// Reset streaming TTS state
   void resetStreamingTTS() {
-    print('[CHUNKED TTS] Resetting TTS state');
+    print('[STREAMING TTS] Resetting streaming TTS state');
     streamingTtsBuffer = '';
     isStreamingTtsActive = false;
     streamingTtsChunkCount = 0;
     lastTtsChunkTime = null;
-  }
-
-  /// Update auto speech setting and notify listeners
-  void updateAutoSpeechSetting(bool enabled) {
-    print('[AUTO SPEECH] Setting changed to: $enabled');
-    AppState.instance.autoSpeechEnabled = enabled;
-    
-    if (!enabled) {
-      // If auto speech is disabled, stop any current TTS
-      stopSpeaking();
-      resetStreamingTTS();
-    }
-    
-    notifyListeners(); // This will trigger UI updates in all ChatBubbles
   }
 
   String _extractPlainText(String text) {
@@ -2779,13 +2446,13 @@ class ChatViewModel extends LoadingViewModel {
 
   Future<void> stopSpeaking() async {
     print('[STREAMING TTS] Stop speaking called - resetting all TTS state');
-    
+
     // Disable auto speech to stop chunk processing
     AppState.instance.autoSpeechEnabled = false;
-    
+
     // Reset streaming TTS state
     resetStreamingTTS();
-    
+
     tts.stop();
     debugPrint("player.state :${player.state}");
     await player.stop();
