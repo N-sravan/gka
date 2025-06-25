@@ -1618,6 +1618,9 @@ class ChatViewModel extends LoadingViewModel {
     String targetLanguage = AppState.instance.isEnglish ? 'en' : 'te';
     String plainText = _extractPlainText(ttsText.trim());
 
+    print('TTS payload :: Input text: "$ttsText"');
+    print('TTS payload :: Plain text: "$plainText"');
+
     if (await networkUtils.hasActiveInternet()) {
       try {
         final body = {
@@ -1638,6 +1641,8 @@ class ChatViewModel extends LoadingViewModel {
             ]
           }
         };
+        
+        print('TTS payload :: ${jsonEncode(body)}');
         final pipelineResponse = await repo.fetchTTSconfig(body);
         if (pipelineResponse.isNotEmpty) {
           // Extract base64 audio from TTS task
@@ -2125,6 +2130,11 @@ class ChatViewModel extends LoadingViewModel {
   /// Handle chunk-wise TTS processing
   Future<void> handleChunkwiseTTS(String text, BuildContext context) async {
     final chunks = _splitIntoChunks(text, maxLen: 200);
+    
+    print('[CHUNKWISE TTS] Split into ${chunks.length} chunks:');
+    for (int i = 0; i < chunks.length; i++) {
+      print('[CHUNKWISE TTS] Chunk ${i + 1}: "${chunks[i]}"');
+    }
 
     for (String chunk in chunks) {
       // Check if speech should be stopped
@@ -2465,19 +2475,63 @@ class ChatViewModel extends LoadingViewModel {
 
   List<String> _splitIntoChunks(String text, {int maxLen = 150}) {
     List<String> chunks = [];
-    String current = "";
-
-    for (String sentence in text.split(RegExp(r'(?<=[.?!])\s+'))) {
-      if ((current + sentence).length > maxLen) {
-        chunks.add(current.trim());
-        current = sentence;
-      } else {
-        current += " $sentence";
+    
+    // Split by sentences first
+    List<String> sentences = text.split(RegExp(r'(?<=[.!?])\s+'));
+    
+    for (String sentence in sentences) {
+      if (sentence.trim().isNotEmpty) {
+        List<String> words = sentence.trim().split(RegExp(r'\s+'));
+        
+        // If sentence has more than 15 words or exceeds maxLen, split further
+        if (words.length > 15 || sentence.length > maxLen) {
+          // Split at natural break points (commas, semicolons, colons)
+          List<String> phrases = sentence.split(RegExp(r'[,;:]\s+'));
+          
+          String currentChunk = '';
+          for (String phrase in phrases) {
+            if (phrase.trim().isNotEmpty) {
+              String testChunk = currentChunk.isEmpty ? phrase.trim() : '$currentChunk, ${phrase.trim()}';
+              List<String> testWords = testChunk.split(RegExp(r'\s+'));
+              
+              if (testWords.length <= 15 && testChunk.length <= maxLen) {
+                currentChunk = testChunk;
+              } else {
+                // Add current chunk and start new one
+                if (currentChunk.isNotEmpty) {
+                  chunks.add(currentChunk);
+                }
+                currentChunk = phrase.trim();
+              }
+            }
+          }
+          // Add remaining chunk
+          if (currentChunk.isNotEmpty) {
+            chunks.add(currentChunk);
+          }
+        } else if (words.length >= 3) {
+          // Good size sentence - add as single chunk
+          chunks.add(sentence.trim());
+        }
       }
     }
-
-    if (current.trim().isNotEmpty) chunks.add(current.trim());
-    return chunks;
+    
+    // Merge very small chunks (< 3 words) with adjacent chunks
+    List<String> optimizedChunks = [];
+    for (int i = 0; i < chunks.length; i++) {
+      String chunk = chunks[i];
+      List<String> chunkWords = chunk.split(RegExp(r'\s+'));
+      
+      if (chunkWords.length < 3 && optimizedChunks.isNotEmpty) {
+        // Small chunk - merge with previous
+        String lastChunk = optimizedChunks.removeLast();
+        optimizedChunks.add('$lastChunk $chunk');
+      } else {
+        optimizedChunks.add(chunk);
+      }
+    }
+    
+    return optimizedChunks;
   }
 
   /// Handle complete final response - chunk and speak immediately for faster TTS
