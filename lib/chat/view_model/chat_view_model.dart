@@ -2122,8 +2122,14 @@ class ChatViewModel extends LoadingViewModel {
     final ttsText = cleanTextForTts(noSourceText);
 
     if (noSourceText.toString().isNotEmpty && response.toString().isNotEmpty) {
-      // Use chunk-wise TTS processing
-      await handleChunkwiseTTS(ttsText, context);
+      // Use processing mode based on user setting
+      if (AppState.instance.ttsChunkedMode) {
+        // Use chunk-wise TTS processing
+        await handleChunkwiseTTS(ttsText, context);
+      } else {
+        // Use full text TTS processing
+        await handleFullTextTTS(ttsText, context);
+      }
     }
   }
 
@@ -2150,6 +2156,19 @@ class ChatViewModel extends LoadingViewModel {
 
       // Small delay between chunks to ensure smooth playback
       await Future.delayed(const Duration(milliseconds: 300));
+    }
+  }
+
+  /// Handle full text TTS processing (no chunking)  
+  Future<void> handleFullTextTTS(String text, BuildContext context) async {
+    print('[FULL TEXT TTS] Processing entire text: "${text.substring(0, text.length.clamp(0, 100))}${text.length > 100 ? '...' : ''}"');
+    
+    if (AppState.instance.ttsMode.toLowerCase() == 'bhashini') {
+      await ttsResponse(text, context);
+    } else if (AppState.instance.ttsMode.toLowerCase() == 'native') {
+      await nativeTTS(text);
+    } else if (AppState.instance.ttsMode.toLowerCase() == 'resemble ai') {
+      await resembleAItts(text, context);
     }
   }
 
@@ -2534,30 +2553,37 @@ class ChatViewModel extends LoadingViewModel {
     return optimizedChunks;
   }
 
-  /// Handle complete final response - chunk and speak immediately for faster TTS
+  /// Handle complete final response - process based on user's TTS mode preference
   Future<void> handleFinalResponseTTS(String completeResponse, BuildContext context) async {
     if (!AppState.instance.autoSpeechEnabled || completeResponse.trim().isEmpty) return;
-    
-    print('[CHUNKED TTS] Received complete response: ${completeResponse.length} characters');
     
     // Clean the complete response text for TTS
     String cleanedText = cleanTextForTts(completeResponse);
     
     // Count words in complete response
     List<String> words = cleanedText.trim().split(RegExp(r'\s+'));
-    print('[CHUNKED TTS] Complete response has ${words.length} words');
     
     // Only process if we have more than 5 words
     if (words.length > 5) {
-      // Split complete response into chunks for faster TTS processing
-      List<String> chunks = _splitResponseIntoTTSChunks(cleanedText);
-      
-      print('[CHUNKED TTS] Split into ${chunks.length} chunks for TTS processing');
-      
-      // Process each chunk sequentially without waiting for previous to complete
-      _processChunksSequentially(chunks, context);
+      if (AppState.instance.ttsChunkedMode) {
+        // Chunked processing mode
+        print('[CHUNKED TTS] Received complete response: ${completeResponse.length} characters');
+        print('[CHUNKED TTS] Complete response has ${words.length} words');
+        
+        // Split complete response into chunks for faster TTS processing
+        List<String> chunks = _splitResponseIntoTTSChunks(cleanedText);
+        
+        print('[CHUNKED TTS] Split into ${chunks.length} chunks for TTS processing');
+        
+        // Process each chunk sequentially without waiting for previous to complete
+        _processChunksSequentially(chunks, context);
+      } else {
+        // Full text processing mode
+        print('[FULL TEXT TTS] Processing complete response: ${completeResponse.length} characters, ${words.length} words');
+        await handleFullTextTTS(cleanedText, context);
+      }
     } else {
-      print('[CHUNKED TTS] Response too short (${words.length} words), skipping TTS');
+      print('[TTS] Response too short (${words.length} words), skipping TTS');
     }
   }
 

@@ -21,6 +21,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool showChainOfActions = true;
   bool showDetailedMode = true;
   bool autoSpeechEnabled = false;
+  bool ttsChunkedMode = true;
 
   final langList = ['English', 'Telugu'];
   final speechServicesList = ['Native', 'Bhashini','Parakeet'];
@@ -39,6 +40,7 @@ class _SettingsPageState extends State<SettingsPage> {
     showChainOfActions = AppState.instance.showChainOfActions;
     showDetailedMode = AppState.instance.showDetailedMode;
     autoSpeechEnabled = AppState.instance.autoSpeechEnabled;
+    ttsChunkedMode = AppState.instance.ttsChunkedMode;
   }
 
   @override
@@ -158,6 +160,19 @@ class _SettingsPageState extends State<SettingsPage> {
                 // Use ChatViewModel method to update setting and notify all UI components
                 viewModel.updateAutoSpeechSetting(value);
                 Fluttertoast.showToast(msg: 'Auto Speech ${value ? 'Enabled' : 'Disabled'}!');
+              },
+            ),
+            const SizedBox(height: 16),
+            _buildToggleItem(
+              "TTS Processing Mode",
+              "Chunked: Fast speech with natural pauses. Full Text: Complete response at once",
+              ttsChunkedMode,
+              (value) {
+                setState(() {
+                  ttsChunkedMode = value;
+                  AppState.instance.ttsChunkedMode = value;
+                });
+                Fluttertoast.showToast(msg: 'TTS Processing: ${value ? 'Chunked Mode' : 'Full Text Mode'}');
               },
             ),
             const SizedBox(height: 40),

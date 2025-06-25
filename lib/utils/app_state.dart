@@ -58,4 +58,5 @@ class AppState {
   bool showChainOfActions = true;
   bool showDetailedMode = true;
   bool autoSpeechEnabled = false;
+  bool ttsChunkedMode = true; // true for chunked, false for full text
 }
