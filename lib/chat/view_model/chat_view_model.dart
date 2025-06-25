@@ -2188,43 +2188,53 @@ class ChatViewModel extends LoadingViewModel {
     // Clean the buffer text for TTS
     String cleanedBuffer = cleanTextForTts(streamingTtsBuffer);
 
-    // Split buffer into sentences for natural TTS chunks
-    List<String> sentences = cleanedBuffer.split(RegExp(r'(?<=[.!?])\s+'));
+    // Check user's TTS processing mode preference
+    if (AppState.instance.ttsChunkedMode) {
+      // Chunked processing mode - split buffer into sentences for natural TTS chunks
+      List<String> sentences = cleanedBuffer.split(RegExp(r'(?<=[.!?])\s+'));
 
-    // Process complete sentences for TTS
-    if (sentences.length > 1) {
-      // Keep the last incomplete sentence in buffer
-      String lastSentence = sentences.removeLast();
+      // Process complete sentences for TTS
+      if (sentences.length > 1) {
+        // Keep the last incomplete sentence in buffer
+        String lastSentence = sentences.removeLast();
 
-      for (String sentence in sentences) {
-        if (sentence.trim().isNotEmpty && AppState.instance.autoSpeechEnabled) {
-          streamingTtsChunkCount++;
-          print(
-              '[STREAMING TTS] Speaking chunk #${streamingTtsChunkCount}: "${sentence.trim()}"');
+        for (String sentence in sentences) {
+          if (sentence.trim().isNotEmpty && AppState.instance.autoSpeechEnabled) {
+            streamingTtsChunkCount++;
+            print(
+                '[STREAMING TTS CHUNKED] Speaking chunk #${streamingTtsChunkCount}: "${sentence.trim()}"');
 
-          await _speakStreamingChunk(sentence.trim(), context);
+            await _speakStreamingChunk(sentence.trim(), context);
 
-          // Small delay between streaming chunks
-          await Future.delayed(const Duration(milliseconds: 200));
+            // Small delay between streaming chunks
+            await Future.delayed(const Duration(milliseconds: 200));
+          }
         }
-      }
 
-      // Update buffer with remaining incomplete sentence
-      streamingTtsBuffer = lastSentence;
+        // Update buffer with remaining incomplete sentence
+        streamingTtsBuffer = lastSentence;
+      }
+    } else {
+      // Full text mode - wait for complete response, don't process streaming chunks
+      print('[STREAMING TTS FULL] Accumulating text, will process when complete. Buffer length: ${cleanedBuffer.length}');
+      // In full text mode, we don't process streaming chunks
+      // The complete response will be handled by handleFinalResponseTTS
     }
 
-    // Handle timeout for remaining buffer content
-    Future.delayed(const Duration(seconds: 2), () async {
-      if (lastTtsChunkTime == currentTime &&
-          streamingTtsBuffer.trim().isNotEmpty &&
-          AppState.instance.autoSpeechEnabled) {
-        print(
-            '[STREAMING TTS] Processing remaining buffer on timeout: "${streamingTtsBuffer.trim()}"');
-        streamingTtsChunkCount++;
-        await _speakStreamingChunk(streamingTtsBuffer.trim(), context);
-        streamingTtsBuffer = '';
-      }
-    });
+    // Handle timeout for remaining buffer content (only in chunked mode)
+    if (AppState.instance.ttsChunkedMode) {
+      Future.delayed(const Duration(seconds: 2), () async {
+        if (lastTtsChunkTime == currentTime &&
+            streamingTtsBuffer.trim().isNotEmpty &&
+            AppState.instance.autoSpeechEnabled) {
+          print(
+              '[STREAMING TTS CHUNKED] Processing remaining buffer on timeout: "${streamingTtsBuffer.trim()}"');
+          streamingTtsChunkCount++;
+          await _speakStreamingChunk(streamingTtsBuffer.trim(), context);
+          streamingTtsBuffer = '';
+        }
+      });
+    }
   }
 
   /// Speak a single streaming chunk using the configured TTS provider
@@ -2233,17 +2243,42 @@ class ChatViewModel extends LoadingViewModel {
       print(
           '[STREAMING TTS] TTS Provider: ${AppState.instance.ttsMode}, Text: "$text"');
 
-      if (AppState.instance.ttsMode.toLowerCase() == 'bhashini') {
-        await ttsResponse(text, context);
-      } else if (AppState.instance.ttsMode.toLowerCase() == 'native') {
-        await nativeTTS(text);
-      } else if (AppState.instance.ttsMode.toLowerCase() == 'resemble ai') {
-        await resembleAItts(text, context);
+      // Apply proper chunking if in chunked mode
+      if (AppState.instance.ttsChunkedMode) {
+        // Split the sentence into optimal chunks
+        List<String> chunks = _splitResponseIntoTTSChunks(text);
+        print('[STREAMING TTS] Split sentence into ${chunks.length} chunks');
+        
+        for (String chunk in chunks) {
+          if (!AppState.instance.autoSpeechEnabled) break;
+          
+          print('[STREAMING TTS CHUNK] Speaking: "$chunk"');
+          
+          if (AppState.instance.ttsMode.toLowerCase() == 'bhashini') {
+            await ttsResponse(chunk, context);
+          } else if (AppState.instance.ttsMode.toLowerCase() == 'native') {
+            await nativeTTS(chunk);
+          } else if (AppState.instance.ttsMode.toLowerCase() == 'resemble ai') {
+            await resembleAItts(chunk, context);
+          }
+          
+          // Small delay between chunks
+          await Future.delayed(const Duration(milliseconds: 100));
+        }
+      } else {
+        // Full text mode - process entire sentence at once
+        if (AppState.instance.ttsMode.toLowerCase() == 'bhashini') {
+          await ttsResponse(text, context);
+        } else if (AppState.instance.ttsMode.toLowerCase() == 'native') {
+          await nativeTTS(text);
+        } else if (AppState.instance.ttsMode.toLowerCase() == 'resemble ai') {
+          await resembleAItts(text, context);
+        }
       }
 
-      print('[STREAMING TTS] Successfully spoke chunk: "$text"');
+      print('[STREAMING TTS] Successfully spoke text: "$text"');
     } catch (e) {
-      print('[STREAMING TTS ERROR] Failed to speak chunk "$text": $e');
+      print('[STREAMING TTS ERROR] Failed to speak text "$text": $e');
     }
   }
 
