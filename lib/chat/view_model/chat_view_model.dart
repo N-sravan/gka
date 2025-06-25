@@ -2479,4 +2479,155 @@ class ChatViewModel extends LoadingViewModel {
     if (current.trim().isNotEmpty) chunks.add(current.trim());
     return chunks;
   }
+
+  /// Handle complete final response - chunk and speak immediately for faster TTS
+  Future<void> handleFinalResponseTTS(String completeResponse, BuildContext context) async {
+    if (!AppState.instance.autoSpeechEnabled || completeResponse.trim().isEmpty) return;
+    
+    print('[CHUNKED TTS] Received complete response: ${completeResponse.length} characters');
+    
+    // Clean the complete response text for TTS
+    String cleanedText = cleanTextForTts(completeResponse);
+    
+    // Count words in complete response
+    List<String> words = cleanedText.trim().split(RegExp(r'\s+'));
+    print('[CHUNKED TTS] Complete response has ${words.length} words');
+    
+    // Only process if we have more than 5 words
+    if (words.length > 5) {
+      // Split complete response into chunks for faster TTS processing
+      List<String> chunks = _splitResponseIntoTTSChunks(cleanedText);
+      
+      print('[CHUNKED TTS] Split into ${chunks.length} chunks for TTS processing');
+      
+      // Process each chunk sequentially without waiting for previous to complete
+      _processChunksSequentially(chunks, context);
+    } else {
+      print('[CHUNKED TTS] Response too short (${words.length} words), skipping TTS');
+    }
+  }
+
+  /// Process chunks sequentially in background without blocking
+  void _processChunksSequentially(List<String> chunks, BuildContext context) async {
+    for (int i = 0; i < chunks.length; i++) {
+      if (!AppState.instance.autoSpeechEnabled) {
+        print('[CHUNKED TTS] Auto speech disabled, stopping chunk processing');
+        break;
+      }
+      
+      String chunk = chunks[i].trim();
+      if (chunk.isNotEmpty) {
+        streamingTtsChunkCount++;
+        print('[CHUNKED TTS] Processing chunk ${i + 1}/${chunks.length}: "$chunk"');
+        
+        // Start TTS for this chunk immediately (don't await - let it run in background)
+        _speakChunkInBackground(chunk, i + 1, context);
+        
+        // Small delay between starting each chunk to avoid overwhelming TTS service
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+    }
+  }
+
+  /// Speak a chunk in background without blocking the next chunk
+  void _speakChunkInBackground(String chunk, int chunkNumber, BuildContext context) async {
+    try {
+      print('[CHUNKED TTS] Starting TTS for chunk $chunkNumber: "$chunk"');
+      
+      if (AppState.instance.ttsMode.toLowerCase() == 'bhashini') {
+        await ttsResponse(chunk, context);
+      } else if (AppState.instance.ttsMode.toLowerCase() == 'native') {
+        await nativeTTS(chunk);
+      } else if (AppState.instance.ttsMode.toLowerCase() == 'resemble ai') {
+        await resembleAItts(chunk, context);
+      }
+      
+      print('[CHUNKED TTS] Completed TTS for chunk $chunkNumber');
+    } catch (e) {
+      print('[CHUNKED TTS ERROR] Failed to speak chunk $chunkNumber "$chunk": $e');
+    }
+  }
+
+  /// Split complete response into optimal chunks for TTS processing
+  List<String> _splitResponseIntoTTSChunks(String text) {
+    List<String> chunks = [];
+    
+    // First try to split by sentences
+    List<String> sentences = text.split(RegExp(r'(?<=[.!?])\s+'));
+    
+    for (String sentence in sentences) {
+      if (sentence.trim().isNotEmpty) {
+        List<String> words = sentence.trim().split(RegExp(r'\s+'));
+        
+        // Optimal chunk size: 8-15 words for natural speech flow
+        if (words.length > 15) {
+          // Long sentence - split at natural break points
+          List<String> phrases = sentence.split(RegExp(r'[,;:]\s+'));
+          
+          String currentChunk = '';
+          for (String phrase in phrases) {
+            if (phrase.trim().isNotEmpty) {
+              String testChunk = currentChunk.isEmpty ? phrase.trim() : '$currentChunk, ${phrase.trim()}';
+              List<String> testWords = testChunk.split(RegExp(r'\s+'));
+              
+              if (testWords.length <= 15) {
+                currentChunk = testChunk;
+              } else {
+                // Add current chunk and start new one
+                if (currentChunk.isNotEmpty) {
+                  chunks.add(currentChunk);
+                }
+                currentChunk = phrase.trim();
+              }
+            }
+          }
+          // Add remaining chunk
+          if (currentChunk.isNotEmpty) {
+            chunks.add(currentChunk);
+          }
+        } else if (words.length >= 3) {
+          // Good size sentence - add as single chunk
+          chunks.add(sentence.trim());
+        }
+      }
+    }
+    
+    // Merge very small chunks (< 3 words) with next chunk
+    List<String> optimizedChunks = [];
+    String pendingSmallChunk = '';
+    
+    for (String chunk in chunks) {
+      List<String> chunkWords = chunk.split(RegExp(r'\s+'));
+      
+      if (chunkWords.length < 3 && optimizedChunks.isNotEmpty) {
+        // Small chunk - merge with previous
+        String lastChunk = optimizedChunks.removeLast();
+        optimizedChunks.add('$lastChunk $chunk');
+      } else {
+        // Add pending small chunk if any
+        if (pendingSmallChunk.isNotEmpty) {
+          optimizedChunks.add('$pendingSmallChunk $chunk');
+          pendingSmallChunk = '';
+        } else {
+          optimizedChunks.add(chunk);
+        }
+      }
+    }
+    
+    return optimizedChunks;
+  }
+
+  /// Update auto speech setting and notify listeners
+  void updateAutoSpeechSetting(bool enabled) {
+    print('[AUTO SPEECH] Setting changed to: $enabled');
+    AppState.instance.autoSpeechEnabled = enabled;
+    
+    if (!enabled) {
+      // If auto speech is disabled, stop any current TTS
+      stopSpeaking();
+      resetStreamingTTS();
+    }
+    
+    notifyListeners(); // This will trigger UI updates in all ChatBubbles
+  }
 }
