@@ -132,6 +132,12 @@ class ChatViewModel extends LoadingViewModel {
   bool isFetchingMore = false;
   bool hasMoreData = true;
   int oldMsgId = 0;
+  
+  // Streaming TTS state variables
+  String streamingTtsBuffer = '';
+  bool isStreamingTtsActive = false;
+  int streamingTtsChunkCount = 0;
+  DateTime? lastTtsChunkTime;
 
   int currentPage = 1;
   final int pageSize = 10;
@@ -1220,9 +1226,10 @@ class ChatViewModel extends LoadingViewModel {
               'is_user': isUser,
             });
             
-            // Trigger auto speech for AI responses
+            // Trigger streaming TTS for AI responses
             if (!isUser) {
-              await handleTTSResponse(AppState.instance.isEnglish ? result : translatedText, context);
+              print('[STREAMING TTS] WebSocket received AI response');
+              await handleStreamingTTS(AppState.instance.isEnglish ? result : translatedText, context);
             }
             
             showLoader.value = false;
@@ -1356,7 +1363,14 @@ class ChatViewModel extends LoadingViewModel {
                     for (var content in contents) {
                       final header = content['header'];
                       if (header != null && header['title'] == 'Output') {
-                        finalText = content['text'];
+                        String newText = content['text'];
+                        if (newText != finalText) {
+                          // New streaming content detected
+                          String chunk = newText.substring(finalText.length);
+                          print('[STREAMING TTS] New streaming chunk: "$chunk"');
+                          handleStreamingTTS(chunk, context);
+                        }
+                        finalText = newText;
                         streamingText.value = finalText;
                         print('Output: $finalText');
                         break;
@@ -2136,6 +2150,9 @@ class ChatViewModel extends LoadingViewModel {
       }
     }
 
+    // Handle streaming TTS for various event types
+    await _processEventForStreamingTTS(event, context);
+
     // Update step status
     _updateProcessingStep(
       event.step,
@@ -2147,6 +2164,63 @@ class ChatViewModel extends LoadingViewModel {
     );
 
     notifyListeners();
+  }
+
+  /// Process SSE events for streaming TTS
+  Future<void> _processEventForStreamingTTS(SSEEventModel event, BuildContext context) async {
+    if (!AppState.instance.autoSpeechEnabled) return;
+
+    print('[STREAMING TTS] Processing SSE event - Step: ${event.step}, Status: ${event.status}');
+
+    // Initialize streaming TTS on answer generation start
+    if (event.step == 'answer_generation' && event.status == 'in_progress') {
+      print('[STREAMING TTS] Starting streaming TTS for answer generation');
+      isStreamingTtsActive = true;
+      resetStreamingTTS();
+    }
+
+    // Process streaming text content from various event sources
+    String? streamingText;
+    
+    switch (event.step) {
+      case 'answer_generation':
+        if (event.status == 'in_progress' && event.message.isNotEmpty) {
+          streamingText = event.message;
+          print('[STREAMING TTS] Answer generation message: "$streamingText"');
+        } else if (event.llmPrompt != null && event.llmPrompt!.isNotEmpty) {
+          streamingText = event.llmPrompt;
+          print('[STREAMING TTS] LLM prompt content: "$streamingText"');
+        }
+        break;
+        
+      case 'translation':
+        if (event.translatedQuery != null && event.translatedQuery!.isNotEmpty) {
+          streamingText = event.translatedQuery;
+          print('[STREAMING TTS] Translated query: "$streamingText"');
+        }
+        break;
+        
+      case 'restructure_route':
+        if (event.restructuredQuestion != null && event.restructuredQuestion!.isNotEmpty) {
+          streamingText = event.restructuredQuestion;
+          print('[STREAMING TTS] Restructured question: "$streamingText"');
+        }
+        break;
+        
+      case 'complete':
+        if (event.finalAnswer != null && event.finalAnswer!.isNotEmpty) {
+          print('[STREAMING TTS] Final answer received - completing streaming TTS');
+          // Process any remaining content and mark as complete
+          streamingText = event.finalAnswer;
+          isStreamingTtsActive = false;
+        }
+        break;
+    }
+
+    // Trigger streaming TTS if we have content
+    if (streamingText != null && streamingText.isNotEmpty && isStreamingTtsActive) {
+      await handleStreamingTTS(streamingText, context);
+    }
   }
 
   /// Update or create a processing step
@@ -2278,6 +2352,83 @@ class ChatViewModel extends LoadingViewModel {
       // Small delay between chunks to ensure smooth playback
       await Future.delayed(const Duration(milliseconds: 300));
     }
+  }
+
+  /// Handle streaming text chunks for real-time TTS processing
+  Future<void> handleStreamingTTS(String incomingText, BuildContext context) async {
+    if (!AppState.instance.autoSpeechEnabled) return;
+    
+    final currentTime = DateTime.now();
+    print('[STREAMING TTS] Processing incoming text: "${incomingText.length > 50 ? incomingText.substring(0, 50) + "..." : incomingText}"');
+    
+    // Add incoming text to buffer
+    streamingTtsBuffer += incomingText;
+    lastTtsChunkTime = currentTime;
+    
+    // Clean the buffer text for TTS
+    String cleanedBuffer = cleanTextForTts(streamingTtsBuffer);
+    
+    // Split buffer into sentences for natural TTS chunks
+    List<String> sentences = cleanedBuffer.split(RegExp(r'(?<=[.!?])\s+'));
+    
+    // Process complete sentences for TTS
+    if (sentences.length > 1) {
+      // Keep the last incomplete sentence in buffer
+      String lastSentence = sentences.removeLast();
+      
+      for (String sentence in sentences) {
+        if (sentence.trim().isNotEmpty && AppState.instance.autoSpeechEnabled) {
+          streamingTtsChunkCount++;
+          print('[STREAMING TTS] Speaking chunk #${streamingTtsChunkCount}: "${sentence.trim()}"');
+          
+          await _speakStreamingChunk(sentence.trim(), context);
+          
+          // Small delay between streaming chunks
+          await Future.delayed(const Duration(milliseconds: 200));
+        }
+      }
+      
+      // Update buffer with remaining incomplete sentence
+      streamingTtsBuffer = lastSentence;
+    }
+    
+    // Handle timeout for remaining buffer content
+    Future.delayed(const Duration(seconds: 2), () async {
+      if (lastTtsChunkTime == currentTime && streamingTtsBuffer.trim().isNotEmpty && AppState.instance.autoSpeechEnabled) {
+        print('[STREAMING TTS] Processing remaining buffer on timeout: "${streamingTtsBuffer.trim()}"');
+        streamingTtsChunkCount++;
+        await _speakStreamingChunk(streamingTtsBuffer.trim(), context);
+        streamingTtsBuffer = '';
+      }
+    });
+  }
+
+  /// Speak a single streaming chunk using the configured TTS provider
+  Future<void> _speakStreamingChunk(String text, BuildContext context) async {
+    try {
+      print('[STREAMING TTS] TTS Provider: ${AppState.instance.ttsMode}, Text: "$text"');
+      
+      if (AppState.instance.ttsMode.toLowerCase() == 'bhashini') {
+        await ttsResponse(text, context);
+      } else if (AppState.instance.ttsMode.toLowerCase() == 'native') {
+        await nativeTTS(text);
+      } else if (AppState.instance.ttsMode.toLowerCase() == 'resemble ai') {
+        await resembleAItts(text, context);
+      }
+      
+      print('[STREAMING TTS] Successfully spoke chunk: "$text"');
+    } catch (e) {
+      print('[STREAMING TTS ERROR] Failed to speak chunk "$text": $e');
+    }
+  }
+
+  /// Reset streaming TTS state
+  void resetStreamingTTS() {
+    print('[STREAMING TTS] Resetting streaming TTS state');
+    streamingTtsBuffer = '';
+    isStreamingTtsActive = false;
+    streamingTtsChunkCount = 0;
+    lastTtsChunkTime = null;
   }
 
   String _extractPlainText(String text) {
@@ -2498,8 +2649,13 @@ class ChatViewModel extends LoadingViewModel {
   }
 
   Future<void> stopSpeaking() async {
+    print('[STREAMING TTS] Stop speaking called - resetting all TTS state');
+    
     // Disable auto speech to stop chunk processing
     AppState.instance.autoSpeechEnabled = false;
+    
+    // Reset streaming TTS state
+    resetStreamingTTS();
     
     tts.stop();
     debugPrint("player.state :${player.state}");
