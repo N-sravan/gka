@@ -20,6 +20,7 @@ class _SettingsPageState extends State<SettingsPage> {
   String selectedTranslationService = 'Bhashini';
   bool showChainOfActions = true;
   bool showDetailedMode = true;
+  bool autoSpeechEnabled = false;
 
   final langList = ['English', 'Telugu'];
   final speechServicesList = ['Native', 'Bhashini','Parakeet'];
@@ -37,6 +38,7 @@ class _SettingsPageState extends State<SettingsPage> {
     selectedTranslationService = AppState.instance.transMode;
     showChainOfActions = AppState.instance.showChainOfActions;
     showDetailedMode = AppState.instance.showDetailedMode;
+    autoSpeechEnabled = AppState.instance.autoSpeechEnabled;
   }
 
   @override
@@ -140,6 +142,21 @@ class _SettingsPageState extends State<SettingsPage> {
                   AppState.instance.showDetailedMode = value;
                 });
                 Fluttertoast.showToast(msg: 'Detailed Mode ${value ? 'Enabled' : 'Disabled'}!');
+              },
+            ),
+            const SizedBox(height: 32),
+            _buildSectionHeader("Auto Speech"),
+            const SizedBox(height: 8),
+            _buildToggleItem(
+              "Auto Speech",
+              "Automatically speak AI responses using chunk-wise TTS",
+              autoSpeechEnabled,
+              (value) {
+                setState(() {
+                  autoSpeechEnabled = value;
+                  AppState.instance.autoSpeechEnabled = value;
+                });
+                Fluttertoast.showToast(msg: 'Auto Speech ${value ? 'Enabled' : 'Disabled'}!');
               },
             ),
             const SizedBox(height: 40),

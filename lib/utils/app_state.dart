@@ -57,4 +57,5 @@ class AppState {
   // Chat display preferences
   bool showChainOfActions = true;
   bool showDetailedMode = true;
+  bool autoSpeechEnabled = false;
 }

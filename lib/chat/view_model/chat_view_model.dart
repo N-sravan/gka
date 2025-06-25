@@ -1219,6 +1219,12 @@ class ChatViewModel extends LoadingViewModel {
               'text': AppState.instance.isEnglish ? result : translatedText,
               'is_user': isUser,
             });
+            
+            // Trigger auto speech for AI responses
+            if (!isUser) {
+              await handleTTSResponse(AppState.instance.isEnglish ? result : translatedText, context);
+            }
+            
             showLoader.value = false;
           } catch (e) {
             print("Error decoding JSON: $e");
@@ -1411,6 +1417,9 @@ class ChatViewModel extends LoadingViewModel {
           'expandContentBlocks': true,
           'content_blocks': contentBlocks,
         });
+        
+        // Trigger auto speech for AI response
+        await handleTTSResponse(finalText, context);
       }
 
       if (messages.length >= 2) {
@@ -2209,6 +2218,9 @@ class ChatViewModel extends LoadingViewModel {
         'processing_steps':
             processingSteps.map((step) => step.toJson()).toList(),
       });
+      
+      // Trigger auto speech for AI response
+      await handleTTSResponse(finalAnswer.trim(), context);
     } else if (!success) {
       messages.add({
         'text':
@@ -2224,6 +2236,9 @@ class ChatViewModel extends LoadingViewModel {
 
   /// Handle TTS response
   Future<void> handleTTSResponse(String response, BuildContext context) async {
+    // Check if auto speech is enabled
+    if (!AppState.instance.autoSpeechEnabled) return;
+    
     bool hasEnglishSource = RegExp(r'\(Source:.*?\)').hasMatch(response);
     bool hasTeluguSource = RegExp(r'\(మూలం:.*?\)').hasMatch(response);
     String noSourceText = '';
@@ -2239,15 +2254,29 @@ class ChatViewModel extends LoadingViewModel {
     final ttsText = cleanTextForTts(noSourceText);
 
     if (noSourceText.toString().isNotEmpty && response.toString().isNotEmpty) {
+      // Use chunk-wise TTS processing
+      await handleChunkwiseTTS(ttsText, context);
+    }
+  }
+
+  /// Handle chunk-wise TTS processing
+  Future<void> handleChunkwiseTTS(String text, BuildContext context) async {
+    final chunks = _splitIntoChunks(text, maxLen: 200);
+    
+    for (String chunk in chunks) {
+      // Check if speech should be stopped
+      if (!AppState.instance.autoSpeechEnabled) break;
+      
       if (AppState.instance.ttsMode.toLowerCase() == 'bhashini') {
-        await ttsResponse(ttsText, context);
+        await ttsResponse(chunk, context);
+      } else if (AppState.instance.ttsMode.toLowerCase() == 'native') {
+        await nativeTTS(chunk);
+      } else if (AppState.instance.ttsMode.toLowerCase() == 'resemble ai') {
+        await resembleAItts(chunk, context);
       }
-      if (AppState.instance.ttsMode.toLowerCase() == 'native') {
-        await nativeTTS(ttsText);
-      }
-      if (AppState.instance.ttsMode.toLowerCase() == 'resemble ai') {
-        await resembleAItts(ttsText, context);
-      }
+      
+      // Small delay between chunks to ensure smooth playback
+      await Future.delayed(const Duration(milliseconds: 300));
     }
   }
 
@@ -2469,6 +2498,9 @@ class ChatViewModel extends LoadingViewModel {
   }
 
   Future<void> stopSpeaking() async {
+    // Disable auto speech to stop chunk processing
+    AppState.instance.autoSpeechEnabled = false;
+    
     tts.stop();
     debugPrint("player.state :${player.state}");
     await player.stop();
