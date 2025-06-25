@@ -864,17 +864,18 @@ const String promptManagementBaseUrl = 'https://apaims2.0.vassarlabs.com/chatbot
 //chatbot API Endpoints
 const String chatHistoryEndpoint = 'get-history';
 const String chatQueryEndpoint = 'query';
+const String queryStreamEndpoint = 'query-stream';
 const String sessionsEndpoint = 'get-sessions';
-const String deleteSessionEndpoint = 'delete-sessions';
-const String updateSessionEndpoint = 'update-session';
+const String deleteSessionEndpoint = 'delete-session';
+const String updateSessionEndpoint = 'update-session-id';
 const String createSessionEndpoint = 'create-session';
 const String langTranslateEndpoint = 'translate-text';
 
 //baseurls
 const String genAiBaseUrl = "https://nawrims.vassarlabs.com/vassar_mind/";
-const String resembleTtsUrl = "http://acerkrishidss.vassarlabs.com/resemble_tts";
-const String chatbotBaseUrl = 'https://agentsbuilder.apaims2.0.vassarlabs.com/api/v1/prediction/4a5c8d41-51d7-4e81-85b8-377bb6a28043';
-
+const String resembleTtsUrl =
+    "http://acerkrishidss.vassarlabs.com/resemble_tts";
+const String chatbotBaseUrl =
+    'https://agentsbuilder.apaims2.0.vassarlabs.com/api/v1/prediction/4a5c8d41-51d7-4e81-85b8-377bb6a28043';
 
 const String bearerToken = '2r9MjMpyFar4ySZh_KfGWzMcmqoUnQOnA9lMoFTG8Bg';
-

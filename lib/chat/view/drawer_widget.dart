@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:gka/utils/app_state.dart';
 import 'package:provider/provider.dart';
 import '../../../utils/common_constants.dart' as constants;
 import '../view_model/chat_view_model.dart';
@@ -10,9 +9,9 @@ import 'prompt_management_view.dart';
 
 class DrawerWidget extends StatefulWidget {
   const DrawerWidget({
-    Key? key,
+    super.key,
     // required this.isFirstTime,
-  }) : super(key: key);
+  });
 
   // final bool isFirstTime;
 
@@ -29,6 +28,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
 
   @override
   void initState() {
+    super.initState();
     viewModel = Provider.of<ChatViewModel>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await viewModel.getSessionsForUser(context);

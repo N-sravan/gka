@@ -57,6 +57,7 @@ class _ChatViewState extends State<ChatView> {
       StreamController<Uint8List>();
   int prevChatLength = 0;
 
+  ScrollController scrollController = ScrollController();
   bool _isRecording = false;
 
   Map<String, String> currentVoice = {
@@ -72,8 +73,21 @@ class _ChatViewState extends State<ChatView> {
     _initRecorder();
     viewModel = Provider.of<ChatViewModel>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (widget.isFromHistory != null && widget.isFromHistory == true) {
-        await viewModel.getMessageHistoryForSession(widget.sessionId!, context);
+      if (widget.isFromHistory != null &&
+          widget.isFromHistory == true &&
+          widget.sessionId != null &&
+          widget.sessionId!.isNotEmpty) {
+        await viewModel.getMessageHistoryForSession(widget.sessionId, context);
+
+        scrollController.addListener(() {
+          if (scrollController.position.pixels >=
+              scrollController.position.maxScrollExtent - 200) {
+            if (viewModel.hasMoreData && !viewModel.isFetchingMore) {
+              viewModel.getMessageHistoryForSession(widget.sessionId, context,
+                  isLoadMore: true);
+            }
+          }
+        });
       }
     });
   }

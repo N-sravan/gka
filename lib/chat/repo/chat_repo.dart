@@ -43,7 +43,10 @@ abstract class ChatRepository {
       String sessionId, BuildContext context);
 
   Future<ChatHistoryModel> fetchChatHistoryForSession(
-      String sessionId, BuildContext context);
+    String sessionId,
+    BuildContext context,
+    int oldMsgId,
+  );
 
   Future<UserResponseModel> fetchUsers(BuildContext context);
 
@@ -344,24 +347,33 @@ class ChatRepositoryImpl extends ChatRepository {
 
   @override
   Future<ChatHistoryModel> fetchChatHistoryForSession(
-      String sessionId, BuildContext context) async {
-    Map<String, String> authHeaders = {
+      String sessionId, BuildContext context, int oldMessageId) async {
+    final Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
     };
 
-    Map<String, dynamic> params = {
+    // Construct request payload based on pagination
+    final Map<String, dynamic> params = {
       "user_id": AppState.instance.userId,
-      "session_id": sessionId
+      "session_id": sessionId,
+      if (oldMessageId == 0)
+        "k_latest_redis": 20
+      else ...{
+        "older_than_pg_message_id": oldMessageId,
+        "pg_limit": 10,
+      }
     };
-    String authUrl = constants.baseUrl + constants.chatHistoryEndpoint;
-    Object data = jsonEncode(params);
-    var response =
-        await http.post(Uri.parse(authUrl), headers: authHeaders, body: data);
 
-    Map<String, dynamic> responseMap = jsonDecode(response.body);
+    final String authUrl = constants.baseUrl + constants.chatHistoryEndpoint;
+    final response = await http.post(
+      Uri.parse(authUrl),
+      headers: authHeaders,
+      body: jsonEncode(params),
+    );
 
-    ChatHistoryModel chatHistoryModel = ChatHistoryModel.fromJson(responseMap);
-    return chatHistoryModel;
+    final Map<String, dynamic> responseMap = jsonDecode(response.body);
+
+    return ChatHistoryModel.fromJson(responseMap);
   }
 
   @override
@@ -411,7 +423,7 @@ class ChatRepositoryImpl extends ChatRepository {
   Future<bool> deleteSession(BuildContext context, String sessionId) async {
     Map<String, dynamic> params = {
       "user_id": AppState.instance.userId,
-      "session_ids": [sessionId]
+      "session_id": sessionId
     };
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson
@@ -437,7 +449,7 @@ class ChatRepositoryImpl extends ChatRepository {
       BuildContext context, String sessionId, String newId) async {
     Map<String, dynamic> params = {
       "user_id": AppState.instance.userId,
-      "session_id": sessionId,
+      "old_session_id": sessionId,
       "new_session_id": newId
     };
     Map<String, String> authHeaders = {

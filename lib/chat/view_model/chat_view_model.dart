@@ -22,6 +22,7 @@ import 'package:gka/utils/common_constants.dart' as constants;
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:uuid/uuid.dart';
 import 'package:web_socket_channel/io.dart';
@@ -130,6 +131,7 @@ class ChatViewModel extends LoadingViewModel {
   String tempStreamingText = '';
   bool isFetchingMore = false;
   bool hasMoreData = true;
+  int oldMsgId = 0;
 
   int currentPage = 1;
   final int pageSize = 10;
@@ -176,6 +178,8 @@ class ChatViewModel extends LoadingViewModel {
   Map<String, int> stepTimings = {};
   int? startTime;
   bool includeDetails = true;
+
+  String? currentTtsMessage;
 
   // ValueNotifiers for the thinking container
   ValueNotifier<bool> isQueryProcessing = ValueNotifier<bool>(false);
@@ -906,16 +910,32 @@ class ChatViewModel extends LoadingViewModel {
     userActivity = newValue!;
   }
 
-  Future? getMessageHistoryForSession(
-      String sessionId, BuildContext context) async {
+  Future? getMessageHistoryForSession(String? sessionId, BuildContext context,
+      {bool isLoadMore = false}) async {
     if (await networkUtils.hasActiveInternet()) {
-      isLoading = true;
+      if (isFetchingMore || (!hasMoreData && isLoadMore)) return;
+
+      if (isLoadMore) {
+        isFetchingMore = true;
+      } else {
+        isLoading = true;
+        hasMoreData = true;
+        oldMsgId = 0;
+        messages.clear();
+      }
+      notifyListeners();
       try {
-        ChatHistoryModel chatHistoryModel =
-            await repo.fetchChatHistoryForSession(sessionId, context);
+        ChatHistoryModel chatHistoryModel = await repo
+            .fetchChatHistoryForSession(sessionId!, context, oldMsgId);
         chatHistoryModel.data.sort((a, b) =>
             DateTime.parse(a.createdAt).compareTo(DateTime.parse(b.createdAt)));
         if (chatHistoryModel.data.isNotEmpty) {
+          int leastMessageId = chatHistoryModel.data
+              .map((msg) => msg.messageId)
+              .reduce((a, b) => a < b ? a : b);
+
+          print('Least messageId: $leastMessageId');
+          oldMsgId = leastMessageId;
           for (ChatMessageHistoryModel item in chatHistoryModel.data) {
             messages.add({
               'text': item.text,
@@ -1029,7 +1049,6 @@ class ChatViewModel extends LoadingViewModel {
               'timestamp': item.timestamp
             });
           }
-          ;
         }
         isLoading = false;
         notifyListeners();
@@ -1070,10 +1089,12 @@ class ChatViewModel extends LoadingViewModel {
 
       try {
         // Call paginated API with current page and size
-        UserSessionModel userSessionModel = await repo.fetchUserSessions(currentPage, pageSize);
+        UserSessionModel userSessionModel =
+            await repo.fetchUserSessions(currentPage, pageSize);
 
         if (userSessionModel.data.isNotEmpty) {
-          userSessionModel.data.sort((a, b) => DateTime.parse(b.insertTs).compareTo(DateTime.parse(a.insertTs)));
+          userSessionModel.data.sort((a, b) =>
+              DateTime.parse(b.insertTs).compareTo(DateTime.parse(a.insertTs)));
 
           for (var item in userSessionModel.data) {
             sessionIdDataMapping[item.sessionId] = item.insertTs;
@@ -1086,7 +1107,8 @@ class ChatViewModel extends LoadingViewModel {
         } else {
           hasMoreData = false;
         }
-        debugPrint("sessionIdDataMapping length - ${sessionIdDataMapping.length}");
+        debugPrint(
+            "sessionIdDataMapping length - ${sessionIdDataMapping.length}");
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text(constants.genericErrorMsg),
@@ -1723,26 +1745,15 @@ class ChatViewModel extends LoadingViewModel {
     }
   }
 
-  resembleAItts(
-      String cleanedText, String messageText, BuildContext context) async {
+  resembleAItts(String ttsText, BuildContext context) async {
     if (await networkUtils.hasActiveInternet()) {
       try {
-        String plainText = _extractPlainText(cleanedText.trim());
+        String plainText = _extractPlainText(ttsText.trim());
         final body = {"text": plainText};
         String? base64Audio = await repo.fetchResembleAItts(body);
 
         if (base64Audio != null && base64Audio.isNotEmpty) {
           Uint8List audioBytes = base64Decode(base64Audio);
-          /*   isQueryProcessing.value = false;
-          showLoader.value = false;
-          notifyListeners();
-          messages.add({
-            'text': cleanedText,
-            'is_user': false,
-            'timestamp': DateTime.now().toIso8601String(),
-            'processing_steps':
-                processingSteps.map((step) => step.toJson()).toList(),
-          });*/
           await player.play(BytesSource(audioBytes));
         } else {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -1766,10 +1777,9 @@ class ChatViewModel extends LoadingViewModel {
     }
   }
 
-  Future<void> ttsResponse(
-      String cleanedText, String messageText, BuildContext context) async {
+  Future<void> ttsResponse(String ttsText, BuildContext context) async {
     String targetLanguage = AppState.instance.isEnglish ? 'en' : 'te';
-    String plainText = _extractPlainText(cleanedText.trim());
+    String plainText = _extractPlainText(ttsText.trim());
 
     if (await networkUtils.hasActiveInternet()) {
       try {
@@ -1815,7 +1825,7 @@ class ChatViewModel extends LoadingViewModel {
             showLoader.value = false;
             notifyListeners();
             messages.add({
-              'text': messageText.toString(),
+              'text': response.toString(),
               'is_user': false,
               'timestamp': DateTime.now().toIso8601String(),
               'processing_steps':
@@ -1929,8 +1939,6 @@ class ChatViewModel extends LoadingViewModel {
       'image_url': imageUrl
     };
 
-    debugPrint("Query Stream request body : $requestBody");
-
     if (!AppState.instance.isEnglish) {
       String translatorEngine = '';
       if (AppState.instance.transMode == 'Bhashini') {
@@ -1945,7 +1953,9 @@ class ChatViewModel extends LoadingViewModel {
       requestBody['translation_engine'] = translatorEngine;
     }
 
-    const apiUrl = 'https://apaims2.0.vassarlabs.com/chatbot/chat/query-stream';
+    debugPrint("Query Stream request body : $requestBody");
+
+    String apiUrl = constants.baseUrl + constants.queryStreamEndpoint;
 
     try {
       final client = http.Client();
@@ -2174,16 +2184,14 @@ class ChatViewModel extends LoadingViewModel {
   }
 
   /// Complete the processing workflow
-  void _completeProcessing(bool success, BuildContext context,
-      [String? finalAnswer]) {
+  Future<void> _completeProcessing(bool success, BuildContext context,
+      [String? finalAnswer]) async {
     isQueryProcessing.value = false;
     showLoader.value = false;
 
     if (success && finalAnswer != null) {
-      print("12345 Final Answer from Response: $finalAnswer");
       String? imageUrl = extractImageUrl(finalAnswer);
 
-      print("12345 Image Url: $imageUrl");
       finalAnswer = finalAnswer.replaceAll(
           RegExp(
               r'^.*https:\/\/minio\.apaims2\.0\.vassarlabs\.com\/[^\s]+\.jpeg.*$',
@@ -2191,6 +2199,7 @@ class ChatViewModel extends LoadingViewModel {
           '');
       finalAnswer =
           finalAnswer.replaceAll(RegExp(r'\n\s*\n+', multiLine: true), '\n\n');
+
       // Add assistant response to messages
       messages.add({
         'text': finalAnswer.trim(),
@@ -2200,9 +2209,6 @@ class ChatViewModel extends LoadingViewModel {
         'processing_steps':
             processingSteps.map((step) => step.toJson()).toList(),
       });
-
-      // Handle TTS if needed (we'll need to pass context through the method chain)
-      // _handleTTSResponse(finalAnswer, context);
     } else if (!success) {
       messages.add({
         'text':
@@ -2213,42 +2219,34 @@ class ChatViewModel extends LoadingViewModel {
             processingSteps.map((step) => step.toJson()).toList(),
       });
     }
-
     notifyListeners();
   }
 
   /// Handle TTS response
-  Future<void> handleTTSResponse(
-      String messageText, BuildContext context) async {
-    print(
-        "AppState.instance.ttsMode.toLowerCase() : ${AppState.instance.ttsMode.toLowerCase()}");
-    bool hasEnglishSource = RegExp(r'\(Source:.*?\)').hasMatch(messageText);
-    bool hasTeluguSource = RegExp(r'\(మూలం:.*?\)').hasMatch(messageText);
+  Future<void> handleTTSResponse(String response, BuildContext context) async {
+    bool hasEnglishSource = RegExp(r'\(Source:.*?\)').hasMatch(response);
+    bool hasTeluguSource = RegExp(r'\(మూలం:.*?\)').hasMatch(response);
     String noSourceText = '';
 
     if (hasEnglishSource) {
-      noSourceText = messageText.replaceAll(RegExp(r'\s*\(Source:.*?\)'), '');
+      noSourceText = response.replaceAll(RegExp(r'\s*\(Source:.*?\)'), '');
     } else if (hasTeluguSource) {
-      noSourceText = messageText.replaceAll(RegExp(r'\s*\(మూలం:.*?\)'), '');
+      noSourceText = response.replaceAll(RegExp(r'\s*\(మూలం:.*?\)'), '');
     } else {
-      noSourceText = messageText;
+      noSourceText = response;
     }
 
-    final cleanedText = cleanTextForTts(noSourceText);
+    final ttsText = cleanTextForTts(noSourceText);
 
-    if (noSourceText.toString().isNotEmpty &&
-        messageText.toString().isNotEmpty) {
+    if (noSourceText.toString().isNotEmpty && response.toString().isNotEmpty) {
       if (AppState.instance.ttsMode.toLowerCase() == 'bhashini') {
-        print("12345 BHASINI");
-        await ttsResponse(cleanedText, messageText, context);
+        await ttsResponse(ttsText, context);
       }
       if (AppState.instance.ttsMode.toLowerCase() == 'native') {
-        print("12345 NATIVE");
-        await nativeTTS(cleanedText, messageText);
+        await nativeTTS(ttsText);
       }
       if (AppState.instance.ttsMode.toLowerCase() == 'resemble ai') {
-        print("12345 RESEMBLE AI");
-        await resembleAItts(cleanedText, messageText, context);
+        await resembleAItts(ttsText, context);
       }
     }
   }
@@ -2431,7 +2429,7 @@ class ChatViewModel extends LoadingViewModel {
     notifyListeners();
   }
 
-  nativeTTS(String cleanedText, String messageText) async {
+  nativeTTS(String ttsText) async {
     /* isQueryProcessing.value = false;
     showLoader.value = false;
     notifyListeners();
@@ -2441,7 +2439,7 @@ class ChatViewModel extends LoadingViewModel {
       'timestamp': DateTime.now().toIso8601String(),
       'processing_steps': processingSteps.map((step) => step.toJson()).toList(),
     });*/
-    String plainText = _extractPlainText(cleanedText.trim());
+    String plainText = _extractPlainText(ttsText.trim());
     await tts.setLanguage(langId);
     await tts.setVoice(currentVoice);
     await tts.setSpeechRate(0.5);
@@ -2479,5 +2477,22 @@ class ChatViewModel extends LoadingViewModel {
       await player.release();
     }
     notifyListeners();
+  }
+
+  List<String> _splitIntoChunks(String text, {int maxLen = 150}) {
+    List<String> chunks = [];
+    String current = "";
+
+    for (String sentence in text.split(RegExp(r'(?<=[.?!])\s+'))) {
+      if ((current + sentence).length > maxLen) {
+        chunks.add(current.trim());
+        current = sentence;
+      } else {
+        current += " $sentence";
+      }
+    }
+
+    if (current.trim().isNotEmpty) chunks.add(current.trim());
+    return chunks;
   }
 }
