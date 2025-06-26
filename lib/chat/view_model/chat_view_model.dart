@@ -1648,7 +1648,6 @@ class ChatViewModel extends LoadingViewModel {
               '[STREAMING TTS] Final answer received - completing streaming TTS');
           // Process any remaining content and mark as complete
           streamingText = event.finalAnswer;
-          isStreamingTtsActive = false;
         }
         break;
     }
@@ -1658,6 +1657,11 @@ class ChatViewModel extends LoadingViewModel {
         streamingText.isNotEmpty &&
         isStreamingTtsActive) {
       await handleStreamingTTS(streamingText, context);
+    }
+    
+    // Mark streaming TTS as inactive after processing final answer
+    if (event.step == 'complete' && event.finalAnswer != null && event.finalAnswer!.isNotEmpty) {
+      isStreamingTtsActive = false;
     }
   }
 
