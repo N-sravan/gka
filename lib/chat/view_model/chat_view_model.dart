@@ -1261,9 +1261,6 @@ class ChatViewModel extends LoadingViewModel {
     String targetLanguage = AppState.instance.isEnglish ? 'en' : 'te';
     String plainText = _extractPlainText(ttsText.trim());
 
-    print('TTS payload :: Input text: "$ttsText"');
-    print('TTS payload :: Plain text: "$plainText"');
-
     if (await networkUtils.hasActiveInternet()) {
       try {
         final body = {
@@ -1284,39 +1281,43 @@ class ChatViewModel extends LoadingViewModel {
             ]
           }
         };
-        
-        print('TTS payload :: ${jsonEncode(body)}');
+
         final pipelineResponse = await repo.fetchTTSconfig(body);
+
         if (pipelineResponse.isNotEmpty) {
-          // Extract base64 audio from TTS task
           final ttsTask = pipelineResponse.firstWhere(
-            (task) => task['taskType'] == 'tts',
+                (task) => task['taskType'] == 'tts',
             orElse: () => null,
           );
           final List<dynamic>? audioList = ttsTask?['audio'];
-          if (audioList != null && audioList.isNotEmpty) {
-            String content = audioList[0]['audioContent'];
-            print("audio content : $content");
-          }
           final String? base64Audio = audioList != null &&
-                  audioList.isNotEmpty &&
-                  audioList[0]['audioContent'] != null
+              audioList.isNotEmpty &&
+              audioList[0]['audioContent'] != null
               ? audioList[0]['audioContent'].toString()
               : null;
 
           if (base64Audio != null) {
             Uint8List audioBytes = base64Decode(base64Audio);
-            /* isQueryProcessing.value = false;
-            showLoader.value = false;
-            notifyListeners();
-            messages.add({
-              'text': response.toString(),
-              'is_user': false,
-              'timestamp': DateTime.now().toIso8601String(),
-              'processing_steps':
-                  processingSteps.map((step) => step.toJson()).toList(),
-            });*/
+
+            ///stop any current audio before playing new
+            await player.stop();
+
+            /// Use Completer to await completion
+            final completer = Completer<void>();
+
+            StreamSubscription? subscription;
+
+            subscription = player.onPlayerComplete.listen((event) {
+              if (!completer.isCompleted) {
+                completer.complete();
+              }
+              subscription?.cancel();
+            });
+
             await player.play(BytesSource(audioBytes));
+
+            //  Wait until audio finishes
+            await completer.future;
           } else {
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
               content: Text(constants.genericErrorMsg),
@@ -1390,7 +1391,6 @@ class ChatViewModel extends LoadingViewModel {
     });
 
 
-    debugPrint("messages : $messages");
     capturedPhoto = null;
     chatController.clear();
     isQueryProcessing.value = true;
@@ -1735,7 +1735,7 @@ class ChatViewModel extends LoadingViewModel {
             processingSteps.map((step) => step.toJson()).toList(),
       });
 
-      await handleFinalResponseTTS(finalAnswer, context);
+      // await handleFinalResponseTTS(finalAnswer, context);
 
       // Trigger auto speech for AI response
       await handleTTSResponse(finalAnswer.trim(), context);
@@ -1785,29 +1785,65 @@ class ChatViewModel extends LoadingViewModel {
 
   /// Handle chunk-wise TTS processing
   Future<void> handleChunkwiseTTS(String text, BuildContext context) async {
-    final chunks = _splitIntoChunks(text, maxLen: 200);
-    
+    final chunks = _splitIntoChunks(text, wordsPerChunk: 10);
+
     print('[CHUNKWISE TTS] Split into ${chunks.length} chunks:');
-    for (int i = 0; i < chunks.length; i++) {
-      print('[CHUNKWISE TTS] Chunk ${i + 1}: "${chunks[i]}"');
-    }
+    final audioChunks = await fetchAllAudioChunks(chunks, context);
+    await playAudioChunksSequentially(audioChunks);
+  }
+
+  Future<List<Uint8List>> fetchAllAudioChunks(List<String> chunks, BuildContext context) async {
+    List<Uint8List> audioChunks = [];
 
     for (String chunk in chunks) {
-      // Check if speech should be stopped
       if (!AppState.instance.autoSpeechEnabled) break;
 
-      if (AppState.instance.ttsMode.toLowerCase() == 'bhashini') {
-        await ttsResponse(chunk, context);
-      } else if (AppState.instance.ttsMode.toLowerCase() == 'native') {
-        await nativeTTS(chunk);
-      } else if (AppState.instance.ttsMode.toLowerCase() == 'resemble ai') {
-        await resembleAItts(chunk, context);
-      }
+      String targetLanguage = AppState.instance.isEnglish ? 'en' : 'te';
+      String plainText = _extractPlainText(chunk.trim());
 
-      // Small delay between chunks to ensure smooth playback
-      await Future.delayed(const Duration(milliseconds: 300));
+      final body = {
+        "pipelineTasks": [
+          {
+            "taskType": "tts",
+            "config": {
+              "language": {"sourceLanguage": targetLanguage},
+              "serviceId": constants.ttsServiceId,
+              "gender": "female",
+              "samplingRate": 8000
+            }
+          }
+        ],
+        "inputData": {
+          "input": [
+            {"source": plainText}
+          ]
+        }
+      };
+
+      final pipelineResponse = await repo.fetchTTSconfig(body);
+
+      if (pipelineResponse.isNotEmpty) {
+        final ttsTask = pipelineResponse.firstWhere(
+              (task) => task['taskType'] == 'tts',
+          orElse: () => null,
+        );
+        final List<dynamic>? audioList = ttsTask?['audio'];
+        final String? base64Audio = audioList != null &&
+            audioList.isNotEmpty &&
+            audioList[0]['audioContent'] != null
+            ? audioList[0]['audioContent'].toString()
+            : null;
+
+        if (base64Audio != null) {
+          Uint8List audioBytes = base64Decode(base64Audio);
+          audioChunks.add(audioBytes);
+        }
+      }
     }
+
+    return audioChunks;
   }
+
 
   /// Handle full text TTS processing (no chunking)  
   Future<void> handleFullTextTTS(String text, BuildContext context) async {
@@ -2177,65 +2213,17 @@ class ChatViewModel extends LoadingViewModel {
     notifyListeners();
   }
 
-  List<String> _splitIntoChunks(String text, {int maxLen = 150}) {
+  List<String> _splitIntoChunks(String text, {int wordsPerChunk = 10}) {
+    List<String> words = text.trim().split(RegExp(r'\s+'));
     List<String> chunks = [];
-    
-    // Split by sentences first
-    List<String> sentences = text.split(RegExp(r'(?<=[.!?])\s+'));
-    
-    for (String sentence in sentences) {
-      if (sentence.trim().isNotEmpty) {
-        List<String> words = sentence.trim().split(RegExp(r'\s+'));
-        
-        // If sentence has more than 15 words or exceeds maxLen, split further
-        if (words.length > 15 || sentence.length > maxLen) {
-          // Split at natural break points (commas, semicolons, colons)
-          List<String> phrases = sentence.split(RegExp(r'[,;:]\s+'));
-          
-          String currentChunk = '';
-          for (String phrase in phrases) {
-            if (phrase.trim().isNotEmpty) {
-              String testChunk = currentChunk.isEmpty ? phrase.trim() : '$currentChunk, ${phrase.trim()}';
-              List<String> testWords = testChunk.split(RegExp(r'\s+'));
-              
-              if (testWords.length <= 15 && testChunk.length <= maxLen) {
-                currentChunk = testChunk;
-              } else {
-                // Add current chunk and start new one
-                if (currentChunk.isNotEmpty) {
-                  chunks.add(currentChunk);
-                }
-                currentChunk = phrase.trim();
-              }
-            }
-          }
-          // Add remaining chunk
-          if (currentChunk.isNotEmpty) {
-            chunks.add(currentChunk);
-          }
-        } else if (words.length >= 3) {
-          // Good size sentence - add as single chunk
-          chunks.add(sentence.trim());
-        }
-      }
+
+    for (int i = 0; i < words.length; i += wordsPerChunk) {
+      int end = (i + wordsPerChunk < words.length) ? i + wordsPerChunk : words.length;
+      String chunk = words.sublist(i, end).join(' ');
+      chunks.add(chunk);
     }
-    
-    // Merge very small chunks (< 3 words) with adjacent chunks
-    List<String> optimizedChunks = [];
-    for (int i = 0; i < chunks.length; i++) {
-      String chunk = chunks[i];
-      List<String> chunkWords = chunk.split(RegExp(r'\s+'));
-      
-      if (chunkWords.length < 3 && optimizedChunks.isNotEmpty) {
-        // Small chunk - merge with previous
-        String lastChunk = optimizedChunks.removeLast();
-        optimizedChunks.add('$lastChunk $chunk');
-      } else {
-        optimizedChunks.add(chunk);
-      }
-    }
-    
-    return optimizedChunks;
+
+    return chunks;
   }
 
   /// Handle complete final response - process based on user's TTS mode preference
@@ -2395,4 +2383,26 @@ class ChatViewModel extends LoadingViewModel {
     
     notifyListeners(); // This will trigger UI updates in all ChatBubbles
   }
+
+  Future<void> playAudioChunksSequentially(List<Uint8List> audioChunks) async {
+    for (final audioBytes in audioChunks) {
+      if (!AppState.instance.autoSpeechEnabled) break;
+
+      await player.stop();
+
+      final completer = Completer<void>();
+      StreamSubscription? subscription;
+
+      subscription = player.onPlayerComplete.listen((event) {
+        if (!completer.isCompleted) {
+          completer.complete();
+        }
+        subscription?.cancel();
+      });
+
+      await player.play(BytesSource(audioBytes));
+      await completer.future;
+    }
+  }
+
 }
