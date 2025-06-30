@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import '../../video_player_widget.dart';
 import '../model/processing_step_model.dart';
+import '../model/video_data_model.dart';
 
 class ThinkingContainerWidget extends StatefulWidget {
   final List<ProcessingStepModel> steps;
@@ -94,7 +96,6 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
         _rotationController.forward();
       }
     });
-    // Don't call onToggle here as it should not hide the container
   }
 
   @override
@@ -173,7 +174,7 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '${widget.steps.length} steps • ${widget.totalDuration/1000}s',
+                    '${widget.steps.length} steps • ${widget.totalDuration / 1000}s',
                     style: TextStyle(
                       fontSize: 11,
                       color: Colors.grey[600],
@@ -265,6 +266,7 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
   }
 
   Widget _buildStepItem(ProcessingStepModel step) {
+    print("step - ${step.displayName} message - ${step.message}");
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
@@ -309,21 +311,23 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
             ],
           ),
           const SizedBox(height: 4),
-          Row(
-            children: [
-              _buildStatusIndicator(step.status),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  step.message,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.grey[700],
-                  ),
-                ),
-              ),
-            ],
-          ),
+          step.name.toLowerCase() != 'citation'
+              ? Row(
+                  children: [
+                    _buildStatusIndicator(step.status),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        step.message.toString(),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : SizedBox(),
           if (widget.includeDetails && step.details != null)
             _buildStepDetails(step),
         ],
@@ -499,7 +503,7 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
             ],
           ),
           const SizedBox(height: 6),
-          _buildFormattedValue(value),
+          _buildFormattedValue(key, value),
         ],
       ),
     );
@@ -564,7 +568,7 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
         .join(' ');
   }
 
-  Widget _buildFormattedValue(dynamic value) {
+  Widget _buildFormattedValue(String key, dynamic value) {
     if (value is String) {
       // Check if string contains structured data
       if (_isTableData(value) || _isStructuredTableData(value)) {
@@ -579,8 +583,8 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
       return _buildNumericValue(value);
     } else if (value is Map) {
       return _buildMapValue(value);
-    } else if (value is List) {
-      return _buildListValue(value);
+    } else if (key == 'video_data') {
+      return _buildVideoThumbnailsFromUrls(value);
     } else {
       return Text(
         value.toString(),
@@ -1328,7 +1332,7 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
             ),
           ),
           Text(
-            '${widget.totalDuration/1000}s',
+            '${widget.totalDuration / 1000}s',
             style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -1338,6 +1342,64 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
           ),
         ],
       ),
+    );
+  }
+
+  Duration _parseDuration(String? timeStr) {
+    if (timeStr == null) return Duration.zero;
+    final parts = timeStr.split(':').map(int.parse).toList();
+    return Duration(
+      hours: parts.length == 3 ? parts[0] : 0,
+      minutes: parts.length >= 2 ? parts[parts.length - 2] : 0,
+      seconds: parts.last,
+    );
+  }
+
+  void _showVideoDialog(VideoDataModel videoData) {
+    final startDuration = _parseDuration(videoData.startTime);
+    final endDuration = _parseDuration(videoData.endTime);
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        child: AspectRatio(
+          aspectRatio: 16 / 9,
+          child: VideoPlayerWidget(
+            url: videoData.url!,
+            start: startDuration,
+            end: endDuration,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVideoThumbnailCard(VideoDataModel videoData) {
+    return GestureDetector(
+      onTap: () => _showVideoDialog(videoData),
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child:  Center(
+            child: Icon(Icons.play_circle_fill, size: 30,color: Colors.green),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVideoThumbnailsFromUrls(List<VideoDataModel> videoDataList) {
+    final uniqueVideoData = videoDataList.toSet().toList();
+
+    return Wrap(
+      spacing: 8.0, // horizontal spacing
+      runSpacing: 8.0, // vertical spacing
+      children: uniqueVideoData.map((videoData) {
+        return _buildVideoThumbnailCard(videoData);
+      }).toList(),
     );
   }
 }

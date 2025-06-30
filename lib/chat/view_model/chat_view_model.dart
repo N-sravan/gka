@@ -16,6 +16,7 @@ import 'package:gka/chat/model/get_documents_response.dart';
 import 'package:gka/chat/model/get_users_response.dart';
 import 'package:gka/chat/model/sse_event_model.dart';
 import 'package:gka/chat/model/processing_step_model.dart';
+import 'package:gka/chat/model/video_data_model.dart';
 import 'package:gka/shared/loading_view_model.dart';
 import 'package:gka/utils/app_state.dart';
 import 'package:gka/utils/common_constants.dart' as constants;
@@ -1420,7 +1421,7 @@ class ChatViewModel extends LoadingViewModel {
       'session_id': sessionId,
       'user_id': AppState.instance.userId,
       'language': AppState.instance.isEnglish ? 'en' : 'te',
-      'retrieval_type': 'vector',
+      'retrieval_type': 'vassar_digital_retrieval',
       'include_details': includeDetails,
       'image_url': imageUrl
     };
@@ -1652,13 +1653,13 @@ class ChatViewModel extends LoadingViewModel {
         break;
     }
 
-    // Trigger streaming TTS if we have content
+    /*// Trigger streaming TTS if we have content
     if (streamingText != null &&
         streamingText.isNotEmpty &&
         isStreamingTtsActive) {
       await handleStreamingTTS(streamingText, context);
-    }
-    
+    }*/
+
     // Mark streaming TTS as inactive after processing final answer
     if (event.step == 'complete' && event.finalAnswer != null && event.finalAnswer!.isNotEmpty) {
       isStreamingTtsActive = false;
@@ -1670,7 +1671,7 @@ class ChatViewModel extends LoadingViewModel {
     String stepName,
     String displayName,
     StepStatus status,
-    String message, {
+    dynamic message, {
     int? duration,
     Map<String, dynamic>? details,
   }) {
@@ -1735,8 +1736,6 @@ class ChatViewModel extends LoadingViewModel {
             processingSteps.map((step) => step.toJson()).toList(),
       });
 
-      // await handleFinalResponseTTS(finalAnswer, context);
-
       // Trigger auto speech for AI response
       await handleTTSResponse(finalAnswer.trim(), context);
     } else if (!success) {
@@ -1761,15 +1760,15 @@ class ChatViewModel extends LoadingViewModel {
     bool hasTeluguSource = RegExp(r'\(మూలం:.*?\)').hasMatch(response);
     String noSourceText = '';
 
-    if (hasEnglishSource) {
+    /* if (hasEnglishSource) {
       noSourceText = response.replaceAll(RegExp(r'\s*\(Source:.*?\)'), '');
     } else if (hasTeluguSource) {
       noSourceText = response.replaceAll(RegExp(r'\s*\(మూలం:.*?\)'), '');
     } else {
       noSourceText = response;
-    }
+    }*/
 
-    final ttsText = cleanTextForTts(noSourceText);
+    final ttsText = sanitizeTextForTTS(noSourceText);
 
     if (noSourceText.toString().isNotEmpty && response.toString().isNotEmpty) {
       // Use processing mode based on user setting
@@ -1845,10 +1844,10 @@ class ChatViewModel extends LoadingViewModel {
   }
 
 
-  /// Handle full text TTS processing (no chunking)  
+  /// Handle full text TTS processing (no chunking)
   Future<void> handleFullTextTTS(String text, BuildContext context) async {
     print('[FULL TEXT TTS] Processing entire text: "${text.substring(0, text.length.clamp(0, 100))}${text.length > 100 ? '...' : ''}"');
-    
+
     if (AppState.instance.ttsMode.toLowerCase() == 'bhashini') {
       await ttsResponse(text, context);
     } else if (AppState.instance.ttsMode.toLowerCase() == 'native') {
@@ -1872,7 +1871,7 @@ class ChatViewModel extends LoadingViewModel {
     lastTtsChunkTime = currentTime;
 
     // Clean the buffer text for TTS
-    String cleanedBuffer = cleanTextForTts(streamingTtsBuffer);
+    String cleanedBuffer = sanitizeTextForTTS(streamingTtsBuffer);
 
     // Check user's TTS processing mode preference
     if (AppState.instance.ttsChunkedMode) {
@@ -1934,12 +1933,12 @@ class ChatViewModel extends LoadingViewModel {
         // Split the sentence into optimal chunks
         List<String> chunks = _splitResponseIntoTTSChunks(text);
         print('[STREAMING TTS] Split sentence into ${chunks.length} chunks');
-        
+
         for (String chunk in chunks) {
           if (!AppState.instance.autoSpeechEnabled) break;
-          
+
           print('[STREAMING TTS CHUNK] Speaking: "$chunk"');
-          
+
           if (AppState.instance.ttsMode.toLowerCase() == 'bhashini') {
             await ttsResponse(chunk, context);
           } else if (AppState.instance.ttsMode.toLowerCase() == 'native') {
@@ -1947,7 +1946,7 @@ class ChatViewModel extends LoadingViewModel {
           } else if (AppState.instance.ttsMode.toLowerCase() == 'resemble ai') {
             await resembleAItts(chunk, context);
           }
-          
+
           // Small delay between chunks
           await Future.delayed(const Duration(milliseconds: 100));
         }
@@ -2051,6 +2050,18 @@ class ChatViewModel extends LoadingViewModel {
         }
         break;
 
+      case 'date_extraction':
+        if (event.message.isNotEmpty) {
+          details['date_extraction'] = event.modelUsed;
+        }
+        break;
+
+      case 'location_extraction':
+        if (event.message.isNotEmpty) {
+          details['location_extraction'] = event.modelUsed;
+        }
+        break;
+
       case 'vision_processing':
         if (event.imagesProcessed != null) {
           details['images_processed'] = event.imagesProcessed;
@@ -2068,12 +2079,47 @@ class ChatViewModel extends LoadingViewModel {
           details['results_count'] = event.resultsCount;
         }
         break;
+
+      case 'citation':
+        print("citation event message : ${event.message}");
+        if (event.message != null) {
+          try {
+            final message = event.message;
+
+            final videoMetadata = message['video_metadata'] as List<dynamic>?;
+
+            if (videoMetadata != null) {
+              const baseUrl =
+                  'https://minio.apaims2.0.vassarlabs.com/genai/cms/';
+              List<VideoDataModel> videoDataList = [];
+
+              for (final item in videoMetadata) {
+                if (item is Map<String, dynamic>) {
+                  final source = item['source'];
+                  final start = item['start'];
+                  final end = item['end'];
+                  if (source != null && source.toString().toLowerCase().endsWith('.mp4')) {
+                    final encodedSource = Uri.encodeComponent(source.toString());
+                    final videoUrl = '$baseUrl$encodedSource';
+                    videoDataList.add(VideoDataModel(videoUrl, start, end));
+                  }
+                }
+              }
+
+              details['video_data'] = videoDataList;
+            }
+          } catch (e) {
+            Fluttertoast.showToast(msg: 'Failed to decode citation message $e');
+          }
+        }
+        break;
     }
 
     // Add error details
     if (event.error != null) {
       details['error'] = event.error.toString();
     }
+    print("details : ${details}");
 
     return details.isNotEmpty ? details : null;
   }
@@ -2172,7 +2218,8 @@ class ChatViewModel extends LoadingViewModel {
     await tts.speak(plainText);
   }
 
-  String cleanTextForTts(String input) {
+/*
+  String removeIconsForTts(String input) {
     // Removes emojis and symbols
     return input
         .replaceAll(
@@ -2192,6 +2239,60 @@ class ChatViewModel extends LoadingViewModel {
         )
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim(); // Clean extra spaces
+  }
+*/
+
+  String sanitizeTextForTTS(String input) {
+    // Step 1: Remove emojis and symbols
+    input = input.replaceAll(
+      RegExp(
+        r'[\u{1F600}-\u{1F64F}' // Emoticons
+        r'\u{1F300}-\u{1F5FF}' // Misc Symbols and Pictographs
+        r'\u{1F680}-\u{1F6FF}' // Transport and Map Symbols
+        r'\u{2600}-\u{26FF}' // Misc symbols
+        r'\u{2700}-\u{27BF}' // Dingbats
+        r'\u{FE00}-\u{FE0F}' // Variation Selectors
+        r'\u{1F900}-\u{1F9FF}' // Supplemental Symbols and Pictographs
+        r'\u{1FA70}-\u{1FAFF}' // Symbols and Pictographs Extended-A
+        r'\u{200D}' // Zero Width Joiner
+        r']+',
+        unicode: true,
+      ),
+      '',
+    );
+
+    // Step 2: Remove English and Telugu source tags
+    input = input
+        .replaceAll(RegExp(r'\s*\(Source:.*?\)', caseSensitive: false), '')
+        .replaceAll(RegExp(r'\s*\(మూలం:.*?\)'), '');
+
+    // Step 3: Remove *, **, !, and bullets
+    input = input
+        .replaceAll(RegExp(r'\*+'), '') // Remove * or **
+        .replaceAll('•', '') // Remove bullets
+        .replaceAll(RegExp(r'!+'), '') // Remove multiple exclamations
+        .replaceAll(RegExp(r'-+'), ' '); // Replace dashes with space
+
+    // Step 4: Replace abbreviations with full forms
+    input = input
+        .replaceAllMapped(
+            RegExp(r'\bmm\b', caseSensitive: false), (_) => 'millimeters')
+        .replaceAllMapped(RegExp(r'°C\b'), (_) => 'Celsius')
+        .replaceAllMapped(
+            RegExp(r'\bHa\b', caseSensitive: false), (_) => 'hectares')
+        .replaceAllMapped(
+            RegExp(r'\bHect\b', caseSensitive: false), (_) => 'hectares')
+        .replaceAllMapped(
+            RegExp(r'\bQtl\b', caseSensitive: false), (_) => 'quintal')
+        .replaceAllMapped(
+            RegExp(r'\b(Rs|INR)\b', caseSensitive: false), (_) => 'rupees')
+        .replaceAllMapped(RegExp(r'\bm/s\b', caseSensitive: false),
+            (_) => 'meter per second');
+
+    // Step 5: Clean up extra spaces
+    input = input.replaceAll(RegExp(r'\s{2,}'), ' ').trim();
+
+    return input;
   }
 
   Future<void> stopSpeaking() async {
@@ -2229,25 +2330,25 @@ class ChatViewModel extends LoadingViewModel {
   /// Handle complete final response - process based on user's TTS mode preference
   Future<void> handleFinalResponseTTS(String completeResponse, BuildContext context) async {
     if (!AppState.instance.autoSpeechEnabled || completeResponse.trim().isEmpty) return;
-    
+
     // Clean the complete response text for TTS
-    String cleanedText = cleanTextForTts(completeResponse);
-    
+    String cleanedText = sanitizeTextForTTS(completeResponse);
+
     // Count words in complete response
     List<String> words = cleanedText.trim().split(RegExp(r'\s+'));
-    
+
     // Only process if we have more than 5 words
     if (words.length > 5) {
       if (AppState.instance.ttsChunkedMode) {
         // Chunked processing mode
         print('[CHUNKED TTS] Received complete response: ${completeResponse.length} characters');
         print('[CHUNKED TTS] Complete response has ${words.length} words');
-        
+
         // Split complete response into chunks for faster TTS processing
         List<String> chunks = _splitResponseIntoTTSChunks(cleanedText);
-        
+
         print('[CHUNKED TTS] Split into ${chunks.length} chunks for TTS processing');
-        
+
         // Process each chunk sequentially without waiting for previous to complete
         _processChunksSequentially(chunks, context);
       } else {
@@ -2267,15 +2368,15 @@ class ChatViewModel extends LoadingViewModel {
         print('[CHUNKED TTS] Auto speech disabled, stopping chunk processing');
         break;
       }
-      
+
       String chunk = chunks[i].trim();
       if (chunk.isNotEmpty) {
         streamingTtsChunkCount++;
         print('[CHUNKED TTS] Processing chunk ${i + 1}/${chunks.length}: "$chunk"');
-        
+
         // Start TTS for this chunk immediately (don't await - let it run in background)
         _speakChunkInBackground(chunk, i + 1, context);
-        
+
         // Small delay between starting each chunk to avoid overwhelming TTS service
         await Future.delayed(const Duration(milliseconds: 100));
       }
@@ -2286,7 +2387,7 @@ class ChatViewModel extends LoadingViewModel {
   void _speakChunkInBackground(String chunk, int chunkNumber, BuildContext context) async {
     try {
       print('[CHUNKED TTS] Starting TTS for chunk $chunkNumber: "$chunk"');
-      
+
       if (AppState.instance.ttsMode.toLowerCase() == 'bhashini') {
         await ttsResponse(chunk, context);
       } else if (AppState.instance.ttsMode.toLowerCase() == 'native') {
@@ -2294,7 +2395,7 @@ class ChatViewModel extends LoadingViewModel {
       } else if (AppState.instance.ttsMode.toLowerCase() == 'resemble ai') {
         await resembleAItts(chunk, context);
       }
-      
+
       print('[CHUNKED TTS] Completed TTS for chunk $chunkNumber');
     } catch (e) {
       print('[CHUNKED TTS ERROR] Failed to speak chunk $chunkNumber "$chunk": $e');
@@ -2304,25 +2405,25 @@ class ChatViewModel extends LoadingViewModel {
   /// Split complete response into optimal chunks for TTS processing
   List<String> _splitResponseIntoTTSChunks(String text) {
     List<String> chunks = [];
-    
+
     // First try to split by sentences
     List<String> sentences = text.split(RegExp(r'(?<=[.!?])\s+'));
-    
+
     for (String sentence in sentences) {
       if (sentence.trim().isNotEmpty) {
         List<String> words = sentence.trim().split(RegExp(r'\s+'));
-        
+
         // Optimal chunk size: 8-15 words for natural speech flow
         if (words.length > 15) {
           // Long sentence - split at natural break points
           List<String> phrases = sentence.split(RegExp(r'[,;:]\s+'));
-          
+
           String currentChunk = '';
           for (String phrase in phrases) {
             if (phrase.trim().isNotEmpty) {
               String testChunk = currentChunk.isEmpty ? phrase.trim() : '$currentChunk, ${phrase.trim()}';
               List<String> testWords = testChunk.split(RegExp(r'\s+'));
-              
+
               if (testWords.length <= 15) {
                 currentChunk = testChunk;
               } else {
@@ -2344,14 +2445,14 @@ class ChatViewModel extends LoadingViewModel {
         }
       }
     }
-    
+
     // Merge very small chunks (< 3 words) with next chunk
     List<String> optimizedChunks = [];
     String pendingSmallChunk = '';
-    
+
     for (String chunk in chunks) {
       List<String> chunkWords = chunk.split(RegExp(r'\s+'));
-      
+
       if (chunkWords.length < 3 && optimizedChunks.isNotEmpty) {
         // Small chunk - merge with previous
         String lastChunk = optimizedChunks.removeLast();
@@ -2366,7 +2467,7 @@ class ChatViewModel extends LoadingViewModel {
         }
       }
     }
-    
+
     return optimizedChunks;
   }
 
@@ -2374,13 +2475,13 @@ class ChatViewModel extends LoadingViewModel {
   void updateAutoSpeechSetting(bool enabled) {
     print('[AUTO SPEECH] Setting changed to: $enabled');
     AppState.instance.autoSpeechEnabled = enabled;
-    
+
     if (!enabled) {
       // If auto speech is disabled, stop any current TTS
       stopSpeaking();
       resetStreamingTTS();
     }
-    
+
     notifyListeners(); // This will trigger UI updates in all ChatBubbles
   }
 

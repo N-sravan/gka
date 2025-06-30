@@ -4,7 +4,7 @@ class ProcessingStepModel {
   final String name;
   final String displayName;
   final StepStatus status;
-  final String message;
+  final dynamic message;
   final int? startTime;
   final int? duration;
   final Map<String, dynamic>? details;

@@ -71,7 +71,8 @@ dependencies:
   flutter_sound: ^9.28.0
   record: ^6.0.0
   audioplayers: ^6.4.0
-
+  video_player: ^2.10.0
+  chewie: ^1.11.3
 # flutter pub get
 # flutter pub run flutter_launcher_icons:main
 

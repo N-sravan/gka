@@ -1,7 +1,7 @@
 class SSEEventModel {
   final String step;
   final String status;
-  final String message;
+  final dynamic message;
   final int? timestamp;
   final Map<String, dynamic>? data;
   final String? finalAnswer;
