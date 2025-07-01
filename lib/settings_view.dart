@@ -21,6 +21,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool showChainOfActions = true;
   bool showDetailedMode = true;
   bool autoSpeechEnabled = false;
+  bool vassarDigitalRetrievalEnabled = false;
   bool ttsChunkedMode = true;
 
   final langList = ['English', 'Telugu'];
@@ -40,6 +41,7 @@ class _SettingsPageState extends State<SettingsPage> {
     showChainOfActions = AppState.instance.showChainOfActions;
     showDetailedMode = AppState.instance.showDetailedMode;
     autoSpeechEnabled = AppState.instance.autoSpeechEnabled;
+    vassarDigitalRetrievalEnabled = AppState.instance.vassarDigitalRetrievalEnabled;
     ttsChunkedMode = AppState.instance.ttsChunkedMode;
   }
 
@@ -175,7 +177,23 @@ class _SettingsPageState extends State<SettingsPage> {
                 Fluttertoast.showToast(msg: 'TTS Processing: ${value ? 'Chunked Mode' : 'Full Text Mode'}');
               },
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 32),
+            _buildSectionHeader("Retrieval Type"),
+            const SizedBox(height: 8),
+            _buildToggleItem(
+              "Retrieval Type",
+              "Enable Vassar Digital for citation",
+              vassarDigitalRetrievalEnabled,
+                  (value) {
+                setState(() {
+                  vassarDigitalRetrievalEnabled = value;
+                  AppState.instance.vassarDigitalRetrievalEnabled = value;
+                  print("vassarDigitalRetrievalEnabled :${value}");
+                });
+                Fluttertoast.showToast(msg: 'Vassar Digital Retrieval ${value ? 'Enabled' : 'Disabled'}!');
+              },
+            ),
+            const SizedBox(height: 32),
           ],
         ),
       );

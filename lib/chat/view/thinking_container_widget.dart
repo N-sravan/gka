@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 import '../../video_player_widget.dart';
 import '../model/processing_step_model.dart';
 import '../model/video_data_model.dart';
@@ -1355,37 +1357,69 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
     );
   }
 
-  void _showVideoDialog(VideoDataModel videoData) {
-    final startDuration = _parseDuration(videoData.startTime);
-    final endDuration = _parseDuration(videoData.endTime);
+  void _showVideoDialog(VideoDataModel videoData) async {
+    final startDuration = _parseDuration(videoData.startTime ?? "00:00:00");
+    final endDuration = _parseDuration(videoData.endTime ?? "00:00:00");
+
+    final videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(videoData.url!));
+    await videoPlayerController.initialize();
+    await videoPlayerController.seekTo(startDuration);
+
+    final chewieController = ChewieController(
+      videoPlayerController: videoPlayerController,
+      aspectRatio: 16 / 9,
+      autoPlay: true,
+      looping: false,
+    );
+
+    late final VoidCallback listener;
+
+    listener = () {
+      if (videoPlayerController.value.position >= endDuration) {
+        videoPlayerController.pause();
+      }
+    };
+
+    videoPlayerController.addListener(listener);
 
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        child: AspectRatio(
-          aspectRatio: 16 / 9,
-          child: VideoPlayerWidget(
-            url: videoData.url!,
-            start: startDuration,
-            end: endDuration,
-          ),
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height / 2,
+          child: Chewie(controller: chewieController),
         ),
       ),
-    );
+    ).then((_) {
+      videoPlayerController.removeListener(listener);
+      videoPlayerController.pause();
+      videoPlayerController.dispose();
+      chewieController.dispose();
+    });
   }
 
   Widget _buildVideoThumbnailCard(VideoDataModel videoData) {
     return GestureDetector(
       onTap: () => _showVideoDialog(videoData),
       child: Container(
-        width: 40,
-        height: 40,
+        width: 48,
+        height: 48,
+        margin: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.shade300),
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(10),
+          color: Colors.white,
+          border: Border.all(),
         ),
-        child:  Center(
-            child: Icon(Icons.play_circle_fill, size: 30,color: Colors.green),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Optionally add thumbnail image here if available
+            Icon(
+              Icons.play_circle_outline,
+              color: Colors.green,
+              size: 24,
+            ),
+          ],
         ),
       ),
     );
@@ -1395,8 +1429,8 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
     final uniqueVideoData = videoDataList.toSet().toList();
 
     return Wrap(
-      spacing: 8.0, // horizontal spacing
-      runSpacing: 8.0, // vertical spacing
+      spacing: 8.0, // horizontal space between items
+      runSpacing: 8.0, // vertical space when wrapped to next row
       children: uniqueVideoData.map((videoData) {
         return _buildVideoThumbnailCard(videoData);
       }).toList(),

@@ -51,7 +51,6 @@ class ChatViewModel extends LoadingViewModel {
   int prevChatLength = 0;
 
   int responseCount = 1;
-  String queryString = "";
   String llmType = '';
   File? selectedFile;
   bool isUploading = false;
@@ -976,7 +975,6 @@ class ChatViewModel extends LoadingViewModel {
     return null;
   }
 
-
   Future<bool>? getStreamResponse(
       String sessionId, BuildContext context) async {
     if (await networkUtils.hasActiveInternet()) {
@@ -1287,13 +1285,13 @@ class ChatViewModel extends LoadingViewModel {
 
         if (pipelineResponse.isNotEmpty) {
           final ttsTask = pipelineResponse.firstWhere(
-                (task) => task['taskType'] == 'tts',
+            (task) => task['taskType'] == 'tts',
             orElse: () => null,
           );
           final List<dynamic>? audioList = ttsTask?['audio'];
           final String? base64Audio = audioList != null &&
-              audioList.isNotEmpty &&
-              audioList[0]['audioContent'] != null
+                  audioList.isNotEmpty &&
+                  audioList[0]['audioContent'] != null
               ? audioList[0]['audioContent'].toString()
               : null;
 
@@ -1391,7 +1389,6 @@ class ChatViewModel extends LoadingViewModel {
       'timestamp': DateTime.now().toIso8601String(),
     });
 
-
     capturedPhoto = null;
     chatController.clear();
     isQueryProcessing.value = true;
@@ -1421,7 +1418,9 @@ class ChatViewModel extends LoadingViewModel {
       'session_id': sessionId,
       'user_id': AppState.instance.userId,
       'language': AppState.instance.isEnglish ? 'en' : 'te',
-      'retrieval_type': 'vassar_digital_retrieval',
+      'retrieval_type': AppState.instance.vassarDigitalRetrievalEnabled
+          ? 'vassar_digital_retrieval'
+          : 'native',
       'include_details': includeDetails,
       'image_url': imageUrl
     };
@@ -1558,7 +1557,6 @@ class ChatViewModel extends LoadingViewModel {
     }
   }
 
-
   /// Handle individual SSE events
   Future<void> _handleSSEEvent(
       SSEEventModel event, BuildContext context) async {
@@ -1661,7 +1659,9 @@ class ChatViewModel extends LoadingViewModel {
     }*/
 
     // Mark streaming TTS as inactive after processing final answer
-    if (event.step == 'complete' && event.finalAnswer != null && event.finalAnswer!.isNotEmpty) {
+    if (event.step == 'complete' &&
+        event.finalAnswer != null &&
+        event.finalAnswer!.isNotEmpty) {
       isStreamingTtsActive = false;
     }
   }
@@ -1791,7 +1791,8 @@ class ChatViewModel extends LoadingViewModel {
     await playAudioChunksSequentially(audioChunks);
   }
 
-  Future<List<Uint8List>> fetchAllAudioChunks(List<String> chunks, BuildContext context) async {
+  Future<List<Uint8List>> fetchAllAudioChunks(
+      List<String> chunks, BuildContext context) async {
     List<Uint8List> audioChunks = [];
 
     for (String chunk in chunks) {
@@ -1823,13 +1824,13 @@ class ChatViewModel extends LoadingViewModel {
 
       if (pipelineResponse.isNotEmpty) {
         final ttsTask = pipelineResponse.firstWhere(
-              (task) => task['taskType'] == 'tts',
+          (task) => task['taskType'] == 'tts',
           orElse: () => null,
         );
         final List<dynamic>? audioList = ttsTask?['audio'];
         final String? base64Audio = audioList != null &&
-            audioList.isNotEmpty &&
-            audioList[0]['audioContent'] != null
+                audioList.isNotEmpty &&
+                audioList[0]['audioContent'] != null
             ? audioList[0]['audioContent'].toString()
             : null;
 
@@ -1843,10 +1844,10 @@ class ChatViewModel extends LoadingViewModel {
     return audioChunks;
   }
 
-
   /// Handle full text TTS processing (no chunking)
   Future<void> handleFullTextTTS(String text, BuildContext context) async {
-    print('[FULL TEXT TTS] Processing entire text: "${text.substring(0, text.length.clamp(0, 100))}${text.length > 100 ? '...' : ''}"');
+    print(
+        '[FULL TEXT TTS] Processing entire text: "${text.substring(0, text.length.clamp(0, 100))}${text.length > 100 ? '...' : ''}"');
 
     if (AppState.instance.ttsMode.toLowerCase() == 'bhashini') {
       await ttsResponse(text, context);
@@ -1884,7 +1885,8 @@ class ChatViewModel extends LoadingViewModel {
         String lastSentence = sentences.removeLast();
 
         for (String sentence in sentences) {
-          if (sentence.trim().isNotEmpty && AppState.instance.autoSpeechEnabled) {
+          if (sentence.trim().isNotEmpty &&
+              AppState.instance.autoSpeechEnabled) {
             streamingTtsChunkCount++;
             print(
                 '[STREAMING TTS CHUNKED] Speaking chunk #${streamingTtsChunkCount}: "${sentence.trim()}"');
@@ -1901,7 +1903,8 @@ class ChatViewModel extends LoadingViewModel {
       }
     } else {
       // Full text mode - wait for complete response, don't process streaming chunks
-      print('[STREAMING TTS FULL] Accumulating text, will process when complete. Buffer length: ${cleanedBuffer.length}');
+      print(
+          '[STREAMING TTS FULL] Accumulating text, will process when complete. Buffer length: ${cleanedBuffer.length}');
       // In full text mode, we don't process streaming chunks
       // The complete response will be handled by handleFinalResponseTTS
     }
@@ -2088,9 +2091,11 @@ class ChatViewModel extends LoadingViewModel {
 
             final videoMetadata = message['video_metadata'] as List<dynamic>?;
 
-            if (videoMetadata != null) {
+            if (videoMetadata != null && videoMetadata.isNotEmpty) {
               const baseUrl =
                   'https://minio.apaims2.0.vassarlabs.com/genai/cms/';
+
+              final Set<String> uniqueKeys = {};
               List<VideoDataModel> videoDataList = [];
 
               for (final item in videoMetadata) {
@@ -2098,10 +2103,17 @@ class ChatViewModel extends LoadingViewModel {
                   final source = item['source'];
                   final start = item['start'];
                   final end = item['end'];
-                  if (source != null && source.toString().toLowerCase().endsWith('.mp4')) {
-                    final encodedSource = Uri.encodeComponent(source.toString());
-                    final videoUrl = '$baseUrl$encodedSource';
-                    videoDataList.add(VideoDataModel(videoUrl, start, end));
+
+                  if (source != null &&
+                      source.toString().toLowerCase().endsWith('.mp4')) {
+                    final key = '$source|$start|$end';
+                    if (!uniqueKeys.contains(key)) {
+                      uniqueKeys.add(key);
+                      final encodedSource =
+                          Uri.encodeComponent(source.toString());
+                      final videoUrl = '$baseUrl$encodedSource';
+                      videoDataList.add(VideoDataModel(videoUrl, start, end));
+                    }
                   }
                 }
               }
@@ -2319,7 +2331,8 @@ class ChatViewModel extends LoadingViewModel {
     List<String> chunks = [];
 
     for (int i = 0; i < words.length; i += wordsPerChunk) {
-      int end = (i + wordsPerChunk < words.length) ? i + wordsPerChunk : words.length;
+      int end =
+          (i + wordsPerChunk < words.length) ? i + wordsPerChunk : words.length;
       String chunk = words.sublist(i, end).join(' ');
       chunks.add(chunk);
     }
@@ -2328,8 +2341,10 @@ class ChatViewModel extends LoadingViewModel {
   }
 
   /// Handle complete final response - process based on user's TTS mode preference
-  Future<void> handleFinalResponseTTS(String completeResponse, BuildContext context) async {
-    if (!AppState.instance.autoSpeechEnabled || completeResponse.trim().isEmpty) return;
+  Future<void> handleFinalResponseTTS(
+      String completeResponse, BuildContext context) async {
+    if (!AppState.instance.autoSpeechEnabled || completeResponse.trim().isEmpty)
+      return;
 
     // Clean the complete response text for TTS
     String cleanedText = sanitizeTextForTTS(completeResponse);
@@ -2341,19 +2356,22 @@ class ChatViewModel extends LoadingViewModel {
     if (words.length > 5) {
       if (AppState.instance.ttsChunkedMode) {
         // Chunked processing mode
-        print('[CHUNKED TTS] Received complete response: ${completeResponse.length} characters');
+        print(
+            '[CHUNKED TTS] Received complete response: ${completeResponse.length} characters');
         print('[CHUNKED TTS] Complete response has ${words.length} words');
 
         // Split complete response into chunks for faster TTS processing
         List<String> chunks = _splitResponseIntoTTSChunks(cleanedText);
 
-        print('[CHUNKED TTS] Split into ${chunks.length} chunks for TTS processing');
+        print(
+            '[CHUNKED TTS] Split into ${chunks.length} chunks for TTS processing');
 
         // Process each chunk sequentially without waiting for previous to complete
         _processChunksSequentially(chunks, context);
       } else {
         // Full text processing mode
-        print('[FULL TEXT TTS] Processing complete response: ${completeResponse.length} characters, ${words.length} words');
+        print(
+            '[FULL TEXT TTS] Processing complete response: ${completeResponse.length} characters, ${words.length} words');
         await handleFullTextTTS(cleanedText, context);
       }
     } else {
@@ -2362,7 +2380,8 @@ class ChatViewModel extends LoadingViewModel {
   }
 
   /// Process chunks sequentially in background without blocking
-  void _processChunksSequentially(List<String> chunks, BuildContext context) async {
+  void _processChunksSequentially(
+      List<String> chunks, BuildContext context) async {
     for (int i = 0; i < chunks.length; i++) {
       if (!AppState.instance.autoSpeechEnabled) {
         print('[CHUNKED TTS] Auto speech disabled, stopping chunk processing');
@@ -2372,7 +2391,8 @@ class ChatViewModel extends LoadingViewModel {
       String chunk = chunks[i].trim();
       if (chunk.isNotEmpty) {
         streamingTtsChunkCount++;
-        print('[CHUNKED TTS] Processing chunk ${i + 1}/${chunks.length}: "$chunk"');
+        print(
+            '[CHUNKED TTS] Processing chunk ${i + 1}/${chunks.length}: "$chunk"');
 
         // Start TTS for this chunk immediately (don't await - let it run in background)
         _speakChunkInBackground(chunk, i + 1, context);
@@ -2384,7 +2404,8 @@ class ChatViewModel extends LoadingViewModel {
   }
 
   /// Speak a chunk in background without blocking the next chunk
-  void _speakChunkInBackground(String chunk, int chunkNumber, BuildContext context) async {
+  void _speakChunkInBackground(
+      String chunk, int chunkNumber, BuildContext context) async {
     try {
       print('[CHUNKED TTS] Starting TTS for chunk $chunkNumber: "$chunk"');
 
@@ -2398,7 +2419,8 @@ class ChatViewModel extends LoadingViewModel {
 
       print('[CHUNKED TTS] Completed TTS for chunk $chunkNumber');
     } catch (e) {
-      print('[CHUNKED TTS ERROR] Failed to speak chunk $chunkNumber "$chunk": $e');
+      print(
+          '[CHUNKED TTS ERROR] Failed to speak chunk $chunkNumber "$chunk": $e');
     }
   }
 
@@ -2421,7 +2443,9 @@ class ChatViewModel extends LoadingViewModel {
           String currentChunk = '';
           for (String phrase in phrases) {
             if (phrase.trim().isNotEmpty) {
-              String testChunk = currentChunk.isEmpty ? phrase.trim() : '$currentChunk, ${phrase.trim()}';
+              String testChunk = currentChunk.isEmpty
+                  ? phrase.trim()
+                  : '$currentChunk, ${phrase.trim()}';
               List<String> testWords = testChunk.split(RegExp(r'\s+'));
 
               if (testWords.length <= 15) {
@@ -2505,5 +2529,4 @@ class ChatViewModel extends LoadingViewModel {
       await completer.future;
     }
   }
-
 }
