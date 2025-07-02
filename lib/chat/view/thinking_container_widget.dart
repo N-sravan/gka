@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import '../../utils/app_state.dart';
 import '../../video_player_widget.dart';
 import '../model/processing_step_model.dart';
 import '../model/video_data_model.dart';
@@ -261,7 +262,21 @@ class _ThinkingContainerWidgetState extends State<ThinkingContainerWidget>
       child: SingleChildScrollView(
         padding: EdgeInsets.zero,
         child: Column(
-          children: widget.steps.map((step) => _buildStepItem(step)).toList(),
+          children: widget.steps
+              .where((step) {
+                if (step.name.toLowerCase() == 'citation' &&
+                    !AppState.instance.vassarDigitalRetrievalEnabled) {
+                  return false;
+                }
+                if (step.name.toLowerCase() == 'citation' &&
+                    AppState.instance.vassarDigitalRetrievalEnabled &&
+                    step.details == null) {
+                  return false;
+                }
+                return true;
+              })
+              .map((step) => _buildStepItem(step))
+              .toList(),
         ),
       ),
     );

@@ -3,7 +3,7 @@ class SSEEventModel {
   final String status;
   final dynamic message;
   final int? timestamp;
-  final Map<String, dynamic>? data;
+  final dynamic data;
   final String? finalAnswer;
   final String? translatedQuery;
   final String? sourceLang;

@@ -58,13 +58,11 @@ class PromptManagementViewModel extends LoadingViewModel {
   // Initialize data
   Future<void> initialize() async {
     isLoading = true;
-    ;
     await Future.wait([
       loadPrompts(),
       loadCategories(),
     ]);
     isLoading = false;
-    ;
   }
 
   // Load all prompts
@@ -241,27 +239,23 @@ class PromptManagementViewModel extends LoadingViewModel {
     }
 
     isLoading = true;
-    ;
     try {
       final response =
           await _repository.createCategory(name.trim(), description?.trim());
 
       if (response.success) {
-        await loadCategories(); // Refresh categories
+        await loadCategories();
         _showSuccess('Category created successfully');
         isLoading = false;
-        ;
         return true;
       } else {
         _showError('Failed to create category: ${response.message}');
         isLoading = false;
-        ;
         return false;
       }
     } catch (e) {
       _showError('Error creating category: ${e.toString()}');
       isLoading = false;
-      ;
       return false;
     }
   }
@@ -307,7 +301,6 @@ class PromptManagementViewModel extends LoadingViewModel {
   // Refresh cache
   Future<void> refreshCache() async {
     isLoading = true;
-    ;
     try {
       final response = await _repository.refreshCache();
       if (response.success) {
@@ -320,13 +313,11 @@ class PromptManagementViewModel extends LoadingViewModel {
       _showError('Error refreshing cache: ${e.toString()}');
     }
     isLoading = false;
-    ;
   }
 
   // Migrate existing prompts
   Future<void> migratePrompts() async {
     isLoading = true;
-    ;
     try {
       final response = await _repository.migratePrompts();
       if (response.success) {
@@ -339,7 +330,6 @@ class PromptManagementViewModel extends LoadingViewModel {
       _showError('Error migrating prompts: ${e.toString()}');
     }
     isLoading = false;
-    ;
   }
 
   // Helper methods

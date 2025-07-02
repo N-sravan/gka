@@ -2054,14 +2054,104 @@ class ChatViewModel extends LoadingViewModel {
         break;
 
       case 'date_extraction':
-        if (event.message.isNotEmpty) {
-          details['date_extraction'] = event.modelUsed;
+        if (event.data != null) {
+          details['date_extraction'] = event.data;
         }
         break;
 
       case 'location_extraction':
-        if (event.message.isNotEmpty) {
-          details['location_extraction'] = event.modelUsed;
+        if (event.data != null) {
+          details['location_extraction'] = event.data;
+        }
+        break;
+
+      case 'location_search':
+        if (event.data != null) {
+          details['location_search'] = event.data;
+        }
+        break;
+
+      case 'weather_api_params':
+        if (event.data != null) {
+          details['weather_api_params'] = event.data;
+        }
+        break;
+
+      case 'weather_components_init':
+        if (event.data != null) {
+          details['weather_components_init'] = event.data;
+        }
+        break;
+
+      case 'weather_api_rainfall_request':
+        if (event.data != null) {
+          details['weather_api_rainfall_request'] = event.data;
+        }
+        break;
+
+      case 'weather_api_rainfall_response':
+        if (event.data != null) {
+          details['weather_api_rainfall_response'] = event.data;
+        }
+        break;
+
+      case 'weather_api_rainfall_success':
+        if (event.data != null) {
+          details['weather_api_rainfall_success'] = event.data;
+        }
+        break;
+
+      case 'weather_api_temperature_request':
+        if (event.data != null) {
+          details['weather_api_temperature_request'] = event.data;
+        }
+        break;
+
+      case 'weather_api_temperature_response':
+        if (event.data != null) {
+          details['weather_api_temperature_response'] = event.data;
+        }
+        break;
+
+      case 'weather_api_temperature_success':
+        if (event.data != null) {
+          details['weather_api_temperature_success'] = event.data;
+        }
+        break;
+
+      case 'weather_api_humidity_request':
+        if (event.data != null) {
+          details['weather_api_humidity_request'] = event.data;
+        }
+        break;
+
+      case 'weather_api_humidity_response':
+        if (event.data != null) {
+          details['weather_api_humidity_response'] = event.data;
+        }
+        break;
+
+      case 'weather_api_humidity_success':
+        if (event.data != null) {
+          details['weather_api_humidity_success'] = event.data;
+        }
+        break;
+
+      case 'weather_api_wind_request':
+        if (event.data != null) {
+          details['weather_api_wind_request'] = event.data;
+        }
+        break;
+
+      case 'weather_api_wind_response':
+        if (event.data != null) {
+          details['weather_api_wind_response'] = event.data;
+        }
+        break;
+
+      case 'weather_api_wind_success':
+        if (event.data != null) {
+          details['weather_api_wind_success'] = event.data;
         }
         break;
 
