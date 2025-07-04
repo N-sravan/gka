@@ -214,9 +214,9 @@ class _ChatBubbleState extends State<ChatBubble> {
     });
   }
 
-  Widget _formattedTextView() {
+  _formattedTextView() {
+    // Trim the text and handle single quotes
     String trimmedText = widget.text.trim().replaceAll("'", "");
-
     if (trimmedText.startsWith("'")) {
       trimmedText = trimmedText.substring(1);
     }
@@ -227,78 +227,59 @@ class _ChatBubbleState extends State<ChatBubble> {
       trimmedText = trimmedText.substring(0, trimmedText.length - 1);
     }
 
-    trimmedText = trimmedText.replaceAll('\u200c', '');
+    trimmedText.replaceAll('\u200c', '');
+    // Split the text by line breaks (\\n)
+    List<String> lines = trimmedText.split('\\n');
 
-    // Split the text by actual newlines
-    List<String> lines = trimmedText.split('\n');
-
-    // For very long text, add scrolling capability
-    if (trimmedText.length > 1000 || lines.length > 20) {
-      return ConstrainedBox(
-        constraints: const BoxConstraints(maxHeight: 300),
-        child: Scrollbar(
-          child: SingleChildScrollView(
-            child: SelectableText.rich(
-              TextSpan(
-                children: _parseText(trimmedText),
-                style: const TextStyle(
-                  color: Color(0xff1E1E1E),
-                  fontSize: 14.0,
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
+    // Process each line to apply bold formatting and replace '*' with '•'
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: lines.map((line) {
+        // Apply bold formatting first
+        final boldTextLine = _parseText(line);
+
+        // Replace '*' with '•' in the bold formatted text
+        final bulletPointText = boldTextLine.map((span) {
+          String text = span.text ?? '';
+          return TextSpan(
+            text: text.replaceAll('*', ''),
+            style: span.style,
+          );
+        }).toList();
+
         return RichText(
           text: TextSpan(
-            children: _parseText(line),
+            children: bulletPointText,
             style: const TextStyle(
               color: Color(0xff1E1E1E),
-              fontSize: 14.0,
+              fontSize: 14.0, // adjust as needed
             ),
           ),
         );
       }).toList(),
     );
   }
-
   List<TextSpan> _parseText(String text) {
-    final List<TextSpan> spans = [];
-    final RegExp regex = RegExp(r'\*\*(.*?)\*\*');
-    final matches = regex.allMatches(text);
+    text.replaceAll('\u200c', '');
+    // Split text by new lines
+    final lines = text.split('\n');
 
-    int lastMatchEnd = 0;
-
-    for (final match in matches) {
-      // Add normal text before the match
-      if (match.start > lastMatchEnd) {
-        spans.add(TextSpan(text: text.substring(lastMatchEnd, match.start)));
+    return lines.map((line) {
+      if (line.trim().startsWith('*')) {
+        // If line starts with '*', make it bold
+        return TextSpan(
+          text: '${line.trim()}\n',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        );
+      } else {
+        // Regular text
+        return TextSpan(
+          text: '${line.trim()}\n',
+          style: const TextStyle(fontWeight: FontWeight.normal),
+        );
       }
-
-      // Add bold text without the ** markers
-      final boldText = match.group(1) ?? '';
-      spans.add(TextSpan(
-        text: boldText,
-        style: const TextStyle(fontWeight: FontWeight.bold),
-      ));
-
-      lastMatchEnd = match.end;
-    }
-
-    // Add remaining normal text after the last match
-    if (lastMatchEnd < text.length) {
-      spans.add(TextSpan(text: text.substring(lastMatchEnd)));
-    }
-
-    return spans;
+    }).toList();
   }
-
   _userProfileView() {
     return SizedBox(
       child: Column(
