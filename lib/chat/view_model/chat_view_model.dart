@@ -23,11 +23,9 @@ import 'package:gka/utils/common_constants.dart' as constants;
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:uuid/uuid.dart';
 import 'package:web_socket_channel/io.dart';
-
 import '../../home/model/available_models.dart' as model;
 import '../../message_bubble.dart';
 import '../../services/api_provider.dart';
@@ -183,7 +181,6 @@ class ChatViewModel extends LoadingViewModel {
   List<ProcessingStepModel> processingSteps = [];
   Map<String, int> stepTimings = {};
   int? startTime;
-  bool includeDetails = true;
 
   String? currentTtsMessage;
 
@@ -1421,7 +1418,7 @@ class ChatViewModel extends LoadingViewModel {
       'retrieval_type': AppState.instance.vassarDigitalRetrievalEnabled
           ? 'vassar_digital_retrieval'
           : 'native',
-      'include_details': includeDetails,
+      'include_details': AppState.instance.showDetailedMode,
       'image_url': imageUrl
     };
 
@@ -1449,6 +1446,7 @@ class ChatViewModel extends LoadingViewModel {
       request.headers.addAll({
         'Content-Type': 'application/json',
         'Accept': 'text/event-stream',
+        'Authorization': 'Bearer ${AppState.instance.token}',
       });
       request.body = jsonEncode(requestBody);
 
@@ -1756,21 +1754,9 @@ class ChatViewModel extends LoadingViewModel {
     // Check if auto speech is enabled
     if (!AppState.instance.autoSpeechEnabled) return;
 
-    bool hasEnglishSource = RegExp(r'\(Source:.*?\)').hasMatch(response);
-    bool hasTeluguSource = RegExp(r'\(మూలం:.*?\)').hasMatch(response);
-    String noSourceText = '';
+    final ttsText = sanitizeTextForTTS(response);
 
-    /* if (hasEnglishSource) {
-      noSourceText = response.replaceAll(RegExp(r'\s*\(Source:.*?\)'), '');
-    } else if (hasTeluguSource) {
-      noSourceText = response.replaceAll(RegExp(r'\s*\(మూలం:.*?\)'), '');
-    } else {
-      noSourceText = response;
-    }*/
-
-    final ttsText = sanitizeTextForTTS(noSourceText);
-
-    if (noSourceText.toString().isNotEmpty && response.toString().isNotEmpty) {
+    if (ttsText.toString().isNotEmpty && ttsText.toString().isNotEmpty) {
       // Use processing mode based on user setting
       if (AppState.instance.ttsChunkedMode) {
         // Use chunk-wise TTS processing
@@ -1997,7 +1983,7 @@ class ChatViewModel extends LoadingViewModel {
 
   /// Format event details for display
   Map<String, dynamic>? _formatEventDetails(SSEEventModel event) {
-    if (!includeDetails) return null;
+    if (!AppState.instance.showDetailedMode) return null;
 
     final details = <String, dynamic>{};
 
@@ -2262,12 +2248,6 @@ class ChatViewModel extends LoadingViewModel {
     notifyListeners();
   }
 
-  /// Toggle include details option
-  void toggleIncludeDetails() {
-    includeDetails = !includeDetails;
-    notifyListeners();
-  }
-
   /// Clear processing state
   void clearProcessingState() {
     processingSteps.clear();
@@ -2319,30 +2299,6 @@ class ChatViewModel extends LoadingViewModel {
     await tts.setSpeechRate(0.5);
     await tts.speak(plainText);
   }
-
-/*
-  String removeIconsForTts(String input) {
-    // Removes emojis and symbols
-    return input
-        .replaceAll(
-          RegExp(
-              r'[\u{1F600}-\u{1F64F}' // Emoticons
-              r'\u{1F300}-\u{1F5FF}' // Misc Symbols and Pictographs
-              r'\u{1F680}-\u{1F6FF}' // Transport and Map Symbols
-              r'\u{2600}-\u{26FF}' // Misc symbols
-              r'\u{2700}-\u{27BF}' // Dingbats
-              r'\u{FE00}-\u{FE0F}' // Variation Selectors
-              r'\u{1F900}-\u{1F9FF}' // Supplemental Symbols and Pictographs
-              r'\u{1FA70}-\u{1FAFF}' // Symbols and Pictographs Extended-A
-              r'\u{200D}' // Zero Width Joiner
-              r']+',
-              unicode: true),
-          '',
-        )
-        .replaceAll(RegExp(r'\s+'), ' ')
-        .trim(); // Clean extra spaces
-  }
-*/
 
   String sanitizeTextForTTS(String input) {
     // Step 1: Remove emojis and symbols
@@ -2618,5 +2574,44 @@ class ChatViewModel extends LoadingViewModel {
       await player.play(BytesSource(audioBytes));
       await completer.future;
     }
+  }
+
+  Future<bool> minioImageUpload(BuildContext context) async {
+    /// Checking for active internet connection
+    if (await networkUtils.hasActiveInternet()) {
+      isLoading = true;
+      try {
+        String? objName = await repo.minioUpload(capturedPhoto!);
+        if (objName != null && objName.isNotEmpty) {
+          imageUrl = constants.platformBaseUrl +
+              constants.minioDownloadImageBaseurl +
+              objName;
+          debugPrint("MINIO IMAGE URL - $imageUrl");
+          isLoading = false;
+          notifyListeners();
+          return true;
+        } else {
+          isLoading = false;
+          notifyListeners();
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Something went wrong,Please try later'),
+          ));
+        }
+      } catch (e) {
+        isLoading = false;
+        notifyListeners();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(constants.genericErrorMsg),
+        ));
+        Util.instance.logMessage('Chat Model', 'Error : $e');
+      }
+    } else {
+      isLoading = false;
+      notifyListeners();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(constants.noNetworkAvailability),
+      ));
+    }
+    return false;
   }
 }

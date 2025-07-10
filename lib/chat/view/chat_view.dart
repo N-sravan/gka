@@ -685,7 +685,7 @@ class _ChatViewState extends State<ChatView> {
                               viewModel.chatController.text !=
                                   'Processing...') {
                             if (viewModel.capturedPhoto != null) {
-                              await viewModel.uploadMediaToS3();
+                              await viewModel.minioImageUpload(context);
                             } else {
                               viewModel.imageUrl = '';
                             }
@@ -932,7 +932,8 @@ class _ChatViewState extends State<ChatView> {
               AppState.instance.language = 'english';
               AppState.instance.isEnglish = true;
             }
-            Fluttertoast.showToast(msg: "Switched to ${AppState.instance.language}");
+            Fluttertoast.showToast(
+                msg: "Switched to ${AppState.instance.language}");
           },
           items: viewModel.langList
               .map(

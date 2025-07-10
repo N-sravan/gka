@@ -78,6 +78,8 @@ abstract class ChatRepository {
   Future<String?> fetchResembleAItts(Map<String, dynamic> body);
 
   Future<String?> parakeetTranscription(File path);
+
+  Future<String?> minioUpload(File path);
 }
 
 /// Concrete class implementation for the login repository
@@ -89,7 +91,8 @@ class ChatRepositoryImpl extends ChatRepository {
       "project_uuid": constants.projectId
     };
     Map<String, String> authHeaders = {
-      constants.headerContentType: constants.headerJson
+      constants.headerContentType: constants.headerJson,
+      'Authorization': 'Bearer ${AppState.instance.token}'
     };
     String authUrl = constants.genAiBaseUrl + constants.deleteTokenEndpoint;
     String requestBody = jsonEncode(params);
@@ -109,7 +112,8 @@ class ChatRepositoryImpl extends ChatRepository {
   Future<int?> deleteTools(List<String> toolUUIDs) async {
     Map<String, dynamic> params = {"tool_uuids": toolUUIDs};
     Map<String, String> authHeaders = {
-      constants.headerContentType: constants.headerJson
+      constants.headerContentType: constants.headerJson,
+      'Authorization': 'Bearer ${AppState.instance.token}'
     };
     String authUrl = constants.genAiBaseUrl + constants.deleteTokenEndpoint;
     String requestBody = jsonEncode(params);
@@ -129,7 +133,8 @@ class ChatRepositoryImpl extends ChatRepository {
   Future<GetAllPromptsResponseModel> fetchPrompts(
       BuildContext context, String modelUUID) async {
     Map<String, String> authHeaders = {
-      constants.headerContentType: constants.headerJson
+      constants.headerContentType: constants.headerJson,
+      'Authorization': 'Bearer ${AppState.instance.token}'
     };
 
     Map<String, String> params = {
@@ -159,7 +164,8 @@ class ChatRepositoryImpl extends ChatRepository {
   @override
   Future<ToolInventoryResponseModel> fetchTools(BuildContext context) async {
     Map<String, String> authHeaders = {
-      constants.headerContentType: constants.headerJson
+      constants.headerContentType: constants.headerJson,
+      'Authorization': 'Bearer ${AppState.instance.token}'
     };
 
     Map<String, String> params = {
@@ -188,7 +194,8 @@ class ChatRepositoryImpl extends ChatRepository {
   Future<PromptSubmissionResponse> createPrompt(BuildContext context,
       String promptMessage, String intent, String modelUUID) async {
     Map<String, String> authHeaders = {
-      constants.headerContentType: constants.headerJson
+      constants.headerContentType: constants.headerJson,
+      'Authorization': 'Bearer ${AppState.instance.token}'
     };
 
     Map<String, String> params = {
@@ -219,7 +226,8 @@ class ChatRepositoryImpl extends ChatRepository {
   @override
   Future<int?> createOrUpdateTool() async {
     Map<String, String> authHeaders = {
-      constants.headerContentType: constants.headerJson
+      constants.headerContentType: constants.headerJson,
+      'Authorization': 'Bearer ${AppState.instance.token}'
     };
 
     Map<String, String> params = {
@@ -251,7 +259,8 @@ class ChatRepositoryImpl extends ChatRepository {
   Future<PromptSubmissionResponse> updatePrompt(
       BuildContext context, String promptMessage, String intent) async {
     Map<String, String> authHeaders = {
-      constants.headerContentType: constants.headerJson
+      constants.headerContentType: constants.headerJson,
+      'Authorization': 'Bearer ${AppState.instance.token}'
     };
 
     Map<String, String> params = {
@@ -282,7 +291,8 @@ class ChatRepositoryImpl extends ChatRepository {
   @override
   Future<AvailabeModelResponse> fetchModels(BuildContext context) async {
     Map<String, String> authHeaders = {
-      constants.headerContentType: constants.headerJson
+      constants.headerContentType: constants.headerJson,
+      'Authorization': 'Bearer ${AppState.instance.token}'
     };
 
     Map<String, String> params = {"project_uuid": constants.projectId};
@@ -302,7 +312,8 @@ class ChatRepositoryImpl extends ChatRepository {
   @override
   Future<GetDocumentsResponseModel> fetchDocuments(BuildContext context) async {
     Map<String, String> authHeaders = {
-      constants.headerContentType: constants.headerJson
+      constants.headerContentType: constants.headerJson,
+      'Authorization': 'Bearer ${AppState.instance.token}'
     };
 
     Map<String, dynamic> params = {
@@ -325,7 +336,8 @@ class ChatRepositoryImpl extends ChatRepository {
   Future<ChatHistoryModel> fetchChatHistory(
       String sessionId, BuildContext context) async {
     Map<String, String> authHeaders = {
-      constants.headerContentType: constants.headerJson
+      constants.headerContentType: constants.headerJson,
+      'Authorization': 'Bearer ${AppState.instance.token}'
     };
 
     Map<String, dynamic> params = {
@@ -349,7 +361,8 @@ class ChatRepositoryImpl extends ChatRepository {
   Future<ChatHistoryModel> fetchChatHistoryForSession(
       String sessionId, BuildContext context, int oldMessageId) async {
     final Map<String, String> authHeaders = {
-      constants.headerContentType: constants.headerJson
+      constants.headerContentType: constants.headerJson,
+      'Authorization': 'Bearer ${AppState.instance.token}'
     };
 
     // Construct request payload based on pagination
@@ -379,7 +392,8 @@ class ChatRepositoryImpl extends ChatRepository {
   @override
   Future<UserResponseModel> fetchUsers(BuildContext context) async {
     Map<String, String> authHeaders = {
-      constants.headerContentType: constants.headerJson
+      constants.headerContentType: constants.headerJson,
+      'Authorization': 'Bearer ${AppState.instance.token}'
     };
 
     Map<String, dynamic> params = {
@@ -401,7 +415,8 @@ class ChatRepositoryImpl extends ChatRepository {
   Future<bool> deleteDocument(BuildContext context, String fileUUID) async {
     Map<String, dynamic> params = {"file_uuid": fileUUID};
     Map<String, String> authHeaders = {
-      constants.headerContentType: constants.headerJson
+      constants.headerContentType: constants.headerJson,
+      'Authorization': 'Bearer ${AppState.instance.token}'
     };
     String authUrl = constants.baseUrl + constants.deleteFileEndpoint;
     String requestBody = jsonEncode(params);
@@ -426,7 +441,8 @@ class ChatRepositoryImpl extends ChatRepository {
       "session_id": sessionId
     };
     Map<String, String> authHeaders = {
-      constants.headerContentType: constants.headerJson
+      constants.headerContentType: constants.headerJson,
+      'Authorization': 'Bearer ${AppState.instance.token}'
     };
     String authUrl = constants.baseUrl + constants.deleteSessionEndpoint;
     String requestBody = jsonEncode(params);
@@ -453,7 +469,8 @@ class ChatRepositoryImpl extends ChatRepository {
       "new_session_id": newId
     };
     Map<String, String> authHeaders = {
-      constants.headerContentType: constants.headerJson
+      constants.headerContentType: constants.headerJson,
+      'Authorization': 'Bearer ${AppState.instance.token}'
     };
     String authUrl = constants.baseUrl + constants.updateSessionEndpoint;
     String requestBody = jsonEncode(params);
@@ -480,7 +497,8 @@ class ChatRepositoryImpl extends ChatRepository {
       "to_lang": destLang
     };
     Map<String, String> authHeaders = {
-      constants.headerContentType: constants.headerJson
+      constants.headerContentType: constants.headerJson,
+      'Authorization': 'Bearer ${AppState.instance.token}'
     };
     String authUrl = constants.baseUrl + constants.langTranslateEndpoint;
     String requestBody = jsonEncode(params);
@@ -499,7 +517,8 @@ class ChatRepositoryImpl extends ChatRepository {
   Future<bool> deleteChunk(BuildContext context, String chunkId) async {
     Map<String, dynamic> params = {"chunk_uuid": chunkId};
     Map<String, String> authHeaders = {
-      constants.headerContentType: constants.headerJson
+      constants.headerContentType: constants.headerJson,
+      'Authorization': 'Bearer ${AppState.instance.token}'
     };
     String authUrl = constants.baseUrl + constants.deleteChunkEndpoint;
     String requestBody = jsonEncode(params);
@@ -521,7 +540,8 @@ class ChatRepositoryImpl extends ChatRepository {
   Future<ActivityStatusResponse> submitActivityStatus(
       Map<String, dynamic> body, bool isIncreased) async {
     Map<String, String> authHeaders = {
-      constants.headerContentType: constants.headerJson
+      constants.headerContentType: constants.headerJson,
+      'Authorization': 'Bearer ${AppState.instance.token}'
     };
     String authUrl = '';
 
@@ -549,6 +569,7 @@ class ChatRepositoryImpl extends ChatRepository {
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson,
       'x-api-key': 'sk-wB4MAe1kOlMMRmdX0KfpwhwMNP8HaKjLnNdsiIdCtxc',
+      'Authorization': 'Bearer ${AppState.instance.token}'
     };
 
     String encodedSessionId = Uri.encodeComponent(sessionId);
@@ -564,9 +585,7 @@ class ChatRepositoryImpl extends ChatRepository {
     if (response.statusCode == 200) {
       List<dynamic> responseList = jsonDecode(response.body);
 
-      return responseList
-          .map((json) => ChatMessageHistory.fromJson(json))
-          .toList();
+      return responseList.map((json) => ChatMessageHistory.fromJson(json)).toList();
     } else {
       throw Exception('Failed to load message history: ${response.statusCode}');
     }
@@ -576,6 +595,7 @@ class ChatRepositoryImpl extends ChatRepository {
   Future<List<ChatMessageHistory>> fetchSessionHistory() async {
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson,
+      'Authorization': 'Bearer ${AppState.instance.token}'
     };
 
     String authUrl =
@@ -598,6 +618,7 @@ class ChatRepositoryImpl extends ChatRepository {
   Future<UserSessionModel> fetchUserSessions(int page, int pageSize) async {
     Map<String, String> authHeaders = {
       constants.headerContentType: constants.headerJson,
+      'Authorization': 'Bearer ${AppState.instance.token}'
     };
     Map<String, dynamic> params = {
       "user_id": AppState.instance.userId,
@@ -622,7 +643,7 @@ class ChatRepositoryImpl extends ChatRepository {
   Future<List> fetchASRconfig(Map<String, dynamic> body) async {
     Map<String, String> headersMap = {
       "Content-Type": "application/json",
-      "Authorization": constants.bhasiniApikey
+      'Authorization': 'Bearer ${AppState.instance.token}',
     };
     Object data = jsonEncode(body);
 
@@ -647,7 +668,7 @@ class ChatRepositoryImpl extends ChatRepository {
   Future<List> fetchTTSconfig(Map<String, dynamic> body) async {
     Map<String, String> headersMap = {
       "Content-Type": "application/json",
-      "Authorization": constants.bhasiniApikey
+      'Authorization': 'Bearer ${AppState.instance.token}',
     };
     Object data = jsonEncode(body);
 
@@ -672,6 +693,7 @@ class ChatRepositoryImpl extends ChatRepository {
     String? base64Audio;
     Map<String, String> headersMap = {
       "Content-Type": "application/json",
+      'Authorization': 'Bearer ${AppState.instance.token}'
     };
     Object data = jsonEncode(body);
 
@@ -695,7 +717,8 @@ class ChatRepositoryImpl extends ChatRepository {
     String url = 'http://acerkrishidss.vassarlabs.com/chatbot_file_transcribe';
     Map<String, String> headersMap = {
       'Content-Type': constants.headerJson,
-      "endpoints": constants.headerMultipart
+      "endpoints": constants.headerMultipart,
+      'Authorization': 'Bearer ${AppState.instance.token}'
     };
 
     var request = http.MultipartRequest('POST', Uri.parse(url));
@@ -713,5 +736,53 @@ class ChatRepositoryImpl extends ChatRepository {
       return finalRes["transcription"]["text"];
     }
     return null;
+  }
+
+  Future<String?> minioUpload(imagePath) async {
+    Map<String, String> headersMap = {
+      'Content-Type': constants.headerJson,
+      "endpoints": constants.headerMultipart
+    };
+
+    String apiUrl =
+        constants.platformBaseUrl + constants.minioImageUploadEndpoint;
+
+    var request = http.MultipartRequest('POST', Uri.parse(apiUrl));
+    File compressedFile;
+    final bytes = File(imagePath.path).readAsBytesSync().lengthInBytes;
+    final kb = bytes / 1024;
+    final imageSize = kb / 1024;
+    if (imageSize > 1) {
+      compressedFile = imagePath;
+      var stream = http.ByteStream(compressedFile.openRead());
+      var length = await compressedFile.length();
+      var multipartFile = http.MultipartFile(
+        'file',
+        stream,
+        length,
+        filename: imagePath.path.split('/').last,
+      );
+      request.files.add(multipartFile);
+    } else {
+      File imageFile = File(imagePath.path);
+      var stream = http.ByteStream(imageFile.openRead());
+      var length = await imageFile.length();
+      var multipartFile = http.MultipartFile(
+        'file',
+        stream,
+        length,
+        filename: imageFile.path.split('/').last,
+      );
+      request.files.add(multipartFile);
+    }
+    request.headers.addAll(headersMap);
+    var response = await request.send();
+    var responseString = await response.stream.bytesToString();
+    dynamic finalRes = json.decode(responseString);
+    String? objectName;
+    if (finalRes['result'] && finalRes['statusCode'] == 200) {
+      objectName = finalRes['response']['objectName'];
+    }
+    return objectName;
   }
 }

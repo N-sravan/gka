@@ -47,7 +47,7 @@ const String accessKey = 'AKIAJNVL3G7MZO7M5TXA';
 const String secretKey = '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';
 const String bucket = 'uniapp-test';
 const String region = 'us-west-2';
-const String s3Filefolder = 'apaims2.0/chatbot/$projectId';
+const String s3Filefolder = 'apaims2.0/chatbot/images';
 
 // HeaderKeys
 const String accept = 'Accept';
@@ -854,12 +854,15 @@ const String asrServiceIdEnglish = 'ai4bharat/whisper-medium-en--gpu--t4';
 const String nmtServiceId = 'ai4bharat/indictrans-v2-all-gpu--t4';
 const String ttsServiceId = 'Bhashini/IITM/TTS';
 // const String bhasiniUrl = 'https://dhruva-api.bhashini.gov.in/services/inference/pipeline';
-const String bhasiniUrl = 'https://apaims2.0.vassarlabs.com/chatbot/bhashini/pipeline';
-const String bhasiniApikey = '9ehV7vDnMszVayjw4U486-9GH27LdgeB-lO85BCkPKrbN29tI9fxLlAp-05tDChA';
+const String bhasiniUrl =
+    'https://apaims2.0.vassarlabs.com/chatbot/bhashini/pipeline';
 
 ///chatbot constants
-const String baseUrl = 'https://apaims2.0.vassarlabs.com/chatbot/chat/';
-const String promptManagementBaseUrl = 'https://apaims2.0.vassarlabs.com/chatbot/';
+const String baseUrl = 'https://apaims2.0.vassarlabs.com/gateway/chatbot/chat/';
+const String promptManagementBaseUrl =
+    'https://apaims2.0.vassarlabs.com/gateway/chatbot/';
+const String platformBaseUrl = 'https://apaims2.0.vassarlabs.com/staging/';
+
 
 //chatbot API Endpoints
 const String chatHistoryEndpoint = 'get-history';
@@ -870,6 +873,8 @@ const String deleteSessionEndpoint = 'delete-session';
 const String updateSessionEndpoint = 'update-session-id';
 const String createSessionEndpoint = 'create-session';
 const String langTranslateEndpoint = 'translate-text';
+const String minioDownloadImageBaseurl = 'api/minio/download/stream?objectName=';
+const String minioImageUploadEndpoint = 'api/minio/upload/document';
 
 //baseurls
 const String genAiBaseUrl = "https://nawrims.vassarlabs.com/vassar_mind/";
