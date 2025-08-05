@@ -140,73 +140,17 @@ class _ChatViewState extends State<ChatView> {
     return Consumer<ChatViewModel>(
       builder: (_, viewModel, child) {
         return Scaffold(
-          backgroundColor: Colors.grey[50],
-          drawer: (widget.isFromHistory ?? false) ? null : const DrawerWidget(),
           appBar: AppBar(
-            elevation: 0,
-            backgroundColor: Colors.white,
-            leading: (widget.isFromHistory ?? false)
-                ? IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.black87),
-                    onPressed: () => Navigator.pop(context),
-                  )
-                : null,
-            titleSpacing: 2,
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child:
-                      Image.asset('assets/images/apaims_logo.png', height: 24),
-                ),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'APAIMS Assistant',
-                      style: TextStyle(
-                        color: Colors.black87,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                      ),
-                    ),
-                    Text(
-                      'AI-Powered Chat',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 11,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+            leading: IconButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              icon: Icon(Icons.arrow_back),
+              color: Colors.white,
             ),
-            actions: [
-              Container(
-                margin: const EdgeInsets.only(right: 8),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: IconButton(
-                  icon: Icon(Icons.settings_outlined,
-                      color: Colors.grey[700], size: 20),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const SettingsPage()),
-                    );
-                  },
-                ),
-              ),
-            ],
+            actionsIconTheme: IconThemeData(color: Colors.white),
+            backgroundColor: Colors.blue,
+            title: Text("Gen AI conversational bot",style: TextStyle(color: Colors.white,fontSize: 18),)
           ),
           body: Container(
             decoration: BoxDecoration(
@@ -308,7 +252,7 @@ class _ChatViewState extends State<ChatView> {
 
   Widget _buildLoaderWidget() {
     return Padding(
-      padding: const EdgeInsets.only(left: 50.0),
+      padding: const EdgeInsets.only(left: 50.0,bottom: 20),
       child: Align(
         alignment: AlignmentDirectional.centerStart,
         child: ValueListenableBuilder(
@@ -689,8 +633,7 @@ class _ChatViewState extends State<ChatView> {
                             } else {
                               viewModel.imageUrl = '';
                             }
-                            viewModel.sendMessageWithQueryStream(
-                                widget.sessionId, context);
+                            viewModel.sendMessage();
                           }
                         }
                       });

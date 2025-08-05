@@ -6,8 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
 class CameraWidget extends StatefulWidget {
-  const CameraWidget({required this.saveCapturedPhoto, Key? key})
-      : super(key: key);
+  const CameraWidget({required this.saveCapturedPhoto, super.key});
 
   final Function saveCapturedPhoto;
 

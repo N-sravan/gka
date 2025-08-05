@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gka/chat/view/chat_view.dart';
 import 'package:gka/home/view/home_view.dart';
 import 'package:gka/utils/app_state.dart';
 import 'package:provider/provider.dart';
@@ -212,22 +213,22 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
                                                 _usernameController.text;
                                             String password =
                                                 _passwordController.text;
-                                            setState(() {
+                                          /*  setState(() {
                                               viewModel.isLoading = true;
-                                            });
-                                            await viewModel.authenticate(userId, password, context);
+                                            });*/
+                                            // await viewModel.authenticate(userId, password, context);
                                             // await viewModel.langflowAuthenticate(userId, password, context);
-                                            /*     AppState.instance.sessionId = Uuid().v4();
+                                            AppState.instance.sessionId = Uuid().v4();
                                             AppState.instance.userId = '5bc7e266-ef3b-4796-99ad-3b9e0bcc97f4';
                                             Navigator.push(
                                               context,
                                               MaterialPageRoute(
-                                                builder: (_) => ChatWindow(
+                                                builder: (_) => ChatView(
                                                   isFromHistory: false,
                                                   sessionId: AppState.instance.sessionId,
                                                 ),
                                               ),
-                                            );*/
+                                            );
                                           }
                                         },
                                         style: ElevatedButton.styleFrom(

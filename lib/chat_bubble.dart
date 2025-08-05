@@ -158,11 +158,10 @@ class _ChatBubbleState extends State<ChatBubble> {
                                 children: [
                                   Padding(
                                     padding: EdgeInsets.only(
-                                        bottom: 4.0,
-                                        right: widget.isUser ? 10.0 : 50.0),
+                                        bottom: 4.0),
                                     child: _formattedTextView(),
                                   ),
-                                  if (!widget.isUser &&
+                                  /*if (!widget.isUser &&
                                       widget.timestamp.isNotEmpty)
                                     IconButton(
                                       icon: Icon(
@@ -196,7 +195,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                                       },
                                       padding: EdgeInsets.zero,
                                       constraints: const BoxConstraints(),
-                                    ),
+                                    ),*/
                                 ],
                               ),
                           ],

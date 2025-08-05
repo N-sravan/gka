@@ -47,6 +47,7 @@ class ChatViewModel extends LoadingViewModel {
   bool isFirstTime = true;
   var scrollControllerListView = ScrollController();
   int prevChatLength = 0;
+  int count = 0;
 
   int responseCount = 1;
   String llmType = '';
@@ -195,6 +196,39 @@ class ChatViewModel extends LoadingViewModel {
     "apiKey": "sk-kzSs-5jk4A7J_8JBqvCX5iaF2miwKuexm1_FIcPLuCw"
   };
 
+  Map<int, String> data = {
+    1: 'Paddy typically needs around 1,200 to 1,500 mm of water throughout the crop cycle. Efficient irrigation scheduling can reduce water use and improve yield.',
+    2: 'Irrigate during critical stages like transplanting, tillering, panicle initiation, and flowering. Avoid over-irrigation during early vegetative stages.',
+    3: 'You can view tank storage status on the portal or mobile app. Look for “Minor Irrigation Tank Status” under your block or village to see capacity and usage..',
+    4: 'Use the Project Monitoring module > Filter by District/Block > Apply “<50% Capacity” filter to get a downloadable list.',
+    5: 'Yes, structure-wise health status (e.g. good, silted, breached) is available in the conservation asset registry in the portal.',
+    6: 'Yes, use the Reservoir Analytics module → Select a reservoir → Click “Rainfall vs Inflow Trends” to access comparative graphs and exportable tables',
+    7: 'Use the Canal Irrigation Monitoring dashboard → Select Time Period → Compare “Scheduled vs Actual Release” across canals and districts',
+    8: 'The decision dashboard highlights “High Silt Load” tanks in red. These are flagged based on siltation levels, low storage, and past desilting records',
+    9: 'Yes, a “Water Stress Alert” report is available under the Inundation Forecast & Planning module. It’s generated using groundwater, rainfall, and tank-level data.',
+  };
+
+/*  Map<String, String> data = {
+    'how much water does paddy generally need during the growing season':
+        'Paddy typically needs around 1,200 to 1,500 mm of water throughout the crop cycle. Efficient irrigation scheduling can reduce water use and improve yield.',
+    'When should I irrigate my paddy field if no rainfall is expected':
+        'Irrigate during critical stages like transplanting, tillering, panicle initiation, and flowering. Avoid over-irrigation during early vegetative stages.',
+    'How can I check if my MI tank has enough water for this season':
+        'You can view tank storage status on the portal or mobile app. Look for “Minor Irrigation Tank Status” under your block or village to see capacity and usage..',
+    'How can I get a list of MI tanks in my division that are below 50% storage':
+        'Use the Project Monitoring module > Filter by District/Block > Apply “<50% Capacity” filter to get a downloadable list.',
+    'Can I check the condition of WC structures like check dams and percolation tanks':
+        'Yes, structure-wise health status (e.g. good, silted, breached) is available in the conservation asset registry in the portal.',
+    'Can I get reservoir-wise rainfall vs inflow data for last 5 years':
+        'Yes, use the Reservoir Analytics module → Select a reservoir → Click “Rainfall vs Inflow Trends” to access comparative graphs and exportable tables',
+    'Is there a way to compare canal water delivery vs target across districts':
+        'Use the Canal Irrigation Monitoring dashboard → Select Time Period → Compare “Scheduled vs Actual Release” across canals and districts',
+    'Which districts need urgent desilting of MI tanks before the next monsoon':
+        'The decision dashboard highlights “High Silt Load” tanks in red. These are flagged based on siltation levels, low storage, and past desilting records',
+    'Can I get a list of villages facing water scarcity risk this summer':
+        'Yes, a “Water Stress Alert” report is available under the Inundation Forecast & Planning module. It’s generated using groundwater, rainfall, and tank-level data.',
+  };*/
+
   // Update API configuration
   void updateApiConfig({String? baseUrl, String? flowId, String? apiKey}) {
     if (baseUrl != null) apiConfig["baseUrl"] = baseUrl;
@@ -220,6 +254,7 @@ class ChatViewModel extends LoadingViewModel {
     isQueryProcessing.value = false;
     showThinkingContainer.value = true;
     streamingText.value = "";
+    count = 1;
   }
 
   void toggleAgentSteps() {
@@ -2613,5 +2648,41 @@ class ChatViewModel extends LoadingViewModel {
       ));
     }
     return false;
+  }
+
+  void sendMessage() {
+    String message = chatController.text;
+    count++;
+    showLoader.value = true;
+    notifyListeners();
+    if (chatController.text.isNotEmpty) {
+      messages.add({
+        'text': chatController.text,
+        'is_user': true,
+      });
+
+      chatController.clear();
+    }
+
+    print("messageText : $message");
+    print("messageText count: $count");
+
+    String? response = data[count];
+    print("messageText response: $response");
+
+    Future.delayed(Duration(seconds: 3), () async {
+      showLoader.value = false;
+      notifyListeners();
+      messages.add({
+        'text': response,
+        'is_user': false,
+      });
+      if (response != null && response.isNotEmpty) {
+        await tts.setLanguage('en-US');
+        await tts.setSpeechRate(0.5);
+        await tts.setVoice({"name": "en-us-x-iom-local", "locale": "en-US"});
+        await tts.speak(response);
+      }
+    });
   }
 }
