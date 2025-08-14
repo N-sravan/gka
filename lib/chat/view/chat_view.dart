@@ -90,6 +90,12 @@ class _ChatViewState extends State<ChatView> {
         });
       }
     });
+
+    viewModel.messages.add({
+      'text': viewModel.botAnswers[0],
+      'is_user': false,
+    });
+    tts.speak(viewModel.botAnswers[0]);
   }
 
   _initAppStateValues() {
@@ -126,7 +132,6 @@ class _ChatViewState extends State<ChatView> {
   @override
   void dispose() {
     super.dispose();
-    // _audioRecorder.closeRecorder();
     _audioStreamController.close();
     _isRecording = false;
 
@@ -137,21 +142,51 @@ class _ChatViewState extends State<ChatView> {
 
   @override
   Widget build(BuildContext context) {
+    if (viewModel.recordingCount == 3) {
+      viewModel.messages.add({
+        'text': viewModel.botAnswers[3],
+        'is_user': false,
+      });
+      viewModel.recordingCount++;
+    }
+    if (viewModel.recordingCount == 5) {
+      viewModel.messages.add({
+        'text': viewModel.botAnswers[5],
+        'is_user': false,
+      });
+      viewModel.recordingCount++;
+    }
+    if (viewModel.recordingCount == 7) {
+      viewModel.messages.add({
+        'text': viewModel.botAnswers[7],
+        'is_user': false,
+      });
+      viewModel.recordingCount++;
+    }
+    if (viewModel.recordingCount == 9) {
+      viewModel.messages.add({
+        'text': viewModel.botAnswers[9],
+        'is_user': false,
+      });
+      viewModel.recordingCount++;
+    }
     return Consumer<ChatViewModel>(
       builder: (_, viewModel, child) {
         return Scaffold(
           appBar: AppBar(
-            leading: IconButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              icon: Icon(Icons.arrow_back),
-              color: Colors.white,
-            ),
-            actionsIconTheme: IconThemeData(color: Colors.white),
-            backgroundColor: Colors.blue,
-            title: Text("Gen AI conversational bot",style: TextStyle(color: Colors.white,fontSize: 18),)
-          ),
+              leading: IconButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                icon: Icon(Icons.arrow_back),
+                color: Colors.white,
+              ),
+              actionsIconTheme: IconThemeData(color: Colors.white),
+              backgroundColor: Colors.blue,
+              title: Text(
+                "Gen AI conversational bot",
+                style: TextStyle(color: Colors.white, fontSize: 18),
+              )),
           body: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -252,7 +287,7 @@ class _ChatViewState extends State<ChatView> {
 
   Widget _buildLoaderWidget() {
     return Padding(
-      padding: const EdgeInsets.only(left: 50.0,bottom: 20),
+      padding: const EdgeInsets.only(left: 50.0, bottom: 20),
       child: Align(
         alignment: AlignmentDirectional.centerStart,
         child: ValueListenableBuilder(
@@ -297,7 +332,6 @@ class _ChatViewState extends State<ChatView> {
           if (adjustedIndex < 0 || adjustedIndex >= viewModel.messages.length) {
             return const SizedBox();
           }
-
           final msg = viewModel.messages[adjustedIndex];
 
           return Padding(

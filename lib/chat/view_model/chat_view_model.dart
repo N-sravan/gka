@@ -46,10 +46,9 @@ class ChatViewModel extends LoadingViewModel {
   final ChatRepository repo;
   bool isFirstTime = true;
   var scrollControllerListView = ScrollController();
-  int prevChatLength = 0;
   int count = 0;
+  int recordingCount = 1;
 
-  int responseCount = 1;
   String llmType = '';
   File? selectedFile;
   bool isUploading = false;
@@ -196,6 +195,20 @@ class ChatViewModel extends LoadingViewModel {
     "apiKey": "sk-kzSs-5jk4A7J_8JBqvCX5iaF2miwKuexm1_FIcPLuCw"
   };
 
+  List<String> botAnswers = [
+    'Unusual water usage detected. Continuous flow since 2:00 AM. Possible leak suspected. Would you like me to investigate further?',
+    'Pressure drop detected in the bathroom line. Location: Washbasin valve. Estimated loss so far: 200 litres. Recommend shutting the valve and booking a plumber.',
+    'Approx. 1,050 litres.',
+    'Reminder: Your water bill of \$45 is due in 3 days. Pay now to avoid late fees.',
+    'Here’s your usage and payment history, with a 15% drop in consumption in July — great work.',
+    'Heads up: Planned maintenance in Zone 3 today from 3 PM to 5 PM. Suggest storing 150 litres for evening use.',
+    'Done, you’ll receive alerts at least 4 hours in advance from now on.',
+    'Alert: Your water usage this week is 1,000 litres above your usual average. Most of the increase is from garden watering.',
+    'Switch to alternate-day watering and reuse RO wastewater for plants — can save up to 600 litres/month.',
+    'Alert: Water quality drop detected — TDS: 610 ppm, Chlorine: Within safe range, Bacteria: None detected. Consider using a purifier before consumption.',
+    'Done. You\'ll receive real-time alerts the moment water quality changes further.',
+  ];
+
   Map<int, String> data = {
     1: 'Paddy typically needs around 1,200 to 1,500 mm of water throughout the crop cycle. Efficient irrigation scheduling can reduce water use and improve yield.',
     2: 'Irrigate during critical stages like transplanting, tillering, panicle initiation, and flowering. Avoid over-irrigation during early vegetative stages.',
@@ -255,6 +268,7 @@ class ChatViewModel extends LoadingViewModel {
     showThinkingContainer.value = true;
     streamingText.value = "";
     count = 1;
+    recordingCount = 1;
   }
 
   void toggleAgentSteps() {
@@ -2650,7 +2664,40 @@ class ChatViewModel extends LoadingViewModel {
     return false;
   }
 
-  void sendMessage() {
+  Future<void> sendMessage() async {
+
+    String message = chatController.text;
+    showLoader.value = true;
+    notifyListeners();
+    if (chatController.text.isNotEmpty) {
+      messages.add({
+        'text': chatController.text,
+        'is_user': true,
+      });
+
+      chatController.clear();
+    }
+
+
+    if (recordingCount != 3 && recordingCount != 5 && recordingCount !=7 && recordingCount !=9) {
+      Future.delayed(Duration(seconds: 3), () async {
+        showLoader.value = false;
+        notifyListeners();
+        messages.add({
+          'text': botAnswers[recordingCount],
+          'is_user': false,
+        });
+        await tts.setLanguage('en-US');
+        await tts.setSpeechRate(0.5);
+        await tts.setVoice({"name": "en-us-x-iom-local", "locale": "en-US"});
+        await tts.speak(botAnswers[recordingCount]);
+        recordingCount++;
+        print("recordingCount : $recordingCount");
+      });
+    }
+  }
+
+/*void sendMessage() {
     String message = chatController.text;
     count++;
     showLoader.value = true;
@@ -2684,5 +2731,5 @@ class ChatViewModel extends LoadingViewModel {
         await tts.speak(response);
       }
     });
-  }
+  }*/
 }
